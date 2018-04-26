@@ -31,14 +31,10 @@ public abstract class AbstractSubject implements Subject {
   }
 
   protected AbstractSubject fabric$metrics$util$AbstractSubject$() {
-    this.observers = ImmutableObserverSet.emptySet();
     fabric$lang$Object$();
+    this.$observers = ImmutableObserverSet.emptySet();
     return this;
   }
-
-  // Using a weak map as the backing for this set so that observers aren't
-  // pinned by their subjects.
-  private ImmutableObserverSet observers;
 
   /*@Override*/
   public void addObserver(Observer o) {
@@ -49,12 +45,12 @@ public abstract class AbstractSubject implements Subject {
     //Logging.METRICS_LOGGER.finer("ADD OBSERVER " + o + " FOR " + tmp + " IN " +
     //    TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
-      if (!tmp.observers.contains(o))
-        tmp.observers = tmp.observers.add(o);
+      if (!tmp.$observers.contains(o))
+        tmp.$observers = tmp.$observers.add(o);
     } else {
       atomic {
-        if (!tmp.observers.contains(o))
-          tmp.observers = tmp.observers.add(o);
+        if (!tmp.$observers.contains(o))
+          tmp.$observers = tmp.$observers.add(o);
       }
     }
   }
@@ -68,29 +64,29 @@ public abstract class AbstractSubject implements Subject {
     //Logging.METRICS_LOGGER.finer("REMOVE OBSERVER " + o + " FOR " + tmp + " IN "
     //    + TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.observers.contains(o))
-        tmp.observers = tmp.observers.remove(o);
+      if (tmp.$observers.contains(o))
+        tmp.$observers = tmp.$observers.remove(o);
     } else {
       atomic {
-        if (tmp.observers.contains(o))
-          tmp.observers = tmp.observers.remove(o);
+        if (tmp.$observers.contains(o))
+          tmp.$observers = tmp.$observers.remove(o);
       }
     }
   }
 
   /*@Override*/
   public boolean observedBy(Observer o) {
-    return observers.contains(o);
+    return $observers.contains(o);
   }
 
   /*@Override*/
   public boolean isObserved() {
-    return !observers.isEmpty();
+    return !$observers.isEmpty();
   }
 
   /*@Override*/
   public ImmutableObserverSet getObservers() {
-    return observers;
+    return $observers;
   }
 
   /**

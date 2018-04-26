@@ -12,6 +12,7 @@ import fabric.lang.Object;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.Store;
+import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _floatArray extends Object {
@@ -39,12 +40,12 @@ public interface _floatArray extends Object {
      * Used for deserializing.
      */
     public _Impl(Store store, long onum, int version, long expiry,
-        Store labelStore, long labelOnum, Store accessPolicyStore,
-        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs,
+        ImmutableObserverSet observers, Store labelStore, long labelOnum,
+        Store accessPolicyStore, long accessPolicyOnum, ObjectInput in,
+        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, labelStore, labelOnum,
+      super(store, onum, version, expiry, observers, labelStore, labelOnum,
           accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
           interStoreRefs);
       value = new float[in.readInt()];

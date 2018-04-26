@@ -39,20 +39,20 @@ import fabric.lang.Object;
 public interface AbstractList
   extends fabric.util.List, fabric.util.AbstractCollection
 {
-    
+
     public int get$modCount();
-    
+
     public int set$modCount(int val);
-    
+
     public int postInc$modCount();
-    
+
     public int postDec$modCount();
-    
+
     /**
      * The main constructor, for use by subclasses.
      */
     public fabric.util.AbstractList fabric$util$AbstractList$();
-    
+
     /**
      * Returns the elements at the specified position in the list.
      *
@@ -61,7 +61,7 @@ public interface AbstractList
      * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
      */
     public abstract fabric.lang.Object get(int index);
-    
+
     /**
      * Insert an element into the list at a given position (optional operation).
      * This shifts all existing elements from that position to the end one
@@ -83,7 +83,7 @@ public interface AbstractList
      * @see #modCount
      */
     public void add(int index, fabric.lang.Object o);
-    
+
     /**
      * Add an element to the end of the list (optional operation). If the list
      * imposes restraints on what can be inserted, such as no null elements,
@@ -101,7 +101,7 @@ public interface AbstractList
      * @see #add(int, Object)
      */
     public boolean add(fabric.lang.Object o);
-    
+
     /**
      * Insert the contents of a collection into the list at a given position
      * (optional operation). Shift all elements at that position to the right
@@ -126,7 +126,7 @@ public interface AbstractList
      * @see #add(int, Object)
      */
     public boolean addAll(int index, fabric.util.Collection c);
-    
+
     /**
      * Clear the list, such that a subsequent call to isEmpty() would return
      * true (optional operation). This implementation calls
@@ -139,7 +139,7 @@ public interface AbstractList
      * @see #removeRange(int, int)
      */
     public void clear();
-    
+
     /**
      * Test whether this list is equal to another object. A List is defined to
      be
@@ -162,12 +162,12 @@ public interface AbstractList
      * @see #hashCode()
      */
     public boolean equals(fabric.lang.Object o);
-    
+
     /**
      * Obtains a hash code for this list. In order to obey the general
      * contract of the hashCode method of class Object, this value is
      * calculated as follows:
-     * 
+     *
      <pre>hashCode = 1;
      Iterator i = list.iterator(LOCAL_STORE);
      while (i.hasNext())
@@ -185,7 +185,7 @@ public interface AbstractList
      * @see #equals(Object)
      */
     public int hashCode();
-    
+
     /**
      * Obtain the first index at which a given object is to be found in this
      * list. This implementation follows a listIterator(store) until a match is
@@ -197,7 +197,7 @@ public interface AbstractList
      *         o.equals(get(n))</code>, or -1 if there is no such index
      */
     public int indexOf(fabric.lang.Object o);
-    
+
     /**
      * Obtain an Iterator over this list, whose sequence is the list order.
      * This implementation uses size(), get(int), and remove(int) of the
@@ -211,73 +211,73 @@ public interface AbstractList
      * @see #modCount
      */
     public fabric.util.Iterator iterator(fabric.worker.Store store);
-    
+
     public static interface AnonymousIterator
       extends fabric.util.Iterator, fabric.lang.Object
     {
-        
+
         public fabric.util.AbstractList get$out$();
-        
+
         public int get$initSize();
-        
+
         public int set$initSize(int val);
-        
+
         public int postInc$initSize();
-        
+
         public int postDec$initSize();
-        
+
         public int get$initModCount();
-        
+
         public int set$initModCount(int val);
-        
+
         public int postInc$initModCount();
-        
+
         public int postDec$initModCount();
-        
+
         public int get$pos();
-        
+
         public int set$pos(int val);
-        
+
         public int postInc$pos();
-        
+
         public int postDec$pos();
-        
+
         public int get$size();
-        
+
         public int set$size(int val);
-        
+
         public int postInc$size();
-        
+
         public int postDec$size();
-        
+
         public int get$last();
-        
+
         public int set$last(int val);
-        
+
         public int postInc$last();
-        
+
         public int postDec$last();
-        
+
         public int get$knownMod();
-        
+
         public int set$knownMod(int val);
-        
+
         public int postInc$knownMod();
-        
+
         public int postDec$knownMod();
-        
+
         public AnonymousIterator fabric$util$AbstractList$AnonymousIterator$();
-        
+
         /**
          * Tests to see if there are any more objects to return.
-         * 
+         *
          * @return True if the end of the list has not yet been reached.
          */
         public boolean hasNext();
-        
+
         /**
          * Retrieves the next object from the list.
-         * 
+         *
          * @return The next object.
          * @throws NoSuchElementException
          *           if there are no more objects to retrieve.
@@ -285,12 +285,12 @@ public interface AbstractList
          *           if the list has been modified elsewhere.
          */
         public fabric.lang.Object next();
-        
+
         /**
          * Removes the last object retrieved by <code>next()</code> from the
          list,
          * if the list supports object removal.
-         * 
+         *
          * @throws ConcurrentModificationException
          *           if the list has been modified elsewhere.
          * @throws IllegalStateException
@@ -301,168 +301,168 @@ public interface AbstractList
          *           if the list does not support removing elements.
          */
         public void remove();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.lang.Object._Proxy
           implements AnonymousIterator
         {
-            
+
             public fabric.util.AbstractList get$out$() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).get$out$();
             }
-            
+
             public int get$initSize() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).get$initSize();
             }
-            
+
             public int set$initSize(int val) {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).set$initSize(val);
             }
-            
+
             public int postInc$initSize() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postInc$initSize();
             }
-            
+
             public int postDec$initSize() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postDec$initSize();
             }
-            
+
             public int get$initModCount() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).get$initModCount();
             }
-            
+
             public int set$initModCount(int val) {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).set$initModCount(val);
             }
-            
+
             public int postInc$initModCount() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postInc$initModCount();
             }
-            
+
             public int postDec$initModCount() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postDec$initModCount();
             }
-            
+
             public int get$pos() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).get$pos();
             }
-            
+
             public int set$pos(int val) {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).set$pos(val);
             }
-            
+
             public int postInc$pos() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postInc$pos();
             }
-            
+
             public int postDec$pos() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postDec$pos();
             }
-            
+
             public int get$size() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).get$size();
             }
-            
+
             public int set$size(int val) {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).set$size(val);
             }
-            
+
             public int postInc$size() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postInc$size();
             }
-            
+
             public int postDec$size() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postDec$size();
             }
-            
+
             public int get$last() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).get$last();
             }
-            
+
             public int set$last(int val) {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).set$last(val);
             }
-            
+
             public int postInc$last() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postInc$last();
             }
-            
+
             public int postDec$last() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postDec$last();
             }
-            
+
             public int get$knownMod() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).get$knownMod();
             }
-            
+
             public int set$knownMod(int val) {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).set$knownMod(val);
             }
-            
+
             public int postInc$knownMod() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postInc$knownMod();
             }
-            
+
             public int postDec$knownMod() {
                 return ((fabric.util.AbstractList.AnonymousIterator._Impl)
                           fetch()).postDec$knownMod();
             }
-            
+
             public native fabric.util.AbstractList.AnonymousIterator
               fabric$util$AbstractList$AnonymousIterator$();
-            
+
             public native boolean hasNext();
-            
+
             public native fabric.lang.Object next();
-            
+
             public native void remove();
-            
+
             public _Proxy(AnonymousIterator._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static class _Impl extends fabric.lang.Object._Impl
           implements AnonymousIterator
         {
-            
+
             public fabric.util.AbstractList get$out$() { return this.out$; }
-            
+
             private fabric.util.AbstractList out$;
-            
+
             public int get$initSize() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.initSize;
             }
-            
+
             public int set$initSize(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -471,27 +471,27 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$initSize() {
                 int tmp = this.get$initSize();
                 this.set$initSize((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$initSize() {
                 int tmp = this.get$initSize();
                 this.set$initSize((int) (tmp - 1));
                 return tmp;
             }
-            
+
             int initSize;
-            
+
             public int get$initModCount() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.initModCount;
             }
-            
+
             public int set$initModCount(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -500,27 +500,27 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$initModCount() {
                 int tmp = this.get$initModCount();
                 this.set$initModCount((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$initModCount() {
                 int tmp = this.get$initModCount();
                 this.set$initModCount((int) (tmp - 1));
                 return tmp;
             }
-            
+
             int initModCount;
-            
+
             public int get$pos() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.pos;
             }
-            
+
             public int set$pos(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -529,27 +529,27 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$pos() {
                 int tmp = this.get$pos();
                 this.set$pos((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$pos() {
                 int tmp = this.get$pos();
                 this.set$pos((int) (tmp - 1));
                 return tmp;
             }
-            
+
             private int pos;
-            
+
             public int get$size() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.size;
             }
-            
+
             public int set$size(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -558,27 +558,27 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$size() {
                 int tmp = this.get$size();
                 this.set$size((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$size() {
                 int tmp = this.get$size();
                 this.set$size((int) (tmp - 1));
                 return tmp;
             }
-            
+
             private int size;
-            
+
             public int get$last() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.last;
             }
-            
+
             public int set$last(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -587,27 +587,27 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$last() {
                 int tmp = this.get$last();
                 this.set$last((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$last() {
                 int tmp = this.get$last();
                 this.set$last((int) (tmp - 1));
                 return tmp;
             }
-            
+
             private int last;
-            
+
             public int get$knownMod() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.knownMod;
             }
-            
+
             public int set$knownMod(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -616,44 +616,44 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$knownMod() {
                 int tmp = this.get$knownMod();
                 this.set$knownMod((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$knownMod() {
                 int tmp = this.get$knownMod();
                 this.set$knownMod((int) (tmp - 1));
                 return tmp;
             }
-            
+
             private int knownMod;
-            
+
             public native AnonymousIterator
               fabric$util$AbstractList$AnonymousIterator$();
-            
+
             /**
              * Checks for modifications made to the list from elsewhere while
              iteration
              * is in progress.
-             * 
+             *
              * @throws ConcurrentModificationException
              *           if the list has been modified elsewhere.
              */
             private native void checkMod();
-            
+
             /**
              * Tests to see if there are any more objects to return.
-             * 
+             *
              * @return True if the end of the list has not yet been reached.
              */
             public native boolean hasNext();
-            
+
             /**
              * Retrieves the next object from the list.
-             * 
+             *
              * @return The next object.
              * @throws NoSuchElementException
              *           if there are no more objects to retrieve.
@@ -661,12 +661,12 @@ public interface AbstractList
              *           if the list has been modified elsewhere.
              */
             public native fabric.lang.Object next();
-            
+
             /**
              * Removes the last object retrieved by <code>next()</code> from the
              list,
              * if the list supports object removal.
-             * 
+             *
              * @throws ConcurrentModificationException
              *           if the list has been modified elsewhere.
              * @throws IllegalStateException
@@ -677,20 +677,20 @@ public interface AbstractList
              *           if the list does not support removing elements.
              */
             public native void remove();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location,
                          final fabric.util.AbstractList out$) {
                 super($location);
                 this.out$ = out$;
             }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.AbstractList.AnonymousIterator._Proxy(
                   this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -706,9 +706,9 @@ public interface AbstractList
                 out.writeInt(this.last);
                 out.writeInt(this.knownMod);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -716,7 +716,7 @@ public interface AbstractList
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.out$ = (fabric.util.AbstractList)
@@ -734,7 +734,7 @@ public interface AbstractList
                 this.last = in.readInt();
                 this.knownMod = in.readInt();
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.util.AbstractList.AnonymousIterator._Impl src =
@@ -748,25 +748,25 @@ public interface AbstractList
                 this.knownMod = src.knownMod;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.AbstractList.AnonymousIterator._Static
             {
-                
+
                 public _Proxy(fabric.util.AbstractList.AnonymousIterator.
                                 _Static._Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.AbstractList.AnonymousIterator.
                   _Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -790,11 +790,11 @@ public interface AbstractList
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.AbstractList.AnonymousIterator._Static
             {
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -803,9 +803,9 @@ public interface AbstractList
                     super.$serialize(out, refTypes, intraStoreRefs,
                                      interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -814,27 +814,27 @@ public interface AbstractList
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.AbstractList.AnonymousIterator.
                       _Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
-    
+
+
     /**
      * Obtain the last index at which a given object is to be found in this
      * list. This implementation grabs listIterator(size()), then searches
@@ -844,7 +844,7 @@ public interface AbstractList
      *         : o.equals(get(n))</code>, or -1 if there is no such index
      */
     public int lastIndexOf(fabric.lang.Object o);
-    
+
     /**
      * Obtain a ListIterator over this list, starting at the beginning. This
      * implementation returns listIterator(0).
@@ -853,7 +853,7 @@ public interface AbstractList
      *         at the beginning
      */
     public fabric.util.ListIterator listIterator(fabric.worker.Store store);
-    
+
     /**
      * Obtain a ListIterator over this list, starting at a given position.
      * A first call to next() would return the same as get(index), and a
@@ -874,7 +874,7 @@ public interface AbstractList
      */
     public fabric.util.ListIterator listIterator(fabric.worker.Store store,
                                                  final int index);
-    
+
     /**
      * Remove the element at a given position in this list (optional operation).
      * Shifts all remaining elements to the left to fill the gap. This
@@ -890,7 +890,7 @@ public interface AbstractList
      * @see #modCount
      */
     public fabric.lang.Object remove(int index);
-    
+
     /**
      * Remove a subsection of the list. This is called by the clear and
      * removeRange methods of the class which implements subList, which are
@@ -912,7 +912,7 @@ public interface AbstractList
      *         not support removing elements.
      */
     public void removeRange(int fromIndex, int toIndex);
-    
+
     /**
      * Replace an element of this list with another object (optional operation).
      * This implementation always throws an UnsupportedOperationException.
@@ -929,7 +929,7 @@ public interface AbstractList
      *         some other reason
      */
     public fabric.lang.Object set(int index, fabric.lang.Object o);
-    
+
     /**
      * Obtain a List view of a subsection of this list, from fromIndex
      * (inclusive) to toIndex (exclusive). If the two indices are equal, the
@@ -967,7 +967,7 @@ public interface AbstractList
      *
      * All methods first check to see if the actual modCount of the backing
      * list is equal to its expected value, and throw a
-     * ConcurrentModificationException if it is not. 
+     * ConcurrentModificationException if it is not.
      *
      * @param fromIndex the index that the returned list should start from
      *        (inclusive)
@@ -980,56 +980,56 @@ public interface AbstractList
      * @see RandomAccess
      */
     public fabric.util.List subList(int fromIndex, int toIndex);
-    
+
     /**
-     * 
+     *
      */
     public static interface AbstractListIterator
       extends fabric.util.ListIterator, fabric.lang.Object
     {
-        
+
         public fabric.util.AbstractList get$out$();
-        
+
         public int get$index();
-        
+
         public int set$index(int val);
-        
+
         public int postInc$index();
-        
+
         public int postDec$index();
-        
+
         public int get$knownMod();
-        
+
         public int set$knownMod(int val);
-        
+
         public int postInc$knownMod();
-        
+
         public int postDec$knownMod();
-        
+
         public int get$position();
-        
+
         public int set$position(int val);
-        
+
         public int postInc$position();
-        
+
         public int postDec$position();
-        
+
         public int get$lastReturned();
-        
+
         public int set$lastReturned(int val);
-        
+
         public int postInc$lastReturned();
-        
+
         public int postDec$lastReturned();
-        
+
         public int get$size();
-        
+
         public int set$size(int val);
-        
+
         public int postInc$size();
-        
+
         public int postDec$size();
-        
+
         /**
          * Tests to see if there are any more objects to
          * return.
@@ -1038,7 +1038,7 @@ public interface AbstractList
          *         reached.
          */
         public boolean hasNext();
-        
+
         /**
          * Tests to see if there are objects prior to the
          * current position in the list.
@@ -1047,7 +1047,7 @@ public interface AbstractList
          *         position of the iterator.
          */
         public boolean hasPrevious();
-        
+
         /**
          * Retrieves the next object from the list.
          *
@@ -1058,7 +1058,7 @@ public interface AbstractList
          *         list has been modified elsewhere.
          */
         public fabric.lang.Object next();
-        
+
         /**
          * Retrieves the previous object from the list.
          *
@@ -1069,7 +1069,7 @@ public interface AbstractList
          *         list has been modified elsewhere.
          */
         public fabric.lang.Object previous();
-        
+
         /**
          * Returns the index of the next element in the
          * list, which will be retrieved by <code>next()</code>
@@ -1077,7 +1077,7 @@ public interface AbstractList
          * @return The index of the next element.
          */
         public int nextIndex();
-        
+
         /**
          * Returns the index of the previous element in the
          * list, which will be retrieved by <code>previous()</code>
@@ -1085,7 +1085,7 @@ public interface AbstractList
          * @return The index of the previous element.
          */
         public int previousIndex();
-        
+
         /**
          * Removes the last object retrieved by <code>next()</code>
          * or <code>previous()</code> from the list, if the list
@@ -1100,7 +1100,7 @@ public interface AbstractList
          *         has been modified elsewhere.
          */
         public void remove();
-        
+
         /**
          * Replaces the last object retrieved by <code>next()</code>
          * or <code>previous</code> with o, if the list supports object
@@ -1120,11 +1120,11 @@ public interface AbstractList
          *         has been modified elsewhere.
          */
         public void set(fabric.lang.Object o);
-        
+
         /**
          * Adds the supplied object before the element that would be returned
          * by a call to <code>next()</code>, if the list supports addition.
-         * 
+         *
          * @param o The object to add to the list.
          * @throws UnsupportedOperationException if the list doesn't support
          *         the addition of new elements.
@@ -1136,157 +1136,157 @@ public interface AbstractList
          *         has been modified elsewhere.
          */
         public void add(fabric.lang.Object o);
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.lang.Object._Proxy
           implements AbstractListIterator
         {
-            
+
             public fabric.util.AbstractList get$out$() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).get$out$();
             }
-            
+
             public int get$index() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).get$index();
             }
-            
+
             public int set$index(int val) {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).set$index(val);
             }
-            
+
             public int postInc$index() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).postInc$index();
             }
-            
+
             public int postDec$index() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).postDec$index();
             }
-            
+
             public int get$knownMod() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).get$knownMod();
             }
-            
+
             public int set$knownMod(int val) {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).set$knownMod(val);
             }
-            
+
             public int postInc$knownMod() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).postInc$knownMod();
             }
-            
+
             public int postDec$knownMod() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).postDec$knownMod();
             }
-            
+
             public int get$position() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).get$position();
             }
-            
+
             public int set$position(int val) {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).set$position(val);
             }
-            
+
             public int postInc$position() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).postInc$position();
             }
-            
+
             public int postDec$position() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).postDec$position();
             }
-            
+
             public int get$lastReturned() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).get$lastReturned();
             }
-            
+
             public int set$lastReturned(int val) {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).set$lastReturned(val);
             }
-            
+
             public int postInc$lastReturned() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).postInc$lastReturned();
             }
-            
+
             public int postDec$lastReturned() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).postDec$lastReturned();
             }
-            
+
             public int get$size() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).get$size();
             }
-            
+
             public int set$size(int val) {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).set$size(val);
             }
-            
+
             public int postInc$size() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).postInc$size();
             }
-            
+
             public int postDec$size() {
                 return ((fabric.util.AbstractList.AbstractListIterator._Impl)
                           fetch()).postDec$size();
             }
-            
+
             public native boolean hasNext();
-            
+
             public native boolean hasPrevious();
-            
+
             public native fabric.lang.Object next();
-            
+
             public native fabric.lang.Object previous();
-            
+
             public native int nextIndex();
-            
+
             public native int previousIndex();
-            
+
             public native void remove();
-            
+
             public native void set(fabric.lang.Object arg1);
-            
+
             public native void add(fabric.lang.Object arg1);
-            
+
             public _Proxy(AbstractListIterator._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl extends fabric.lang.Object._Impl
           implements AbstractListIterator
         {
-            
+
             public fabric.util.AbstractList get$out$() { return this.out$; }
-            
+
             private fabric.util.AbstractList out$;
-            
+
             public int get$index() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.index;
             }
-            
+
             public int set$index(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -1295,30 +1295,30 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$index() {
                 int tmp = this.get$index();
                 this.set$index((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$index() {
                 int tmp = this.get$index();
                 this.set$index((int) (tmp - 1));
                 return tmp;
             }
-            
+
             /**
-             * 
+             *
              */
             private int index;
-            
+
             public int get$knownMod() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.knownMod;
             }
-            
+
             public int set$knownMod(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -1327,27 +1327,27 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$knownMod() {
                 int tmp = this.get$knownMod();
                 this.set$knownMod((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$knownMod() {
                 int tmp = this.get$knownMod();
                 this.set$knownMod((int) (tmp - 1));
                 return tmp;
             }
-            
+
             private int knownMod;
-            
+
             public int get$position() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.position;
             }
-            
+
             public int set$position(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -1356,27 +1356,27 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$position() {
                 int tmp = this.get$position();
                 this.set$position((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$position() {
                 int tmp = this.get$position();
                 this.set$position((int) (tmp - 1));
                 return tmp;
             }
-            
+
             private int position;
-            
+
             public int get$lastReturned() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.lastReturned;
             }
-            
+
             public int set$lastReturned(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -1385,27 +1385,27 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$lastReturned() {
                 int tmp = this.get$lastReturned();
                 this.set$lastReturned((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$lastReturned() {
                 int tmp = this.get$lastReturned();
                 this.set$lastReturned((int) (tmp - 1));
                 return tmp;
             }
-            
+
             private int lastReturned;
-            
+
             public int get$size() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.size;
             }
-            
+
             public int set$size(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -1414,27 +1414,27 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$size() {
                 int tmp = this.get$size();
                 this.set$size((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$size() {
                 int tmp = this.get$size();
                 this.set$size((int) (tmp - 1));
                 return tmp;
             }
-            
+
             private int size;
-            
+
             /**
              * @param index
              */
             private native AbstractListIterator
               fabric$util$AbstractList$AbstractListIterator$(int index);
-            
+
             /**
              * Checks for modifications made to the list from
              * elsewhere while iteration is in progress.
@@ -1443,7 +1443,7 @@ public interface AbstractList
              *         list has been modified elsewhere.
              */
             private native void checkMod();
-            
+
             /**
              * Tests to see if there are any more objects to
              * return.
@@ -1452,7 +1452,7 @@ public interface AbstractList
              *         reached.
              */
             public native boolean hasNext();
-            
+
             /**
              * Tests to see if there are objects prior to the
              * current position in the list.
@@ -1461,7 +1461,7 @@ public interface AbstractList
              *         position of the iterator.
              */
             public native boolean hasPrevious();
-            
+
             /**
              * Retrieves the next object from the list.
              *
@@ -1472,7 +1472,7 @@ public interface AbstractList
              *         list has been modified elsewhere.
              */
             public native fabric.lang.Object next();
-            
+
             /**
              * Retrieves the previous object from the list.
              *
@@ -1483,7 +1483,7 @@ public interface AbstractList
              *         list has been modified elsewhere.
              */
             public native fabric.lang.Object previous();
-            
+
             /**
              * Returns the index of the next element in the
              * list, which will be retrieved by <code>next()</code>
@@ -1491,7 +1491,7 @@ public interface AbstractList
              * @return The index of the next element.
              */
             public native int nextIndex();
-            
+
             /**
              * Returns the index of the previous element in the
              * list, which will be retrieved by <code>previous()</code>
@@ -1499,7 +1499,7 @@ public interface AbstractList
              * @return The index of the previous element.
              */
             public native int previousIndex();
-            
+
             /**
              * Removes the last object retrieved by <code>next()</code>
              * or <code>previous()</code> from the list, if the list
@@ -1515,7 +1515,7 @@ public interface AbstractList
              *         has been modified elsewhere.
              */
             public native void remove();
-            
+
             /**
              * Replaces the last object retrieved by <code>next()</code>
              * or <code>previous</code> with o, if the list supports object
@@ -1536,12 +1536,12 @@ public interface AbstractList
              *         has been modified elsewhere.
              */
             public native void set(fabric.lang.Object o);
-            
+
             /**
              * Adds the supplied object before the element that would be
              returned
              * by a call to <code>next()</code>, if the list supports addition.
-             * 
+             *
              * @param o The object to add to the list.
              * @throws UnsupportedOperationException if the list doesn't support
              *         the addition of new elements.
@@ -1553,20 +1553,20 @@ public interface AbstractList
              *         has been modified elsewhere.
              */
             public native void add(fabric.lang.Object o);
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location,
                          final fabric.util.AbstractList out$) {
                 super($location);
                 this.out$ = out$;
             }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.AbstractList.AbstractListIterator._Proxy(
                   this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -1581,9 +1581,9 @@ public interface AbstractList
                 out.writeInt(this.lastReturned);
                 out.writeInt(this.size);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -1591,7 +1591,7 @@ public interface AbstractList
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.out$ = (fabric.util.AbstractList)
@@ -1608,7 +1608,7 @@ public interface AbstractList
                 this.lastReturned = in.readInt();
                 this.size = in.readInt();
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.util.AbstractList.AbstractListIterator._Impl src =
@@ -1621,25 +1621,25 @@ public interface AbstractList
                 this.size = src.size;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.AbstractList.AbstractListIterator._Static
             {
-                
+
                 public _Proxy(fabric.util.AbstractList.AbstractListIterator.
                                 _Static._Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.AbstractList.
                   AbstractListIterator._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -1663,11 +1663,11 @@ public interface AbstractList
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.AbstractList.AbstractListIterator._Static
             {
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -1676,9 +1676,9 @@ public interface AbstractList
                     super.$serialize(out, refTypes, intraStoreRefs,
                                      interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -1687,26 +1687,26 @@ public interface AbstractList
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.AbstractList.AbstractListIterator.
                       _Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * This class follows the implementation requirements set forth in
      * {@link AbstractList#subList(int, int)}. It matches Sun's implementation
@@ -1718,38 +1718,38 @@ public interface AbstractList
     public static interface SubList
       extends fabric.util.AbstractList
     {
-        
+
         public SubList fabric$util$AbstractList$SubList$();
-        
+
         /**
-         * 
+         *
          */
         public static interface SubListIterator
           extends fabric.util.ListIterator, fabric.lang.Object
         {
-            
+
             public fabric.util.AbstractList.SubList get$out$();
-            
+
             public int get$index();
-            
+
             public int set$index(int val);
-            
+
             public int postInc$index();
-            
+
             public int postDec$index();
-            
+
             public fabric.util.ListIterator get$i();
-            
+
             public fabric.util.ListIterator set$i(fabric.util.ListIterator val);
-            
+
             public int get$position();
-            
+
             public int set$position(int val);
-            
+
             public int postInc$position();
-            
+
             public int postDec$position();
-            
+
             /**
              * Tests to see if there are any more objects to
              * return.
@@ -1758,7 +1758,7 @@ public interface AbstractList
              *         reached.
              */
             public boolean hasNext();
-            
+
             /**
              * Tests to see if there are objects prior to the
              * current position in the list.
@@ -1767,7 +1767,7 @@ public interface AbstractList
              *         position of the iterator.
              */
             public boolean hasPrevious();
-            
+
             /**
              * Retrieves the next object from the list.
              *
@@ -1778,7 +1778,7 @@ public interface AbstractList
              *         list has been modified elsewhere.
              */
             public fabric.lang.Object next();
-            
+
             /**
              * Retrieves the previous object from the list.
              *
@@ -1789,7 +1789,7 @@ public interface AbstractList
              *         list has been modified elsewhere.
              */
             public fabric.lang.Object previous();
-            
+
             /**
              * Returns the index of the next element in the
              * list, which will be retrieved by <code>next()</code>
@@ -1797,7 +1797,7 @@ public interface AbstractList
              * @return The index of the next element.
              */
             public int nextIndex();
-            
+
             /**
              * Returns the index of the previous element in the
              * list, which will be retrieved by <code>previous()</code>
@@ -1805,7 +1805,7 @@ public interface AbstractList
              * @return The index of the previous element.
              */
             public int previousIndex();
-            
+
             /**
              * Removes the last object retrieved by <code>next()</code>
              * from the list, if the list supports object removal.
@@ -1818,7 +1818,7 @@ public interface AbstractList
              *         not support removing elements.
              */
             public void remove();
-            
+
             /**
              * Replaces the last object retrieved by <code>next()</code>
              * or <code>previous</code> with o, if the list supports object
@@ -1839,12 +1839,12 @@ public interface AbstractList
              *         has been modified elsewhere.
              */
             public void set(fabric.lang.Object o);
-            
+
             /**
              * Adds the supplied object before the element that would be
              returned
              * by a call to <code>next()</code>, if the list supports addition.
-             * 
+             *
              * @param o The object to add to the list.
              * @throws UnsupportedOperationException if the list doesn't support
              *         the addition of new elements.
@@ -1856,55 +1856,55 @@ public interface AbstractList
              *         has been modified elsewhere.
              */
             public void add(fabric.lang.Object o);
-            
+
             public fabric.lang.Object $initLabels();
-            
+
             public static class _Proxy extends fabric.lang.Object._Proxy
               implements SubListIterator
             {
-                
+
                 public fabric.util.AbstractList.SubList get$out$() {
                     return ((fabric.util.AbstractList.SubList.SubListIterator.
                               _Impl)
                               fetch()).
                       get$out$();
                 }
-                
+
                 public int get$index() {
                     return ((fabric.util.AbstractList.SubList.SubListIterator.
                               _Impl)
                               fetch()).
                       get$index();
                 }
-                
+
                 public int set$index(int val) {
                     return ((fabric.util.AbstractList.SubList.SubListIterator.
                               _Impl)
                               fetch()).
                       set$index(val);
                 }
-                
+
                 public int postInc$index() {
                     return ((fabric.util.AbstractList.SubList.SubListIterator.
                               _Impl)
                               fetch()).
                       postInc$index();
                 }
-                
+
                 public int postDec$index() {
                     return ((fabric.util.AbstractList.SubList.SubListIterator.
                               _Impl)
                               fetch()).
                       postDec$index();
                 }
-                
+
                 public fabric.util.ListIterator get$i() {
                     return ((fabric.util.AbstractList.SubList.SubListIterator.
                               _Impl)
                               fetch()).
                       get$i();
                 }
-                
+
                 public fabric.util.ListIterator set$i(
                   fabric.util.ListIterator val) {
                     return ((fabric.util.AbstractList.SubList.SubListIterator.
@@ -1912,76 +1912,76 @@ public interface AbstractList
                               fetch()).
                       set$i(val);
                 }
-                
+
                 public int get$position() {
                     return ((fabric.util.AbstractList.SubList.SubListIterator.
                               _Impl)
                               fetch()).
                       get$position();
                 }
-                
+
                 public int set$position(int val) {
                     return ((fabric.util.AbstractList.SubList.SubListIterator.
                               _Impl)
                               fetch()).
                       set$position(val);
                 }
-                
+
                 public int postInc$position() {
                     return ((fabric.util.AbstractList.SubList.SubListIterator.
                               _Impl)
                               fetch()).
                       postInc$position();
                 }
-                
+
                 public int postDec$position() {
                     return ((fabric.util.AbstractList.SubList.SubListIterator.
                               _Impl)
                               fetch()).
                       postDec$position();
                 }
-                
+
                 public native boolean hasNext();
-                
+
                 public native boolean hasPrevious();
-                
+
                 public native fabric.lang.Object next();
-                
+
                 public native fabric.lang.Object previous();
-                
+
                 public native int nextIndex();
-                
+
                 public native int previousIndex();
-                
+
                 public native void remove();
-                
+
                 public native void set(fabric.lang.Object arg1);
-                
+
                 public native void add(fabric.lang.Object arg1);
-                
+
                 public _Proxy(SubListIterator._Impl impl) { super(impl); }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
             }
-            
+
             public static final class _Impl extends fabric.lang.Object._Impl
               implements SubListIterator
             {
-                
+
                 public fabric.util.AbstractList.SubList get$out$() {
                     return this.out$;
                 }
-                
+
                 private SubList out$;
-                
+
                 public int get$index() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.index;
                 }
-                
+
                 public int set$index(int val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -1991,30 +1991,30 @@ public interface AbstractList
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public int postInc$index() {
                     int tmp = this.get$index();
                     this.set$index((int) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public int postDec$index() {
                     int tmp = this.get$index();
                     this.set$index((int) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
-                 * 
+                 *
                  */
                 private int index;
-                
+
                 public fabric.util.ListIterator get$i() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.i;
                 }
-                
+
                 public fabric.util.ListIterator set$i(
                   fabric.util.ListIterator val) {
                     fabric.worker.transaction.TransactionManager tm =
@@ -2025,15 +2025,15 @@ public interface AbstractList
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 private fabric.util.ListIterator i;
-                
+
                 public int get$position() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.position;
                 }
-                
+
                 public int set$position(int val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -2043,27 +2043,27 @@ public interface AbstractList
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public int postInc$position() {
                     int tmp = this.get$position();
                     this.set$position((int) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public int postDec$position() {
                     int tmp = this.get$position();
                     this.set$position((int) (tmp - 1));
                     return tmp;
                 }
-                
+
                 private int position;
-                
+
                 /**
                  * @param index
                  */
                 private native SubListIterator
                   fabric$util$AbstractList$SubListIterator$(int index);
-                
+
                 /**
                  * Tests to see if there are any more objects to
                  * return.
@@ -2072,7 +2072,7 @@ public interface AbstractList
                  *         reached.
                  */
                 public native boolean hasNext();
-                
+
                 /**
                  * Tests to see if there are objects prior to the
                  * current position in the list.
@@ -2081,7 +2081,7 @@ public interface AbstractList
                  *         position of the iterator.
                  */
                 public native boolean hasPrevious();
-                
+
                 /**
                  * Retrieves the next object from the list.
                  *
@@ -2092,7 +2092,7 @@ public interface AbstractList
                  *         list has been modified elsewhere.
                  */
                 public native fabric.lang.Object next();
-                
+
                 /**
                  * Retrieves the previous object from the list.
                  *
@@ -2103,7 +2103,7 @@ public interface AbstractList
                  *         list has been modified elsewhere.
                  */
                 public native fabric.lang.Object previous();
-                
+
                 /**
                  * Returns the index of the next element in the
                  * list, which will be retrieved by <code>next()</code>
@@ -2111,7 +2111,7 @@ public interface AbstractList
                  * @return The index of the next element.
                  */
                 public native int nextIndex();
-                
+
                 /**
                  * Returns the index of the previous element in the
                  * list, which will be retrieved by <code>previous()</code>
@@ -2119,7 +2119,7 @@ public interface AbstractList
                  * @return The index of the previous element.
                  */
                 public native int previousIndex();
-                
+
                 /**
                  * Removes the last object retrieved by <code>next()</code>
                  * from the list, if the list supports object removal.
@@ -2132,7 +2132,7 @@ public interface AbstractList
                  *         not support removing elements.
                  */
                 public native void remove();
-                
+
                 /**
                  * Replaces the last object retrieved by <code>next()</code>
                  * or <code>previous</code> with o, if the list supports object
@@ -2156,13 +2156,13 @@ public interface AbstractList
                  *         has been modified elsewhere.
                  */
                 public native void set(fabric.lang.Object o);
-                
+
                 /**
                  * Adds the supplied object before the element that would be
                  returned
                  * by a call to <code>next()</code>, if the list supports
                  addition.
-                 * 
+                 *
                  * @param o The object to add to the list.
                  * @throws UnsupportedOperationException if the list doesn't
                  support
@@ -2177,21 +2177,21 @@ public interface AbstractList
                  *         has been modified elsewhere.
                  */
                 public native void add(fabric.lang.Object o);
-                
+
                 public native fabric.lang.Object $initLabels();
-                
+
                 public _Impl(fabric.worker.Store $location,
                              final SubList out$) {
                     super($location);
                     this.out$ = out$;
                 }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.AbstractList.SubList.SubListIterator.
                       _Proxy(
                       this);
                 }
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -2206,9 +2206,9 @@ public interface AbstractList
                               intraStoreRefs, interStoreRefs);
                     out.writeInt(this.position);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -2217,7 +2217,7 @@ public interface AbstractList
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.out$ =
@@ -2236,7 +2236,7 @@ public interface AbstractList
                                         interStoreRefs);
                     this.position = in.readInt();
                 }
-                
+
                 public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                     super.$copyAppStateFrom(other);
                     fabric.util.AbstractList.SubList.SubListIterator._Impl src =
@@ -2248,7 +2248,7 @@ public interface AbstractList
                     this.position = src.position;
                 }
             }
-            
+
             interface _Static extends fabric.lang.Object, Cloneable {
                 final class _Proxy
                 extends fabric.
@@ -2258,20 +2258,20 @@ public interface AbstractList
                   implements fabric.util.AbstractList.SubList.SubListIterator.
                                _Static
                 {
-                    
+
                     public _Proxy(fabric.util.AbstractList.SubList.
                                     SubListIterator._Static._Impl impl) {
                         super(impl);
                     }
-                    
+
                     public _Proxy(fabric.worker.Store store, long onum) {
                         super(store, onum);
                     }
-                    
+
                     public static final fabric.util.AbstractList.SubList.
                       SubListIterator._Static
                       $instance;
-                    
+
                     static {
                         fabric.
                           util.
@@ -2298,7 +2298,7 @@ public interface AbstractList
                         impl.$init();
                     }
                 }
-                
+
                 class _Impl
                 extends fabric.
                   lang.
@@ -2307,7 +2307,7 @@ public interface AbstractList
                   implements fabric.util.AbstractList.SubList.SubListIterator.
                                _Static
                 {
-                    
+
                     public void $serialize(java.io.ObjectOutput out,
                                            java.util.List refTypes,
                                            java.util.List intraStoreRefs,
@@ -2316,9 +2316,10 @@ public interface AbstractList
                         super.$serialize(out, refTypes, intraStoreRefs,
                                          interStoreRefs);
                     }
-                    
+
                     public _Impl(fabric.worker.Store store, long onum,
                                  int version, long expiry,
+                                 fabric.worker.metrics.ImmutableObserverSet observers,
                                  fabric.worker.Store labelStore, long labelOnum,
                                  fabric.worker.Store accessPolicyStore,
                                  long accessPolicyOnum, java.io.ObjectInput in,
@@ -2327,48 +2328,48 @@ public interface AbstractList
                                  java.util.Iterator interStoreRefs)
                           throws java.io.IOException,
                         java.lang.ClassNotFoundException {
-                        super(store, onum, version, expiry, labelStore,
+                        super(store, onum, version, expiry, observers, labelStore,
                               labelOnum, accessPolicyStore, accessPolicyOnum,
                               in, refTypes, intraStoreRefs, interStoreRefs);
                     }
-                    
+
                     public _Impl(fabric.worker.Store store) { super(store); }
-                    
+
                     protected fabric.lang.Object._Proxy $makeProxy() {
                         return new fabric.util.AbstractList.SubList.
                           SubListIterator._Static._Proxy(
                           this);
                     }
-                    
+
                     private void $init() {  }
                 }
-                
+
             }
-            
+
         }
-        
-        
+
+
         public fabric.util.AbstractList get$backingList();
-        
+
         public fabric.util.AbstractList set$backingList(
           fabric.util.AbstractList val);
-        
+
         public int get$offset();
-        
+
         public int set$offset(int val);
-        
+
         public int postInc$offset();
-        
+
         public int postDec$offset();
-        
+
         public int get$size();
-        
+
         public int set$size(int val);
-        
+
         public int postInc$size();
-        
+
         public int postDec$size();
-        
+
         /**
          * Construct the sublist.
          *
@@ -2378,7 +2379,7 @@ public interface AbstractList
          */
         public SubList fabric$util$AbstractList$SubList$(
           fabric.util.AbstractList backing, int fromIndex, int toIndex);
-        
+
         /**
          * This method checks the two modCount fields to ensure that there has
          * not been a concurrent modification, returning if all is okay.
@@ -2387,7 +2388,7 @@ public interface AbstractList
          *         modified externally to this sublist
          */
         public void checkMod();
-        
+
         /**
          * Specified by AbstractList.subList to return the private field size.
          *
@@ -2396,7 +2397,7 @@ public interface AbstractList
          *         modified externally to this sublist
          */
         public int size();
-        
+
         /**
          * Specified by AbstractList.subList to delegate to the backing list.
          *
@@ -2417,7 +2418,7 @@ public interface AbstractList
          *         for some other reason
          */
         public fabric.lang.Object set(int index, fabric.lang.Object o);
-        
+
         /**
          * Specified by AbstractList.subList to delegate to the backing list.
          *
@@ -2429,7 +2430,7 @@ public interface AbstractList
          size()
          */
         public fabric.lang.Object get(int index);
-        
+
         /**
          * Specified by AbstractList.subList to delegate to the backing list.
          *
@@ -2448,7 +2449,7 @@ public interface AbstractList
          *         list for some other reason.
          */
         public void add(int index, fabric.lang.Object o);
-        
+
         /**
          * Specified by AbstractList.subList to delegate to the backing list.
          *
@@ -2462,7 +2463,7 @@ public interface AbstractList
          *         support the remove operation
          */
         public fabric.lang.Object remove(int index);
-        
+
         /**
          * Specified by AbstractList.subList to delegate to the backing list.
          * This does no bounds checking, as it assumes it will only be called
@@ -2476,7 +2477,7 @@ public interface AbstractList
          *         not support removing elements.
          */
         public void removeRange(int fromIndex, int toIndex);
-        
+
         /**
          * Specified by AbstractList.subList to delegate to the backing list.
          *
@@ -2499,7 +2500,7 @@ public interface AbstractList
          * @throws NullPointerException if the specified collection is null
          */
         public boolean addAll(int index, fabric.util.Collection c);
-        
+
         /**
          * Specified by AbstractList.subList to return addAll(size, c).
          *
@@ -2519,14 +2520,14 @@ public interface AbstractList
          * @throws NullPointerException if the specified collection is null
          */
         public boolean addAll(fabric.util.Collection c);
-        
+
         /**
          * Specified by AbstractList.subList to return listIterator(Store).
          *
          * @return an iterator over the sublist
          */
         public fabric.util.Iterator iterator(fabric.worker.Store store);
-        
+
         /**
          * Specified by AbstractList.subList to return a wrapper around the
          * backing list's iterator.
@@ -2539,92 +2540,92 @@ public interface AbstractList
          */
         public fabric.util.ListIterator listIterator(fabric.worker.Store store,
                                                      final int index);
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.util.AbstractList._Proxy
           implements SubList
         {
-            
+
             public fabric.util.AbstractList get$backingList() {
                 return ((fabric.util.AbstractList.SubList._Impl) fetch()).
                   get$backingList();
             }
-            
+
             public fabric.util.AbstractList set$backingList(
               fabric.util.AbstractList val) {
                 return ((fabric.util.AbstractList.SubList._Impl) fetch()).
                   set$backingList(val);
             }
-            
+
             public int get$offset() {
                 return ((fabric.util.AbstractList.SubList._Impl) fetch()).
                   get$offset();
             }
-            
+
             public int set$offset(int val) {
                 return ((fabric.util.AbstractList.SubList._Impl) fetch()).
                   set$offset(val);
             }
-            
+
             public int postInc$offset() {
                 return ((fabric.util.AbstractList.SubList._Impl) fetch()).
                   postInc$offset();
             }
-            
+
             public int postDec$offset() {
                 return ((fabric.util.AbstractList.SubList._Impl) fetch()).
                   postDec$offset();
             }
-            
+
             public int get$size() {
                 return ((fabric.util.AbstractList.SubList._Impl) fetch()).
                   get$size();
             }
-            
+
             public int set$size(int val) {
                 return ((fabric.util.AbstractList.SubList._Impl) fetch()).
                   set$size(val);
             }
-            
+
             public int postInc$size() {
                 return ((fabric.util.AbstractList.SubList._Impl) fetch()).
                   postInc$size();
             }
-            
+
             public int postDec$size() {
                 return ((fabric.util.AbstractList.SubList._Impl) fetch()).
                   postDec$size();
             }
-            
+
             public native fabric.util.AbstractList.SubList
               fabric$util$AbstractList$SubList$();
-            
+
             public native fabric.util.AbstractList.SubList
               fabric$util$AbstractList$SubList$(fabric.util.AbstractList arg1,
                                                 int arg2, int arg3);
-            
+
             public native void checkMod();
-            
+
             public _Proxy(SubList._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static class _Impl extends fabric.util.AbstractList._Impl
           implements SubList
         {
-            
+
             public native SubList fabric$util$AbstractList$SubList$();
-            
+
             public fabric.util.AbstractList get$backingList() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.backingList;
             }
-            
+
             public fabric.util.AbstractList set$backingList(
               fabric.util.AbstractList val) {
                 fabric.worker.transaction.TransactionManager tm =
@@ -2634,16 +2635,16 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             /** The original list. */
             fabric.util.AbstractList backingList;
-            
+
             public int get$offset() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.offset;
             }
-            
+
             public int set$offset(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -2652,28 +2653,28 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$offset() {
                 int tmp = this.get$offset();
                 this.set$offset((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$offset() {
                 int tmp = this.get$offset();
                 this.set$offset((int) (tmp - 1));
                 return tmp;
             }
-            
+
             /** The index of the first element of the sublist. */
             int offset;
-            
+
             public int get$size() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.size;
             }
-            
+
             public int set$size(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -2682,22 +2683,22 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$size() {
                 int tmp = this.get$size();
                 this.set$size((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$size() {
                 int tmp = this.get$size();
                 this.set$size((int) (tmp - 1));
                 return tmp;
             }
-            
+
             /** The size of the sublist. */
             int size;
-            
+
             /**
              * Construct the sublist.
              *
@@ -2707,7 +2708,7 @@ public interface AbstractList
              */
             public native SubList fabric$util$AbstractList$SubList$(
               fabric.util.AbstractList backing, int fromIndex, int toIndex);
-            
+
             /**
              * This method checks the two modCount fields to ensure that there
              has
@@ -2718,7 +2719,7 @@ public interface AbstractList
              *         modified externally to this sublist
              */
             public native void checkMod();
-            
+
             /**
              * This method checks that a value is between 0 and size
              (inclusive). If
@@ -2729,7 +2730,7 @@ public interface AbstractList
              size()
              */
             private native void checkBoundsInclusive(int index);
-            
+
             /**
              * This method checks that a value is between 0 (inclusive) and size
              * (exclusive). If it is not, an exception is thrown.
@@ -2739,7 +2740,7 @@ public interface AbstractList
              size()
              */
             private native void checkBoundsExclusive(int index);
-            
+
             /**
              * Specified by AbstractList.subList to return the private field
              size.
@@ -2750,7 +2751,7 @@ public interface AbstractList
              *         modified externally to this sublist
              */
             public native int size();
-            
+
             /**
              * Specified by AbstractList.subList to delegate to the backing
              list.
@@ -2775,7 +2776,7 @@ public interface AbstractList
              */
             public native fabric.lang.Object set(int index,
                                                  fabric.lang.Object o);
-            
+
             /**
              * Specified by AbstractList.subList to delegate to the backing
              list.
@@ -2789,7 +2790,7 @@ public interface AbstractList
              size()
              */
             public native fabric.lang.Object get(int index);
-            
+
             /**
              * Specified by AbstractList.subList to delegate to the backing
              list.
@@ -2812,7 +2813,7 @@ public interface AbstractList
              *         list for some other reason.
              */
             public native void add(int index, fabric.lang.Object o);
-            
+
             /**
              * Specified by AbstractList.subList to delegate to the backing
              list.
@@ -2829,7 +2830,7 @@ public interface AbstractList
              *         support the remove operation
              */
             public native fabric.lang.Object remove(int index);
-            
+
             /**
              * Specified by AbstractList.subList to delegate to the backing
              list.
@@ -2847,7 +2848,7 @@ public interface AbstractList
              *         not support removing elements.
              */
             public native void removeRange(int fromIndex, int toIndex);
-            
+
             /**
              * Specified by AbstractList.subList to delegate to the backing
              list.
@@ -2873,7 +2874,7 @@ public interface AbstractList
              * @throws NullPointerException if the specified collection is null
              */
             public native boolean addAll(int index, fabric.util.Collection c);
-            
+
             /**
              * Specified by AbstractList.subList to return addAll(size, c).
              *
@@ -2895,7 +2896,7 @@ public interface AbstractList
              * @throws NullPointerException if the specified collection is null
              */
             public native boolean addAll(fabric.util.Collection c);
-            
+
             /**
              * Specified by AbstractList.subList to return listIterator(Store).
              *
@@ -2903,7 +2904,7 @@ public interface AbstractList
              */
             public native fabric.util.Iterator iterator(
               fabric.worker.Store store);
-            
+
             /**
              * Specified by AbstractList.subList to return a wrapper around the
              * backing list's iterator.
@@ -2917,15 +2918,15 @@ public interface AbstractList
              */
             public native fabric.util.ListIterator listIterator(
               fabric.worker.Store store, final int index);
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.AbstractList.SubList._Proxy(this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -2937,9 +2938,9 @@ public interface AbstractList
                 out.writeInt(this.offset);
                 out.writeInt(this.size);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -2947,7 +2948,7 @@ public interface AbstractList
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.backingList =
@@ -2958,7 +2959,7 @@ public interface AbstractList
                 this.offset = in.readInt();
                 this.size = in.readInt();
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.util.AbstractList.SubList._Impl src =
@@ -2968,24 +2969,24 @@ public interface AbstractList
                 this.size = src.size;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.AbstractList.SubList._Static
             {
-                
+
                 public _Proxy(fabric.util.AbstractList.SubList._Static.
                                 _Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.AbstractList.SubList._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -3002,11 +3003,11 @@ public interface AbstractList
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.AbstractList.SubList._Static
             {
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -3015,9 +3016,9 @@ public interface AbstractList
                     super.$serialize(out, refTypes, intraStoreRefs,
                                      interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -3026,25 +3027,25 @@ public interface AbstractList
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.AbstractList.SubList._Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * This class is a RandomAccess version of SubList, as required by
      * {@link AbstractList#subList(int, int)}.
@@ -3054,7 +3055,7 @@ public interface AbstractList
     public static interface RandomAccessSubList
       extends fabric.util.RandomAccess, SubList
     {
-        
+
         /**
          * Construct the sublist.
          *
@@ -3065,30 +3066,30 @@ public interface AbstractList
         public RandomAccessSubList
           fabric$util$AbstractList$RandomAccessSubList$(
           fabric.util.AbstractList backing, int fromIndex, int toIndex);
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy
         extends fabric.util.AbstractList.SubList._Proxy
           implements RandomAccessSubList
         {
-            
+
             public native fabric.util.AbstractList.RandomAccessSubList
               fabric$util$AbstractList$RandomAccessSubList$(
               fabric.util.AbstractList arg1, int arg2, int arg3);
-            
+
             public _Proxy(RandomAccessSubList._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl
         extends fabric.util.AbstractList.SubList._Impl
           implements RandomAccessSubList
         {
-            
+
             /**
              * Construct the sublist.
              *
@@ -3099,16 +3100,16 @@ public interface AbstractList
             public native RandomAccessSubList
               fabric$util$AbstractList$RandomAccessSubList$(
               fabric.util.AbstractList backing, int fromIndex, int toIndex);
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.AbstractList.RandomAccessSubList._Proxy(
                   this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -3116,9 +3117,9 @@ public interface AbstractList
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -3126,30 +3127,30 @@ public interface AbstractList
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.AbstractList.RandomAccessSubList._Static
             {
-                
+
                 public _Proxy(fabric.util.AbstractList.RandomAccessSubList.
                                 _Static._Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.AbstractList.
                   RandomAccessSubList._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -3173,11 +3174,11 @@ public interface AbstractList
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.AbstractList.RandomAccessSubList._Static
             {
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -3186,9 +3187,9 @@ public interface AbstractList
                     super.$serialize(out, refTypes, intraStoreRefs,
                                      interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -3197,94 +3198,94 @@ public interface AbstractList
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.AbstractList.RandomAccessSubList.
                       _Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     public static class _Proxy extends fabric.util.AbstractCollection._Proxy
       implements fabric.util.AbstractList
     {
-        
+
         public int get$modCount() {
             return ((fabric.util.AbstractList._Impl) fetch()).get$modCount();
         }
-        
+
         public int set$modCount(int val) {
             return ((fabric.util.AbstractList._Impl) fetch()).set$modCount(val);
         }
-        
+
         public int postInc$modCount() {
             return ((fabric.util.AbstractList._Impl) fetch()).postInc$modCount(
                                                                 );
         }
-        
+
         public int postDec$modCount() {
             return ((fabric.util.AbstractList._Impl) fetch()).postDec$modCount(
                                                                 );
         }
-        
+
         public native fabric.util.AbstractList fabric$util$AbstractList$();
-        
+
         public fabric.lang.Object get(int arg1) {
             return ((fabric.util.AbstractList) fetch()).get(arg1);
         }
-        
+
         public native void add(int arg1, fabric.lang.Object arg2);
-        
+
         public native boolean addAll(int arg1, fabric.util.Collection arg2);
-        
+
         public native int indexOf(fabric.lang.Object arg1);
-        
+
         public native int lastIndexOf(fabric.lang.Object arg1);
-        
+
         public native fabric.util.ListIterator listIterator(
           fabric.worker.Store arg1);
-        
+
         public native fabric.util.ListIterator listIterator(
           fabric.worker.Store arg1, int arg2);
-        
+
         public native fabric.lang.Object remove(int arg1);
-        
+
         public native void removeRange(int arg1, int arg2);
-        
+
         public native fabric.lang.Object set(int arg1, fabric.lang.Object arg2);
-        
+
         public native fabric.util.List subList(int arg1, int arg2);
-        
+
         public _Proxy(AbstractList._Impl impl) { super(impl); }
-        
+
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }
     }
-    
+
     public abstract static class _Impl
     extends fabric.util.AbstractCollection._Impl
       implements fabric.util.AbstractList
     {
-        
+
         public int get$modCount() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
             return this.modCount;
         }
-        
+
         public int set$modCount(int val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
@@ -3293,19 +3294,19 @@ public interface AbstractList
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-        
+
         public int postInc$modCount() {
             int tmp = this.get$modCount();
             this.set$modCount((int) (tmp + 1));
             return tmp;
         }
-        
+
         public int postDec$modCount() {
             int tmp = this.get$modCount();
             this.set$modCount((int) (tmp - 1));
             return tmp;
         }
-        
+
         /**
          * A count of the number of structural modifications that have been made
          to
@@ -3325,12 +3326,12 @@ public interface AbstractList
          * Otherwise, this field may be ignored.
          */
         protected int modCount;
-        
+
         /**
          * The main constructor, for use by subclasses.
          */
         public native fabric.util.AbstractList fabric$util$AbstractList$();
-        
+
         /**
          * Returns the elements at the specified position in the list.
          *
@@ -3340,7 +3341,7 @@ public interface AbstractList
          size()
          */
         public abstract fabric.lang.Object get(int index);
-        
+
         /**
          * Insert an element into the list at a given position (optional
          operation).
@@ -3369,7 +3370,7 @@ public interface AbstractList
          * @see #modCount
          */
         public native void add(int index, fabric.lang.Object o);
-        
+
         /**
          * Add an element to the end of the list (optional operation). If the
          list
@@ -3391,7 +3392,7 @@ public interface AbstractList
          * @see #add(int, Object)
          */
         public native boolean add(fabric.lang.Object o);
-        
+
         /**
          * Insert the contents of a collection into the list at a given position
          * (optional operation). Shift all elements at that position to the
@@ -3422,7 +3423,7 @@ public interface AbstractList
          * @see #add(int, Object)
          */
         public native boolean addAll(int index, fabric.util.Collection c);
-        
+
         /**
          * Clear the list, such that a subsequent call to isEmpty() would return
          * true (optional operation). This implementation calls
@@ -3436,7 +3437,7 @@ public interface AbstractList
          * @see #removeRange(int, int)
          */
         public native void clear();
-        
+
         /**
          * Test whether this list is equal to another object. A List is defined
          to be
@@ -3463,12 +3464,12 @@ public interface AbstractList
          * @see #hashCode()
          */
         public native boolean equals(fabric.lang.Object o);
-        
+
         /**
          * Obtains a hash code for this list. In order to obey the general
          * contract of the hashCode method of class Object, this value is
          * calculated as follows:
-         * 
+         *
          <pre>hashCode = 1;
          Iterator i = list.iterator(LOCAL_STORE);
          while (i.hasNext())
@@ -3486,7 +3487,7 @@ public interface AbstractList
          * @see #equals(Object)
          */
         public native int hashCode();
-        
+
         /**
          * Obtain the first index at which a given object is to be found in this
          * list. This implementation follows a listIterator(store) until a match
@@ -3499,7 +3500,7 @@ public interface AbstractList
          *         o.equals(get(n))</code>, or -1 if there is no such index
          */
         public native int indexOf(fabric.lang.Object o);
-        
+
         /**
          * Obtain an Iterator over this list, whose sequence is the list order.
          * This implementation uses size(), get(int), and remove(int) of the
@@ -3513,7 +3514,7 @@ public interface AbstractList
          * @see #modCount
          */
         public native fabric.util.Iterator iterator(fabric.worker.Store store);
-        
+
         /**
          * Obtain the last index at which a given object is to be found in this
          * list. This implementation grabs listIterator(size()), then searches
@@ -3524,7 +3525,7 @@ public interface AbstractList
          *         : o.equals(get(n))</code>, or -1 if there is no such index
          */
         public native int lastIndexOf(fabric.lang.Object o);
-        
+
         /**
          * Obtain a ListIterator over this list, starting at the beginning. This
          * implementation returns listIterator(0).
@@ -3535,7 +3536,7 @@ public interface AbstractList
          */
         public native fabric.util.ListIterator listIterator(
           fabric.worker.Store store);
-        
+
         /**
          * Obtain a ListIterator over this list, starting at a given position.
          * A first call to next() would return the same as get(index), and a
@@ -3559,7 +3560,7 @@ public interface AbstractList
          */
         public native fabric.util.ListIterator listIterator(
           fabric.worker.Store store, final int index);
-        
+
         /**
          * Remove the element at a given position in this list (optional
          operation).
@@ -3578,7 +3579,7 @@ public interface AbstractList
          * @see #modCount
          */
         public native fabric.lang.Object remove(int index);
-        
+
         /**
          * Remove a subsection of the list. This is called by the clear and
          * removeRange methods of the class which implements subList, which are
@@ -3603,7 +3604,7 @@ public interface AbstractList
          *         not support removing elements.
          */
         public native void removeRange(int fromIndex, int toIndex);
-        
+
         /**
          * Replace an element of this list with another object (optional
          operation).
@@ -3626,7 +3627,7 @@ public interface AbstractList
          *         some other reason
          */
         public native fabric.lang.Object set(int index, fabric.lang.Object o);
-        
+
         /**
          * Obtain a List view of a subsection of this list, from fromIndex
          * (inclusive) to toIndex (exclusive). If the two indices are equal, the
@@ -3665,7 +3666,7 @@ public interface AbstractList
          *
          * All methods first check to see if the actual modCount of the backing
          * list is equal to its expected value, and throw a
-         * ConcurrentModificationException if it is not. 
+         * ConcurrentModificationException if it is not.
          *
          * @param fromIndex the index that the returned list should start from
          *        (inclusive)
@@ -3679,13 +3680,13 @@ public interface AbstractList
          * @see RandomAccess
          */
         public native fabric.util.List subList(int fromIndex, int toIndex);
-        
+
         public _Impl(fabric.worker.Store $location) { super($location); }
-        
+
         protected fabric.lang.Object._Proxy $makeProxy() {
             return new fabric.util.AbstractList._Proxy(this);
         }
-        
+
         public void $serialize(java.io.ObjectOutput out,
                                java.util.List refTypes,
                                java.util.List intraStoreRefs,
@@ -3694,9 +3695,9 @@ public interface AbstractList
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             out.writeInt(this.modCount);
         }
-        
+
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
+                     long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                      long labelOnum, fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
@@ -3704,12 +3705,12 @@ public interface AbstractList
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, expiry, observers, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.modCount = in.readInt();
         }
-        
+
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
             super.$copyAppStateFrom(other);
             fabric.util.AbstractList._Impl src =
@@ -3717,38 +3718,38 @@ public interface AbstractList
             this.modCount = src.modCount;
         }
     }
-    
+
     interface _Static extends fabric.lang.Object, Cloneable {
-        
+
         public fabric.worker.Store get$LOCAL_STORE();
-        
+
         public fabric.worker.Store set$LOCAL_STORE(fabric.worker.Store val);
-        
+
         final class _Proxy extends fabric.lang.Object._Proxy
           implements fabric.util.AbstractList._Static
         {
-            
+
             public fabric.worker.Store get$LOCAL_STORE() {
                 return ((fabric.util.AbstractList._Static._Impl) fetch()).
                   get$LOCAL_STORE();
             }
-            
+
             public fabric.worker.Store set$LOCAL_STORE(
               fabric.worker.Store val) {
                 return ((fabric.util.AbstractList._Static._Impl) fetch()).
                   set$LOCAL_STORE(val);
             }
-            
+
             public _Proxy(fabric.util.AbstractList._Static._Impl impl) {
                 super(impl);
             }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
-            
+
             public static final fabric.util.AbstractList._Static $instance;
-            
+
             static {
                 fabric.
                   util.
@@ -3763,17 +3764,17 @@ public interface AbstractList
                 impl.$init();
             }
         }
-        
+
         class _Impl extends fabric.lang.Object._Impl
           implements fabric.util.AbstractList._Static
         {
-            
+
             public fabric.worker.Store get$LOCAL_STORE() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.LOCAL_STORE;
             }
-            
+
             public fabric.worker.Store set$LOCAL_STORE(
               fabric.worker.Store val) {
                 fabric.worker.transaction.TransactionManager tm =
@@ -3783,9 +3784,9 @@ public interface AbstractList
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             protected fabric.worker.Store LOCAL_STORE;
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -3794,9 +3795,9 @@ public interface AbstractList
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
                 $writeInline(out, this.LOCAL_STORE);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -3804,21 +3805,21 @@ public interface AbstractList
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.LOCAL_STORE = (fabric.worker.Store) in.readObject();
             }
-            
+
             public _Impl(fabric.worker.Store store) { super(store); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.AbstractList._Static._Proxy(this);
             }
-            
+
             private void $init() {  }
         }
-        
+
     }
-    
+
 }

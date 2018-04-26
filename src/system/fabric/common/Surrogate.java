@@ -11,6 +11,7 @@ import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ImmutableObserverSet;
 
 /**
  * Encapsulates an inter-store pointer.
@@ -27,12 +28,13 @@ public final class Surrogate extends _Impl {
   public final long onum;
 
   public Surrogate(Store store, long onum, int version, long expiry,
-      Store labelStore, long labelOnum, Store accessPolicyStore,
-      long accessPolicyOnum, ObjectInput serializedInput,
-      Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+      ImmutableObserverSet observers, Store labelStore, long labelOnum,
+      Store accessPolicyStore, long accessPolicyOnum,
+      ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
+      Iterator<Long> intraStoreRefs,
       Iterator<Pair<String, Long>> interStoreRefs)
-          throws IOException, ClassNotFoundException {
-    super(store, onum, version, expiry, labelStore, labelOnum,
+      throws IOException, ClassNotFoundException {
+    super(store, onum, version, expiry, observers, labelStore, labelOnum,
         accessPolicyStore, accessPolicyOnum, serializedInput, refTypes,
         intraStoreRefs, interStoreRefs);
     String storeName = serializedInput.readUTF();

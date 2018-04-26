@@ -433,7 +433,7 @@ public interface floatArray
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
+                     long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                      long labelOnum, fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
@@ -441,7 +441,7 @@ public interface floatArray
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, expiry, observers, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.CHUNK_SIZE = in.readInt();
@@ -570,7 +570,7 @@ public interface floatArray
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -578,7 +578,7 @@ public interface floatArray
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.DEFAULT_VALUE = in.readFloat();

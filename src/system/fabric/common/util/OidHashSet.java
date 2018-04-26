@@ -18,7 +18,9 @@ import fabric.worker.Worker;
  * A map keyed on OIDs. Supports null keys.
  */
 public final class OidHashSet implements Iterable<Oid>, FastSerializable {
-  HashMap<Store, LongHashSet> map;
+  // Using strings to avoid trying to get the store object before the worker is
+  // initialized (while deserializing objects from disk).
+  HashMap<String, LongHashSet> map;
 
   boolean hasNull;
 
@@ -34,7 +36,7 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
     int size = in.readInt();
     map = new HashMap<>();
     for (int i = 0; i < size; i++) {
-      Store s = Worker.getWorker().getStore(in.readUTF());
+      String s = in.readUTF();
       int size2 = in.readInt();
       LongHashSet submap = new LongHashSet(size2);
       map.put(s, submap);
@@ -50,7 +52,7 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   public OidHashSet(OidHashSet other) {
     this();
 
-    for (Map.Entry<Store, LongHashSet> entry : other.map.entrySet()) {
+    for (Map.Entry<String, LongHashSet> entry : other.map.entrySet()) {
       this.map.put(entry.getKey(), new LongHashSet(entry.getValue()));
     }
 
@@ -58,7 +60,11 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   }
 
   public LongSet get(Store store) {
-    return map.get(store);
+    return map.get(store.name());
+  }
+
+  public LongSet get(String storeName) {
+    return map.get(storeName);
   }
 
   public void clear() {
@@ -67,16 +73,21 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   }
 
   public boolean contains(Object obj) {
-    return obj == null ? hasNull : contains(obj.$getStore(), obj.$getOnum());
+    return obj == null ? hasNull
+        : contains(obj.$getStore().name(), obj.$getOnum());
   }
 
-  public boolean contains(Store store, long onum) {
-    LongHashSet submap = map.get(store);
+  public boolean contains(String storeName, long onum) {
+    LongHashSet submap = map.get(storeName);
     return submap != null && submap.contains(onum);
   }
 
+  public boolean contains(Store store, long onum) {
+    return contains(store.name(), onum);
+  }
+
   public boolean contains(Oid oid) {
-    return contains(oid.store, oid.onum);
+    return contains(oid.store.name(), oid.onum);
   }
 
   public boolean add(Object obj) {
@@ -86,21 +97,21 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
       return val;
     }
 
-    LongHashSet submap = map.get(obj.$getStore());
-    if (submap == null) {
-      submap = new LongHashSet();
-      map.put(obj.$getStore(), submap);
-    }
-    return submap.add(obj.$getOnum());
+    return add(obj.$getStore(), obj.$getOnum());
   }
 
-  public boolean add(Store store, long onum) {
-    LongHashSet submap = map.get(store);
+  public boolean add(String storeName, long onum) {
+    LongHashSet submap = map.get(storeName);
     if (submap == null) {
       submap = new LongHashSet();
-      map.put(store, submap);
+      map.put(storeName, submap);
     }
     return submap.add(onum);
+  }
+
+
+  public boolean add(Store store, long onum) {
+    return add(store.name(), onum);
   }
 
   public boolean add(Oid oid) {
@@ -114,20 +125,23 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
       return result;
     }
 
-    LongHashSet submap = map.get(obj.$getStore());
-    return submap != null && submap.remove(obj.$getOnum());
+    return remove(obj.$getStore(), obj.$getOnum());
+  }
+
+  public boolean remove(String storeName, long onum) {
+    LongHashSet submap = map.get(storeName);
+    return submap != null && submap.remove(onum);
   }
 
   public boolean remove(Store store, long onum) {
-    LongHashSet submap = map.get(store);
-    return submap != null && submap.remove(onum);
+    return remove(store.name(), onum);
   }
 
   public boolean remove(Oid oid) {
     return remove(oid.store, oid.onum);
   }
 
-  public Set<Store> storeSet() {
+  public Set<String> storeNameSet() {
     return map.keySet();
   }
 
@@ -135,7 +149,7 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   public Iterator<Oid> iterator() {
     return new Iterator<Oid>() {
       private Store curStore = null;
-      private Iterator<Store> storeIter = map.keySet().iterator();
+      private Iterator<String> storeIter = map.keySet().iterator();
       private LongIterator subIter = null;
 
       /**
@@ -145,8 +159,8 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
        */
       private void advance() {
         while (subIter == null && storeIter.hasNext()) {
-          curStore = storeIter.next();
-          subIter = map.get(curStore).iterator();
+          curStore = Worker.getWorker().getStore(storeIter.next());
+          subIter = map.get(curStore.name()).iterator();
           if (!subIter.hasNext()) subIter = null;
         }
       }
@@ -191,8 +205,8 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
       hasNull = true;
     }
 
-    for (Map.Entry<Store, LongHashSet> entry : m.map.entrySet()) {
-      Store store = entry.getKey();
+    for (Map.Entry<String, LongHashSet> entry : m.map.entrySet()) {
+      String store = entry.getKey();
 
       if (map.containsKey(store)) {
         map.get(store).addAll(entry.getValue());
@@ -208,10 +222,10 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
       return false;
     }
     OidHashSet map2 = (OidHashSet) other;
-    if (!storeSet().equals(map2.storeSet())) {
+    if (!storeNameSet().equals(map2.storeNameSet())) {
       return false;
     }
-    for (Store s : storeSet()) {
+    for (String s : storeNameSet()) {
       if (!get(s).equals(map2.get(s))) {
         return false;
       }
@@ -222,8 +236,8 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(map.size());
-    for (Map.Entry<Store, LongHashSet> e : map.entrySet()) {
-      out.writeUTF(e.getKey().name());
+    for (Map.Entry<String, LongHashSet> e : map.entrySet()) {
+      out.writeUTF(e.getKey());
       out.writeInt(e.getValue().size());
       for (LongIterator iter = e.getValue().iterator(); iter.hasNext();) {
         out.writeLong(iter.next());

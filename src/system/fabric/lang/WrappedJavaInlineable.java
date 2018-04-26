@@ -9,6 +9,7 @@ import fabric.lang.arrays.ObjectArray;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.Store;
+import fabric.worker.metrics.ImmutableObserverSet;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
 
@@ -92,6 +93,16 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   @Override
   public long set$$expiry(long val) {
     throw new InternalError("WrappedJavaInlineables don't have expiries.");
+  }
+
+  @Override
+  public ImmutableObserverSet get$$observers() {
+    throw new InternalError("WrappedJavaInlineables don't have observers.");
+  }
+
+  @Override
+  public ImmutableObserverSet set$$observers(ImmutableObserverSet val) {
+    throw new InternalError("WrappedJavaInlineables don't have observers.");
   }
 
   @Override

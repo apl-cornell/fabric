@@ -492,16 +492,18 @@ public interface RunningStats extends fabric.lang.Object {
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     long expiry,
+                     fabric.worker.metrics.ImmutableObserverSet observers,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
-                  accessPolicyStore, accessPolicyOnum, in, refTypes,
+            super(store, onum, version, expiry, observers, labelStore,
+                  labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.stamp = in.readBoolean();
             this.mean = in.readDouble();
@@ -621,17 +623,19 @@ public interface RunningStats extends fabric.lang.Object {
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         long expiry,
+                         fabric.worker.metrics.ImmutableObserverSet observers,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
-                      accessPolicyStore, accessPolicyOnum, in, refTypes,
-                      intraStoreRefs, interStoreRefs);
+                super(store, onum, version, expiry, observers, labelStore,
+                      labelOnum, accessPolicyStore, accessPolicyOnum, in,
+                      refTypes, intraStoreRefs, interStoreRefs);
                 this.ALPHA = in.readDouble();
             }
             
@@ -773,11 +777,11 @@ public interface RunningStats extends fabric.lang.Object {
         
     }
     
-    public static final byte[] $classHash = new byte[] { 85, 97, -3, 19, -71,
-    40, -103, 63, -11, 18, 25, -27, -26, 90, -48, 92, -100, -107, 28, -12, 122,
-    -108, -68, 125, 43, -51, -61, 81, 125, -115, -5, -40 };
+    public static final byte[] $classHash = new byte[] { -14, 89, -12, -118,
+    -57, 4, -22, -39, -60, 90, 66, 75, 36, -113, -87, 6, 87, -16, 121, -87, -61,
+    69, 50, 12, -70, -58, -109, -125, -85, -65, -69, 63 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1524505527000L;
+    public static final long jlc$SourceLastModified$fabil = 1524675608000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

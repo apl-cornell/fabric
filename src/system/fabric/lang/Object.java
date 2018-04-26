@@ -31,6 +31,7 @@ import fabric.worker.LocalStore;
 import fabric.worker.ObjectCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.ReadMap;
@@ -58,7 +59,13 @@ public interface Object {
 
   /** The expiry of a contract. */
   long get$$expiry();
+
   long set$$expiry(long expiry);
+
+  /** The observers of this object. */
+  ImmutableObserverSet get$$observers();
+
+  ImmutableObserverSet set$$observers(ImmutableObserverSet observers);
 
   /**
    * The object's access policy, specifying the program contexts in which it is
@@ -293,6 +300,17 @@ public interface Object {
     }
 
     @Override
+    public final ImmutableObserverSet get$$observers() {
+      return fetch().get$$observers();
+    }
+
+    @Override
+    public final ImmutableObserverSet set$$observers(
+        ImmutableObserverSet observers) {
+      return fetch().set$$observers(observers);
+    }
+
+    @Override
     public final ConfPolicy get$$accessPolicy() {
       // If the object hasn't been deserialized yet, avoid deserialization by
       // obtaining a reference to the object's access label directly from the
@@ -520,9 +538,15 @@ public interface Object {
     public long $expiry;
 
     /**
+     * The observers field, to be used by Contracts and Metrics.
+     */
+    public ImmutableObserverSet $observers;
+
+    /**
      * A private constructor for initializing transaction-management state.
      */
-    private _Impl(Store store, long onum, int version, long expiry) {
+    private _Impl(Store store, long onum, int version, long expiry,
+        ImmutableObserverSet observers) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
@@ -537,6 +561,7 @@ public interface Object {
       this.$isOwned = false;
       this.writerMapVersion = -1;
       this.$expiry = expiry;
+      this.$observers = observers;
 
       if (TRACE_OBJECTS)
         this.$stackTrace = Thread.currentThread().getStackTrace();
@@ -557,7 +582,7 @@ public interface Object {
      *          the location for the object
      */
     public _Impl(Store store) throws UnreachableNodeException {
-      this(store, store.createOnum(), 0, 0);
+      this(store, store.createOnum(), 0, 0, null);
       store.cache(this);
 
       // Register the new object with the transaction manager.
@@ -675,6 +700,7 @@ public interface Object {
       writerMapVersion = other.writerMapVersion;
       $copyAppStateFrom(other);
       $expiry = other.$expiry;
+      $observers = other.$observers;
     }
 
     /**
@@ -713,10 +739,30 @@ public interface Object {
     @Override
     public final long set$$expiry(long expiry) {
       TransactionManager tm = TransactionManager.getInstance();
-      boolean transactionCreated = tm.registerExpiryWrite(this, this.$expiry, expiry);
+      boolean transactionCreated =
+          tm.registerExpiryWrite(this, this.$expiry, expiry);
       this.$expiry = expiry;
       if (transactionCreated) tm.commitTransaction();
       return $expiry;
+    }
+
+    @Override
+    public final ImmutableObserverSet get$$observers() {
+      TransactionManager.getInstance().registerRead(this);
+      return $observers;
+    }
+
+    @Override
+    public final ImmutableObserverSet set$$observers(
+        ImmutableObserverSet observers) {
+      TransactionManager tm = TransactionManager.getInstance();
+      boolean transactionCreated = tm.registerWrite(this);
+      // TODO something like the below.
+      //boolean transactionCreated =
+      //    tm.registerExpiryWrite(this, this.$expiry, expiry);
+      this.$observers = observers;
+      if (transactionCreated) tm.commitTransaction();
+      return $observers;
     }
 
     @Override
@@ -828,12 +874,13 @@ public interface Object {
      * @throws ClassNotFoundException
      */
     public _Impl(Store store, long onum, int version, long expiry,
-        Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
-        long accessPolicyOnum, ObjectInput serializedInput,
-        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+        ImmutableObserverSet observers, Store updateLabelStore,
+        long updateLabelOnum, Store accessPolicyStore, long accessPolicyOnum,
+        ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws IOException, ClassNotFoundException {
-      this(store, onum, version, expiry);
+      this(store, onum, version, expiry, observers);
       this.$updateLabel = new Label._Proxy(updateLabelStore, updateLabelOnum);
       this.$accessPolicy =
           new ConfPolicy._Proxy(accessPolicyStore, accessPolicyOnum);
@@ -1095,14 +1142,15 @@ public interface Object {
       }
 
       public _Impl(Store store, long onum, int version, long expiry,
-          Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
-          long accessPolicyOnum, ObjectInput serializedInput,
-          Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+          ImmutableObserverSet observers, Store updateLabelStore,
+          long updateLabelOnum, Store accessPolicyStore, long accessPolicyOnum,
+          ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
+          Iterator<Long> intraStoreRefs,
           Iterator<Pair<String, Long>> interStoreRefs)
           throws IOException, ClassNotFoundException {
-        super(store, onum, version, expiry, updateLabelStore, updateLabelOnum,
-            accessPolicyStore, accessPolicyOnum, serializedInput, refTypes,
-            intraStoreRefs, interStoreRefs);
+        super(store, onum, version, expiry, observers, updateLabelStore,
+            updateLabelOnum, accessPolicyStore, accessPolicyOnum,
+            serializedInput, refTypes, intraStoreRefs, interStoreRefs);
       }
 
       @Override

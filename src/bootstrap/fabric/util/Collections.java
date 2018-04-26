@@ -49,31 +49,31 @@ public interface Collections
     public static interface EmptySet
       extends java.io.Serializable, fabric.util.AbstractSet
     {
-        
+
         /**
          * A private constructor adds overhead.
          */
         public EmptySet fabric$util$Collections$EmptySet$();
-        
+
         /**
          * The size: always 0!
          * @return 0.
          */
         public int size();
-        
+
         /**
          * Returns an iterator that does not iterate.
          * @return A non-iterating iterator.
          */
         public fabric.util.Iterator iterator(fabric.worker.Store store);
-        
+
         /**
          * The empty set never contains anything.
          * @param o The object to search for.
          * @return <code>false</code>.
          */
         public boolean contains(fabric.lang.Object o);
-        
+
         /**
          * This is true only if the given collection is also empty.
          * @param c The collection of objects which are to be compared
@@ -81,7 +81,7 @@ public interface Collections
          * @return <code>true</code> if c is empty.
          */
         public boolean containsAll(fabric.util.Collection c);
-        
+
         /**
          * Equal only if the other set is empty.
          * @param o The object to compare with this set.
@@ -89,20 +89,20 @@ public interface Collections
          <code>Set</code>.
          */
         public boolean equals(fabric.lang.Object o);
-        
+
         /**
          * The hashcode is always 0.
          * @return 0.
          */
         public int hashCode();
-        
+
         /**
          * Always succeeds with a <code>false</code> result.
          * @param o The object to remove.
          * @return <code>false</code>.
          */
         public boolean remove(fabric.lang.Object o);
-        
+
         /**
          * Always succeeds with a <code>false</code> result.
          * @param c The collection of objects which should
@@ -110,7 +110,7 @@ public interface Collections
          * @return <code>false</code>.
          */
         public boolean removeAll(fabric.util.Collection c);
-        
+
         /**
          * Always succeeds with a <code>false</code> result.
          * @param c The collection of objects which should
@@ -118,13 +118,13 @@ public interface Collections
          * @return <code>false</code>.
          */
         public boolean retainAll(fabric.util.Collection c);
-        
+
         /**
          * The array is always empty.
          * @return A new array with a size of 0.
          */
         public fabric.lang.arrays.ObjectArray toArray();
-        
+
         /**
          * We don't even need to use reflection!
          * @param a An existing array, which can be empty.
@@ -133,59 +133,59 @@ public interface Collections
          */
         public fabric.lang.arrays.ObjectArray toArray(
           fabric.lang.arrays.ObjectArray a);
-        
+
         /**
          * The string never changes.
          *
          * @return the string "[]".
          */
         public java.lang.String toString();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.util.AbstractSet._Proxy
           implements EmptySet
         {
-            
+
             public native fabric.util.Collections.EmptySet
               fabric$util$Collections$EmptySet$();
-            
+
             public _Proxy(EmptySet._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl extends fabric.util.AbstractSet._Impl
           implements EmptySet
         {
-            
+
             /**
              * A private constructor adds overhead.
              */
             public native EmptySet fabric$util$Collections$EmptySet$();
-            
+
             /**
              * The size: always 0!
              * @return 0.
              */
             public native int size();
-            
+
             /**
              * Returns an iterator that does not iterate.
              * @return A non-iterating iterator.
              */
             public native fabric.util.Iterator iterator(
               fabric.worker.Store store);
-            
+
             /**
              * The empty set never contains anything.
              * @param o The object to search for.
              * @return <code>false</code>.
              */
             public native boolean contains(fabric.lang.Object o);
-            
+
             /**
              * This is true only if the given collection is also empty.
              * @param c The collection of objects which are to be compared
@@ -193,7 +193,7 @@ public interface Collections
              * @return <code>true</code> if c is empty.
              */
             public native boolean containsAll(fabric.util.Collection c);
-            
+
             /**
              * Equal only if the other set is empty.
              * @param o The object to compare with this set.
@@ -201,20 +201,20 @@ public interface Collections
              <code>Set</code>.
              */
             public native boolean equals(fabric.lang.Object o);
-            
+
             /**
              * The hashcode is always 0.
              * @return 0.
              */
             public native int hashCode();
-            
+
             /**
              * Always succeeds with a <code>false</code> result.
              * @param o The object to remove.
              * @return <code>false</code>.
              */
             public native boolean remove(fabric.lang.Object o);
-            
+
             /**
              * Always succeeds with a <code>false</code> result.
              * @param c The collection of objects which should
@@ -222,7 +222,7 @@ public interface Collections
              * @return <code>false</code>.
              */
             public native boolean removeAll(fabric.util.Collection c);
-            
+
             /**
              * Always succeeds with a <code>false</code> result.
              * @param c The collection of objects which should
@@ -230,13 +230,13 @@ public interface Collections
              * @return <code>false</code>.
              */
             public native boolean retainAll(fabric.util.Collection c);
-            
+
             /**
              * The array is always empty.
              * @return A new array with a size of 0.
              */
             public native fabric.lang.arrays.ObjectArray toArray();
-            
+
             /**
              * We don't even need to use reflection!
              * @param a An existing array, which can be empty.
@@ -245,22 +245,22 @@ public interface Collections
              */
             public native fabric.lang.arrays.ObjectArray toArray(
               fabric.lang.arrays.ObjectArray a);
-            
+
             /**
              * The string never changes.
              *
              * @return the string "[]".
              */
             public native java.lang.String toString();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.EmptySet._Proxy(this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -268,9 +268,9 @@ public interface Collections
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -278,58 +278,58 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.Collections.EmptySet._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     return ((fabric.util.Collections.EmptySet._Static._Impl)
                               fetch()).get$serialVersionUID();
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     return ((fabric.util.Collections.EmptySet._Static._Impl)
                               fetch()).set$serialVersionUID(val);
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     return ((fabric.util.Collections.EmptySet._Static._Impl)
                               fetch()).postInc$serialVersionUID();
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     return ((fabric.util.Collections.EmptySet._Static._Impl)
                               fetch()).postDec$serialVersionUID();
                 }
-                
+
                 public _Proxy(fabric.util.Collections.EmptySet._Static.
                                 _Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.EmptySet._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -346,17 +346,17 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.Collections.EmptySet._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -366,24 +366,24 @@ public interface Collections
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -393,9 +393,9 @@ public interface Collections
                                      interStoreRefs);
                     out.writeLong(this.serialVersionUID);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -404,26 +404,26 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong();
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.EmptySet._Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #EMPTY_LIST}. This class name is required
      * for compatibility with Sun's JDK serializability.
@@ -434,18 +434,18 @@ public interface Collections
       extends java.io.Serializable, fabric.util.RandomAccess,
               fabric.util.AbstractList
     {
-        
+
         /**
          * A private constructor adds overhead.
          */
         public EmptyList fabric$util$Collections$EmptyList$();
-        
+
         /**
          * The size is always 0.
          * @return 0.
          */
         public int size();
-        
+
         /**
          * No matter the index, it is out of bounds.  This
          * method never returns, throwing an exception instead.
@@ -456,22 +456,22 @@ public interface Collections
          *         is outside the bounds of an empty array.
          */
         public fabric.lang.Object get(int index);
-        
+
         /**
          * Never contains anything.
          * @param o The object to search for.
          * @return <code>false</code>.
          */
         public boolean contains(fabric.lang.Object o);
-        
+
         /**
          * This is true only if the given collection is also empty.
          * @param c The collection of objects, which should be compared
          *          against the members of this list.
-         * @return <code>true</code> if c is also empty. 
+         * @return <code>true</code> if c is also empty.
          */
         public boolean containsAll(fabric.util.Collection c);
-        
+
         /**
          * Equal only if the other list is empty.
          * @param o The object to compare against this list.
@@ -479,34 +479,34 @@ public interface Collections
          *         <code>List</code>.
          */
         public boolean equals(fabric.lang.Object o);
-        
+
         /**
          * The hashcode is always 1.
          * @return 1.
          */
         public int hashCode();
-        
+
         /**
          * Returns -1.
          * @param o The object to search for.
          * @return -1.
          */
         public int indexOf(fabric.lang.Object o);
-        
+
         /**
          * Returns -1.
          * @param o The object to search for.
          * @return -1.
          */
         public int lastIndexOf(fabric.lang.Object o);
-        
+
         /**
          * Always succeeds with <code>false</code> result.
          * @param o The object to remove.
          * @return -1.
          */
         public boolean remove(fabric.lang.Object o);
-        
+
         /**
          * Always succeeds with <code>false</code> result.
          * @param c The collection of objects which should
@@ -514,7 +514,7 @@ public interface Collections
          * @return <code>false</code>.
          */
         public boolean removeAll(fabric.util.Collection c);
-        
+
         /**
          * Always succeeds with <code>false</code> result.
          * @param c The collection of objects which should
@@ -522,13 +522,13 @@ public interface Collections
          * @return <code>false</code>.
          */
         public boolean retainAll(fabric.util.Collection c);
-        
+
         /**
          * The array is always empty.
          * @return A new array with a size of 0.
          */
         public fabric.lang.arrays.ObjectArray toArray();
-        
+
         /**
          * We don't even need to use reflection!
          * @param a An existing array, which can be empty.
@@ -537,45 +537,45 @@ public interface Collections
          */
         public fabric.lang.arrays.ObjectArray toArray(
           fabric.lang.arrays.ObjectArray a);
-        
+
         /**
          * The string never changes.
          *
          * @return the string "[]".
          */
         public java.lang.String toString();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.util.AbstractList._Proxy
           implements EmptyList
         {
-            
+
             public native fabric.util.Collections.EmptyList
               fabric$util$Collections$EmptyList$();
-            
+
             public _Proxy(EmptyList._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl extends fabric.util.AbstractList._Impl
           implements EmptyList
         {
-            
+
             /**
              * A private constructor adds overhead.
              */
             public native EmptyList fabric$util$Collections$EmptyList$();
-            
+
             /**
              * The size is always 0.
              * @return 0.
              */
             public native int size();
-            
+
             /**
              * No matter the index, it is out of bounds.  This
              * method never returns, throwing an exception instead.
@@ -586,22 +586,22 @@ public interface Collections
              *         is outside the bounds of an empty array.
              */
             public native fabric.lang.Object get(int index);
-            
+
             /**
              * Never contains anything.
              * @param o The object to search for.
              * @return <code>false</code>.
              */
             public native boolean contains(fabric.lang.Object o);
-            
+
             /**
              * This is true only if the given collection is also empty.
              * @param c The collection of objects, which should be compared
              *          against the members of this list.
-             * @return <code>true</code> if c is also empty. 
+             * @return <code>true</code> if c is also empty.
              */
             public native boolean containsAll(fabric.util.Collection c);
-            
+
             /**
              * Equal only if the other list is empty.
              * @param o The object to compare against this list.
@@ -609,34 +609,34 @@ public interface Collections
              *         <code>List</code>.
              */
             public native boolean equals(fabric.lang.Object o);
-            
+
             /**
              * The hashcode is always 1.
              * @return 1.
              */
             public native int hashCode();
-            
+
             /**
              * Returns -1.
              * @param o The object to search for.
              * @return -1.
              */
             public native int indexOf(fabric.lang.Object o);
-            
+
             /**
              * Returns -1.
              * @param o The object to search for.
              * @return -1.
              */
             public native int lastIndexOf(fabric.lang.Object o);
-            
+
             /**
              * Always succeeds with <code>false</code> result.
              * @param o The object to remove.
              * @return -1.
              */
             public native boolean remove(fabric.lang.Object o);
-            
+
             /**
              * Always succeeds with <code>false</code> result.
              * @param c The collection of objects which should
@@ -644,7 +644,7 @@ public interface Collections
              * @return <code>false</code>.
              */
             public native boolean removeAll(fabric.util.Collection c);
-            
+
             /**
              * Always succeeds with <code>false</code> result.
              * @param c The collection of objects which should
@@ -652,13 +652,13 @@ public interface Collections
              * @return <code>false</code>.
              */
             public native boolean retainAll(fabric.util.Collection c);
-            
+
             /**
              * The array is always empty.
              * @return A new array with a size of 0.
              */
             public native fabric.lang.arrays.ObjectArray toArray();
-            
+
             /**
              * We don't even need to use reflection!
              * @param a An existing array, which can be empty.
@@ -667,22 +667,22 @@ public interface Collections
              */
             public native fabric.lang.arrays.ObjectArray toArray(
               fabric.lang.arrays.ObjectArray a);
-            
+
             /**
              * The string never changes.
              *
              * @return the string "[]".
              */
             public native java.lang.String toString();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.EmptyList._Proxy(this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -690,9 +690,9 @@ public interface Collections
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -700,58 +700,58 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.Collections.EmptyList._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     return ((fabric.util.Collections.EmptyList._Static._Impl)
                               fetch()).get$serialVersionUID();
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     return ((fabric.util.Collections.EmptyList._Static._Impl)
                               fetch()).set$serialVersionUID(val);
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     return ((fabric.util.Collections.EmptyList._Static._Impl)
                               fetch()).postInc$serialVersionUID();
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     return ((fabric.util.Collections.EmptyList._Static._Impl)
                               fetch()).postDec$serialVersionUID();
                 }
-                
+
                 public _Proxy(fabric.util.Collections.EmptyList._Static.
                                 _Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.EmptyList._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -774,17 +774,17 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.Collections.EmptyList._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -794,24 +794,24 @@ public interface Collections
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -821,9 +821,9 @@ public interface Collections
                                      interStoreRefs);
                     out.writeLong(this.serialVersionUID);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -832,26 +832,26 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong();
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.EmptyList._Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #EMPTY_MAP}. This class name is required
      * for compatibility with Sun's JDK serializability.
@@ -861,32 +861,32 @@ public interface Collections
     public static interface EmptyMap
       extends java.io.Serializable, fabric.util.AbstractMap
     {
-        
+
         /**
          * A private constructor adds overhead.
          */
         public EmptyMap fabric$util$Collections$EmptyMap$();
-        
+
         /**
          * There are no entries.
          * @return The empty set.
          */
         public fabric.util.Set entrySet();
-        
+
         /**
          * No entries!
          * @param key The key to search for.
          * @return <code>false</code>.
          */
         public boolean containsKey(fabric.lang.Object key);
-        
+
         /**
          * No entries!
          * @param value The value to search for.
          * @return <code>false</code>.
          */
         public boolean containsValue(fabric.lang.Object value);
-        
+
         /**
          * Equal to all empty maps.
          * @param o The object o to compare against this map.
@@ -894,39 +894,39 @@ public interface Collections
          *         <code>Map</code>.
          */
         public boolean equals(fabric.lang.Object o);
-        
+
         /**
          * No mappings, so this returns null.
          * @param o The key of the object to retrieve.
-         * @return null. 
+         * @return null.
          */
         public fabric.lang.Object get(fabric.lang.Object o);
-        
+
         /**
          * The hashcode is always 0.
          * @return 0.
          */
         public int hashCode();
-        
+
         /**
          * No entries.
          * @return The empty set.
          */
         public fabric.util.Set keySet();
-        
+
         /**
          * Remove always succeeds, with null result.
          * @param o The key of the mapping to remove.
          * @return null, as there is never a mapping for o.
          */
         public fabric.lang.Object remove(fabric.lang.Object o);
-        
+
         /**
          * Size is always 0.
          * @return 0.
          */
         public int size();
-        
+
         /**
          * No entries. Technically, EMPTY_SET, while more specific than a
          general
@@ -934,59 +934,59 @@ public interface Collections
          * @return The empty set.
          */
         public fabric.util.Collection values();
-        
+
         /**
          * The string never changes.
          *
          * @return the string "[]".
          */
         public java.lang.String toString();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.util.AbstractMap._Proxy
           implements EmptyMap
         {
-            
+
             public native fabric.util.Collections.EmptyMap
               fabric$util$Collections$EmptyMap$();
-            
+
             public _Proxy(EmptyMap._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl extends fabric.util.AbstractMap._Impl
           implements EmptyMap
         {
-            
+
             /**
              * A private constructor adds overhead.
              */
             public native EmptyMap fabric$util$Collections$EmptyMap$();
-            
+
             /**
              * There are no entries.
              * @return The empty set.
              */
             public native fabric.util.Set entrySet();
-            
+
             /**
              * No entries!
              * @param key The key to search for.
              * @return <code>false</code>.
              */
             public native boolean containsKey(fabric.lang.Object key);
-            
+
             /**
              * No entries!
              * @param value The value to search for.
              * @return <code>false</code>.
              */
             public native boolean containsValue(fabric.lang.Object value);
-            
+
             /**
              * Equal to all empty maps.
              * @param o The object o to compare against this map.
@@ -994,39 +994,39 @@ public interface Collections
              *         <code>Map</code>.
              */
             public native boolean equals(fabric.lang.Object o);
-            
+
             /**
              * No mappings, so this returns null.
              * @param o The key of the object to retrieve.
-             * @return null. 
+             * @return null.
              */
             public native fabric.lang.Object get(fabric.lang.Object o);
-            
+
             /**
              * The hashcode is always 0.
              * @return 0.
              */
             public native int hashCode();
-            
+
             /**
              * No entries.
              * @return The empty set.
              */
             public native fabric.util.Set keySet();
-            
+
             /**
              * Remove always succeeds, with null result.
              * @param o The key of the mapping to remove.
              * @return null, as there is never a mapping for o.
              */
             public native fabric.lang.Object remove(fabric.lang.Object o);
-            
+
             /**
              * Size is always 0.
              * @return 0.
              */
             public native int size();
-            
+
             /**
              * No entries. Technically, EMPTY_SET, while more specific than a
              general
@@ -1034,22 +1034,22 @@ public interface Collections
              * @return The empty set.
              */
             public native fabric.util.Collection values();
-            
+
             /**
              * The string never changes.
              *
              * @return the string "[]".
              */
             public native java.lang.String toString();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.EmptyMap._Proxy(this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -1057,9 +1057,9 @@ public interface Collections
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -1067,58 +1067,58 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.Collections.EmptyMap._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     return ((fabric.util.Collections.EmptyMap._Static._Impl)
                               fetch()).get$serialVersionUID();
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     return ((fabric.util.Collections.EmptyMap._Static._Impl)
                               fetch()).set$serialVersionUID(val);
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     return ((fabric.util.Collections.EmptyMap._Static._Impl)
                               fetch()).postInc$serialVersionUID();
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     return ((fabric.util.Collections.EmptyMap._Static._Impl)
                               fetch()).postDec$serialVersionUID();
                 }
-                
+
                 public _Proxy(fabric.util.Collections.EmptyMap._Static.
                                 _Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.EmptyMap._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -1135,17 +1135,17 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.Collections.EmptyMap._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -1155,24 +1155,24 @@ public interface Collections
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -1182,9 +1182,9 @@ public interface Collections
                                      interStoreRefs);
                     out.writeLong(this.serialVersionUID);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -1193,26 +1193,26 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong();
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.EmptyMap._Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #nCopies(int, Object)}. This class name
      * is required for compatibility with Sun's JDK serializability.
@@ -1223,19 +1223,19 @@ public interface Collections
       extends java.io.Serializable, fabric.util.RandomAccess,
               fabric.util.AbstractList
     {
-        
+
         public int get$n();
-        
+
         public int set$n(int val);
-        
+
         public int postInc$n();
-        
+
         public int postDec$n();
-        
+
         public fabric.lang.Object get$element();
-        
+
         public fabric.lang.Object set$element(fabric.lang.Object val);
-        
+
         /**
          * Constructs the list.
          *
@@ -1245,13 +1245,13 @@ public interface Collections
          */
         public CopiesList fabric$util$Collections$CopiesList$(
           int n, fabric.lang.Object o);
-        
+
         /**
          * The size is fixed.
          * @return The size of the list.
          */
         public int size();
-        
+
         /**
          * The same element is returned.
          * @param index The index of the element to be returned (irrelevant
@@ -1259,21 +1259,21 @@ public interface Collections
          * @return The element used by this list.
          */
         public fabric.lang.Object get(int index);
-        
+
         /**
          * This list only contains one element.
          * @param o The object to search for.
          * @return <code>true</code> if o is the element used by this list.
          */
         public boolean contains(fabric.lang.Object o);
-        
+
         /**
          * The index is either 0 or -1.
          * @param o The object to find the index of.
          * @return 0 if <code>o == element</code>, -1 if not.
          */
         public int indexOf(fabric.lang.Object o);
-        
+
         /**
          * The index is either n-1 or -1.
          * @param o The object to find the last index of.
@@ -1281,7 +1281,7 @@ public interface Collections
          *         -1 if not.
          */
         public int lastIndexOf(fabric.lang.Object o);
-        
+
         /**
          * A subList is just another CopiesList.
          * @param from The starting bound of the sublist.
@@ -1291,77 +1291,77 @@ public interface Collections
          *         used by this list.
          */
         public fabric.util.List subList(int from, int to);
-        
+
         /**
          * The array is easy.
          * @return An array of size n filled with copies of
          *         the element used by this list.
          */
         public fabric.lang.arrays.ObjectArray toArray();
-        
+
         /**
          * The string is easy to generate.
          * @return A string representation of the list.
          */
         public java.lang.String toString();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.util.AbstractList._Proxy
           implements CopiesList
         {
-            
+
             public int get$n() {
                 return ((fabric.util.Collections.CopiesList._Impl) fetch()).
                   get$n();
             }
-            
+
             public int set$n(int val) {
                 return ((fabric.util.Collections.CopiesList._Impl) fetch()).
                   set$n(val);
             }
-            
+
             public int postInc$n() {
                 return ((fabric.util.Collections.CopiesList._Impl) fetch()).
                   postInc$n();
             }
-            
+
             public int postDec$n() {
                 return ((fabric.util.Collections.CopiesList._Impl) fetch()).
                   postDec$n();
             }
-            
+
             public fabric.lang.Object get$element() {
                 return ((fabric.util.Collections.CopiesList._Impl) fetch()).
                   get$element();
             }
-            
+
             public fabric.lang.Object set$element(fabric.lang.Object val) {
                 return ((fabric.util.Collections.CopiesList._Impl) fetch()).
                   set$element(val);
             }
-            
+
             public native fabric.util.Collections.CopiesList
               fabric$util$Collections$CopiesList$(int arg1,
                                                   fabric.lang.Object arg2);
-            
+
             public _Proxy(CopiesList._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl extends fabric.util.AbstractList._Impl
           implements CopiesList
         {
-            
+
             public int get$n() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.n;
             }
-            
+
             public int set$n(int val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -1370,31 +1370,31 @@ public interface Collections
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public int postInc$n() {
                 int tmp = this.get$n();
                 this.set$n((int) (tmp + 1));
                 return tmp;
             }
-            
+
             public int postDec$n() {
                 int tmp = this.get$n();
                 this.set$n((int) (tmp - 1));
                 return tmp;
             }
-            
+
             /**
              * The count of elements in this list.
              * @serial the list size
              */
             private int n;
-            
+
             public fabric.lang.Object get$element() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.element;
             }
-            
+
             public fabric.lang.Object set$element(fabric.lang.Object val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -1403,13 +1403,13 @@ public interface Collections
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             /**
              * The repeated list element.
              * @serial the list contents
              */
             private fabric.lang.Object element;
-            
+
             /**
              * Constructs the list.
              *
@@ -1419,13 +1419,13 @@ public interface Collections
              */
             public native CopiesList fabric$util$Collections$CopiesList$(
               int n, fabric.lang.Object o);
-            
+
             /**
              * The size is fixed.
              * @return The size of the list.
              */
             public native int size();
-            
+
             /**
              * The same element is returned.
              * @param index The index of the element to be returned (irrelevant
@@ -1433,21 +1433,21 @@ public interface Collections
              * @return The element used by this list.
              */
             public native fabric.lang.Object get(int index);
-            
+
             /**
              * This list only contains one element.
              * @param o The object to search for.
              * @return <code>true</code> if o is the element used by this list.
              */
             public native boolean contains(fabric.lang.Object o);
-            
+
             /**
              * The index is either 0 or -1.
              * @param o The object to find the index of.
              * @return 0 if <code>o == element</code>, -1 if not.
              */
             public native int indexOf(fabric.lang.Object o);
-            
+
             /**
              * The index is either n-1 or -1.
              * @param o The object to find the last index of.
@@ -1455,7 +1455,7 @@ public interface Collections
              *         -1 if not.
              */
             public native int lastIndexOf(fabric.lang.Object o);
-            
+
             /**
              * A subList is just another CopiesList.
              * @param from The starting bound of the sublist.
@@ -1465,28 +1465,28 @@ public interface Collections
              *         used by this list.
              */
             public native fabric.util.List subList(int from, int to);
-            
+
             /**
              * The array is easy.
              * @return An array of size n filled with copies of
              *         the element used by this list.
              */
             public native fabric.lang.arrays.ObjectArray toArray();
-            
+
             /**
              * The string is easy to generate.
              * @return A string representation of the list.
              */
             public native java.lang.String toString();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.CopiesList._Proxy(this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -1497,9 +1497,9 @@ public interface Collections
                 $writeRef($getStore(), this.element, refTypes, out,
                           intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -1507,7 +1507,7 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.n = in.readInt();
@@ -1520,7 +1520,7 @@ public interface Collections
                                           intraStoreRefs,
                                           interStoreRefs);
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.util.Collections.CopiesList._Impl src =
@@ -1529,53 +1529,53 @@ public interface Collections
                 this.element = src.element;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.Collections.CopiesList._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     return ((fabric.util.Collections.CopiesList._Static._Impl)
                               fetch()).get$serialVersionUID();
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     return ((fabric.util.Collections.CopiesList._Static._Impl)
                               fetch()).set$serialVersionUID(val);
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     return ((fabric.util.Collections.CopiesList._Static._Impl)
                               fetch()).postInc$serialVersionUID();
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     return ((fabric.util.Collections.CopiesList._Static._Impl)
                               fetch()).postDec$serialVersionUID();
                 }
-                
+
                 public _Proxy(fabric.util.Collections.CopiesList._Static.
                                 _Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.CopiesList._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -1598,17 +1598,17 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.Collections.CopiesList._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -1618,24 +1618,24 @@ public interface Collections
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -1645,9 +1645,9 @@ public interface Collections
                                      interStoreRefs);
                     out.writeLong(this.serialVersionUID);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -1656,27 +1656,27 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong();
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.CopiesList._Static.
                       _Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #reverseOrder()}. This class name
      * is required for compatibility with Sun's JDK serializability.
@@ -1686,12 +1686,12 @@ public interface Collections
     public static interface ReverseComparator
       extends fabric.util.Comparator, java.io.Serializable, fabric.lang.Object
     {
-        
+
         /**
          * A private constructor adds overhead.
          */
         public ReverseComparator fabric$util$Collections$ReverseComparator$();
-        
+
         /**
          * Compare two objects in reverse natural order.
          *
@@ -1700,36 +1700,36 @@ public interface Collections
          * @return &lt;, ==, or &gt; 0 according to b.compareTo(a)
          */
         public int compare(fabric.lang.Object a, fabric.lang.Object b);
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.lang.Object._Proxy
           implements ReverseComparator
         {
-            
+
             public native fabric.util.Collections.ReverseComparator
               fabric$util$Collections$ReverseComparator$();
-            
+
             public native int compare(fabric.lang.Object arg1,
                                       fabric.lang.Object arg2);
-            
+
             public _Proxy(ReverseComparator._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl extends fabric.lang.Object._Impl
           implements ReverseComparator
         {
-            
+
             /**
              * A private constructor adds overhead.
              */
             public native ReverseComparator
               fabric$util$Collections$ReverseComparator$();
-            
+
             /**
              * Compare two objects in reverse natural order.
              *
@@ -1739,16 +1739,16 @@ public interface Collections
              */
             public native int compare(fabric.lang.Object a,
                                       fabric.lang.Object b);
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.ReverseComparator._Proxy(
                   this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -1756,9 +1756,9 @@ public interface Collections
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -1766,67 +1766,67 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.Collections.ReverseComparator._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     return ((fabric.util.Collections.ReverseComparator._Static.
                               _Impl)
                               fetch()).
                       get$serialVersionUID();
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     return ((fabric.util.Collections.ReverseComparator._Static.
                               _Impl)
                               fetch()).
                       set$serialVersionUID(val);
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     return ((fabric.util.Collections.ReverseComparator._Static.
                               _Impl)
                               fetch()).
                       postInc$serialVersionUID();
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     return ((fabric.util.Collections.ReverseComparator._Static.
                               _Impl)
                               fetch()).
                       postDec$serialVersionUID();
                 }
-                
+
                 public _Proxy(fabric.util.Collections.ReverseComparator._Static.
                                 _Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.ReverseComparator.
                   _Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -1850,17 +1850,17 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.Collections.ReverseComparator._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -1870,24 +1870,24 @@ public interface Collections
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -1897,9 +1897,9 @@ public interface Collections
                                      interStoreRefs);
                     out.writeLong(this.serialVersionUID);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -1908,27 +1908,27 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong();
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.ReverseComparator.
                       _Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #singleton(Object)}. This class name
      * is required for compatibility with Sun's JDK serializability.
@@ -1938,29 +1938,29 @@ public interface Collections
     public static interface SingletonSet
       extends java.io.Serializable, fabric.util.AbstractSet
     {
-        
+
         public fabric.lang.Object get$element();
-        
+
         public fabric.lang.Object set$element(fabric.lang.Object val);
-        
+
         /**
          * Construct a singleton.
          * @param o the element
          */
         public SingletonSet fabric$util$Collections$SingletonSet$(
           fabric.lang.Object o);
-        
+
         /**
          * The size: always 1!
          * @return 1.
          */
         public int size();
-        
+
         /**
          * Returns an iterator over the lone element.
          */
         public fabric.util.Iterator iterator(fabric.worker.Store store);
-        
+
         /**
          * The set only contains one element.
          *
@@ -1968,7 +1968,7 @@ public interface Collections
          * @return <code>true</code> if o == the element of the singleton.
          */
         public boolean contains(fabric.lang.Object o);
-        
+
         /**
          * This is true if the other collection only contains the element.
          *
@@ -1977,21 +1977,21 @@ public interface Collections
          *         elements equal to the element in this singleton.
          */
         public boolean containsAll(fabric.util.Collection c);
-        
+
         /**
          * The hash is just that of the element.
-         * 
+         *
          * @return The hashcode of the element.
          */
         public int hashCode();
-        
+
         /**
          * Returning an array is simple.
          *
          * @return An array containing the element.
          */
         public fabric.lang.arrays.ObjectArray toArray();
-        
+
         /**
          * Obvious string.
          *
@@ -1999,43 +1999,43 @@ public interface Collections
          *         square brackets.
          */
         public java.lang.String toString();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.util.AbstractSet._Proxy
           implements SingletonSet
         {
-            
+
             public fabric.lang.Object get$element() {
                 return ((fabric.util.Collections.SingletonSet._Impl) fetch()).
                   get$element();
             }
-            
+
             public fabric.lang.Object set$element(fabric.lang.Object val) {
                 return ((fabric.util.Collections.SingletonSet._Impl) fetch()).
                   set$element(val);
             }
-            
+
             public native fabric.util.Collections.SingletonSet
               fabric$util$Collections$SingletonSet$(fabric.lang.Object arg1);
-            
+
             public _Proxy(SingletonSet._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl extends fabric.util.AbstractSet._Impl
           implements SingletonSet
         {
-            
+
             public fabric.lang.Object get$element() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.element;
             }
-            
+
             public fabric.lang.Object set$element(fabric.lang.Object val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -2044,32 +2044,32 @@ public interface Collections
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             /**
              * The single element; package visible for use in nested class.
              * @serial the singleton
              */
             fabric.lang.Object element;
-            
+
             /**
              * Construct a singleton.
              * @param o the element
              */
             public native SingletonSet fabric$util$Collections$SingletonSet$(
               fabric.lang.Object o);
-            
+
             /**
              * The size: always 1!
              * @return 1.
              */
             public native int size();
-            
+
             /**
              * Returns an iterator over the lone element.
              */
             public native fabric.util.Iterator iterator(
               fabric.worker.Store store);
-            
+
             /**
              * The set only contains one element.
              *
@@ -2077,7 +2077,7 @@ public interface Collections
              * @return <code>true</code> if o == the element of the singleton.
              */
             public native boolean contains(fabric.lang.Object o);
-            
+
             /**
              * This is true if the other collection only contains the element.
              *
@@ -2087,21 +2087,21 @@ public interface Collections
              *         elements equal to the element in this singleton.
              */
             public native boolean containsAll(fabric.util.Collection c);
-            
+
             /**
              * The hash is just that of the element.
-             * 
+             *
              * @return The hashcode of the element.
              */
             public native int hashCode();
-            
+
             /**
              * Returning an array is simple.
              *
              * @return An array containing the element.
              */
             public native fabric.lang.arrays.ObjectArray toArray();
-            
+
             /**
              * Obvious string.
              *
@@ -2109,15 +2109,15 @@ public interface Collections
              *         square brackets.
              */
             public native java.lang.String toString();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.SingletonSet._Proxy(this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -2127,9 +2127,9 @@ public interface Collections
                 $writeRef($getStore(), this.element, refTypes, out,
                           intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -2137,7 +2137,7 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.element = (fabric.lang.Object)
@@ -2149,7 +2149,7 @@ public interface Collections
                                           intraStoreRefs,
                                           interStoreRefs);
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.util.Collections.SingletonSet._Impl src =
@@ -2157,53 +2157,53 @@ public interface Collections
                 this.element = src.element;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.Collections.SingletonSet._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     return ((fabric.util.Collections.SingletonSet._Static._Impl)
                               fetch()).get$serialVersionUID();
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     return ((fabric.util.Collections.SingletonSet._Static._Impl)
                               fetch()).set$serialVersionUID(val);
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     return ((fabric.util.Collections.SingletonSet._Static._Impl)
                               fetch()).postInc$serialVersionUID();
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     return ((fabric.util.Collections.SingletonSet._Static._Impl)
                               fetch()).postDec$serialVersionUID();
                 }
-                
+
                 public _Proxy(fabric.util.Collections.SingletonSet._Static.
                                 _Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.SingletonSet._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -2226,17 +2226,17 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.Collections.SingletonSet._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -2246,24 +2246,24 @@ public interface Collections
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -2273,9 +2273,9 @@ public interface Collections
                                      interStoreRefs);
                     out.writeLong(this.serialVersionUID);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -2284,27 +2284,27 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong();
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.SingletonSet._Static.
                       _Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #singletonList(Object)}. This class name
      * is required for compatibility with Sun's JDK serializability.
@@ -2315,24 +2315,24 @@ public interface Collections
       extends java.io.Serializable, fabric.util.RandomAccess,
               fabric.util.AbstractList
     {
-        
+
         public fabric.lang.Object get$element();
-        
+
         public fabric.lang.Object set$element(fabric.lang.Object val);
-        
+
         /**
          * Construct a singleton.
          * @param o the element
          */
         public SingletonList fabric$util$Collections$SingletonList$(
           fabric.lang.Object o);
-        
+
         /**
          * The size: always 1!
          * @return 1.
          */
         public int size();
-        
+
         /**
          * Only index 0 is valid.
          * @param index The index of the element
@@ -2343,7 +2343,7 @@ public interface Collections
          *         index is not 0.
          */
         public fabric.lang.Object get(int index);
-        
+
         /**
          * The set only contains one element.
          *
@@ -2351,7 +2351,7 @@ public interface Collections
          * @return <code>true</code> if o == the singleton element.
          */
         public boolean contains(fabric.lang.Object o);
-        
+
         /**
          * This is true if the other collection only contains the element.
          *
@@ -2360,7 +2360,7 @@ public interface Collections
          *         elements equal to the element in this singleton.
          */
         public boolean containsAll(fabric.util.Collection c);
-        
+
         /**
          * Speed up the hashcode computation.
          *
@@ -2368,7 +2368,7 @@ public interface Collections
          *         on the hashcode of the singleton element.
          */
         public int hashCode();
-        
+
         /**
          * Either the list has it or not.
          *
@@ -2376,7 +2376,7 @@ public interface Collections
          * @return 0 if o is the singleton element, -1 if not.
          */
         public int indexOf(fabric.lang.Object o);
-        
+
         /**
          * Either the list has it or not.
          *
@@ -2384,10 +2384,10 @@ public interface Collections
          * @return 0 if o is the singleton element, -1 if not.
          */
         public int lastIndexOf(fabric.lang.Object o);
-        
+
         /**
          * Sublists are limited in scope.
-         * 
+         *
          * @param from The starting bound for the sublist.
          * @param to The ending bound for the sublist.
          * @return Either an empty list if both bounds are
@@ -2397,58 +2397,58 @@ public interface Collections
          *         than 1.
          */
         public fabric.util.List subList(int from, int to);
-        
+
         /**
          * Returning an array is simple.
          *
          * @return An array containing the element.
          */
         public fabric.lang.arrays.ObjectArray toArray();
-        
+
         /**
          * Obvious string.
          *
          * @return The string surrounded by enclosing
-         *         square brackets. 
+         *         square brackets.
          */
         public java.lang.String toString();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.util.AbstractList._Proxy
           implements SingletonList
         {
-            
+
             public fabric.lang.Object get$element() {
                 return ((fabric.util.Collections.SingletonList._Impl) fetch()).
                   get$element();
             }
-            
+
             public fabric.lang.Object set$element(fabric.lang.Object val) {
                 return ((fabric.util.Collections.SingletonList._Impl) fetch()).
                   set$element(val);
             }
-            
+
             public native fabric.util.Collections.SingletonList
               fabric$util$Collections$SingletonList$(fabric.lang.Object arg1);
-            
+
             public _Proxy(SingletonList._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl extends fabric.util.AbstractList._Impl
           implements SingletonList
         {
-            
+
             public fabric.lang.Object get$element() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.element;
             }
-            
+
             public fabric.lang.Object set$element(fabric.lang.Object val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -2457,26 +2457,26 @@ public interface Collections
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             /**
              * The single element.
              * @serial the singleton
              */
             private fabric.lang.Object element;
-            
+
             /**
              * Construct a singleton.
              * @param o the element
              */
             public native SingletonList fabric$util$Collections$SingletonList$(
               fabric.lang.Object o);
-            
+
             /**
              * The size: always 1!
              * @return 1.
              */
             public native int size();
-            
+
             /**
              * Only index 0 is valid.
              * @param index The index of the element
@@ -2487,7 +2487,7 @@ public interface Collections
              *         index is not 0.
              */
             public native fabric.lang.Object get(int index);
-            
+
             /**
              * The set only contains one element.
              *
@@ -2495,7 +2495,7 @@ public interface Collections
              * @return <code>true</code> if o == the singleton element.
              */
             public native boolean contains(fabric.lang.Object o);
-            
+
             /**
              * This is true if the other collection only contains the element.
              *
@@ -2505,7 +2505,7 @@ public interface Collections
              *         elements equal to the element in this singleton.
              */
             public native boolean containsAll(fabric.util.Collection c);
-            
+
             /**
              * Speed up the hashcode computation.
              *
@@ -2513,7 +2513,7 @@ public interface Collections
              *         on the hashcode of the singleton element.
              */
             public native int hashCode();
-            
+
             /**
              * Either the list has it or not.
              *
@@ -2521,7 +2521,7 @@ public interface Collections
              * @return 0 if o is the singleton element, -1 if not.
              */
             public native int indexOf(fabric.lang.Object o);
-            
+
             /**
              * Either the list has it or not.
              *
@@ -2529,10 +2529,10 @@ public interface Collections
              * @return 0 if o is the singleton element, -1 if not.
              */
             public native int lastIndexOf(fabric.lang.Object o);
-            
+
             /**
              * Sublists are limited in scope.
-             * 
+             *
              * @param from The starting bound for the sublist.
              * @param to The ending bound for the sublist.
              * @return Either an empty list if both bounds are
@@ -2542,30 +2542,30 @@ public interface Collections
              *         than 1.
              */
             public native fabric.util.List subList(int from, int to);
-            
+
             /**
              * Returning an array is simple.
              *
              * @return An array containing the element.
              */
             public native fabric.lang.arrays.ObjectArray toArray();
-            
+
             /**
              * Obvious string.
              *
              * @return The string surrounded by enclosing
-             *         square brackets. 
+             *         square brackets.
              */
             public native java.lang.String toString();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.SingletonList._Proxy(this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -2575,9 +2575,9 @@ public interface Collections
                 $writeRef($getStore(), this.element, refTypes, out,
                           intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -2585,7 +2585,7 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.element = (fabric.lang.Object)
@@ -2597,7 +2597,7 @@ public interface Collections
                                           intraStoreRefs,
                                           interStoreRefs);
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.util.Collections.SingletonList._Impl src =
@@ -2605,62 +2605,62 @@ public interface Collections
                 this.element = src.element;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.Collections.SingletonList._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     return ((fabric.util.Collections.SingletonList._Static.
                               _Impl)
                               fetch()).
                       get$serialVersionUID();
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     return ((fabric.util.Collections.SingletonList._Static.
                               _Impl)
                               fetch()).
                       set$serialVersionUID(val);
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     return ((fabric.util.Collections.SingletonList._Static.
                               _Impl)
                               fetch()).
                       postInc$serialVersionUID();
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     return ((fabric.util.Collections.SingletonList._Static.
                               _Impl)
                               fetch()).
                       postDec$serialVersionUID();
                 }
-                
+
                 public _Proxy(fabric.util.Collections.SingletonList._Static.
                                 _Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.SingletonList.
                   _Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -2683,17 +2683,17 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.Collections.SingletonList._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -2703,24 +2703,24 @@ public interface Collections
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -2730,9 +2730,9 @@ public interface Collections
                                      interStoreRefs);
                     out.writeLong(this.serialVersionUID);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -2741,27 +2741,27 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong();
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.SingletonList._Static.
                       _Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #singletonMap(Object, Object)}. This class
      * name is required for compatibility with Sun's JDK serializability.
@@ -2771,19 +2771,19 @@ public interface Collections
     public static interface SingletonMap
       extends java.io.Serializable, fabric.util.AbstractMap
     {
-        
+
         public fabric.lang.Object get$k();
-        
+
         public fabric.lang.Object set$k(fabric.lang.Object val);
-        
+
         public fabric.lang.Object get$v();
-        
+
         public fabric.lang.Object set$v(fabric.lang.Object val);
-        
+
         public fabric.util.Set get$entries();
-        
+
         public fabric.util.Set set$entries(fabric.util.Set val);
-        
+
         /**
          * Construct a singleton.
          * @param key the key
@@ -2791,14 +2791,14 @@ public interface Collections
          */
         public SingletonMap fabric$util$Collections$SingletonMap$(
           fabric.lang.Object key, fabric.lang.Object value);
-        
+
         /**
          * There is a single immutable entry.
          *
          * @return A singleton containing the map entry.
          */
         public fabric.util.Set entrySet();
-        
+
         /**
          * Single entry.
          *
@@ -2807,7 +2807,7 @@ public interface Collections
          *         this map.
          */
         public boolean containsKey(fabric.lang.Object key);
-        
+
         /**
          * Single entry.
          *
@@ -2816,7 +2816,7 @@ public interface Collections
          *         this map.
          */
         public boolean containsValue(fabric.lang.Object value);
-        
+
         /**
          * Single entry.
          *
@@ -2825,7 +2825,7 @@ public interface Collections
          *         singleton key, null otherwise.
          */
         public fabric.lang.Object get(fabric.lang.Object key);
-        
+
         /**
          * Calculate the hashcode directly.
          *
@@ -2833,21 +2833,21 @@ public interface Collections
          *         and the singleton value.
          */
         public int hashCode();
-        
+
         /**
          * Return the keyset.
          *
          * @return A singleton containing the key.
          */
         public fabric.util.Set keySet();
-        
+
         /**
          * The size: always 1!
          *
          * @return 1.
          */
         public int size();
-        
+
         /**
          * Return the values. Technically, a singleton, while more specific than
          * a general Collection, will work. Besides, that's what the JDK uses!
@@ -2855,7 +2855,7 @@ public interface Collections
          * @return A singleton containing the value.
          */
         public fabric.util.Collection values();
-        
+
         /**
          * Obvious string.
          *
@@ -2863,64 +2863,64 @@ public interface Collections
          *         and its associated value.
          */
         public java.lang.String toString();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.util.AbstractMap._Proxy
           implements SingletonMap
         {
-            
+
             public fabric.lang.Object get$k() {
                 return ((fabric.util.Collections.SingletonMap._Impl) fetch()).
                   get$k();
             }
-            
+
             public fabric.lang.Object set$k(fabric.lang.Object val) {
                 return ((fabric.util.Collections.SingletonMap._Impl) fetch()).
                   set$k(val);
             }
-            
+
             public fabric.lang.Object get$v() {
                 return ((fabric.util.Collections.SingletonMap._Impl) fetch()).
                   get$v();
             }
-            
+
             public fabric.lang.Object set$v(fabric.lang.Object val) {
                 return ((fabric.util.Collections.SingletonMap._Impl) fetch()).
                   set$v(val);
             }
-            
+
             public fabric.util.Set get$entries() {
                 return ((fabric.util.Collections.SingletonMap._Impl) fetch()).
                   get$entries();
             }
-            
+
             public fabric.util.Set set$entries(fabric.util.Set val) {
                 return ((fabric.util.Collections.SingletonMap._Impl) fetch()).
                   set$entries(val);
             }
-            
+
             public native fabric.util.Collections.SingletonMap
               fabric$util$Collections$SingletonMap$(fabric.lang.Object arg1,
                                                     fabric.lang.Object arg2);
-            
+
             public _Proxy(SingletonMap._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl extends fabric.util.AbstractMap._Impl
           implements SingletonMap
         {
-            
+
             public fabric.lang.Object get$k() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.k;
             }
-            
+
             public fabric.lang.Object set$k(fabric.lang.Object val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -2929,19 +2929,19 @@ public interface Collections
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             /**
              * The single key.
              * @serial the singleton key
              */
             private fabric.lang.Object k;
-            
+
             public fabric.lang.Object get$v() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.v;
             }
-            
+
             public fabric.lang.Object set$v(fabric.lang.Object val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -2950,19 +2950,19 @@ public interface Collections
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             /**
              * The corresponding value.
              * @serial the singleton value
              */
             private fabric.lang.Object v;
-            
+
             public fabric.util.Set get$entries() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.entries;
             }
-            
+
             public fabric.util.Set set$entries(fabric.util.Set val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -2971,12 +2971,12 @@ public interface Collections
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             /**
              * Cache the entry set.
              */
             private transient fabric.util.Set entries;
-            
+
             /**
              * Construct a singleton.
              * @param key the key
@@ -2984,14 +2984,14 @@ public interface Collections
              */
             public native SingletonMap fabric$util$Collections$SingletonMap$(
               fabric.lang.Object key, fabric.lang.Object value);
-            
+
             /**
              * There is a single immutable entry.
              *
              * @return A singleton containing the map entry.
              */
             public native fabric.util.Set entrySet();
-            
+
             /**
              * Single entry.
              *
@@ -3001,7 +3001,7 @@ public interface Collections
              *         this map.
              */
             public native boolean containsKey(fabric.lang.Object key);
-            
+
             /**
              * Single entry.
              *
@@ -3011,7 +3011,7 @@ public interface Collections
              *         this map.
              */
             public native boolean containsValue(fabric.lang.Object value);
-            
+
             /**
              * Single entry.
              *
@@ -3020,7 +3020,7 @@ public interface Collections
              *         singleton key, null otherwise.
              */
             public native fabric.lang.Object get(fabric.lang.Object key);
-            
+
             /**
              * Calculate the hashcode directly.
              *
@@ -3028,21 +3028,21 @@ public interface Collections
              *         and the singleton value.
              */
             public native int hashCode();
-            
+
             /**
              * Return the keyset.
              *
              * @return A singleton containing the key.
              */
             public native fabric.util.Set keySet();
-            
+
             /**
              * The size: always 1!
              *
              * @return 1.
              */
             public native int size();
-            
+
             /**
              * Return the values. Technically, a singleton, while more specific
              than
@@ -3052,7 +3052,7 @@ public interface Collections
              * @return A singleton containing the value.
              */
             public native fabric.util.Collection values();
-            
+
             /**
              * Obvious string.
              *
@@ -3060,15 +3060,15 @@ public interface Collections
              *         and its associated value.
              */
             public native java.lang.String toString();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.SingletonMap._Proxy(this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -3080,9 +3080,9 @@ public interface Collections
                 $writeRef($getStore(), this.v, refTypes, out, intraStoreRefs,
                           interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -3090,7 +3090,7 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.k = (fabric.lang.Object)
@@ -3102,7 +3102,7 @@ public interface Collections
                                     (fabric.common.RefTypeEnum) refTypes.next(),
                                     in, store, intraStoreRefs, interStoreRefs);
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.util.Collections.SingletonMap._Impl src =
@@ -3112,53 +3112,53 @@ public interface Collections
                 this.entries = src.entries;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.Collections.SingletonMap._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     return ((fabric.util.Collections.SingletonMap._Static._Impl)
                               fetch()).get$serialVersionUID();
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     return ((fabric.util.Collections.SingletonMap._Static._Impl)
                               fetch()).set$serialVersionUID(val);
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     return ((fabric.util.Collections.SingletonMap._Static._Impl)
                               fetch()).postInc$serialVersionUID();
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     return ((fabric.util.Collections.SingletonMap._Static._Impl)
                               fetch()).postDec$serialVersionUID();
                 }
-                
+
                 public _Proxy(fabric.util.Collections.SingletonMap._Static.
                                 _Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.SingletonMap._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -3181,17 +3181,17 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.Collections.SingletonMap._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -3201,24 +3201,24 @@ public interface Collections
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -3228,9 +3228,9 @@ public interface Collections
                                      interStoreRefs);
                     out.writeLong(this.serialVersionUID);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -3239,27 +3239,27 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong();
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.SingletonMap._Static.
                       _Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #unmodifiableCollection(Collection)}. This
      * class name is required for compatibility with Sun's JDK serializability.
@@ -3269,11 +3269,11 @@ public interface Collections
     public static interface UnmodifiableCollection
       extends fabric.util.Collection, java.io.Serializable, fabric.lang.Object
     {
-        
+
         public fabric.util.Collection get$c();
-        
+
         public fabric.util.Collection set$c(fabric.util.Collection val);
-        
+
         /**
          * Wrap a given collection.
          * @param c the collection to wrap
@@ -3282,7 +3282,7 @@ public interface Collections
         public UnmodifiableCollection
           fabric$util$Collections$UnmodifiableCollection$(
           fabric.util.Collection c);
-        
+
         /**
          * Blocks the addition of elements to the underlying collection.
          * This method never returns, throwing an exception instead.
@@ -3295,7 +3295,7 @@ public interface Collections
          *         support the add operation.
          */
         public boolean add(fabric.lang.Object o);
-        
+
         /**
          * Blocks the addition of a collection of elements to the underlying
          * collection.  This method never returns, throwing an exception
@@ -3309,7 +3309,7 @@ public interface Collections
          *         support the <code>addAll</code> operation.
          */
         public boolean addAll(fabric.util.Collection c);
-        
+
         /**
          * Blocks the clearing of the underlying collection.  This method never
          * returns, throwing an exception instead.
@@ -3319,7 +3319,7 @@ public interface Collections
          *         not support the <code>clear()</code> operation.
          */
         public void clear();
-        
+
         /**
          * Test whether the underlying collection contains a given object as one
          of its
@@ -3338,7 +3338,7 @@ public interface Collections
          *         doesn't support null values.
          */
         public boolean contains(fabric.lang.Object o);
-        
+
         /**
          * Test whether the underlying collection contains every element in a
          given
@@ -3357,7 +3357,7 @@ public interface Collections
          * @throws NullPointerException if c itself is null.
          */
         public boolean containsAll(fabric.util.Collection c1);
-        
+
         /**
          * Tests whether the underlying collection is empty, that is,
          * if size() == 0.
@@ -3365,7 +3365,7 @@ public interface Collections
          * @return <code>true</code> if this collection contains no elements.
          */
         public boolean isEmpty();
-        
+
         /**
          * Obtain an Iterator over the underlying collection, which maintains
          * its unmodifiable nature.
@@ -3374,9 +3374,9 @@ public interface Collections
          *         collection, in any order.
          */
         public fabric.util.Iterator iterator(fabric.worker.Store store);
-        
+
         public fabric.util.Iterator iterator();
-        
+
         /**
          * Blocks the removal of an object from the underlying collection.
          * This method never returns, throwing an exception instead.
@@ -3389,7 +3389,7 @@ public interface Collections
          *         does not support the <code>remove()</code> operation.
          */
         public boolean remove(fabric.lang.Object o);
-        
+
         /**
          * Blocks the removal of a collection of objects from the underlying
          * collection.  This method never returns, throwing an exception
@@ -3401,7 +3401,7 @@ public interface Collections
          *         does not support the <code>removeAll()</code> operation.
          */
         public boolean removeAll(fabric.util.Collection c);
-        
+
         /**
          * Blocks the removal of all elements from the underlying collection,
          * except those in the supplied collection.  This method never returns,
@@ -3413,14 +3413,14 @@ public interface Collections
          *         does not support the <code>retainAll()</code> operation.
          */
         public boolean retainAll(fabric.util.Collection c);
-        
+
         /**
          * Retrieves the number of elements in the underlying collection.
          *
          * @return the number of elements in the collection.
          */
         public int size();
-        
+
         /**
          * Copy the current contents of the underlying collection into an array.
          *
@@ -3431,7 +3431,7 @@ public interface Collections
          *         the underlying collection, in any order.
          */
         public fabric.lang.arrays.ObjectArray toArray();
-        
+
         /**
          * Copy the current contents of the underlying collection into an array.
           If
@@ -3458,7 +3458,7 @@ public interface Collections
          */
         public fabric.lang.arrays.ObjectArray toArray(
           fabric.lang.arrays.ObjectArray a);
-        
+
         /**
          * A textual representation of the unmodifiable collection.
          *
@@ -3466,74 +3466,74 @@ public interface Collections
          <code>String</code>.
          */
         public java.lang.String toString();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.lang.Object._Proxy
           implements UnmodifiableCollection
         {
-            
+
             public fabric.util.Collection get$c() {
                 return ((fabric.util.Collections.UnmodifiableCollection._Impl)
                           fetch()).get$c();
             }
-            
+
             public fabric.util.Collection set$c(fabric.util.Collection val) {
                 return ((fabric.util.Collections.UnmodifiableCollection._Impl)
                           fetch()).set$c(val);
             }
-            
+
             public native fabric.util.Collections.UnmodifiableCollection
               fabric$util$Collections$UnmodifiableCollection$(
               fabric.util.Collection arg1);
-            
+
             public native boolean add(fabric.lang.Object arg1);
-            
+
             public native boolean addAll(fabric.util.Collection arg1);
-            
+
             public native void clear();
-            
+
             public native boolean contains(fabric.lang.Object arg1);
-            
+
             public native boolean containsAll(fabric.util.Collection arg1);
-            
+
             public native boolean isEmpty();
-            
+
             public native fabric.util.Iterator iterator(
               fabric.worker.Store arg1);
-            
+
             public native fabric.util.Iterator iterator();
-            
+
             public native boolean remove(fabric.lang.Object arg1);
-            
+
             public native boolean removeAll(fabric.util.Collection arg1);
-            
+
             public native boolean retainAll(fabric.util.Collection arg1);
-            
+
             public native int size();
-            
+
             public native fabric.lang.arrays.ObjectArray toArray();
-            
+
             public native fabric.lang.arrays.ObjectArray toArray(
               fabric.lang.arrays.ObjectArray arg1);
-            
+
             public _Proxy(UnmodifiableCollection._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static class _Impl extends fabric.lang.Object._Impl
           implements UnmodifiableCollection
         {
-            
+
             public fabric.util.Collection get$c() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.c;
             }
-            
+
             public fabric.util.Collection set$c(fabric.util.Collection val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -3542,13 +3542,13 @@ public interface Collections
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             /**
              * The wrapped collection. Package visible for use by subclasses.
              * @serial the real collection
              */
             fabric.util.Collection c;
-            
+
             /**
              * Wrap a given collection.
              * @param c the collection to wrap
@@ -3557,7 +3557,7 @@ public interface Collections
             public native UnmodifiableCollection
               fabric$util$Collections$UnmodifiableCollection$(
               fabric.util.Collection c);
-            
+
             /**
              * Blocks the addition of elements to the underlying collection.
              * This method never returns, throwing an exception instead.
@@ -3570,7 +3570,7 @@ public interface Collections
              *         support the add operation.
              */
             public native boolean add(fabric.lang.Object o);
-            
+
             /**
              * Blocks the addition of a collection of elements to the underlying
              * collection.  This method never returns, throwing an exception
@@ -3584,7 +3584,7 @@ public interface Collections
              *         support the <code>addAll</code> operation.
              */
             public native boolean addAll(fabric.util.Collection c);
-            
+
             /**
              * Blocks the clearing of the underlying collection.  This method
              never
@@ -3595,7 +3595,7 @@ public interface Collections
              *         not support the <code>clear()</code> operation.
              */
             public native void clear();
-            
+
             /**
              * Test whether the underlying collection contains a given object as
              one of its
@@ -3614,7 +3614,7 @@ public interface Collections
              *         doesn't support null values.
              */
             public native boolean contains(fabric.lang.Object o);
-            
+
             /**
              * Test whether the underlying collection contains every element in
              a given
@@ -3633,7 +3633,7 @@ public interface Collections
              * @throws NullPointerException if c itself is null.
              */
             public native boolean containsAll(fabric.util.Collection c1);
-            
+
             /**
              * Tests whether the underlying collection is empty, that is,
              * if size() == 0.
@@ -3642,7 +3642,7 @@ public interface Collections
              elements.
              */
             public native boolean isEmpty();
-            
+
             /**
              * Obtain an Iterator over the underlying collection, which
              maintains
@@ -3654,9 +3654,9 @@ public interface Collections
              */
             public native fabric.util.Iterator iterator(
               fabric.worker.Store store);
-            
+
             public native fabric.util.Iterator iterator();
-            
+
             /**
              * Blocks the removal of an object from the underlying collection.
              * This method never returns, throwing an exception instead.
@@ -3670,7 +3670,7 @@ public interface Collections
              *         does not support the <code>remove()</code> operation.
              */
             public native boolean remove(fabric.lang.Object o);
-            
+
             /**
              * Blocks the removal of a collection of objects from the underlying
              * collection.  This method never returns, throwing an exception
@@ -3683,7 +3683,7 @@ public interface Collections
              *         does not support the <code>removeAll()</code> operation.
              */
             public native boolean removeAll(fabric.util.Collection c);
-            
+
             /**
              * Blocks the removal of all elements from the underlying
              collection,
@@ -3698,14 +3698,14 @@ public interface Collections
              *         does not support the <code>retainAll()</code> operation.
              */
             public native boolean retainAll(fabric.util.Collection c);
-            
+
             /**
              * Retrieves the number of elements in the underlying collection.
              *
              * @return the number of elements in the collection.
              */
             public native int size();
-            
+
             /**
              * Copy the current contents of the underlying collection into an
              array.
@@ -3717,7 +3717,7 @@ public interface Collections
              *         the underlying collection, in any order.
              */
             public native fabric.lang.arrays.ObjectArray toArray();
-            
+
             /**
              * Copy the current contents of the underlying collection into an
              array.  If
@@ -3746,7 +3746,7 @@ public interface Collections
              */
             public native fabric.lang.arrays.ObjectArray toArray(
               fabric.lang.arrays.ObjectArray a);
-            
+
             /**
              * A textual representation of the unmodifiable collection.
              *
@@ -3754,17 +3754,17 @@ public interface Collections
              <code>String</code>.
              */
             public native java.lang.String toString();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.UnmodifiableCollection.
                   _Proxy(
                   this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -3774,9 +3774,9 @@ public interface Collections
                 $writeRef($getStore(), this.c, refTypes, out, intraStoreRefs,
                           interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -3784,7 +3784,7 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.c = (fabric.util.Collection)
@@ -3792,7 +3792,7 @@ public interface Collections
                                     (fabric.common.RefTypeEnum) refTypes.next(),
                                     in, store, intraStoreRefs, interStoreRefs);
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.util.Collections.UnmodifiableCollection._Impl src =
@@ -3800,62 +3800,62 @@ public interface Collections
                 this.c = src.c;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.Collections.UnmodifiableCollection._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     return ((fabric.util.Collections.UnmodifiableCollection.
                               _Static._Impl)
                               fetch()).
                       get$serialVersionUID();
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     return ((fabric.util.Collections.UnmodifiableCollection.
                               _Static._Impl)
                               fetch()).
                       set$serialVersionUID(val);
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     return ((fabric.util.Collections.UnmodifiableCollection.
                               _Static._Impl)
                               fetch()).
                       postInc$serialVersionUID();
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     return ((fabric.util.Collections.UnmodifiableCollection.
                               _Static._Impl)
                               fetch()).
                       postDec$serialVersionUID();
                 }
-                
+
                 public _Proxy(fabric.util.Collections.UnmodifiableCollection.
                                 _Static._Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.
                   UnmodifiableCollection._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -3879,17 +3879,17 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.Collections.UnmodifiableCollection._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -3899,24 +3899,24 @@ public interface Collections
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -3926,9 +3926,9 @@ public interface Collections
                                      interStoreRefs);
                     out.writeLong(this.serialVersionUID);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -3937,27 +3937,27 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong();
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.UnmodifiableCollection.
                       _Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of the various iterator methods in the
      * unmodifiable classes.
@@ -3967,18 +3967,18 @@ public interface Collections
     public static interface UnmodifiableIterator
       extends fabric.util.Iterator, fabric.lang.Object
     {
-        
+
         public fabric.util.Iterator get$i();
-        
+
         public fabric.util.Iterator set$i(fabric.util.Iterator val);
-        
+
         /**
          * Only trusted code creates a wrapper.
          * @param i the wrapped iterator
          */
         public UnmodifiableIterator
           fabric$util$Collections$UnmodifiableIterator$(fabric.util.Iterator i);
-        
+
         /**
          * Obtains the next element in the underlying collection.
          *
@@ -3986,7 +3986,7 @@ public interface Collections
          * @throws NoSuchElementException if there are no more elements.
          */
         public fabric.lang.Object next();
-        
+
         /**
          * Tests whether there are still elements to be retrieved from the
          * underlying collection by <code>next()</code>.  When this method
@@ -3998,7 +3998,7 @@ public interface Collections
          *         collection.
          */
         public boolean hasNext();
-        
+
         /**
          * Blocks the removal of elements from the underlying collection by the
          * iterator.
@@ -4007,50 +4007,50 @@ public interface Collections
          *         does not support the removal of elements by its iterator.
          */
         public void remove();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.lang.Object._Proxy
           implements UnmodifiableIterator
         {
-            
+
             public fabric.util.Iterator get$i() {
                 return ((fabric.util.Collections.UnmodifiableIterator._Impl)
                           fetch()).get$i();
             }
-            
+
             public fabric.util.Iterator set$i(fabric.util.Iterator val) {
                 return ((fabric.util.Collections.UnmodifiableIterator._Impl)
                           fetch()).set$i(val);
             }
-            
+
             public native fabric.util.Collections.UnmodifiableIterator
               fabric$util$Collections$UnmodifiableIterator$(
               fabric.util.Iterator arg1);
-            
+
             public native fabric.lang.Object next();
-            
+
             public native boolean hasNext();
-            
+
             public native void remove();
-            
+
             public _Proxy(UnmodifiableIterator._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static class _Impl extends fabric.lang.Object._Impl
           implements UnmodifiableIterator
         {
-            
+
             public fabric.util.Iterator get$i() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.i;
             }
-            
+
             public fabric.util.Iterator set$i(fabric.util.Iterator val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -4059,12 +4059,12 @@ public interface Collections
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             /**
              * The wrapped iterator.
              */
             private fabric.util.Iterator i;
-            
+
             /**
              * Only trusted code creates a wrapper.
              * @param i the wrapped iterator
@@ -4072,7 +4072,7 @@ public interface Collections
             public native UnmodifiableIterator
               fabric$util$Collections$UnmodifiableIterator$(
               fabric.util.Iterator i);
-            
+
             /**
              * Obtains the next element in the underlying collection.
              *
@@ -4080,7 +4080,7 @@ public interface Collections
              * @throws NoSuchElementException if there are no more elements.
              */
             public native fabric.lang.Object next();
-            
+
             /**
              * Tests whether there are still elements to be retrieved from the
              * underlying collection by <code>next()</code>.  When this method
@@ -4093,7 +4093,7 @@ public interface Collections
              *         collection.
              */
             public native boolean hasNext();
-            
+
             /**
              * Blocks the removal of elements from the underlying collection by
              the
@@ -4104,16 +4104,16 @@ public interface Collections
              *         does not support the removal of elements by its iterator.
              */
             public native void remove();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.UnmodifiableIterator._Proxy(
                   this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -4123,9 +4123,9 @@ public interface Collections
                 $writeRef($getStore(), this.i, refTypes, out, intraStoreRefs,
                           interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -4133,7 +4133,7 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.i = (fabric.util.Iterator)
@@ -4141,7 +4141,7 @@ public interface Collections
                                     (fabric.common.RefTypeEnum) refTypes.next(),
                                     in, store, intraStoreRefs, interStoreRefs);
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.util.Collections.UnmodifiableIterator._Impl src =
@@ -4149,25 +4149,25 @@ public interface Collections
                 this.i = src.i;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.Collections.UnmodifiableIterator._Static
             {
-                
+
                 public _Proxy(fabric.util.Collections.UnmodifiableIterator.
                                 _Static._Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.
                   UnmodifiableIterator._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -4191,11 +4191,11 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.Collections.UnmodifiableIterator._Static
             {
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -4204,9 +4204,9 @@ public interface Collections
                     super.$serialize(out, refTypes, intraStoreRefs,
                                      interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -4215,26 +4215,26 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.UnmodifiableIterator.
                       _Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #unmodifiableList(List)} for sequential
      * lists. This class name is required for compatibility with Sun's JDK
@@ -4245,11 +4245,11 @@ public interface Collections
     public static interface UnmodifiableList
       extends fabric.util.List, UnmodifiableCollection
     {
-        
+
         public fabric.util.List get$list();
-        
+
         public fabric.util.List set$list(fabric.util.List val);
-        
+
         /**
          * Wrap a given list.
          * @param l the list to wrap
@@ -4257,7 +4257,7 @@ public interface Collections
          */
         public UnmodifiableList fabric$util$Collections$UnmodifiableList$(
           fabric.util.List l);
-        
+
         /**
          * Blocks the addition of an element to the underlying
          * list at a specific index.  This method never returns,
@@ -4269,7 +4269,7 @@ public interface Collections
          *         list doesn't support the <code>add()</code> operation.
          */
         public void add(int index, fabric.lang.Object o);
-        
+
         /**
          * Blocks the addition of a collection of elements to the
          * underlying list at a specific index.  This method never
@@ -4281,7 +4281,7 @@ public interface Collections
          *         list doesn't support the <code>addAll()</code> operation.
          */
         public boolean addAll(int index, fabric.util.Collection c);
-        
+
         /**
          * Returns <code>true</code> if the object, o, is an instance of
          * <code>List</code> with the same size and elements
@@ -4291,7 +4291,7 @@ public interface Collections
          * @return <code>true</code> if o is equivalent to the underlying list.
          */
         public boolean equals(fabric.lang.Object o);
-        
+
         /**
          * Retrieves the element at a given index in the underlying list.
          *
@@ -4301,7 +4301,7 @@ public interface Collections
          size()
          */
         public fabric.lang.Object get(int index);
-        
+
         /**
          * Computes the hash code for the underlying list.
          * The exact computation is described in the documentation
@@ -4311,7 +4311,7 @@ public interface Collections
          * @see List#hashCode()
          */
         public int hashCode();
-        
+
         /**
          * Obtain the first index at which a given object is to be found in the
          * underlying list.
@@ -4326,7 +4326,7 @@ public interface Collections
          *         list does not support null values.
          */
         public int indexOf(fabric.lang.Object o);
-        
+
         /**
          * Obtain the last index at which a given object is to be found in the
          * underlying list.
@@ -4340,7 +4340,7 @@ public interface Collections
          *         list does not support null values.
          */
         public int lastIndexOf(fabric.lang.Object o);
-        
+
         /**
          * Obtains a list iterator over the underlying list, starting at the
          beginning
@@ -4351,7 +4351,7 @@ public interface Collections
          *         underlying list, in order, starting at the beginning.
          */
         public fabric.util.ListIterator listIterator(fabric.worker.Store store);
-        
+
         /**
          * Obtains a list iterator over the underlying list, starting at the
          specified
@@ -4375,7 +4375,7 @@ public interface Collections
          */
         public fabric.util.ListIterator listIterator(fabric.worker.Store store,
                                                      int index);
-        
+
         /**
          * Blocks the removal of the element at the specified index.
          * This method never returns, throwing an exception instead.
@@ -4387,7 +4387,7 @@ public interface Collections
          *         operation.
          */
         public fabric.lang.Object remove(int index);
-        
+
         /**
          * Blocks the replacement of the element at the specified index.
          * This method never returns, throwing an exception instead.
@@ -4400,7 +4400,7 @@ public interface Collections
          *         operation.
          */
         public fabric.lang.Object set(int index, fabric.lang.Object o);
-        
+
         /**
          * Obtain a List view of a subsection of the underlying list, from
          * fromIndex (inclusive) to toIndex (exclusive). If the two indices
@@ -4418,68 +4418,68 @@ public interface Collections
          *         || toIndex &gt; size() || fromIndex &gt; toIndex.
          */
         public fabric.util.List subList(int fromIndex, int toIndex);
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy
         extends fabric.util.Collections.UnmodifiableCollection._Proxy
           implements UnmodifiableList
         {
-            
+
             public fabric.util.List get$list() {
                 return ((fabric.util.Collections.UnmodifiableList._Impl)
                           fetch()).get$list();
             }
-            
+
             public fabric.util.List set$list(fabric.util.List val) {
                 return ((fabric.util.Collections.UnmodifiableList._Impl)
                           fetch()).set$list(val);
             }
-            
+
             public native fabric.util.Collections.UnmodifiableList
               fabric$util$Collections$UnmodifiableList$(fabric.util.List arg1);
-            
+
             public native void add(int arg1, fabric.lang.Object arg2);
-            
+
             public native boolean addAll(int arg1, fabric.util.Collection arg2);
-            
+
             public native fabric.lang.Object get(int arg1);
-            
+
             public native int indexOf(fabric.lang.Object arg1);
-            
+
             public native int lastIndexOf(fabric.lang.Object arg1);
-            
+
             public native fabric.util.ListIterator listIterator(
               fabric.worker.Store arg1);
-            
+
             public native fabric.util.ListIterator listIterator(
               fabric.worker.Store arg1, int arg2);
-            
+
             public native fabric.lang.Object remove(int arg1);
-            
+
             public native fabric.lang.Object set(int arg1,
                                                  fabric.lang.Object arg2);
-            
+
             public native fabric.util.List subList(int arg1, int arg2);
-            
+
             public _Proxy(UnmodifiableList._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static class _Impl
         extends fabric.util.Collections.UnmodifiableCollection._Impl
           implements UnmodifiableList
         {
-            
+
             public fabric.util.List get$list() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.list;
             }
-            
+
             public fabric.util.List set$list(fabric.util.List val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -4488,14 +4488,14 @@ public interface Collections
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             /**
              * The wrapped list; stored both here and in the superclass to avoid
              * excessive casting. Package visible for use by subclass.
              * @serial the wrapped list
              */
             fabric.util.List list;
-            
+
             /**
              * Wrap a given list.
              * @param l the list to wrap
@@ -4503,7 +4503,7 @@ public interface Collections
              */
             public native UnmodifiableList
               fabric$util$Collections$UnmodifiableList$(fabric.util.List l);
-            
+
             /**
              * Blocks the addition of an element to the underlying
              * list at a specific index.  This method never returns,
@@ -4515,7 +4515,7 @@ public interface Collections
              *         list doesn't support the <code>add()</code> operation.
              */
             public native void add(int index, fabric.lang.Object o);
-            
+
             /**
              * Blocks the addition of a collection of elements to the
              * underlying list at a specific index.  This method never
@@ -4527,7 +4527,7 @@ public interface Collections
              *         list doesn't support the <code>addAll()</code> operation.
              */
             public native boolean addAll(int index, fabric.util.Collection c);
-            
+
             /**
              * Returns <code>true</code> if the object, o, is an instance of
              * <code>List</code> with the same size and elements
@@ -4538,7 +4538,7 @@ public interface Collections
              list.
              */
             public native boolean equals(fabric.lang.Object o);
-            
+
             /**
              * Retrieves the element at a given index in the underlying list.
              *
@@ -4548,7 +4548,7 @@ public interface Collections
              size()
              */
             public native fabric.lang.Object get(int index);
-            
+
             /**
              * Computes the hash code for the underlying list.
              * The exact computation is described in the documentation
@@ -4558,7 +4558,7 @@ public interface Collections
              * @see List#hashCode()
              */
             public native int hashCode();
-            
+
             /**
              * Obtain the first index at which a given object is to be found in
              the
@@ -4574,7 +4574,7 @@ public interface Collections
              *         list does not support null values.
              */
             public native int indexOf(fabric.lang.Object o);
-            
+
             /**
              * Obtain the last index at which a given object is to be found in
              the
@@ -4590,7 +4590,7 @@ public interface Collections
              *         list does not support null values.
              */
             public native int lastIndexOf(fabric.lang.Object o);
-            
+
             /**
              * Obtains a list iterator over the underlying list, starting at the
              beginning
@@ -4602,7 +4602,7 @@ public interface Collections
              */
             public native fabric.util.ListIterator listIterator(
               fabric.worker.Store store);
-            
+
             /**
              * Obtains a list iterator over the underlying list, starting at the
              specified
@@ -4627,7 +4627,7 @@ public interface Collections
              */
             public native fabric.util.ListIterator listIterator(
               fabric.worker.Store store, int index);
-            
+
             /**
              * Blocks the removal of the element at the specified index.
              * This method never returns, throwing an exception instead.
@@ -4639,7 +4639,7 @@ public interface Collections
              *         operation.
              */
             public native fabric.lang.Object remove(int index);
-            
+
             /**
              * Blocks the replacement of the element at the specified index.
              * This method never returns, throwing an exception instead.
@@ -4653,7 +4653,7 @@ public interface Collections
              */
             public native fabric.lang.Object set(int index,
                                                  fabric.lang.Object o);
-            
+
             /**
              * Obtain a List view of a subsection of the underlying list, from
              * fromIndex (inclusive) to toIndex (exclusive). If the two indices
@@ -4673,16 +4673,16 @@ public interface Collections
              *         || toIndex &gt; size() || fromIndex &gt; toIndex.
              */
             public native fabric.util.List subList(int fromIndex, int toIndex);
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.UnmodifiableList._Proxy(
                   this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -4692,9 +4692,9 @@ public interface Collections
                 $writeRef($getStore(), this.list, refTypes, out, intraStoreRefs,
                           interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -4702,7 +4702,7 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.list = (fabric.util.List)
@@ -4714,7 +4714,7 @@ public interface Collections
                                        intraStoreRefs,
                                        interStoreRefs);
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.util.Collections.UnmodifiableList._Impl src =
@@ -4722,62 +4722,62 @@ public interface Collections
                 this.list = src.list;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy
               implements fabric.util.Collections.UnmodifiableList._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     return ((fabric.util.Collections.UnmodifiableList._Static.
                               _Impl)
                               fetch()).
                       get$serialVersionUID();
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     return ((fabric.util.Collections.UnmodifiableList._Static.
                               _Impl)
                               fetch()).
                       set$serialVersionUID(val);
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     return ((fabric.util.Collections.UnmodifiableList._Static.
                               _Impl)
                               fetch()).
                       postInc$serialVersionUID();
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     return ((fabric.util.Collections.UnmodifiableList._Static.
                               _Impl)
                               fetch()).
                       postDec$serialVersionUID();
                 }
-                
+
                 public _Proxy(fabric.util.Collections.UnmodifiableList._Static.
                                 _Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.UnmodifiableList.
                   _Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -4801,17 +4801,17 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl
               implements fabric.util.Collections.UnmodifiableList._Static
             {
-                
+
                 public long get$serialVersionUID() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -4821,24 +4821,24 @@ public interface Collections
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -4848,9 +4848,9 @@ public interface Collections
                                      interStoreRefs);
                     out.writeLong(this.serialVersionUID);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -4859,27 +4859,27 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong();
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.UnmodifiableList._Static.
                       _Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #unmodifiableList(List)} for random-access
      * lists. This class name is required for compatibility with Sun's JDK
@@ -4890,7 +4890,7 @@ public interface Collections
     public static interface UnmodifiableRandomAccessList
       extends fabric.util.RandomAccess, UnmodifiableList
     {
-        
+
         /**
          * Wrap a given list.
          * @param l the list to wrap
@@ -4899,32 +4899,32 @@ public interface Collections
         public UnmodifiableRandomAccessList
           fabric$util$Collections$UnmodifiableRandomAccessList$(
           fabric.util.List l);
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy
         extends fabric.util.Collections.UnmodifiableList._Proxy
           implements UnmodifiableRandomAccessList
         {
-            
+
             public native fabric.util.Collections.UnmodifiableRandomAccessList
               fabric$util$Collections$UnmodifiableRandomAccessList$(
               fabric.util.List arg1);
-            
+
             public _Proxy(UnmodifiableRandomAccessList._Impl impl) {
                 super(impl);
             }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl
         extends fabric.util.Collections.UnmodifiableList._Impl
           implements UnmodifiableRandomAccessList
         {
-            
+
             /**
              * Wrap a given list.
              * @param l the list to wrap
@@ -4933,17 +4933,17 @@ public interface Collections
             public native UnmodifiableRandomAccessList
               fabric$util$Collections$UnmodifiableRandomAccessList$(
               fabric.util.List l);
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.UnmodifiableRandomAccessList.
                   _Proxy(
                   this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -4951,9 +4951,9 @@ public interface Collections
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -4961,22 +4961,22 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy
             extends fabric.
               lang.
@@ -4985,49 +4985,49 @@ public interface Collections
               implements fabric.util.Collections.UnmodifiableRandomAccessList.
                            _Static
             {
-                
+
                 public long get$serialVersionUID() {
                     return ((fabric.util.Collections.
                               UnmodifiableRandomAccessList._Static._Impl)
                               fetch()).
                       get$serialVersionUID();
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     return ((fabric.util.Collections.
                               UnmodifiableRandomAccessList._Static._Impl)
                               fetch()).
                       set$serialVersionUID(val);
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     return ((fabric.util.Collections.
                               UnmodifiableRandomAccessList._Static._Impl)
                               fetch()).
                       postInc$serialVersionUID();
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     return ((fabric.util.Collections.
                               UnmodifiableRandomAccessList._Static._Impl)
                               fetch()).
                       postDec$serialVersionUID();
                 }
-                
+
                 public _Proxy(fabric.util.Collections.
                                 UnmodifiableRandomAccessList._Static.
                                 _Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.
                   UnmodifiableRandomAccessList._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -5052,7 +5052,7 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl
             extends fabric.
               lang.
@@ -5061,13 +5061,13 @@ public interface Collections
               implements fabric.util.Collections.UnmodifiableRandomAccessList.
                            _Static
             {
-                
+
                 public long get$serialVersionUID() {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerRead(this);
                     return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) {
                     fabric.worker.transaction.TransactionManager tm =
                       fabric.worker.transaction.TransactionManager.getInstance(
@@ -5077,24 +5077,24 @@ public interface Collections
                     if (transactionCreated) tm.commitTransaction();
                     return val;
                 }
-                
+
                 public long postInc$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp + 1));
                     return tmp;
                 }
-                
+
                 public long postDec$serialVersionUID() {
                     long tmp = this.get$serialVersionUID();
                     this.set$serialVersionUID((long) (tmp - 1));
                     return tmp;
                 }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -5104,9 +5104,9 @@ public interface Collections
                                      interStoreRefs);
                     out.writeLong(this.serialVersionUID);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -5115,27 +5115,27 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong();
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.
                       UnmodifiableRandomAccessList._Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link UnmodifiableList#listIterator(Store)}.
      *
@@ -5144,11 +5144,11 @@ public interface Collections
     public static interface UnmodifiableListIterator
       extends fabric.util.ListIterator, UnmodifiableIterator
     {
-        
+
         public fabric.util.ListIterator get$li();
-        
+
         public fabric.util.ListIterator set$li(fabric.util.ListIterator val);
-        
+
         /**
          * Only trusted code creates a wrapper.
          * @param li the wrapped iterator
@@ -5156,7 +5156,7 @@ public interface Collections
         public UnmodifiableListIterator
           fabric$util$Collections$UnmodifiableListIterator$(
           fabric.util.ListIterator li);
-        
+
         /**
          * Blocks the addition of an object to the list underlying this
          iterator.
@@ -5168,7 +5168,7 @@ public interface Collections
          *         list does not support the <code>add()</code> operation.
          */
         public void add(fabric.lang.Object o);
-        
+
         /**
          * Tests whether there are still elements to be retrieved from the
          * underlying collection by <code>previous()</code>.  When this method
@@ -5180,7 +5180,7 @@ public interface Collections
          *         current position in the underlying list.
          */
         public boolean hasPrevious();
-        
+
         /**
          * Find the index of the element that would be returned by a call to
          next.
@@ -5191,7 +5191,7 @@ public interface Collections
          *         <code>next()</code>.
          */
         public int nextIndex();
-        
+
         /**
          * Obtains the previous element in the underlying list.
          *
@@ -5199,7 +5199,7 @@ public interface Collections
          * @throws NoSuchElementException if there are no more prior elements.
          */
         public fabric.lang.Object previous();
-        
+
         /**
          * Find the index of the element that would be returned by a call to
          * previous. If <code>hasPrevious()</code> returns <code>false</code>,
@@ -5209,7 +5209,7 @@ public interface Collections
          *         <code>previous()</code>.
          */
         public int previousIndex();
-        
+
         /**
          * Blocks the replacement of an element in the list underlying this
          * iterator.  This method never returns, throwing an exception instead.
@@ -5220,59 +5220,59 @@ public interface Collections
          *         list does not support the <code>set()</code> operation.
          */
         public void set(fabric.lang.Object o);
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy
         extends fabric.util.Collections.UnmodifiableIterator._Proxy
           implements UnmodifiableListIterator
         {
-            
+
             public fabric.util.ListIterator get$li() {
                 return ((fabric.util.Collections.UnmodifiableListIterator._Impl)
                           fetch()).get$li();
             }
-            
+
             public fabric.util.ListIterator set$li(
               fabric.util.ListIterator val) {
                 return ((fabric.util.Collections.UnmodifiableListIterator._Impl)
                           fetch()).set$li(val);
             }
-            
+
             public native fabric.util.Collections.UnmodifiableListIterator
               fabric$util$Collections$UnmodifiableListIterator$(
               fabric.util.ListIterator arg1);
-            
+
             public native void add(fabric.lang.Object arg1);
-            
+
             public native boolean hasPrevious();
-            
+
             public native int nextIndex();
-            
+
             public native fabric.lang.Object previous();
-            
+
             public native int previousIndex();
-            
+
             public native void set(fabric.lang.Object arg1);
-            
+
             public _Proxy(UnmodifiableListIterator._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static final class _Impl
         extends fabric.util.Collections.UnmodifiableIterator._Impl
           implements UnmodifiableListIterator
         {
-            
+
             public fabric.util.ListIterator get$li() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
                 return this.li;
             }
-            
+
             public fabric.util.ListIterator set$li(
               fabric.util.ListIterator val) {
                 fabric.worker.transaction.TransactionManager tm =
@@ -5282,13 +5282,13 @@ public interface Collections
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             /**
              * The wrapped iterator, stored both here and in the superclass to
              * avoid excessive casting.
              */
             private fabric.util.ListIterator li;
-            
+
             /**
              * Only trusted code creates a wrapper.
              * @param li the wrapped iterator
@@ -5296,7 +5296,7 @@ public interface Collections
             public native UnmodifiableListIterator
               fabric$util$Collections$UnmodifiableListIterator$(
               fabric.util.ListIterator li);
-            
+
             /**
              * Blocks the addition of an object to the list underlying this
              iterator.
@@ -5308,7 +5308,7 @@ public interface Collections
              *         list does not support the <code>add()</code> operation.
              */
             public native void add(fabric.lang.Object o);
-            
+
             /**
              * Tests whether there are still elements to be retrieved from the
              * underlying collection by <code>previous()</code>.  When this
@@ -5322,7 +5322,7 @@ public interface Collections
              *         current position in the underlying list.
              */
             public native boolean hasPrevious();
-            
+
             /**
              * Find the index of the element that would be returned by a call to
              next.
@@ -5333,7 +5333,7 @@ public interface Collections
              *         <code>next()</code>.
              */
             public native int nextIndex();
-            
+
             /**
              * Obtains the previous element in the underlying list.
              *
@@ -5342,7 +5342,7 @@ public interface Collections
              elements.
              */
             public native fabric.lang.Object previous();
-            
+
             /**
              * Find the index of the element that would be returned by a call to
              * previous. If <code>hasPrevious()</code> returns
@@ -5353,7 +5353,7 @@ public interface Collections
              *         <code>previous()</code>.
              */
             public native int previousIndex();
-            
+
             /**
              * Blocks the replacement of an element in the list underlying this
              * iterator.  This method never returns, throwing an exception
@@ -5365,17 +5365,17 @@ public interface Collections
              *         list does not support the <code>set()</code> operation.
              */
             public native void set(fabric.lang.Object o);
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.Collections.UnmodifiableListIterator.
                   _Proxy(
                   this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -5385,9 +5385,9 @@ public interface Collections
                 $writeRef($getStore(), this.li, refTypes, out, intraStoreRefs,
                           interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -5395,7 +5395,7 @@ public interface Collections
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.li = (fabric.util.ListIterator)
@@ -5407,7 +5407,7 @@ public interface Collections
                                      intraStoreRefs,
                                      interStoreRefs);
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.util.Collections.UnmodifiableListIterator._Impl src =
@@ -5416,7 +5416,7 @@ public interface Collections
                 this.li = src.li;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
             final class _Proxy
             extends fabric.
@@ -5426,20 +5426,20 @@ public interface Collections
               implements fabric.util.Collections.UnmodifiableListIterator.
                            _Static
             {
-                
+
                 public _Proxy(fabric.util.Collections.UnmodifiableListIterator.
                                 _Static._Impl impl) {
                     super(impl);
                 }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.util.Collections.
                   UnmodifiableListIterator._Static
                   $instance;
-                
+
                 static {
                     fabric.
                       util.
@@ -5463,7 +5463,7 @@ public interface Collections
                     impl.$init();
                 }
             }
-            
+
             class _Impl
             extends fabric.
               lang.
@@ -5472,7 +5472,7 @@ public interface Collections
               implements fabric.util.Collections.UnmodifiableListIterator.
                            _Static
             {
-                
+
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -5481,9 +5481,9 @@ public interface Collections
                     super.$serialize(out, refTypes, intraStoreRefs,
                                      interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -5492,26 +5492,26 @@ public interface Collections
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.Collections.UnmodifiableListIterator.
                       _Static._Proxy(
                       this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #unmodifiableMap(Map)}. This
      * class name is required for compatibility with Sun's JDK serializability.
@@ -5521,30 +5521,30 @@ public interface Collections
     public static interface UnmodifiableMap
       extends fabric.util.Map, java.io.Serializable, fabric.lang.Object
     {
-        
+
         public fabric.util.Map get$m();
-        
+
         public fabric.util.Map set$m(fabric.util.Map val);
-        
+
         public fabric.util.Set get$entries();
-        
+
         public fabric.util.Set set$entries(fabric.util.Set val);
-        
+
         public fabric.util.Set get$keys();
-        
+
         public fabric.util.Set set$keys(fabric.util.Set val);
-        
+
         public fabric.util.Collection get$values();
-        
+
         public fabric.util.Collection set$values(fabric.util.Collection val);
-        
+
         /**
          * Wrap a given map.
          * @param m the map to wrap
          * @throws NullPointerException if m is null
          */
         public UnmodifiableMap fabric$util$Collections$UnmodifiableMap$(fabric.util.Map m);
-        
+
         /**
          * Blocks the clearing of entries from the underlying map.
          * This method never returns, throwing an exception instead.
@@ -5553,7 +5553,7 @@ public interface Collections
          *         map does not support the <code>clear()</code> operation.
          */
         public void clear();
-        
+
         /**
          * Returns <code>true</code> if the underlying map contains a mapping for
          * the given key.
@@ -5565,7 +5565,7 @@ public interface Collections
          *         does not permit null keys
          */
         public boolean containsKey(fabric.lang.Object key);
-        
+
         /**
          * Returns <code>true</code> if the underlying map contains at least one
          mapping with
@@ -5582,7 +5582,7 @@ public interface Collections
          *         support null values.
          */
         public boolean containsValue(fabric.lang.Object value);
-        
+
         /**
          * Returns a unmodifiable set view of the entries in the underlying map.
          * Each element in the set is a unmodifiable variant of <code>Map.Entry</code>.
@@ -5595,7 +5595,7 @@ public interface Collections
          * @see Map.Entry
          */
         public fabric.util.Set entrySet();
-        
+
         /**
          * The implementation of {@link UnmodifiableMap#entrySet()}. This class
          * name is required for compatibility with Sun's JDK serializability.
@@ -5606,65 +5606,65 @@ public interface Collections
                                                              UnmodifiableSet {
             public static interface UnmodifiableMapEntry extends Entry, fabric.lang.Object
             {
-                
+
                 public fabric.util.Map.Entry get$e();
-                
+
                 public fabric.util.Map.Entry set$e(fabric.util.Map.Entry val);
-                
+
                 /**
                  * Returns <code>true</code> if the object, o, is also a map entry
                  * with an identical key and value.
-                 * 
+                 *
                  * @param o the object to compare.
                  * @return <code>true</code> if o is an equivalent map entry.
                  */
                 public boolean equals(fabric.lang.Object o);
-                
+
                 /**
                  * Returns the key of this map entry.
-                 * 
+                 *
                  * @return the key.
                  */
                 public fabric.lang.Object getKey();
-                
+
                 /**
                  * Returns the value of this map entry.
-                 * 
+                 *
                  * @return the value.
                  */
                 public fabric.lang.Object getValue();
-                
+
                 /**
                  * Computes the hash code of this map entry. The computation is
                  * described in the <code>Map</code> interface documentation.
-                 * 
+                 *
                  * @return the hash code of this entry.
                  * @see Map#hashCode()
                  */
                 public int hashCode();
-                
+
                 /**
                  * Blocks the alteration of the value of this map entry. This method
                  * never returns, throwing an exception instead.
-                 * 
+                 *
                  * @param value The new value.
                  * @throws UnsupportedOperationException as an unmodifiable map entry
                  *           does not support the <code>setValue()</code> operation.
                  */
                 public fabric.lang.Object setValue(fabric.lang.Object value);
-                
+
                 /**
                  * Returns a textual representation of the map entry.
-                 * 
+                 *
                  * @return The map entry as a <code>String</code>.
                  */
                 public java.lang.String toString();
-                
+
                 public fabric.lang.Object $initLabels();
-                
+
                 public static class _Proxy extends fabric.lang.Object._Proxy implements UnmodifiableMapEntry
                 {
-                    
+
                     public fabric.util.Map.Entry get$e() { return ((fabric.util.
                                                                      Collections.
                                                                      UnmodifiableMap.
@@ -5673,35 +5673,35 @@ public interface Collections
                                                                      _Impl) fetch(
                                                                               )).
                                                              get$e(); }
-                    
+
                     public fabric.util.Map.Entry set$e(fabric.util.Map.Entry val) {
                         return ((fabric.util.Collections.UnmodifiableMap.UnmodifiableEntrySet.
                                   UnmodifiableMapEntry._Impl) fetch()).set$e(val);
                     }
-                    
+
                     public native fabric.lang.Object getKey();
-                    
+
                     public native fabric.lang.Object getValue();
-                    
+
                     public native fabric.lang.Object setValue(fabric.lang.Object arg1);
-                    
+
                     public _Proxy(UnmodifiableMapEntry._Impl impl) { super(impl);
                     }
-                    
+
                     public _Proxy(fabric.worker.Store store, long onum) { super(
                                                                             store,
                                                                             onum);
                     }
                 }
-                
+
                 public static final class _Impl extends fabric.lang.Object._Impl
                   implements UnmodifiableMapEntry {
-                    
+
                     public fabric.util.Map.Entry get$e() { fabric.worker.transaction.TransactionManager.
                                                              getInstance().registerRead(
                                                                              this);
                                                            return this.e; }
-                    
+
                     public fabric.util.Map.Entry set$e(fabric.util.Map.Entry val) {
                         fabric.worker.transaction.TransactionManager tm = fabric.worker.transaction.TransactionManager.
                           getInstance();
@@ -5709,70 +5709,70 @@ public interface Collections
                         this.e = val;
                         if (transactionCreated) tm.commitTransaction();
                         return val; }
-                    
+
                     private Entry e;
-                    
+
                     private native UnmodifiableMapEntry fabric$util$Collections$UnmodifiableMapEntry$(
                       Entry e);
-                    
+
                     /**
                      * Returns <code>true</code> if the object, o, is also a map
                      entry
                      * with an identical key and value.
-                     * 
+                     *
                      * @param o the object to compare.
                      * @return <code>true</code> if o is an equivalent map entry.
                      */
                     public native boolean equals(fabric.lang.Object o);
-                    
+
                     /**
                      * Returns the key of this map entry.
-                     * 
+                     *
                      * @return the key.
                      */
                     public native fabric.lang.Object getKey();
-                    
+
                     /**
                      * Returns the value of this map entry.
-                     * 
+                     *
                      * @return the value.
                      */
                     public native fabric.lang.Object getValue();
-                    
+
                     /**
                      * Computes the hash code of this map entry. The computation
                      is
                      * described in the <code>Map</code> interface documentation.
-                     * 
+                     *
                      * @return the hash code of this entry.
                      * @see Map#hashCode()
                      */
                     public native int hashCode();
-                    
+
                     /**
                      * Blocks the alteration of the value of this map entry. This
                      method
                      * never returns, throwing an exception instead.
-                     * 
+                     *
                      * @param value The new value.
                      * @throws UnsupportedOperationException as an unmodifiable map
                      entry
                      *           does not support the <code>setValue()</code> operation.
                      */
                     public native fabric.lang.Object setValue(fabric.lang.Object value);
-                    
+
                     /**
                      * Returns a textual representation of the map entry.
-                     * 
+                     *
                      * @return The map entry as a <code>String</code>.
                      */
                     public native java.lang.String toString();
-                    
+
                     public native fabric.lang.Object $initLabels();
-                    
+
                     public _Impl(fabric.worker.Store $location) { super($location);
                     }
-                    
+
                     protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                          util.Collections.
                                                                          UnmodifiableMap.
@@ -5780,7 +5780,7 @@ public interface Collections
                                                                          UnmodifiableMapEntry.
                                                                          _Proxy(
                                                                          this); }
-                    
+
                     public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                            java.util.List intraStoreRefs, java.util.
                                              List interStoreRefs) throws java.io.
@@ -5788,14 +5788,14 @@ public interface Collections
                                                      interStoreRefs);
                                     $writeRef($getStore(), this.e, refTypes, out,
                                               intraStoreRefs, interStoreRefs); }
-                    
+
                     public _Impl(fabric.worker.Store store, long onum, int version,
-                                 long expiry, fabric.worker.Store labelStore, long labelOnum,
+                                 long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore, long labelOnum,
                                  fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
                                  java.io.ObjectInput in, java.util.Iterator refTypes,
                                  java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                           throws java.io.IOException, java.lang.ClassNotFoundException {
-                        super(store, onum, version, expiry, labelStore, labelOnum,
+                        super(store, onum, version, expiry, observers, labelStore, labelOnum,
                               accessPolicyStore, accessPolicyOnum, in, refTypes,
                               intraStoreRefs, interStoreRefs);
                         this.e = (fabric.util.Map.Entry) $readRef(fabric.util.Map.
@@ -5807,7 +5807,7 @@ public interface Collections
                                                                   in, store, intraStoreRefs,
                                                                   interStoreRefs);
                     }
-                    
+
                     public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                         super.$copyAppStateFrom(other);
                         fabric.util.Collections.UnmodifiableMap.UnmodifiableEntrySet.
@@ -5817,7 +5817,7 @@ public interface Collections
                                                              _Impl) other;
                         this.e = src.e; }
                 }
-                
+
                 interface _Static extends fabric.lang.Object, Cloneable {
                     final class _Proxy extends fabric.lang.Object._Proxy implements fabric.
                                                                                       util.
@@ -5827,19 +5827,19 @@ public interface Collections
                                                                                       UnmodifiableMapEntry.
                                                                                       _Static
                     {
-                        
+
                         public _Proxy(fabric.util.Collections.UnmodifiableMap.UnmodifiableEntrySet.
                                         UnmodifiableMapEntry._Static._Impl impl) {
                             super(impl); }
-                        
+
                         public _Proxy(fabric.worker.Store store, long onum) { super(
                                                                                 store,
                                                                                 onum);
                         }
-                        
+
                         public static final fabric.util.Collections.UnmodifiableMap.
                           UnmodifiableEntrySet.UnmodifiableMapEntry._Static $instance;
-                        
+
                         static { fabric.util.Collections.UnmodifiableMap.UnmodifiableEntrySet.
                                    UnmodifiableMapEntry._Static._Impl impl = (fabric.
                                                                                util.
@@ -5864,7 +5864,7 @@ public interface Collections
                                                _Static) impl.$getProxy();
                                  impl.$init(); }
                     }
-                    
+
                     class _Impl extends fabric.lang.Object._Impl implements fabric.
                                                                               util.
                                                                               Collections.
@@ -5873,15 +5873,15 @@ public interface Collections
                                                                               UnmodifiableMapEntry.
                                                                               _Static
                     {
-                        
+
                         public void $serialize(java.io.ObjectOutput out, java.util.
                                                  List refTypes, java.util.List intraStoreRefs,
                                                java.util.List interStoreRefs) throws java.
                           io.IOException { super.$serialize(out, refTypes, intraStoreRefs,
                                                             interStoreRefs); }
-                        
+
                         public _Impl(fabric.worker.Store store, long onum, int version,
-                                     long expiry, fabric.worker.Store labelStore,
+                                     long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                                      long labelOnum, fabric.worker.Store accessPolicyStore,
                                      long accessPolicyOnum, java.io.ObjectInput in,
                                      java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
@@ -5891,6 +5891,7 @@ public interface Collections
                                                                                onum,
                                                                                version,
                                                                                expiry,
+                                                                               observers,
                                                                                labelStore,
                                                                                labelOnum,
                                                                                accessPolicyStore,
@@ -5900,9 +5901,9 @@ public interface Collections
                                                                                intraStoreRefs,
                                                                                interStoreRefs);
                         }
-                        
+
                         public _Impl(fabric.worker.Store store) { super(store); }
-                        
+
                         protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                              util.
                                                                              Collections.
@@ -5913,97 +5914,97 @@ public interface Collections
                                                                              _Proxy(
                                                                              this);
                         }
-                        
+
                         private void $init() {  }
                     }
-                    
+
                 }
-                
+
             }
-            
-            
+
+
             /**
              * Wrap a given set.
              * @param s the set to wrap
              */
             public UnmodifiableEntrySet fabric$util$Collections$UnmodifiableEntrySet$(
               fabric.util.Set s);
-            
+
             public fabric.util.Iterator iterator(fabric.worker.Store store);
-            
+
             public fabric.lang.arrays.ObjectArray toArray();
-            
+
             public fabric.lang.arrays.ObjectArray toArray(fabric.lang.arrays.ObjectArray array);
-            
+
             public fabric.lang.Object $initLabels();
-            
+
             public static class _Proxy extends fabric.util.Collections.UnmodifiableSet.
               _Proxy implements UnmodifiableEntrySet {
-                
+
                 public native fabric.util.Collections.UnmodifiableMap.UnmodifiableEntrySet
                   fabric$util$Collections$UnmodifiableEntrySet$(fabric.util.Set arg1);
-                
+
                 public _Proxy(UnmodifiableEntrySet._Impl impl) { super(impl); }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) { super(store,
                                                                             onum);
                 }
             }
-            
+
             public static final class _Impl extends fabric.util.Collections.UnmodifiableSet.
               _Impl implements UnmodifiableEntrySet {
-                
+
                 /**
                  * Wrap a given set.
                  * @param s the set to wrap
                  */
                 public native UnmodifiableEntrySet fabric$util$Collections$UnmodifiableEntrySet$(
                   fabric.util.Set s);
-                
+
                 public native fabric.util.Iterator iterator(fabric.worker.Store store);
-                
+
                 public native fabric.lang.arrays.ObjectArray toArray();
-                
+
                 public native fabric.lang.arrays.ObjectArray toArray(fabric.lang.arrays.ObjectArray array);
-                
+
                 public native fabric.lang.Object $initLabels();
-                
+
                 public _Impl(fabric.worker.Store $location) { super($location); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                      util.Collections.
                                                                      UnmodifiableMap.
                                                                      UnmodifiableEntrySet.
                                                                      _Proxy(this);
                 }
-                
+
                 public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                        java.util.List intraStoreRefs, java.util.
                                          List interStoreRefs) throws java.io.IOException {
                     super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
                 }
-                
-                public _Impl(fabric.worker.Store store, long onum, int version, long expiry,
+
+                public _Impl(fabric.worker.Store store, long onum, int version, long expiry, fabric.worker.metrics.ImmutableObserverSet observers,
                              fabric.worker.Store labelStore, long labelOnum, fabric.
                                worker.Store accessPolicyStore, long accessPolicyOnum,
                              java.io.ObjectInput in, java.util.Iterator refTypes,
                              java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                       throws java.io.IOException, java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum, accessPolicyStore,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum, accessPolicyStore,
                           accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
                 }
             }
-            
+
             interface _Static extends fabric.lang.Object, Cloneable {
-                
+
                 public long get$serialVersionUID();
-                
+
                 public long set$serialVersionUID(long val);
-                
+
                 public long postInc$serialVersionUID();
-                
+
                 public long postDec$serialVersionUID();
-                
+
                 final class _Proxy extends fabric.lang.Object._Proxy implements fabric.
                                                                                   util.
                                                                                   Collections.
@@ -6011,7 +6012,7 @@ public interface Collections
                                                                                   UnmodifiableEntrySet.
                                                                                   _Static
                 {
-                    
+
                     public long get$serialVersionUID() { return ((fabric.util.Collections.
                                                                    UnmodifiableMap.
                                                                    UnmodifiableEntrySet.
@@ -6019,7 +6020,7 @@ public interface Collections
                                                                    fetch()).get$serialVersionUID(
                                                                               );
                     }
-                    
+
                     public long set$serialVersionUID(long val) { return ((fabric.
                                                                            util.
                                                                            Collections.
@@ -6031,7 +6032,7 @@ public interface Collections
                                                                              )).
                                                                    set$serialVersionUID(
                                                                      val); }
-                    
+
                     public long postInc$serialVersionUID() { return ((fabric.util.
                                                                        Collections.
                                                                        UnmodifiableMap.
@@ -6040,7 +6041,7 @@ public interface Collections
                                                                        fetch()).
                                                                postInc$serialVersionUID(
                                                                  ); }
-                    
+
                     public long postDec$serialVersionUID() { return ((fabric.util.
                                                                        Collections.
                                                                        UnmodifiableMap.
@@ -6049,18 +6050,18 @@ public interface Collections
                                                                        fetch()).
                                                                postDec$serialVersionUID(
                                                                  ); }
-                    
+
                     public _Proxy(fabric.util.Collections.UnmodifiableMap.UnmodifiableEntrySet.
                                     _Static._Impl impl) { super(impl); }
-                    
+
                     public _Proxy(fabric.worker.Store store, long onum) { super(
                                                                             store,
                                                                             onum);
                     }
-                    
+
                     public static final fabric.util.Collections.UnmodifiableMap.
                       UnmodifiableEntrySet._Static $instance;
-                    
+
                     static { fabric.util.Collections.UnmodifiableMap.UnmodifiableEntrySet.
                                _Static._Impl impl = (fabric.util.Collections.UnmodifiableMap.
                                                       UnmodifiableEntrySet._Static.
@@ -6077,20 +6078,20 @@ public interface Collections
                                                                                 );
                              impl.$init(); }
                 }
-                
+
                 class _Impl extends fabric.lang.Object._Impl implements fabric.util.
                                                                           Collections.
                                                                           UnmodifiableMap.
                                                                           UnmodifiableEntrySet.
                                                                           _Static
                 {
-                    
+
                     public long get$serialVersionUID() { fabric.worker.transaction.TransactionManager.
                                                            getInstance().registerRead(
                                                                            this);
                                                          return this.serialVersionUID;
                     }
-                    
+
                     public long set$serialVersionUID(long val) { fabric.worker.transaction.
                                                                    TransactionManager tm =
                                                                    fabric.worker.transaction.TransactionManager.
@@ -6104,46 +6105,46 @@ public interface Collections
                                                                      tm.commitTransaction(
                                                                           );
                                                                  return val; }
-                    
+
                     public long postInc$serialVersionUID() { long tmp = this.get$serialVersionUID(
                                                                                );
                                                              this.set$serialVersionUID(
                                                                     (long) (tmp +
                                                                               1));
                                                              return tmp; }
-                    
+
                     public long postDec$serialVersionUID() { long tmp = this.get$serialVersionUID(
                                                                                );
                                                              this.set$serialVersionUID(
                                                                     (long) (tmp -
                                                                               1));
                                                              return tmp; }
-                    
+
                     /**
                      * Compatible with JDK 1.4.
                      */
                     private long serialVersionUID;
-                    
+
                     public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                            java.util.List intraStoreRefs, java.util.
                                              List interStoreRefs) throws java.io.
                       IOException { super.$serialize(out, refTypes, intraStoreRefs,
                                                      interStoreRefs);
                                     out.writeLong(this.serialVersionUID); }
-                    
+
                     public _Impl(fabric.worker.Store store, long onum, int version,
-                                 long expiry, fabric.worker.Store labelStore, long labelOnum,
+                                 long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore, long labelOnum,
                                  fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
                                  java.io.ObjectInput in, java.util.Iterator refTypes,
                                  java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                           throws java.io.IOException, java.lang.ClassNotFoundException {
-                        super(store, onum, version, expiry, labelStore, labelOnum,
+                        super(store, onum, version, expiry, observers, labelStore, labelOnum,
                               accessPolicyStore, accessPolicyOnum, in, refTypes,
                               intraStoreRefs, interStoreRefs);
                         this.serialVersionUID = in.readLong(); }
-                    
+
                     public _Impl(fabric.worker.Store store) { super(store); }
-                    
+
                     protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                          util.Collections.
                                                                          UnmodifiableMap.
@@ -6151,15 +6152,15 @@ public interface Collections
                                                                          _Static.
                                                                          _Proxy(
                                                                          this); }
-                    
+
                     private void $init() {  }
                 }
-                
+
             }
-            
+
         }
-        
-        
+
+
         /**
          * Returns <code>true</code> if the object, o, is also an instance
          * of <code>Map</code> with an equal set of map entries.
@@ -6168,7 +6169,7 @@ public interface Collections
          * @return <code>true</code> if o is an equivalent map.
          */
         public boolean equals(fabric.lang.Object o);
-        
+
         /**
          * Returns the value associated with the supplied key or
          * null if no such mapping exists.  An ambiguity can occur
@@ -6183,7 +6184,7 @@ public interface Collections
          * @see #containsKey(Object)
          */
         public fabric.lang.Object get(fabric.lang.Object key);
-        
+
         /**
          * Blocks the addition of a new entry to the underlying map.
          * This method never returns, throwing an exception instead.
@@ -6195,7 +6196,7 @@ public interface Collections
          *         map does not support the <code>put()</code> operation.
          */
         public fabric.lang.Object put(fabric.lang.Object key, fabric.lang.Object value);
-        
+
         /**
          * Computes the hash code for the underlying map, as the sum
          * of the hash codes of all entries.
@@ -6204,14 +6205,14 @@ public interface Collections
          * @see Map.Entry#hashCode()
          */
         public int hashCode();
-        
+
         /**
          * Returns <code>true</code> if the underlying map contains no entries.
          *
          * @return <code>true</code> if the map is empty.
          */
         public boolean isEmpty();
-        
+
         /**
          * Returns a unmodifiable set view of the keys in the underlying map.
          * The set is backed by the map, so that changes in one show up in the other.
@@ -6222,7 +6223,7 @@ public interface Collections
          * @return the set view of all keys.
          */
         public fabric.util.Set keySet();
-        
+
         /**
          * Blocks the addition of the entries in the supplied map.
          * This method never returns, throwing an exception instead.
@@ -6233,7 +6234,7 @@ public interface Collections
          *         map does not support the <code>putAll</code> operation.
          */
         public void putAll(fabric.util.Map m);
-        
+
         /**
          * Blocks the removal of an entry from the map.
          * This method never returns, throwing an exception instead.
@@ -6246,7 +6247,7 @@ public interface Collections
          *         map does not support the <code>remove</code> operation.
          */
         public fabric.lang.Object remove(fabric.lang.Object o);
-        
+
         /**
          * Returns the number of key-value mappings in the underlying map.
          * If there are more than Integer.MAX_VALUE mappings, Integer.MAX_VALUE
@@ -6255,14 +6256,14 @@ public interface Collections
          * @return the number of mappings.
          */
         public int size();
-        
+
         /**
          * Returns a textual representation of the map.
          *
          * @return The map in the form of a <code>String</code>.
          */
         public java.lang.String toString();
-        
+
         /**
          * Returns a unmodifiable collection view of the values in the underlying
          map.
@@ -6275,15 +6276,15 @@ public interface Collections
          * @return the collection view of all values.
          */
         public fabric.util.Collection values();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.lang.Object._Proxy implements UnmodifiableMap
         {
-            
+
             public fabric.util.Map get$m() { return ((fabric.util.Collections.UnmodifiableMap.
                                                        _Impl) fetch()).get$m(); }
-            
+
             public fabric.util.Map set$m(fabric.util.Map val) { return ((fabric.
                                                                           util.Collections.
                                                                           UnmodifiableMap.
@@ -6292,12 +6293,12 @@ public interface Collections
                                                                             )).set$m(
                                                                                  val);
             }
-            
+
             public fabric.util.Set get$entries() { return ((fabric.util.Collections.
                                                              UnmodifiableMap._Impl)
                                                              fetch()).get$entries(
                                                                         ); }
-            
+
             public fabric.util.Set set$entries(fabric.util.Set val) { return ((fabric.
                                                                                 util.
                                                                                 Collections.
@@ -6307,11 +6308,11 @@ public interface Collections
                                                                                   )).
                                                                         set$entries(
                                                                           val); }
-            
+
             public fabric.util.Set get$keys() { return ((fabric.util.Collections.
                                                           UnmodifiableMap._Impl)
                                                           fetch()).get$keys(); }
-            
+
             public fabric.util.Set set$keys(fabric.util.Set val) { return ((fabric.
                                                                              util.
                                                                              Collections.
@@ -6321,58 +6322,58 @@ public interface Collections
                                                                                )).
                                                                      set$keys(val);
             }
-            
+
             public fabric.util.Collection get$values() { return ((fabric.util.Collections.
                                                                    UnmodifiableMap.
                                                                    _Impl) fetch(
                                                                             )).get$values(
                                                                                  );
             }
-            
+
             public fabric.util.Collection set$values(fabric.util.Collection val) {
                 return ((fabric.util.Collections.UnmodifiableMap._Impl) fetch()).
                   set$values(val); }
-            
+
             public native fabric.util.Collections.UnmodifiableMap fabric$util$Collections$UnmodifiableMap$(
               fabric.util.Map arg1);
-            
+
             public native void clear();
-            
+
             public native boolean containsKey(fabric.lang.Object arg1);
-            
+
             public native boolean containsValue(fabric.lang.Object arg1);
-            
+
             public native fabric.util.Set entrySet();
-            
+
             public native fabric.lang.Object get(fabric.lang.Object arg1);
-            
+
             public native fabric.lang.Object put(fabric.lang.Object arg1, fabric.lang.Object arg2);
-            
+
             public native boolean isEmpty();
-            
+
             public native fabric.util.Set keySet();
-            
+
             public native void putAll(fabric.util.Map arg1);
-            
+
             public native fabric.lang.Object remove(fabric.lang.Object arg1);
-            
+
             public native int size();
-            
+
             public native fabric.util.Collection values();
-            
+
             public _Proxy(UnmodifiableMap._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) { super(store, onum);
             }
         }
-        
+
         public static class _Impl extends fabric.lang.Object._Impl implements UnmodifiableMap
         {
-            
+
             public fabric.util.Map get$m() { fabric.worker.transaction.TransactionManager.
                                                getInstance().registerRead(this);
                                              return this.m; }
-            
+
             public fabric.util.Map set$m(fabric.util.Map val) { fabric.worker.transaction.
                                                                   TransactionManager tm =
                                                                   fabric.worker.transaction.TransactionManager.
@@ -6385,18 +6386,18 @@ public interface Collections
                                                                     tm.commitTransaction(
                                                                          );
                                                                 return val; }
-            
+
             /**
              * The wrapped map.
              * @serial the real map
              */
             private fabric.util.Map m;
-            
+
             public fabric.util.Set get$entries() { fabric.worker.transaction.TransactionManager.
                                                      getInstance().registerRead(
                                                                      this);
                                                    return this.entries; }
-            
+
             public fabric.util.Set set$entries(fabric.util.Set val) { fabric.worker.
                                                                         transaction.
                                                                         TransactionManager tm =
@@ -6413,16 +6414,16 @@ public interface Collections
                                                                                );
                                                                       return val;
             }
-            
+
             /**
              * Cache the entry set.
              */
             private transient fabric.util.Set entries;
-            
+
             public fabric.util.Set get$keys() { fabric.worker.transaction.TransactionManager.
                                                   getInstance().registerRead(this);
                                                 return this.keys; }
-            
+
             public fabric.util.Set set$keys(fabric.util.Set val) { fabric.worker.
                                                                      transaction.
                                                                      TransactionManager tm =
@@ -6437,17 +6438,17 @@ public interface Collections
                                                                        tm.commitTransaction(
                                                                             );
                                                                    return val; }
-            
+
             /**
              * Cache the key set.
              */
             private transient fabric.util.Set keys;
-            
+
             public fabric.util.Collection get$values() { fabric.worker.transaction.TransactionManager.
                                                            getInstance().registerRead(
                                                                            this);
                                                          return this.values; }
-            
+
             public fabric.util.Collection set$values(fabric.util.Collection val) {
                 fabric.worker.transaction.TransactionManager tm = fabric.worker.transaction.TransactionManager.
                   getInstance();
@@ -6455,12 +6456,12 @@ public interface Collections
                 this.values = val;
                 if (transactionCreated) tm.commitTransaction();
                 return val; }
-            
+
             /**
              * Cache the value collection.
              */
             private transient fabric.util.Collection values;
-            
+
             /**
              * Wrap a given map.
              * @param m the map to wrap
@@ -6468,7 +6469,7 @@ public interface Collections
              */
             public native UnmodifiableMap fabric$util$Collections$UnmodifiableMap$(
               fabric.util.Map m);
-            
+
             /**
              * Blocks the clearing of entries from the underlying map.
              * This method never returns, throwing an exception instead.
@@ -6477,7 +6478,7 @@ public interface Collections
              *         map does not support the <code>clear()</code> operation.
              */
             public native void clear();
-            
+
             /**
              * Returns <code>true</code> if the underlying map contains a mapping
              for
@@ -6490,7 +6491,7 @@ public interface Collections
              *         does not permit null keys
              */
             public native boolean containsKey(fabric.lang.Object key);
-            
+
             /**
              * Returns <code>true</code> if the underlying map contains at least
              one mapping with
@@ -6508,7 +6509,7 @@ public interface Collections
              *         support null values.
              */
             public native boolean containsValue(fabric.lang.Object value);
-            
+
             /**
              * Returns a unmodifiable set view of the entries in the underlying map.
              * Each element in the set is a unmodifiable variant of <code>Map.Entry</code>.
@@ -6522,7 +6523,7 @@ public interface Collections
              * @see Map.Entry
              */
             public native fabric.util.Set entrySet();
-            
+
             /**
              * Returns <code>true</code> if the object, o, is also an instance
              * of <code>Map</code> with an equal set of map entries.
@@ -6531,7 +6532,7 @@ public interface Collections
              * @return <code>true</code> if o is an equivalent map.
              */
             public native boolean equals(fabric.lang.Object o);
-            
+
             /**
              * Returns the value associated with the supplied key or
              * null if no such mapping exists.  An ambiguity can occur
@@ -6546,7 +6547,7 @@ public interface Collections
              * @see #containsKey(Object)
              */
             public native fabric.lang.Object get(fabric.lang.Object key);
-            
+
             /**
              * Blocks the addition of a new entry to the underlying map.
              * This method never returns, throwing an exception instead.
@@ -6558,7 +6559,7 @@ public interface Collections
              *         map does not support the <code>put()</code> operation.
              */
             public native fabric.lang.Object put(fabric.lang.Object key, fabric.lang.Object value);
-            
+
             /**
              * Computes the hash code for the underlying map, as the sum
              * of the hash codes of all entries.
@@ -6567,14 +6568,14 @@ public interface Collections
              * @see Map.Entry#hashCode()
              */
             public native int hashCode();
-            
+
             /**
              * Returns <code>true</code> if the underlying map contains no entries.
              *
              * @return <code>true</code> if the map is empty.
              */
             public native boolean isEmpty();
-            
+
             /**
              * Returns a unmodifiable set view of the keys in the underlying map.
              * The set is backed by the map, so that changes in one show up in the
@@ -6586,7 +6587,7 @@ public interface Collections
              * @return the set view of all keys.
              */
             public native fabric.util.Set keySet();
-            
+
             /**
              * Blocks the addition of the entries in the supplied map.
              * This method never returns, throwing an exception instead.
@@ -6597,7 +6598,7 @@ public interface Collections
              *         map does not support the <code>putAll</code> operation.
              */
             public native void putAll(fabric.util.Map m);
-            
+
             /**
              * Blocks the removal of an entry from the map.
              * This method never returns, throwing an exception instead.
@@ -6610,7 +6611,7 @@ public interface Collections
              *         map does not support the <code>remove</code> operation.
              */
             public native fabric.lang.Object remove(fabric.lang.Object o);
-            
+
             /**
              * Returns the number of key-value mappings in the underlying map.
              * If there are more than Integer.MAX_VALUE mappings, Integer.MAX_VALUE
@@ -6619,14 +6620,14 @@ public interface Collections
              * @return the number of mappings.
              */
             public native int size();
-            
+
             /**
              * Returns a textual representation of the map.
              *
              * @return The map in the form of a <code>String</code>.
              */
             public native java.lang.String toString();
-            
+
             /**
              * Returns a unmodifiable collection view of the values in the underlying
              map.
@@ -6639,16 +6640,16 @@ public interface Collections
              * @return the collection view of all values.
              */
             public native fabric.util.Collection values();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                  util.Collections.
                                                                  UnmodifiableMap.
                                                                  _Proxy(this); }
-            
+
             public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                    java.util.List intraStoreRefs, java.util.List interStoreRefs)
                   throws java.io.IOException { super.$serialize(out, refTypes, intraStoreRefs,
@@ -6656,20 +6657,21 @@ public interface Collections
                                                $writeRef($getStore(), this.m, refTypes,
                                                          out, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version, long expiry,
+                         fabric.worker.metrics.ImmutableObserverSet observers,
                          fabric.worker.Store labelStore, long labelOnum, fabric.
                            worker.Store accessPolicyStore, long accessPolicyOnum,
                          java.io.ObjectInput in, java.util.Iterator refTypes, java.
                            util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                   throws java.io.IOException, java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum, accessPolicyStore,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum, accessPolicyStore,
                       accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
                 this.m = (fabric.util.Map) $readRef(fabric.util.Map._Proxy.class,
                                                     (fabric.common.RefTypeEnum) refTypes.
                                                       next(), in, store, intraStoreRefs,
                                                     interStoreRefs); }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) { super.
                                                                               $copyAppStateFrom(
                                                                                 other);
@@ -6702,30 +6704,30 @@ public interface Collections
                                                                                 values;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy implements fabric.
                                                                               util.
                                                                               Collections.
                                                                               UnmodifiableMap.
                                                                               _Static
             {
-                
+
                 public long get$serialVersionUID() { return ((fabric.util.Collections.
                                                                UnmodifiableMap._Static.
                                                                _Impl) fetch()).get$serialVersionUID(
                                                                                  );
                 }
-                
+
                 public long set$serialVersionUID(long val) { return ((fabric.util.
                                                                        Collections.
                                                                        UnmodifiableMap.
@@ -6733,31 +6735,31 @@ public interface Collections
                                                                        fetch()).
                                                                set$serialVersionUID(
                                                                  val); }
-                
+
                 public long postInc$serialVersionUID() { return ((fabric.util.Collections.
                                                                    UnmodifiableMap.
                                                                    _Static._Impl)
                                                                    fetch()).postInc$serialVersionUID(
                                                                               );
                 }
-                
+
                 public long postDec$serialVersionUID() { return ((fabric.util.Collections.
                                                                    UnmodifiableMap.
                                                                    _Static._Impl)
                                                                    fetch()).postDec$serialVersionUID(
                                                                               );
                 }
-                
+
                 public _Proxy(fabric.util.Collections.UnmodifiableMap._Static._Impl impl) {
                     super(impl); }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) { super(store,
                                                                             onum);
                 }
-                
+
                 public static final fabric.util.Collections.UnmodifiableMap._Static
                   $instance;
-                
+
                 static { fabric.util.Collections.UnmodifiableMap._Static._Impl impl =
                            (fabric.util.Collections.UnmodifiableMap._Static._Impl)
                              fabric.lang.Object._Static._Proxy.$makeStaticInstance(
@@ -6768,18 +6770,18 @@ public interface Collections
                                        impl.$getProxy();
                          impl.$init(); }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl implements fabric.util.
                                                                       Collections.
                                                                       UnmodifiableMap.
                                                                       _Static {
-                
+
                 public long get$serialVersionUID() { fabric.worker.transaction.TransactionManager.
                                                        getInstance().registerRead(
                                                                        this);
                                                      return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) { fabric.worker.transaction.
                                                                TransactionManager tm =
                                                                fabric.worker.transaction.TransactionManager.
@@ -6793,55 +6795,56 @@ public interface Collections
                                                                  tm.commitTransaction(
                                                                       );
                                                              return val; }
-                
+
                 public long postInc$serialVersionUID() { long tmp = this.get$serialVersionUID(
                                                                            );
                                                          this.set$serialVersionUID(
                                                                 (long) (tmp + 1));
                                                          return tmp; }
-                
+
                 public long postDec$serialVersionUID() { long tmp = this.get$serialVersionUID(
                                                                            );
                                                          this.set$serialVersionUID(
                                                                 (long) (tmp - 1));
                                                          return tmp; }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                        java.util.List intraStoreRefs, java.util.
                                          List interStoreRefs) throws java.io.IOException {
                     super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
                     out.writeLong(this.serialVersionUID); }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version, long expiry,
+                             fabric.worker.metrics.ImmutableObserverSet observers,
                              fabric.worker.Store labelStore, long labelOnum, fabric.
                                worker.Store accessPolicyStore, long accessPolicyOnum,
                              java.io.ObjectInput in, java.util.Iterator refTypes,
                              java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                       throws java.io.IOException, java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum, accessPolicyStore,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum, accessPolicyStore,
                           accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong(); }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                      util.Collections.
                                                                      UnmodifiableMap.
                                                                      _Static._Proxy(
                                                                      this); }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #unmodifiableSet(Set)}. This class
      * name is required for compatibility with Sun's JDK serializability.
@@ -6850,14 +6853,14 @@ public interface Collections
      */
     public static interface UnmodifiableSet extends fabric.util.Set, UnmodifiableCollection
     {
-        
+
         /**
          * Wrap a given set.
          * @param s the set to wrap
          * @throws NullPointerException if s is null
          */
         public UnmodifiableSet fabric$util$Collections$UnmodifiableSet$(fabric.util.Set s);
-        
+
         /**
          * Returns <code>true</code> if the object, o, is also an instance of
          * <code>Set</code> of the same size and with the same entries.
@@ -6865,7 +6868,7 @@ public interface Collections
          * @return <code>true</code> if o is an equivalent set.
          */
         public boolean equals(fabric.lang.Object o);
-        
+
         /**
          * Computes the hash code of this set, as the sum of the
          * hash codes of all elements within the set.
@@ -6873,24 +6876,24 @@ public interface Collections
          * @return the hash code of the set.
          */
         public int hashCode();
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.util.Collections.UnmodifiableCollection.
           _Proxy implements UnmodifiableSet {
-            
+
             public native fabric.util.Collections.UnmodifiableSet fabric$util$Collections$UnmodifiableSet$(
               fabric.util.Set arg1);
-            
+
             public _Proxy(UnmodifiableSet._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) { super(store, onum);
             }
         }
-        
+
         public static class _Impl extends fabric.util.Collections.UnmodifiableCollection.
           _Impl implements UnmodifiableSet {
-            
+
             /**
              * Wrap a given set.
              * @param s the set to wrap
@@ -6898,7 +6901,7 @@ public interface Collections
              */
             public native UnmodifiableSet fabric$util$Collections$UnmodifiableSet$(
               fabric.util.Set s);
-            
+
             /**
              * Returns <code>true</code> if the object, o, is also an instance of
              * <code>Set</code> of the same size and with the same entries.
@@ -6906,7 +6909,7 @@ public interface Collections
              * @return <code>true</code> if o is an equivalent set.
              */
             public native boolean equals(fabric.lang.Object o);
-            
+
             /**
              * Computes the hash code of this set, as the sum of the
              * hash codes of all elements within the set.
@@ -6914,56 +6917,57 @@ public interface Collections
              * @return the hash code of the set.
              */
             public native int hashCode();
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                  util.Collections.
                                                                  UnmodifiableSet.
                                                                  _Proxy(this); }
-            
+
             public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                    java.util.List intraStoreRefs, java.util.List interStoreRefs)
                   throws java.io.IOException { super.$serialize(out, refTypes, intraStoreRefs,
                                                                 interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version, long expiry,
+                         fabric.worker.metrics.ImmutableObserverSet observers,
                          fabric.worker.Store labelStore, long labelOnum, fabric.
                            worker.Store accessPolicyStore, long accessPolicyOnum,
                          java.io.ObjectInput in, java.util.Iterator refTypes, java.
                            util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                   throws java.io.IOException, java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum, accessPolicyStore,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum, accessPolicyStore,
                       accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy implements fabric.
                                                                               util.
                                                                               Collections.
                                                                               UnmodifiableSet.
                                                                               _Static
             {
-                
+
                 public long get$serialVersionUID() { return ((fabric.util.Collections.
                                                                UnmodifiableSet._Static.
                                                                _Impl) fetch()).get$serialVersionUID(
                                                                                  );
                 }
-                
+
                 public long set$serialVersionUID(long val) { return ((fabric.util.
                                                                        Collections.
                                                                        UnmodifiableSet.
@@ -6971,31 +6975,31 @@ public interface Collections
                                                                        fetch()).
                                                                set$serialVersionUID(
                                                                  val); }
-                
+
                 public long postInc$serialVersionUID() { return ((fabric.util.Collections.
                                                                    UnmodifiableSet.
                                                                    _Static._Impl)
                                                                    fetch()).postInc$serialVersionUID(
                                                                               );
                 }
-                
+
                 public long postDec$serialVersionUID() { return ((fabric.util.Collections.
                                                                    UnmodifiableSet.
                                                                    _Static._Impl)
                                                                    fetch()).postDec$serialVersionUID(
                                                                               );
                 }
-                
+
                 public _Proxy(fabric.util.Collections.UnmodifiableSet._Static._Impl impl) {
                     super(impl); }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) { super(store,
                                                                             onum);
                 }
-                
+
                 public static final fabric.util.Collections.UnmodifiableSet._Static
                   $instance;
-                
+
                 static { fabric.util.Collections.UnmodifiableSet._Static._Impl impl =
                            (fabric.util.Collections.UnmodifiableSet._Static._Impl)
                              fabric.lang.Object._Static._Proxy.$makeStaticInstance(
@@ -7006,18 +7010,18 @@ public interface Collections
                                        impl.$getProxy();
                          impl.$init(); }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl implements fabric.util.
                                                                       Collections.
                                                                       UnmodifiableSet.
                                                                       _Static {
-                
+
                 public long get$serialVersionUID() { fabric.worker.transaction.TransactionManager.
                                                        getInstance().registerRead(
                                                                        this);
                                                      return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) { fabric.worker.transaction.
                                                                TransactionManager tm =
                                                                fabric.worker.transaction.TransactionManager.
@@ -7031,55 +7035,56 @@ public interface Collections
                                                                  tm.commitTransaction(
                                                                       );
                                                              return val; }
-                
+
                 public long postInc$serialVersionUID() { long tmp = this.get$serialVersionUID(
                                                                            );
                                                          this.set$serialVersionUID(
                                                                 (long) (tmp + 1));
                                                          return tmp; }
-                
+
                 public long postDec$serialVersionUID() { long tmp = this.get$serialVersionUID(
                                                                            );
                                                          this.set$serialVersionUID(
                                                                 (long) (tmp - 1));
                                                          return tmp; }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                        java.util.List intraStoreRefs, java.util.
                                          List interStoreRefs) throws java.io.IOException {
                     super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
                     out.writeLong(this.serialVersionUID); }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version, long expiry,
+                             fabric.worker.metrics.ImmutableObserverSet observers,
                              fabric.worker.Store labelStore, long labelOnum, fabric.
                                worker.Store accessPolicyStore, long accessPolicyOnum,
                              java.io.ObjectInput in, java.util.Iterator refTypes,
                              java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                       throws java.io.IOException, java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum, accessPolicyStore,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum, accessPolicyStore,
                           accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong(); }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                      util.Collections.
                                                                      UnmodifiableSet.
                                                                      _Static._Proxy(
                                                                      this); }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #unmodifiableSortedMap(SortedMap)}. This
      * class name is required for compatibility with Sun's JDK serializability.
@@ -7088,11 +7093,11 @@ public interface Collections
      */
     public static interface UnmodifiableSortedMap extends fabric.util.SortedMap,
                                                           UnmodifiableMap {
-        
+
         public fabric.util.SortedMap get$sm();
-        
+
         public fabric.util.SortedMap set$sm(fabric.util.SortedMap val);
-        
+
         /**
          * Wrap a given map.
          * @param sm the map to wrap
@@ -7100,7 +7105,7 @@ public interface Collections
          */
         public UnmodifiableSortedMap fabric$util$Collections$UnmodifiableSortedMap$(
           fabric.util.SortedMap sm);
-        
+
         /**
          * Returns the comparator used in sorting the underlying map,
          * or null if it is the keys' natural ordering.
@@ -7108,7 +7113,7 @@ public interface Collections
          * @return the sorting comparator.
          */
         public fabric.util.Comparator comparator();
-        
+
         /**
          * Returns the first (lowest sorted) key in the map.
          *
@@ -7116,7 +7121,7 @@ public interface Collections
          * @throws NoSuchElementException if this map is empty.
          */
         public fabric.lang.Object firstKey();
-        
+
         /**
          * Returns a unmodifiable view of the portion of the map strictly less
          * than toKey. The view is backed by the underlying map, so changes in
@@ -7140,7 +7145,7 @@ public interface Collections
          *         null keys.
          */
         public fabric.util.SortedMap headMap(fabric.lang.Object toKey);
-        
+
         /**
          * Returns the last (highest sorted) key in the map.
          *
@@ -7148,7 +7153,7 @@ public interface Collections
          * @throws NoSuchElementException if this map is empty.
          */
         public fabric.lang.Object lastKey();
-        
+
         /**
          * Returns a unmodifiable view of the portion of the map greater than or
          * equal to fromKey, and strictly less than toKey. The view is backed by
@@ -7176,7 +7181,7 @@ public interface Collections
          *         does not allow null keys.
          */
         public fabric.util.SortedMap subMap(fabric.lang.Object fromKey, fabric.lang.Object toKey);
-        
+
         /**
          * Returns a unmodifiable view of the portion of the map greater than or
          * equal to fromKey. The view is backed by the underlying map, so changes
@@ -7202,18 +7207,18 @@ public interface Collections
          *         null keys
          */
         public fabric.util.SortedMap tailMap(fabric.lang.Object fromKey);
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.util.Collections.UnmodifiableMap.
           _Proxy implements UnmodifiableSortedMap {
-            
+
             public fabric.util.SortedMap get$sm() { return ((fabric.util.Collections.
                                                               UnmodifiableSortedMap.
                                                               _Impl) fetch()).get$sm(
                                                                                 );
             }
-            
+
             public fabric.util.SortedMap set$sm(fabric.util.SortedMap val) { return ((fabric.
                                                                                        util.
                                                                                        Collections.
@@ -7224,36 +7229,36 @@ public interface Collections
                                                                                set$sm(
                                                                                  val);
             }
-            
+
             public native fabric.util.Collections.UnmodifiableSortedMap fabric$util$Collections$UnmodifiableSortedMap$(
               fabric.util.SortedMap arg1);
-            
+
             public native fabric.util.Comparator comparator();
-            
+
             public native fabric.lang.Object firstKey();
-            
+
             public native fabric.util.SortedMap headMap(fabric.lang.Object arg1);
-            
+
             public native fabric.lang.Object lastKey();
-            
+
             public native fabric.util.SortedMap subMap(fabric.lang.Object arg1, fabric.lang.Object arg2);
-            
+
             public native fabric.util.SortedMap tailMap(fabric.lang.Object arg1);
-            
+
             public _Proxy(UnmodifiableSortedMap._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) { super(store, onum);
             }
         }
-        
+
         public static class _Impl extends fabric.util.Collections.UnmodifiableMap.
           _Impl implements UnmodifiableSortedMap {
-            
+
             public fabric.util.SortedMap get$sm() { fabric.worker.transaction.TransactionManager.
                                                       getInstance().registerRead(
                                                                       this);
                                                     return this.sm; }
-            
+
             public fabric.util.SortedMap set$sm(fabric.util.SortedMap val) { fabric.
                                                                                worker.
                                                                                transaction.
@@ -7274,14 +7279,14 @@ public interface Collections
                                                                                      );
                                                                              return val;
             }
-            
+
             /**
              * The wrapped map; stored both here and in the superclass to avoid
              * excessive casting.
              * @serial the wrapped map
              */
             private fabric.util.SortedMap sm;
-            
+
             /**
              * Wrap a given map.
              * @param sm the map to wrap
@@ -7289,7 +7294,7 @@ public interface Collections
              */
             public native UnmodifiableSortedMap fabric$util$Collections$UnmodifiableSortedMap$(
               fabric.util.SortedMap sm);
-            
+
             /**
              * Returns the comparator used in sorting the underlying map,
              * or null if it is the keys' natural ordering.
@@ -7297,7 +7302,7 @@ public interface Collections
              * @return the sorting comparator.
              */
             public native fabric.util.Comparator comparator();
-            
+
             /**
              * Returns the first (lowest sorted) key in the map.
              *
@@ -7305,7 +7310,7 @@ public interface Collections
              * @throws NoSuchElementException if this map is empty.
              */
             public native fabric.lang.Object firstKey();
-            
+
             /**
              * Returns a unmodifiable view of the portion of the map strictly less
              * than toKey. The view is backed by the underlying map, so changes in
@@ -7332,7 +7337,7 @@ public interface Collections
              *         null keys.
              */
             public native fabric.util.SortedMap headMap(fabric.lang.Object toKey);
-            
+
             /**
              * Returns the last (highest sorted) key in the map.
              *
@@ -7340,7 +7345,7 @@ public interface Collections
              * @throws NoSuchElementException if this map is empty.
              */
             public native fabric.lang.Object lastKey();
-            
+
             /**
              * Returns a unmodifiable view of the portion of the map greater than
              or
@@ -7373,7 +7378,7 @@ public interface Collections
              */
             public native fabric.util.SortedMap subMap(fabric.lang.Object fromKey,
                                                        fabric.lang.Object toKey);
-            
+
             /**
              * Returns a unmodifiable view of the portion of the map greater than
              or
@@ -7403,16 +7408,16 @@ public interface Collections
              *         null keys
              */
             public native fabric.util.SortedMap tailMap(fabric.lang.Object fromKey);
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                  util.Collections.
                                                                  UnmodifiableSortedMap.
                                                                  _Proxy(this); }
-            
+
             public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                    java.util.List intraStoreRefs, java.util.List interStoreRefs)
                   throws java.io.IOException { super.$serialize(out, refTypes, intraStoreRefs,
@@ -7420,14 +7425,15 @@ public interface Collections
                                                $writeRef($getStore(), this.sm, refTypes,
                                                          out, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version, long expiry,
+                         fabric.worker.metrics.ImmutableObserverSet observers,
                          fabric.worker.Store labelStore, long labelOnum, fabric.
                            worker.Store accessPolicyStore, long accessPolicyOnum,
                          java.io.ObjectInput in, java.util.Iterator refTypes, java.
                            util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                   throws java.io.IOException, java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum, accessPolicyStore,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum, accessPolicyStore,
                       accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
                 this.sm = (fabric.util.SortedMap) $readRef(fabric.util.SortedMap.
                                                              _Proxy.class, (fabric.
@@ -7438,7 +7444,7 @@ public interface Collections
                                                                                ),
                                                            in, store, intraStoreRefs,
                                                            interStoreRefs); }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) { super.
                                                                               $copyAppStateFrom(
                                                                                 other);
@@ -7459,30 +7465,30 @@ public interface Collections
                                                                                 sm;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy implements fabric.
                                                                               util.
                                                                               Collections.
                                                                               UnmodifiableSortedMap.
                                                                               _Static
             {
-                
+
                 public long get$serialVersionUID() { return ((fabric.util.Collections.
                                                                UnmodifiableSortedMap.
                                                                _Static._Impl) fetch(
                                                                                 )).
                                                        get$serialVersionUID(); }
-                
+
                 public long set$serialVersionUID(long val) { return ((fabric.util.
                                                                        Collections.
                                                                        UnmodifiableSortedMap.
@@ -7490,31 +7496,31 @@ public interface Collections
                                                                        fetch()).
                                                                set$serialVersionUID(
                                                                  val); }
-                
+
                 public long postInc$serialVersionUID() { return ((fabric.util.Collections.
                                                                    UnmodifiableSortedMap.
                                                                    _Static._Impl)
                                                                    fetch()).postInc$serialVersionUID(
                                                                               );
                 }
-                
+
                 public long postDec$serialVersionUID() { return ((fabric.util.Collections.
                                                                    UnmodifiableSortedMap.
                                                                    _Static._Impl)
                                                                    fetch()).postDec$serialVersionUID(
                                                                               );
                 }
-                
+
                 public _Proxy(fabric.util.Collections.UnmodifiableSortedMap._Static.
                                 _Impl impl) { super(impl); }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) { super(store,
                                                                             onum);
                 }
-                
+
                 public static final fabric.util.Collections.UnmodifiableSortedMap.
                   _Static $instance;
-                
+
                 static { fabric.util.Collections.UnmodifiableSortedMap._Static._Impl impl =
                            (fabric.util.Collections.UnmodifiableSortedMap._Static.
                              _Impl) fabric.lang.Object._Static._Proxy.$makeStaticInstance(
@@ -7527,18 +7533,18 @@ public interface Collections
                                        _Static) impl.$getProxy();
                          impl.$init(); }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl implements fabric.util.
                                                                       Collections.
                                                                       UnmodifiableSortedMap.
                                                                       _Static {
-                
+
                 public long get$serialVersionUID() { fabric.worker.transaction.TransactionManager.
                                                        getInstance().registerRead(
                                                                        this);
                                                      return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) { fabric.worker.transaction.
                                                                TransactionManager tm =
                                                                fabric.worker.transaction.TransactionManager.
@@ -7552,55 +7558,56 @@ public interface Collections
                                                                  tm.commitTransaction(
                                                                       );
                                                              return val; }
-                
+
                 public long postInc$serialVersionUID() { long tmp = this.get$serialVersionUID(
                                                                            );
                                                          this.set$serialVersionUID(
                                                                 (long) (tmp + 1));
                                                          return tmp; }
-                
+
                 public long postDec$serialVersionUID() { long tmp = this.get$serialVersionUID(
                                                                            );
                                                          this.set$serialVersionUID(
                                                                 (long) (tmp - 1));
                                                          return tmp; }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                        java.util.List intraStoreRefs, java.util.
                                          List interStoreRefs) throws java.io.IOException {
                     super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
                     out.writeLong(this.serialVersionUID); }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version, long expiry,
+                             fabric.worker.metrics.ImmutableObserverSet observers,
                              fabric.worker.Store labelStore, long labelOnum, fabric.
                                worker.Store accessPolicyStore, long accessPolicyOnum,
                              java.io.ObjectInput in, java.util.Iterator refTypes,
                              java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                       throws java.io.IOException, java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum, accessPolicyStore,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum, accessPolicyStore,
                           accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong(); }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                      util.Collections.
                                                                      UnmodifiableSortedMap.
                                                                      _Static._Proxy(
                                                                      this); }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
+
     /**
      * The implementation of {@link #synchronizedSortedMap(SortedMap)}. This
      * class name is required for compatibility with Sun's JDK serializability.
@@ -7609,11 +7616,11 @@ public interface Collections
      */
     public static interface UnmodifiableSortedSet extends fabric.util.SortedSet,
                                                           UnmodifiableSet {
-        
+
         public fabric.util.SortedSet get$ss();
-        
+
         public fabric.util.SortedSet set$ss(fabric.util.SortedSet val);
-        
+
         /**
          * Wrap a given set.
          * @param ss the set to wrap
@@ -7621,7 +7628,7 @@ public interface Collections
          */
         public UnmodifiableSortedSet fabric$util$Collections$UnmodifiableSortedSet$(
           fabric.util.SortedSet ss);
-        
+
         /**
          * Returns the comparator used in sorting the underlying set,
          * or null if it is the elements' natural ordering.
@@ -7629,7 +7636,7 @@ public interface Collections
          * @return the sorting comparator
          */
         public fabric.util.Comparator comparator();
-        
+
         /**
          * Returns the first (lowest sorted) element in the underlying
          * set.
@@ -7638,7 +7645,7 @@ public interface Collections
          * @throws NoSuchElementException if the set is empty.
          */
         public fabric.lang.Object first();
-        
+
         /**
          * Returns a unmodifiable view of the portion of the set strictly
          * less than toElement. The view is backed by the underlying set,
@@ -7666,7 +7673,7 @@ public interface Collections
          *         allow null elements.
          */
         public fabric.util.SortedSet headSet(fabric.lang.Object toElement);
-        
+
         /**
          * Returns the last (highest sorted) element in the underlying
          * set.
@@ -7675,7 +7682,7 @@ public interface Collections
          * @throws NoSuchElementException if the set is empty.
          */
         public fabric.lang.Object last();
-        
+
         /**
          * Returns a unmodifiable view of the portion of the set greater than or
          * equal to fromElement, and strictly less than toElement. The view is backed
@@ -7707,7 +7714,7 @@ public interface Collections
          *         set does not allow null elements.
          */
         public fabric.util.SortedSet subSet(fabric.lang.Object fromElement, fabric.lang.Object toElement);
-        
+
         /**
          * Returns a unmodifiable view of the portion of the set greater than or
          equal to
@@ -7736,18 +7743,18 @@ public interface Collections
          *         allow null elements.
          */
         public fabric.util.SortedSet tailSet(fabric.lang.Object fromElement);
-        
+
         public fabric.lang.Object $initLabels();
-        
+
         public static class _Proxy extends fabric.util.Collections.UnmodifiableSet.
           _Proxy implements UnmodifiableSortedSet {
-            
+
             public fabric.util.SortedSet get$ss() { return ((fabric.util.Collections.
                                                               UnmodifiableSortedSet.
                                                               _Impl) fetch()).get$ss(
                                                                                 );
             }
-            
+
             public fabric.util.SortedSet set$ss(fabric.util.SortedSet val) { return ((fabric.
                                                                                        util.
                                                                                        Collections.
@@ -7758,36 +7765,36 @@ public interface Collections
                                                                                set$ss(
                                                                                  val);
             }
-            
+
             public native fabric.util.Collections.UnmodifiableSortedSet fabric$util$Collections$UnmodifiableSortedSet$(
               fabric.util.SortedSet arg1);
-            
+
             public native fabric.util.Comparator comparator();
-            
+
             public native fabric.lang.Object first();
-            
+
             public native fabric.util.SortedSet headSet(fabric.lang.Object arg1);
-            
+
             public native fabric.lang.Object last();
-            
+
             public native fabric.util.SortedSet subSet(fabric.lang.Object arg1, fabric.lang.Object arg2);
-            
+
             public native fabric.util.SortedSet tailSet(fabric.lang.Object arg1);
-            
+
             public _Proxy(UnmodifiableSortedSet._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) { super(store, onum);
             }
         }
-        
+
         public static class _Impl extends fabric.util.Collections.UnmodifiableSet.
           _Impl implements UnmodifiableSortedSet {
-            
+
             public fabric.util.SortedSet get$ss() { fabric.worker.transaction.TransactionManager.
                                                       getInstance().registerRead(
                                                                       this);
                                                     return this.ss; }
-            
+
             public fabric.util.SortedSet set$ss(fabric.util.SortedSet val) { fabric.
                                                                                worker.
                                                                                transaction.
@@ -7808,14 +7815,14 @@ public interface Collections
                                                                                      );
                                                                              return val;
             }
-            
+
             /**
              * The wrapped set; stored both here and in the superclass to avoid
              * excessive casting.
              * @serial the wrapped set
              */
             private fabric.util.SortedSet ss;
-            
+
             /**
              * Wrap a given set.
              * @param ss the set to wrap
@@ -7823,7 +7830,7 @@ public interface Collections
              */
             public native UnmodifiableSortedSet fabric$util$Collections$UnmodifiableSortedSet$(
               fabric.util.SortedSet ss);
-            
+
             /**
              * Returns the comparator used in sorting the underlying set,
              * or null if it is the elements' natural ordering.
@@ -7831,7 +7838,7 @@ public interface Collections
              * @return the sorting comparator
              */
             public native fabric.util.Comparator comparator();
-            
+
             /**
              * Returns the first (lowest sorted) element in the underlying
              * set.
@@ -7840,7 +7847,7 @@ public interface Collections
              * @throws NoSuchElementException if the set is empty.
              */
             public native fabric.lang.Object first();
-            
+
             /**
              * Returns a unmodifiable view of the portion of the set strictly
              * less than toElement. The view is backed by the underlying set,
@@ -7870,7 +7877,7 @@ public interface Collections
              *         allow null elements.
              */
             public native fabric.util.SortedSet headSet(fabric.lang.Object toElement);
-            
+
             /**
              * Returns the last (highest sorted) element in the underlying
              * set.
@@ -7879,7 +7886,7 @@ public interface Collections
              * @throws NoSuchElementException if the set is empty.
              */
             public native fabric.lang.Object last();
-            
+
             /**
              * Returns a unmodifiable view of the portion of the set greater than
              or
@@ -7914,7 +7921,7 @@ public interface Collections
              */
             public native fabric.util.SortedSet subSet(fabric.lang.Object fromElement,
                                                        fabric.lang.Object toElement);
-            
+
             /**
              * Returns a unmodifiable view of the portion of the set greater than
              or equal to
@@ -7945,16 +7952,16 @@ public interface Collections
              *         allow null elements.
              */
             public native fabric.util.SortedSet tailSet(fabric.lang.Object fromElement);
-            
+
             public native fabric.lang.Object $initLabels();
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                  util.Collections.
                                                                  UnmodifiableSortedSet.
                                                                  _Proxy(this); }
-            
+
             public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                    java.util.List intraStoreRefs, java.util.List interStoreRefs)
                   throws java.io.IOException { super.$serialize(out, refTypes, intraStoreRefs,
@@ -7962,14 +7969,15 @@ public interface Collections
                                                $writeRef($getStore(), this.ss, refTypes,
                                                          out, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version, long expiry,
+                         fabric.worker.metrics.ImmutableObserverSet observers,
                          fabric.worker.Store labelStore, long labelOnum, fabric.
                            worker.Store accessPolicyStore, long accessPolicyOnum,
                          java.io.ObjectInput in, java.util.Iterator refTypes, java.
                            util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                   throws java.io.IOException, java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum, accessPolicyStore,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum, accessPolicyStore,
                       accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
                 this.ss = (fabric.util.SortedSet) $readRef(fabric.util.SortedSet.
                                                              _Proxy.class, (fabric.
@@ -7980,7 +7988,7 @@ public interface Collections
                                                                                ),
                                                            in, store, intraStoreRefs,
                                                            interStoreRefs); }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) { super.
                                                                               $copyAppStateFrom(
                                                                                 other);
@@ -8001,30 +8009,30 @@ public interface Collections
                                                                                 ss;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
-            
+
             public long get$serialVersionUID();
-            
+
             public long set$serialVersionUID(long val);
-            
+
             public long postInc$serialVersionUID();
-            
+
             public long postDec$serialVersionUID();
-            
+
             final class _Proxy extends fabric.lang.Object._Proxy implements fabric.
                                                                               util.
                                                                               Collections.
                                                                               UnmodifiableSortedSet.
                                                                               _Static
             {
-                
+
                 public long get$serialVersionUID() { return ((fabric.util.Collections.
                                                                UnmodifiableSortedSet.
                                                                _Static._Impl) fetch(
                                                                                 )).
                                                        get$serialVersionUID(); }
-                
+
                 public long set$serialVersionUID(long val) { return ((fabric.util.
                                                                        Collections.
                                                                        UnmodifiableSortedSet.
@@ -8032,31 +8040,31 @@ public interface Collections
                                                                        fetch()).
                                                                set$serialVersionUID(
                                                                  val); }
-                
+
                 public long postInc$serialVersionUID() { return ((fabric.util.Collections.
                                                                    UnmodifiableSortedSet.
                                                                    _Static._Impl)
                                                                    fetch()).postInc$serialVersionUID(
                                                                               );
                 }
-                
+
                 public long postDec$serialVersionUID() { return ((fabric.util.Collections.
                                                                    UnmodifiableSortedSet.
                                                                    _Static._Impl)
                                                                    fetch()).postDec$serialVersionUID(
                                                                               );
                 }
-                
+
                 public _Proxy(fabric.util.Collections.UnmodifiableSortedSet._Static.
                                 _Impl impl) { super(impl); }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) { super(store,
                                                                             onum);
                 }
-                
+
                 public static final fabric.util.Collections.UnmodifiableSortedSet.
                   _Static $instance;
-                
+
                 static { fabric.util.Collections.UnmodifiableSortedSet._Static._Impl impl =
                            (fabric.util.Collections.UnmodifiableSortedSet._Static.
                              _Impl) fabric.lang.Object._Static._Proxy.$makeStaticInstance(
@@ -8069,18 +8077,18 @@ public interface Collections
                                        _Static) impl.$getProxy();
                          impl.$init(); }
             }
-            
+
             class _Impl extends fabric.lang.Object._Impl implements fabric.util.
                                                                       Collections.
                                                                       UnmodifiableSortedSet.
                                                                       _Static {
-                
+
                 public long get$serialVersionUID() { fabric.worker.transaction.TransactionManager.
                                                        getInstance().registerRead(
                                                                        this);
                                                      return this.serialVersionUID;
                 }
-                
+
                 public long set$serialVersionUID(long val) { fabric.worker.transaction.
                                                                TransactionManager tm =
                                                                fabric.worker.transaction.TransactionManager.
@@ -8094,144 +8102,145 @@ public interface Collections
                                                                  tm.commitTransaction(
                                                                       );
                                                              return val; }
-                
+
                 public long postInc$serialVersionUID() { long tmp = this.get$serialVersionUID(
                                                                            );
                                                          this.set$serialVersionUID(
                                                                 (long) (tmp + 1));
                                                          return tmp; }
-                
+
                 public long postDec$serialVersionUID() { long tmp = this.get$serialVersionUID(
                                                                            );
                                                          this.set$serialVersionUID(
                                                                 (long) (tmp - 1));
                                                          return tmp; }
-                
+
                 /**
                  * Compatible with JDK 1.4.
                  */
                 private long serialVersionUID;
-                
+
                 public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                        java.util.List intraStoreRefs, java.util.
                                          List interStoreRefs) throws java.io.IOException {
                     super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
                     out.writeLong(this.serialVersionUID); }
-                
+
                 public _Impl(fabric.worker.Store store, long onum, int version, long expiry,
+                             fabric.worker.metrics.ImmutableObserverSet observers,
                              fabric.worker.Store labelStore, long labelOnum, fabric.
                                worker.Store accessPolicyStore, long accessPolicyOnum,
                              java.io.ObjectInput in, java.util.Iterator refTypes,
                              java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                       throws java.io.IOException, java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum, accessPolicyStore,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum, accessPolicyStore,
                           accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
                     this.serialVersionUID = in.readLong(); }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                      util.Collections.
                                                                      UnmodifiableSortedSet.
                                                                      _Static._Proxy(
                                                                      this); }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
     }
-    
-    
+
+
     public fabric.lang.Object $initLabels();
-    
+
     public static class _Proxy extends fabric.lang.Object._Proxy implements fabric.util.Collections
     {
-        
+
         public static final native int compare(fabric.lang.Object arg1, fabric.lang.Object arg2,
                                                fabric.util.Comparator arg3);
-        
+
         public static native int binarySearch(fabric.util.List arg1, fabric.lang.Object arg2);
-        
+
         public static native int binarySearch(fabric.util.List arg1, fabric.lang.Object arg2,
                                               fabric.util.Comparator arg3);
-        
+
         public static native void copy(fabric.util.List arg1, fabric.util.List arg2);
-        
+
         public static native void fill(fabric.util.List arg1, fabric.lang.Object arg2);
-        
+
         public static native int indexOfSubList(fabric.util.List arg1, fabric.util.List arg2);
-        
+
         public static native int lastIndexOfSubList(fabric.util.List arg1, fabric.util.List arg2);
-        
+
         public static native fabric.util.ArrayList list(fabric.util.Enumeration arg1);
-        
+
         public static native fabric.lang.Object max(fabric.util.Collection arg1);
-        
+
         public static native fabric.lang.Object max(fabric.util.Collection arg1,
                                                     fabric.util.Comparator arg2);
-        
+
         public static native fabric.lang.Object min(fabric.util.Collection arg1);
-        
+
         public static native fabric.lang.Object min(fabric.util.Collection arg1,
                                                     fabric.util.Comparator arg2);
-        
+
         public static native fabric.util.List nCopies(int arg1, fabric.lang.Object arg2);
-        
+
         public static native boolean replaceAll(fabric.util.List arg1, fabric.lang.Object arg2,
                                                 fabric.lang.Object arg3);
-        
+
         public static native void reverse(fabric.util.List arg1);
-        
+
         public static native fabric.util.Comparator reverseOrder();
-        
+
         public static native void rotate(fabric.util.List arg1, int arg2);
-        
+
         public static native void shuffle(fabric.util.List arg1);
-        
+
         public static native void shuffle(fabric.util.List arg1, fabric.util.Random arg2);
-        
+
         public static native fabric.util.Set singleton(fabric.lang.Object arg1);
-        
+
         public static native fabric.util.List singletonList(fabric.lang.Object arg1);
-        
+
         public static native fabric.util.Map singletonMap(fabric.lang.Object arg1,
                                                           fabric.lang.Object arg2);
-        
+
         public static native void sort(fabric.util.List arg1);
-        
+
         public static native void sort(fabric.util.List arg1, fabric.util.Comparator arg2);
-        
+
         public static native void swap(fabric.util.List arg1, int arg2, int arg3);
-        
+
         public static native fabric.util.Collection unmodifiableCollection(fabric.worker.Store arg1,
                                                                            fabric.util.Collection arg2);
-        
+
         public static native fabric.util.List unmodifiableList(fabric.worker.Store arg1,
                                                                fabric.util.List arg2);
-        
+
         public static native fabric.util.Map unmodifiableMap(fabric.worker.Store arg1,
                                                              fabric.util.Map arg2);
-        
+
         public static native fabric.util.Set unmodifiableSet(fabric.worker.Store arg1,
                                                              fabric.util.Set arg2);
-        
+
         public static native fabric.util.SortedMap unmodifiableSortedMap(fabric.worker.Store arg1,
                                                                          fabric.util.SortedMap arg2);
-        
+
         public static native fabric.util.SortedSet unmodifiableSortedSet(fabric.worker.Store arg1,
                                                                          fabric.util.SortedSet arg2);
-        
+
         public _Proxy(Collections._Impl impl) { super(impl); }
-        
+
         public _Proxy(fabric.worker.Store store, long onum) { super(store, onum);
         }
     }
-    
+
     public static class _Impl extends fabric.lang.Object._Impl implements fabric.util.Collections
     {
-        
+
         /**
          * Determines if a list should be treated as a sequential-access one.
          * Rather than the old method of JDK 1.3 of assuming only instanceof
@@ -8243,7 +8252,7 @@ public interface Collections
          * @return <code>true</code> if it should be treated as sequential-access
          */
         private static native boolean isSequential(fabric.util.List l);
-        
+
         /**
          * Compare two objects with or without a Comparator. If c is null, uses the
          * natural ordering. Slightly slower than doing it inline if the JVM isn't
@@ -8252,7 +8261,7 @@ public interface Collections
          */
         public static final native int compare(fabric.lang.Object o1, fabric.lang.Object o2,
                                                fabric.util.Comparator c);
-        
+
         /**
          * Perform a binary search of a List for a key, using the natural ordering
          of
@@ -8283,7 +8292,7 @@ public interface Collections
          * @see #sort(List)
          */
         public static native int binarySearch(fabric.util.List l, fabric.lang.Object key);
-        
+
         /**
          * Perform a binary search of a List for a key, using a supplied Comparator.
          * The list must be sorted (as by the sort() method with the same Comparator)
@@ -8317,7 +8326,7 @@ public interface Collections
          */
         public static native int binarySearch(fabric.util.List l, fabric.lang.Object key,
                                               fabric.util.Comparator c);
-        
+
         /**
          * Copy one list to another. If the destination list is longer than the
          * source list, the remaining elements are unaffected. This method runs in
@@ -8332,7 +8341,7 @@ public interface Collections
          *         support the set operation
          */
         public static native void copy(fabric.util.List dest, fabric.util.List source);
-        
+
         /**
          * Replace every element of a list with a given value. This method runs in
          * linear time.
@@ -8343,7 +8352,7 @@ public interface Collections
          *         support the set operation.
          */
         public static native void fill(fabric.util.List l, fabric.lang.Object val);
-        
+
         /**
          * Returns the starting index where the specified sublist first occurs
          * in a larger list, or -1 if there is no matching position. If
@@ -8358,7 +8367,7 @@ public interface Collections
          * @since 1.4
          */
         public static native int indexOfSubList(fabric.util.List source, fabric.util.List target);
-        
+
         /**
          * Returns the starting index where the specified sublist last occurs
          * in a larger list, or -1 if there is no matching position. If
@@ -8373,7 +8382,7 @@ public interface Collections
          * @since 1.4
          */
         public static native int lastIndexOfSubList(fabric.util.List source, fabric.util.List target);
-        
+
         /**
          * Returns an ArrayList holding the elements visited by a given
          * Enumeration. This method exists for interoperability between legacy
@@ -8385,7 +8394,7 @@ public interface Collections
          * @since 1.4
          */
         public static native fabric.util.ArrayList list(fabric.util.Enumeration e);
-        
+
         /**
          * Find the maximum element in a Collection, according to the natural
          * ordering of the elements. This implementation iterates over the
@@ -8398,7 +8407,7 @@ public interface Collections
          * @exception NullPointerException if null.compareTo is called
          */
         public static native fabric.lang.Object max(fabric.util.Collection c);
-        
+
         /**
          * Find the maximum element in a Collection, according to a specified
          * Comparator. This implementation iterates over the Collection, so it
@@ -8414,7 +8423,7 @@ public interface Collections
          *        (only possible when order is null)
          */
         public static native fabric.lang.Object max(fabric.util.Collection c, fabric.util.Comparator order);
-        
+
         /**
          * Find the minimum element in a Collection, according to the natural
          * ordering of the elements. This implementation iterates over the
@@ -8427,7 +8436,7 @@ public interface Collections
          * @throws NullPointerException if null.compareTo is called
          */
         public static native fabric.lang.Object min(fabric.util.Collection c);
-        
+
         /**
          * Find the minimum element in a Collection, according to a specified
          * Comparator. This implementation iterates over the Collection, so it
@@ -8443,7 +8452,7 @@ public interface Collections
          *        (only possible when order is null)
          */
         public static native fabric.lang.Object min(fabric.util.Collection c, fabric.util.Comparator order);
-        
+
         /**
          * Creates an immutable list consisting of the same object repeated n times.
          * The returned object is tiny, consisting of only a single reference to
@@ -8461,7 +8470,7 @@ public interface Collections
          * @see RandomAccess
          */
         public static native fabric.util.List nCopies(final int n, final fabric.lang.Object o);
-        
+
         /**
          * Replace all instances of one object with another in the specified list.
          * The list does not change size. An element e is replaced if
@@ -8481,7 +8490,7 @@ public interface Collections
          */
         public static native boolean replaceAll(fabric.util.List list, fabric.lang.Object oldval,
                                                 fabric.lang.Object newval);
-        
+
         /**
          * Reverse a given list. This method works in linear time.
          *
@@ -8490,7 +8499,7 @@ public interface Collections
          *         support the set operation
          */
         public static native void reverse(fabric.util.List l);
-        
+
         /**
          * Get a comparator that implements the reverse of natural ordering. In
          * other words, this sorts Comparable objects opposite of how their
@@ -8503,7 +8512,7 @@ public interface Collections
          * @see Serializable
          */
         public static native fabric.util.Comparator reverseOrder();
-        
+
         /**
          * Rotate the elements in a list by a specified distance. After calling this
          * method, the element now at index <code>i</code> was formerly at index
@@ -8535,7 +8544,7 @@ public interface Collections
          * @since 1.4
          */
         public static native void rotate(fabric.util.List list, int distance);
-        
+
         /**
          * Shuffle a list according to a default source of randomness. The algorithm
          * used iterates backwards over the list, swapping each element with an
@@ -8559,7 +8568,7 @@ public interface Collections
          *         support the set operation
          */
         public static native void shuffle(fabric.util.List l);
-        
+
         /**
          * Shuffle a list according to a given source of randomness. The algorithm
          * used iterates backwards over the list, swapping each element with an
@@ -8584,7 +8593,7 @@ public interface Collections
          *         support the set operation
          */
         public static native void shuffle(fabric.util.List l, fabric.util.Random r);
-        
+
         /**
          * Obtain an immutable Set consisting of a single element. The return value
          * of this method is Serializable.
@@ -8594,7 +8603,7 @@ public interface Collections
          * @see Serializable
          */
         public static native fabric.util.Set singleton(fabric.lang.Object o);
-        
+
         /**
          * Obtain an immutable List consisting of a single element. The return value
          * of this method is Serializable, and implements RandomAccess.
@@ -8606,7 +8615,7 @@ public interface Collections
          * @since 1.3
          */
         public static native fabric.util.List singletonList(fabric.lang.Object o);
-        
+
         /**
          * Obtain an immutable Map consisting of a single key-value pair.
          * The return value of this method is Serializable.
@@ -8619,7 +8628,7 @@ public interface Collections
          */
         public static native fabric.util.Map singletonMap(fabric.lang.Object key,
                                                           fabric.lang.Object value);
-        
+
         /**
          * Sort a list according to the natural ordering of its elements. The list
          * must be modifiable, but can be of fixed size. The sort algorithm is
@@ -8637,7 +8646,7 @@ public interface Collections
          * @see Arrays#sort(Object[])
          */
         public static native void sort(fabric.util.List l);
-        
+
         /**
          * Sort a list according to a specified Comparator. The list must be
          * modifiable, but can be of fixed size. The sort algorithm is precisely
@@ -8653,15 +8662,15 @@ public interface Collections
          *        <code>null</code> for natural ordering
          * @throws ClassCastException if c will not compare some pair of items
          * @throws UnsupportedOperationException if the List is not modifiable
-         * @throws NullPointerException if the List is <code>null</code> or 
+         * @throws NullPointerException if the List is <code>null</code> or
          *         <code>null</code> is compared by natural ordering (only possible
-         
+
          *         when c is <code>null</code>)
-         *         
+         *
          * @see Arrays#sort(Object[], Comparator)
          */
         public static native void sort(fabric.util.List l, fabric.util.Comparator c);
-        
+
         /**
          * Swaps the elements at the specified positions within the list. Equal
          * positions have no effect.
@@ -8675,7 +8684,7 @@ public interface Collections
          * @since 1.4
          */
         public static native void swap(fabric.util.List l, int i, int j);
-        
+
         /**
          * Returns an unmodifiable view of the given collection. This allows
          * "read-only" access, although changes in the backing collection show up
@@ -8698,7 +8707,7 @@ public interface Collections
          */
         public static native fabric.util.Collection unmodifiableCollection(fabric.worker.Store store,
                                                                            fabric.util.Collection c);
-        
+
         /**
          * Returns an unmodifiable view of the given list. This allows
          * "read-only" access, although changes in the backing list show up
@@ -8706,7 +8715,7 @@ public interface Collections
          * via sublists, will fail with {@link UnsupportedOperationException}.
          * Although this view prevents changes to the structure of the list and
          * its elements, the values referenced by the objects in the list can
-         * still be modified.   
+         * still be modified.
          * <p>
          *
          * The returned List implements Serializable, but can only be serialized
@@ -8721,7 +8730,7 @@ public interface Collections
          */
         public static native fabric.util.List unmodifiableList(fabric.worker.Store store,
                                                                fabric.util.List l);
-        
+
         /**
          * Returns an unmodifiable view of the given map. This allows "read-only"
          * access, although changes in the backing map show up in this view.
@@ -8729,7 +8738,7 @@ public interface Collections
          * iterators will fail with {@link UnsupportedOperationException}.
          * Although this view prevents changes to the structure of the map and its
          * entries, the values referenced by the objects in the map can still be
-         * modified.   
+         * modified.
          * <p>
          *
          * The returned Map implements Serializable, but can only be serialized if
@@ -8741,7 +8750,7 @@ public interface Collections
          */
         public static native fabric.util.Map unmodifiableMap(fabric.worker.Store store,
                                                              fabric.util.Map m);
-        
+
         /**
          * Returns an unmodifiable view of the given set. This allows
          * "read-only" access, although changes in the backing set show up
@@ -8749,7 +8758,7 @@ public interface Collections
          * will fail with {@link UnsupportedOperationException}.
          * Although this view prevents changes to the structure of the set and its
          * entries, the values referenced by the objects in the set can still be
-         * modified.   
+         * modified.
          * <p>
          *
          * The returned Set implements Serializable, but can only be serialized if
@@ -8761,7 +8770,7 @@ public interface Collections
          */
         public static native fabric.util.Set unmodifiableSet(fabric.worker.Store store,
                                                              fabric.util.Set s);
-        
+
         /**
          * Returns an unmodifiable view of the given sorted map. This allows
          * "read-only" access, although changes in the backing map show up in this
@@ -8769,7 +8778,7 @@ public interface Collections
          * views, or iterators, will fail with {@link UnsupportedOperationException}.
          * Although this view prevents changes to the structure of the map and its
          * entries, the values referenced by the objects in the map can still be
-         * modified.   
+         * modified.
          * <p>
          *
          * The returned SortedMap implements Serializable, but can only be
@@ -8781,7 +8790,7 @@ public interface Collections
          */
         public static native fabric.util.SortedMap unmodifiableSortedMap(fabric.worker.Store store,
                                                                          fabric.util.SortedMap m);
-        
+
         /**
          * Returns an unmodifiable view of the given sorted set. This allows
          * "read-only" access, although changes in the backing set show up
@@ -8789,7 +8798,7 @@ public interface Collections
          * iterators, will fail with {@link UnsupportedOperationException}.
          * Although this view prevents changes to the structure of the set and its
          * entries, the values referenced by the objects in the set can still be
-         * modified.   
+         * modified.
          * <p>
          *
          * The returns SortedSet implements Serializable, but can only be
@@ -8801,108 +8810,109 @@ public interface Collections
          */
         public static native fabric.util.SortedSet unmodifiableSortedSet(fabric.worker.Store store,
                                                                          fabric.util.SortedSet s);
-        
+
         public native fabric.lang.Object $initLabels();
-        
+
         public _Impl(fabric.worker.Store $location) { super($location); }
-        
+
         protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.util.
                                                              Collections._Proxy(
                                                              this); }
-        
+
         public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                java.util.List intraStoreRefs, java.util.List interStoreRefs)
               throws java.io.IOException { super.$serialize(out, refTypes, intraStoreRefs,
                                                             interStoreRefs); }
-        
+
         public _Impl(fabric.worker.Store store, long onum, int version, long expiry,
+                     fabric.worker.metrics.ImmutableObserverSet observers,
                      fabric.worker.Store labelStore, long labelOnum, fabric.worker.
                        Store accessPolicyStore, long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs) throws java.io.IOException,
-            java.lang.ClassNotFoundException { super(store, onum, version, expiry,
+            java.lang.ClassNotFoundException { super(store, onum, version, expiry, observers,
                                                      labelStore, labelOnum, accessPolicyStore,
                                                      accessPolicyOnum, in, refTypes,
                                                      intraStoreRefs, interStoreRefs);
         }
     }
-    
+
     interface _Static extends fabric.lang.Object, Cloneable {
-        
+
         public fabric.worker.Store get$LOCAL_STORE();
-        
+
         public fabric.worker.Store set$LOCAL_STORE(fabric.worker.Store val);
-        
+
         public int get$LARGE_LIST_SIZE();
-        
+
         public int set$LARGE_LIST_SIZE(int val);
-        
+
         public int postInc$LARGE_LIST_SIZE();
-        
+
         public int postDec$LARGE_LIST_SIZE();
-        
+
         public fabric.util.Set get$EMPTY_SET();
-        
+
         public fabric.util.Set set$EMPTY_SET(fabric.util.Set val);
-        
+
         public fabric.util.List get$EMPTY_LIST();
-        
+
         public fabric.util.List set$EMPTY_LIST(fabric.util.List val);
-        
+
         public fabric.util.Map get$EMPTY_MAP();
-        
+
         public fabric.util.Map set$EMPTY_MAP(fabric.util.Map val);
-        
+
         public fabric.util.Collections.ReverseComparator get$rcInstance();
-        
+
         public fabric.util.Collections.ReverseComparator set$rcInstance(fabric.util.Collections.ReverseComparator val);
-        
+
         public fabric.util.Random get$defaultRandom();
-        
+
         public fabric.util.Random set$defaultRandom(fabric.util.Random val);
-        
+
         final class _Proxy extends fabric.lang.Object._Proxy implements fabric.util.
                                                                           Collections.
                                                                           _Static
         {
-            
+
             public fabric.worker.Store get$LOCAL_STORE() { return ((fabric.util.
                                                                      Collections.
                                                                      _Static._Impl)
                                                                      fetch()).get$LOCAL_STORE(
                                                                                 );
             }
-            
+
             public fabric.worker.Store set$LOCAL_STORE(fabric.worker.Store val) {
                 return ((fabric.util.Collections._Static._Impl) fetch()).set$LOCAL_STORE(
                                                                            val);
             }
-            
+
             public int get$LARGE_LIST_SIZE() { return ((fabric.util.Collections.
                                                          _Static._Impl) fetch()).
                                                  get$LARGE_LIST_SIZE(); }
-            
+
             public int set$LARGE_LIST_SIZE(int val) { return ((fabric.util.Collections.
                                                                 _Static._Impl) fetch(
                                                                                  )).
                                                         set$LARGE_LIST_SIZE(val);
             }
-            
+
             public int postInc$LARGE_LIST_SIZE() { return ((fabric.util.Collections.
                                                              _Static._Impl) fetch(
                                                                               )).
                                                      postInc$LARGE_LIST_SIZE(); }
-            
+
             public int postDec$LARGE_LIST_SIZE() { return ((fabric.util.Collections.
                                                              _Static._Impl) fetch(
                                                                               )).
                                                      postDec$LARGE_LIST_SIZE(); }
-            
+
             public fabric.util.Set get$EMPTY_SET() { return ((fabric.util.Collections.
                                                                _Static._Impl) fetch(
                                                                                 )).
                                                        get$EMPTY_SET(); }
-            
+
             public fabric.util.Set set$EMPTY_SET(fabric.util.Set val) { return ((fabric.
                                                                                   util.
                                                                                   Collections.
@@ -8913,12 +8923,12 @@ public interface Collections
                                                                           set$EMPTY_SET(
                                                                             val);
             }
-            
+
             public fabric.util.List get$EMPTY_LIST() { return ((fabric.util.Collections.
                                                                  _Static._Impl) fetch(
                                                                                   )).
                                                          get$EMPTY_LIST(); }
-            
+
             public fabric.util.List set$EMPTY_LIST(fabric.util.List val) { return ((fabric.
                                                                                      util.
                                                                                      Collections.
@@ -8929,12 +8939,12 @@ public interface Collections
                                                                              set$EMPTY_LIST(
                                                                                val);
             }
-            
+
             public fabric.util.Map get$EMPTY_MAP() { return ((fabric.util.Collections.
                                                                _Static._Impl) fetch(
                                                                                 )).
                                                        get$EMPTY_MAP(); }
-            
+
             public fabric.util.Map set$EMPTY_MAP(fabric.util.Map val) { return ((fabric.
                                                                                   util.
                                                                                   Collections.
@@ -8945,7 +8955,7 @@ public interface Collections
                                                                           set$EMPTY_MAP(
                                                                             val);
             }
-            
+
             public fabric.util.Collections.ReverseComparator get$rcInstance() { return ((fabric.
                                                                                           util.
                                                                                           Collections.
@@ -8956,32 +8966,32 @@ public interface Collections
                                                                                   get$rcInstance(
                                                                                     );
             }
-            
+
             public fabric.util.Collections.ReverseComparator set$rcInstance(fabric.util.Collections.ReverseComparator val) {
                 return ((fabric.util.Collections._Static._Impl) fetch()).set$rcInstance(
                                                                            val);
             }
-            
+
             public fabric.util.Random get$defaultRandom() { return ((fabric.util.
                                                                       Collections.
                                                                       _Static._Impl)
                                                                       fetch()).get$defaultRandom(
                                                                                  );
             }
-            
+
             public fabric.util.Random set$defaultRandom(fabric.util.Random val) {
                 return ((fabric.util.Collections._Static._Impl) fetch()).set$defaultRandom(
                                                                            val);
             }
-            
+
             public _Proxy(fabric.util.Collections._Static._Impl impl) { super(impl);
             }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) { super(store, onum);
             }
-            
+
             public static final fabric.util.Collections._Static $instance;
-            
+
             static { fabric.util.Collections._Static._Impl impl = (fabric.util.Collections.
                                                                     _Static._Impl)
                                                                     fabric.lang.Object._Static._Proxy.
@@ -8994,16 +9004,16 @@ public interface Collections
                                                                           );
                      impl.$init(); }
         }
-        
+
         class _Impl extends fabric.lang.Object._Impl implements fabric.util.Collections.
                                                                   _Static {
-            
+
             public fabric.worker.Store get$LOCAL_STORE() { fabric.worker.transaction.TransactionManager.
                                                              getInstance().registerRead(
                                                                              this);
                                                            return this.LOCAL_STORE;
             }
-            
+
             public fabric.worker.Store set$LOCAL_STORE(fabric.worker.Store val) {
                 fabric.worker.transaction.TransactionManager tm = fabric.worker.transaction.TransactionManager.
                   getInstance();
@@ -9011,13 +9021,13 @@ public interface Collections
                 this.LOCAL_STORE = val;
                 if (transactionCreated) tm.commitTransaction();
                 return val; }
-            
+
             protected fabric.worker.Store LOCAL_STORE;
-            
+
             public int get$LARGE_LIST_SIZE() { fabric.worker.transaction.TransactionManager.
                                                  getInstance().registerRead(this);
                                                return this.LARGE_LIST_SIZE; }
-            
+
             public int set$LARGE_LIST_SIZE(int val) { fabric.worker.transaction.
                                                         TransactionManager tm = fabric.worker.transaction.TransactionManager.
                                                         getInstance();
@@ -9028,21 +9038,21 @@ public interface Collections
                                                                                 commitTransaction(
                                                                                   );
                                                       return val; }
-            
+
             public int postInc$LARGE_LIST_SIZE() { int tmp = this.get$LARGE_LIST_SIZE(
                                                                     );
                                                    this.set$LARGE_LIST_SIZE((int)
                                                                               (tmp +
                                                                                  1));
                                                    return tmp; }
-            
+
             public int postDec$LARGE_LIST_SIZE() { int tmp = this.get$LARGE_LIST_SIZE(
                                                                     );
                                                    this.set$LARGE_LIST_SIZE((int)
                                                                               (tmp -
                                                                                  1));
                                                    return tmp; }
-            
+
             /**
              * Constant used to decide cutoff for when a non-RandomAccess list should
              * be treated as sequential-access. Basically, quadratic behavior is
@@ -9050,12 +9060,12 @@ public interface Collections
              * place. I arbitrarily set it to 16, so it may need some tuning.
              */
             private int LARGE_LIST_SIZE;
-            
+
             public fabric.util.Set get$EMPTY_SET() { fabric.worker.transaction.TransactionManager.
                                                        getInstance().registerRead(
                                                                        this);
                                                      return this.EMPTY_SET; }
-            
+
             public fabric.util.Set set$EMPTY_SET(fabric.util.Set val) { fabric.worker.
                                                                           transaction.
                                                                           TransactionManager tm =
@@ -9072,18 +9082,18 @@ public interface Collections
                                                                                  );
                                                                         return val;
             }
-            
+
             /**
              * An immutable, serializable, empty Set.
              * @see Serializable
              */
             public fabric.util.Set EMPTY_SET;
-            
+
             public fabric.util.List get$EMPTY_LIST() { fabric.worker.transaction.TransactionManager.
                                                          getInstance().registerRead(
                                                                          this);
                                                        return this.EMPTY_LIST; }
-            
+
             public fabric.util.List set$EMPTY_LIST(fabric.util.List val) { fabric.
                                                                              worker.
                                                                              transaction.
@@ -9104,19 +9114,19 @@ public interface Collections
                                                                                    );
                                                                            return val;
             }
-            
+
             /**
              * An immutable, serializable, empty List, which implements RandomAccess.
              * @see Serializable
              * @see RandomAccess
              */
             public fabric.util.List EMPTY_LIST;
-            
+
             public fabric.util.Map get$EMPTY_MAP() { fabric.worker.transaction.TransactionManager.
                                                        getInstance().registerRead(
                                                                        this);
                                                      return this.EMPTY_MAP; }
-            
+
             public fabric.util.Map set$EMPTY_MAP(fabric.util.Map val) { fabric.worker.
                                                                           transaction.
                                                                           TransactionManager tm =
@@ -9133,13 +9143,13 @@ public interface Collections
                                                                                  );
                                                                         return val;
             }
-            
+
             /**
              * An immutable, serializable, empty Map.
              * @see Serializable
              */
             public fabric.util.Map EMPTY_MAP;
-            
+
             public fabric.util.Collections.ReverseComparator get$rcInstance() { fabric.worker.transaction.TransactionManager.
                                                                                   getInstance(
                                                                                     ).
@@ -9148,7 +9158,7 @@ public interface Collections
                                                                                 return this.
                                                                                          rcInstance;
             }
-            
+
             public fabric.util.Collections.ReverseComparator set$rcInstance(fabric.util.Collections.ReverseComparator val) {
                 fabric.worker.transaction.TransactionManager tm = fabric.worker.transaction.TransactionManager.
                   getInstance();
@@ -9156,18 +9166,18 @@ public interface Collections
                 this.rcInstance = val;
                 if (transactionCreated) tm.commitTransaction();
                 return val; }
-            
+
             /**
              * The object for {@link #reverseOrder()}.
              */
             private fabric.util.Collections.ReverseComparator rcInstance;
-            
+
             public fabric.util.Random get$defaultRandom() { fabric.worker.transaction.TransactionManager.
                                                               getInstance().registerRead(
                                                                               this);
                                                             return this.defaultRandom;
             }
-            
+
             public fabric.util.Random set$defaultRandom(fabric.util.Random val) {
                 fabric.worker.transaction.TransactionManager tm = fabric.worker.transaction.TransactionManager.
                   getInstance();
@@ -9175,7 +9185,7 @@ public interface Collections
                 this.defaultRandom = val;
                 if (transactionCreated) tm.commitTransaction();
                 return val; }
-            
+
             /**
              * Cache a single Random object for use by shuffle(List). This improves
              * performance as well as ensuring that sequential calls to shuffle()
@@ -9185,7 +9195,7 @@ public interface Collections
              seed.
              */
             private fabric.util.Random defaultRandom;
-            
+
             public void $serialize(java.io.ObjectOutput out, java.util.List refTypes,
                                    java.util.List intraStoreRefs, java.util.List interStoreRefs)
                   throws java.io.IOException { super.$serialize(out, refTypes, intraStoreRefs,
@@ -9207,14 +9217,15 @@ public interface Collections
                                                $writeRef($getStore(), this.defaultRandom,
                                                          refTypes, out, intraStoreRefs,
                                                          interStoreRefs); }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version, long expiry,
+                         fabric.worker.metrics.ImmutableObserverSet observers,
                          fabric.worker.Store labelStore, long labelOnum, fabric.
                            worker.Store accessPolicyStore, long accessPolicyOnum,
                          java.io.ObjectInput in, java.util.Iterator refTypes, java.
                            util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
                   throws java.io.IOException, java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum, accessPolicyStore,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum, accessPolicyStore,
                       accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
                 this.LOCAL_STORE = (fabric.worker.Store) in.readObject();
                 this.LARGE_LIST_SIZE = in.readInt();
@@ -9258,17 +9269,17 @@ public interface Collections
                                                                    in, store, intraStoreRefs,
                                                                    interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store) { super(store); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() { return new fabric.
                                                                  util.Collections.
                                                                  _Static._Proxy(
                                                                  this); }
-            
+
             private void $init() {  }
         }
-        
+
     }
-    
+
 }

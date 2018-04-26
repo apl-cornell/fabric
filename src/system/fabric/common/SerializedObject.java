@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import fabric.lang.security.Label;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ImmutableObserverSet;
 
 /**
  * <code>_Impl</code> objects are stored on stores in serialized form as
@@ -86,6 +88,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     private long onum;
     private int version;
     private long expiry;
+    private ImmutableObserverSet observers;
 
     /**
      * Construct default with onum
@@ -94,6 +97,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.onum = onum;
       this.version = 0;
       this.expiry = 0;
+      this.observers = null;
     }
 
     /**
@@ -103,6 +107,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.onum = obj.$getOnum();
       this.version = obj.$version;
       this.expiry = obj.$expiry;
+      this.observers = obj.$observers;
     }
 
     /**
@@ -113,6 +118,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
         this.onum = in.readLong();
         this.version = in.readInt();
         this.expiry = in.readLong();
+        if (in.readBoolean()) {
+          this.observers = new ImmutableObserverSet(in);
+        }
       } catch (IOException e) {
         throw new InternalError("This shouldn't be possible", e);
       }
@@ -124,6 +132,12 @@ public final class SerializedObject implements FastSerializable, Serializable {
         out.writeLong(onum);
         out.writeInt(version);
         out.writeLong(expiry);
+        if (observers != null) {
+          out.writeBoolean(true);
+          observers.write(out);
+        } else {
+          out.writeBoolean(false);
+        }
       } catch (IOException e) {
         throw new InternalError("This shouldn't be possible", e);
       }
@@ -162,6 +176,38 @@ public final class SerializedObject implements FastSerializable, Serializable {
      */
     public void setExpiry(long expiry) {
       this.expiry = expiry;
+    }
+
+    /**
+     * @return the observers
+     */
+    public ImmutableObserverSet getObservers() {
+      return observers;
+    }
+
+    /**
+     * @param observers the observers to set
+     */
+    public void setObservers(ImmutableObserverSet observers) {
+      this.observers = observers;
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+      write(out);
+    }
+
+    private void readObject(ObjectInputStream in)
+        throws IOException, ClassNotFoundException {
+      this.onum = in.readLong();
+      this.version = in.readInt();
+      this.expiry = in.readLong();
+      if (in.readBoolean()) {
+        this.observers = new ImmutableObserverSet(in);
+      }
+    }
+
+    private void readObjectNoData() throws ObjectStreamException {
+      // Do nothing..
     }
   }
 
@@ -364,6 +410,22 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public void setExpiry(long expiry) {
     header.setExpiry(expiry);
+  }
+
+  /**
+   * @return the serialized object's observers
+   */
+  public ImmutableObserverSet getObservers() {
+    return header.getObservers();
+  }
+
+  /**
+   * Modifies the serialized object's observers
+   *
+   * @param observers
+   */
+  public void setObservers(ImmutableObserverSet observers) {
+    header.setObservers(observers);
   }
 
   /**
@@ -1209,9 +1271,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       if (constructor == null) {
         constructor = implClass.getConstructor(Store.class, long.class,
-            int.class, long.class, Store.class, long.class, Store.class,
-            long.class, ObjectInput.class, Iterator.class, Iterator.class,
-            Iterator.class);
+            int.class, long.class, ImmutableObserverSet.class, Store.class,
+            long.class, Store.class, long.class, ObjectInput.class,
+            Iterator.class, Iterator.class, Iterator.class);
         constructorTable.put(implClass, constructor);
       }
 
@@ -1238,8 +1300,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
       }
 
       _Impl result = (_Impl) constructor.newInstance(store, getOnum(),
-          getVersion(), getExpiry(), updateLabelStore, updateLabelOnum,
-          accessPolicyStore, accessPolicyOnum,
+          getVersion(), getExpiry(), getObservers(), updateLabelStore,
+          updateLabelOnum, accessPolicyStore, accessPolicyOnum,
           new ObjectInputStream(getSerializedDataStream()),
           getRefTypeIterator(), getIntraStoreRefIterator(),
           getInterStoreRefIterator());

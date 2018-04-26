@@ -280,7 +280,7 @@ public interface LinkedHashMap
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -288,7 +288,7 @@ public interface LinkedHashMap
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.out$ = (fabric.util.LinkedHashMap)
@@ -379,7 +379,7 @@ public interface LinkedHashMap
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -388,7 +388,7 @@ public interface LinkedHashMap
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
@@ -886,7 +886,7 @@ public interface LinkedHashMap
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -894,7 +894,7 @@ public interface LinkedHashMap
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.out$ = (fabric.util.LinkedHashMap)
@@ -989,7 +989,7 @@ public interface LinkedHashMap
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
+                             long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -998,7 +998,7 @@ public interface LinkedHashMap
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, expiry, observers, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
@@ -1301,7 +1301,7 @@ public interface LinkedHashMap
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
+                     long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                      long labelOnum, fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
@@ -1309,7 +1309,7 @@ public interface LinkedHashMap
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, expiry, observers, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.root =
@@ -1435,7 +1435,7 @@ public interface LinkedHashMap
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
+                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -1443,7 +1443,7 @@ public interface LinkedHashMap
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, expiry, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.serialVersionUID = in.readLong();
