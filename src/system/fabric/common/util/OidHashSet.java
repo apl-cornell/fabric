@@ -10,21 +10,21 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import fabric.common.FastSerializable;
+import fabric.common.Surrogate;
 import fabric.lang.Object;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
 /**
- * A map keyed on OIDs. Supports null keys.
+ * A map keyed on OIDs. Does not supports null keys.
  */
 public final class OidHashSet implements Iterable<Oid>, FastSerializable {
-  HashMap<Store, LongHashSet> map;
-
-  boolean hasNull;
+  // Using strings to avoid trying to get the store object before the worker is
+  // initialized (while deserializing objects from disk).
+  HashMap<String, LongHashSet> map;
 
   public OidHashSet() {
     map = new HashMap<>();
-    hasNull = false;
   }
 
   /**
@@ -34,7 +34,7 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
     int size = in.readInt();
     map = new HashMap<>();
     for (int i = 0; i < size; i++) {
-      Store s = Worker.getWorker().getStore(in.readUTF());
+      String s = in.readUTF();
       int size2 = in.readInt();
       LongHashSet submap = new LongHashSet(size2);
       map.put(s, submap);
@@ -50,57 +50,67 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   public OidHashSet(OidHashSet other) {
     this();
 
-    for (Map.Entry<Store, LongHashSet> entry : other.map.entrySet()) {
+    for (Map.Entry<String, LongHashSet> entry : other.map.entrySet()) {
       this.map.put(entry.getKey(), new LongHashSet(entry.getValue()));
     }
-
-    this.hasNull = other.hasNull;
   }
 
   public LongSet get(Store store) {
-    return map.get(store);
+    return map.get(store.name());
+  }
+
+  public LongSet get(String storeName) {
+    return map.get(storeName);
   }
 
   public void clear() {
     map.clear();
-    hasNull = false;
   }
 
   public boolean contains(Object obj) {
-    return obj == null ? hasNull : contains(obj.$getStore(), obj.$getOnum());
+    if (obj instanceof Surrogate) {
+      throw new InternalError("Surrogates should not be passed to OidHashSet");
+    }
+
+    return obj != null && contains(obj.$getStore().name(), obj.$getOnum());
   }
 
-  public boolean contains(Store store, long onum) {
-    LongHashSet submap = map.get(store);
+  public boolean contains(String storeName, long onum) {
+    LongHashSet submap = map.get(storeName);
     return submap != null && submap.contains(onum);
   }
 
+  public boolean contains(Store store, long onum) {
+    return contains(store.name(), onum);
+  }
+
   public boolean contains(Oid oid) {
-    return contains(oid.store, oid.onum);
+    return contains(oid.store.name(), oid.onum);
   }
 
   public boolean add(Object obj) {
     if (obj == null) {
-      boolean val = hasNull;
-      hasNull = true;
-      return val;
+      throw new NullPointerException();
     }
 
-    LongHashSet submap = map.get(obj.$getStore());
+    if (obj instanceof Surrogate) {
+      throw new InternalError("Surrogates should not be passed to OidHashSet");
+    }
+
+    return add(obj.$getStore(), obj.$getOnum());
+  }
+
+  public boolean add(String storeName, long onum) {
+    LongHashSet submap = map.get(storeName);
     if (submap == null) {
       submap = new LongHashSet();
-      map.put(obj.$getStore(), submap);
+      map.put(storeName, submap);
     }
-    return submap.add(obj.$getOnum());
+    return submap.add(onum);
   }
 
   public boolean add(Store store, long onum) {
-    LongHashSet submap = map.get(store);
-    if (submap == null) {
-      submap = new LongHashSet();
-      map.put(store, submap);
-    }
-    return submap.add(onum);
+    return add(store.name(), onum);
   }
 
   public boolean add(Oid oid) {
@@ -109,25 +119,34 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
 
   public boolean remove(Object obj) {
     if (obj == null) {
-      boolean result = hasNull;
-      hasNull = false;
-      return result;
+      throw new NullPointerException();
     }
 
-    LongHashSet submap = map.get(obj.$getStore());
-    return submap != null && submap.remove(obj.$getOnum());
+    if (obj instanceof Surrogate) {
+      throw new InternalError("Surrogates should not be passed to OidHashSet");
+    }
+
+    return remove(obj.$getStore(), obj.$getOnum());
+  }
+
+  public boolean remove(String storeName, long onum) {
+    LongHashSet submap = map.get(storeName);
+    boolean result = submap != null && submap.remove(onum);
+    if (result && submap.isEmpty()) {
+      map.remove(storeName);
+    }
+    return result;
   }
 
   public boolean remove(Store store, long onum) {
-    LongHashSet submap = map.get(store);
-    return submap != null && submap.remove(onum);
+    return remove(store.name(), onum);
   }
 
   public boolean remove(Oid oid) {
     return remove(oid.store, oid.onum);
   }
 
-  public Set<Store> storeSet() {
+  public Set<String> storeNameSet() {
     return map.keySet();
   }
 
@@ -135,7 +154,7 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   public Iterator<Oid> iterator() {
     return new Iterator<Oid>() {
       private Store curStore = null;
-      private Iterator<Store> storeIter = map.keySet().iterator();
+      private Iterator<String> storeIter = map.keySet().iterator();
       private LongIterator subIter = null;
 
       /**
@@ -145,8 +164,8 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
        */
       private void advance() {
         while (subIter == null && storeIter.hasNext()) {
-          curStore = storeIter.next();
-          subIter = map.get(curStore).iterator();
+          curStore = Worker.getWorker().getStore(storeIter.next());
+          subIter = map.get(curStore.name()).iterator();
           if (!subIter.hasNext()) subIter = null;
         }
       }
@@ -174,11 +193,11 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   }
 
   public boolean isEmpty() {
-    return !hasNull && map.isEmpty();
+    return map.isEmpty();
   }
 
   public int size() {
-    int result = hasNull ? 1 : 0;
+    int result = 0;
 
     for (LongHashSet submap : this.map.values())
       result += submap.size();
@@ -187,12 +206,8 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   }
 
   public void putAll(OidHashSet m) {
-    if (m.hasNull) {
-      hasNull = true;
-    }
-
-    for (Map.Entry<Store, LongHashSet> entry : m.map.entrySet()) {
-      Store store = entry.getKey();
+    for (Map.Entry<String, LongHashSet> entry : m.map.entrySet()) {
+      String store = entry.getKey();
 
       if (map.containsKey(store)) {
         map.get(store).addAll(entry.getValue());
@@ -208,10 +223,10 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
       return false;
     }
     OidHashSet map2 = (OidHashSet) other;
-    if (!storeSet().equals(map2.storeSet())) {
+    if (!storeNameSet().equals(map2.storeNameSet())) {
       return false;
     }
-    for (Store s : storeSet()) {
+    for (String s : storeNameSet()) {
       if (!get(s).equals(map2.get(s))) {
         return false;
       }
@@ -222,12 +237,31 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(map.size());
-    for (Map.Entry<Store, LongHashSet> e : map.entrySet()) {
-      out.writeUTF(e.getKey().name());
+    for (Map.Entry<String, LongHashSet> e : map.entrySet()) {
+      out.writeUTF(e.getKey());
       out.writeInt(e.getValue().size());
       for (LongIterator iter = e.getValue().iterator(); iter.hasNext();) {
         out.writeLong(iter.next());
       }
     }
+  }
+
+  @Override
+  public String toString() {
+    boolean first = true;
+    String result = "[";
+    for (Map.Entry<String, LongHashSet> e : map.entrySet()) {
+      String storeName = e.getKey();
+      for (LongIterator iter = e.getValue().iterator(); iter.hasNext();) {
+        long onum = iter.next();
+        if (first) {
+          first = false;
+        } else {
+          result += ", ";
+        }
+        result += "<" + storeName + "#" + onum + ">";
+      }
+    }
+    return result + "]";
   }
 }
