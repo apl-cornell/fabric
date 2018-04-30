@@ -1588,6 +1588,11 @@ public final class TransactionManager {
     if (needTransaction) startTransaction();
 
     synchronized (obj) {
+      // The object is being written, so it's not being extended.
+      synchronized (current.extendedContracts) {
+        current.extendedContracts.remove(obj);
+      }
+      current.cancelDelayedExtension(obj);
       if (obj.$writer == current
           && obj.writerMapVersion == current.writerMap.version && obj.$isOwned)
         return needTransaction;
@@ -1597,12 +1602,6 @@ public final class TransactionManager {
         ensureWriteLock(obj);
         ensureObjectUpToDate(obj);
         ensureOwnership(obj);
-
-        // The object has been written, so it's not being extended.
-        synchronized (current.extendedContracts) {
-          current.extendedContracts.remove(obj);
-        }
-        current.cancelDelayedExtension(obj);
       } finally {
         Timing.TXLOG.end();
       }
@@ -1623,23 +1622,30 @@ public final class TransactionManager {
     if (needTransaction) startTransaction();
 
     synchronized (obj) {
+      boolean extending = newExpiry > oldExpiry;
+      if (!extending) {
+        synchronized (current.extendedContracts) {
+          current.extendedContracts.remove(obj);
+        }
+        synchronized (current.retractedContracts) {
+          current.retractedContracts.put(obj, obj);
+        }
+        current.cancelDelayedExtension(obj);
+      }
+
       if (obj.$writer == current
           && obj.writerMapVersion == current.writerMap.version && obj.$isOwned)
         return needTransaction;
 
-      // If this wasn't written (outside of other extensions) prior to now, it's
-      // an extension.
-      boolean extension = oldExpiry < newExpiry;
-      boolean previouslyExtended = false;
-      synchronized (current.extendedContracts) {
-        previouslyExtended = current.extendedContracts.containsKey(obj);
-      }
+      boolean alreadyWritten = false;
       synchronized (current.writes) {
-        if (current.writes.contains(obj) && !previouslyExtended)
-          extension = false;
+        alreadyWritten = current.writes.contains(obj);
       }
-      synchronized (current.creates) {
-        if (current.creates.contains(obj)) extension = false;
+      // If this wasn't written and sets a longer expiry, it's an extension.
+      if (!alreadyWritten && extending) {
+        synchronized (current.extendedContracts) {
+          current.extendedContracts.put(obj, obj);
+        }
       }
 
       try {
@@ -1649,28 +1655,6 @@ public final class TransactionManager {
         ensureOwnership(obj);
       } finally {
         Timing.TXLOG.end();
-      }
-
-      if (extension) {
-        Logging.log(METRICS_LOGGER, Level.FINE,
-            "ATTEMPTING EXTENSION OF {0}/{1} IN {2}/{3} FROM {4} to {5}",
-            obj.$getStore(), new Long(obj.$getOnum()), Thread.currentThread(),
-            getCurrentTid(), oldExpiry, newExpiry);
-        synchronized (current.extendedContracts) {
-          current.extendedContracts.put(obj, obj);
-        }
-      } else {
-        synchronized (current.extendedContracts) {
-          current.extendedContracts.remove(obj);
-        }
-        current.cancelDelayedExtension(obj);
-      }
-
-      // Track retractions
-      if (oldExpiry >= newExpiry) {
-        synchronized (current.retractedContracts) {
-          current.retractedContracts.put(obj, obj);
-        }
       }
     }
 

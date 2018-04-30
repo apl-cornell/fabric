@@ -1,24 +1,25 @@
 package fabric.worker.metrics;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.Iterator;
 
-import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyMap;
-import fabric.common.util.OidKeyHashMap;
-import fabric.worker.Store;
-import fabric.worker.Worker;
+import fabric.common.FastSerializable;
+import fabric.common.util.Oid;
+import fabric.common.util.OidHashSet;
 
 /**
  * Utility class to easily express an immutable vector of items.
  */
-public class ImmutableSet
-    implements Serializable, Iterable<fabric.lang.Object._Proxy> {
-  /** The array backing this set */
-  private OidKeyHashMap<fabric.lang.Object._Proxy> items;
+public class ImmutableSet implements FastSerializable, Serializable,
+    Iterable<fabric.lang.Object._Proxy> {
+
+  private OidHashSet items;
 
   /** Provided since you can't mark constructors as native for the fabil
    * signatures
@@ -28,14 +29,18 @@ public class ImmutableSet
   }
 
   public ImmutableSet(fabric.lang.Object[] items) {
-    this.items = new OidKeyHashMap<>();
+    this.items = new OidHashSet();
     for (fabric.lang.Object item : items) {
-      this.items.put(item, item.$getProxy());
+      this.items.add(item);
     }
   }
 
-  private ImmutableSet(OidKeyHashMap<fabric.lang.Object._Proxy> items) {
-    this.items = new OidKeyHashMap<>(items);
+  public ImmutableSet(DataInput in) throws IOException {
+    this.items = new OidHashSet(in);
+  }
+
+  private ImmutableSet(OidHashSet items) {
+    this.items = new OidHashSet(items);
   }
 
   /** @return the length. */
@@ -46,7 +51,7 @@ public class ImmutableSet
   /** @return a new set with the given item added. */
   public ImmutableSet add(fabric.lang.Object obs) {
     ImmutableSet updated = new ImmutableSet(items);
-    updated.items.put(obs, obs.$getProxy());
+    updated.items.add(obs);
     return updated;
   }
 
@@ -59,7 +64,7 @@ public class ImmutableSet
 
   /** @return true iff the given observer is in the set */
   public boolean contains(fabric.lang.Object obs) {
-    return items.containsKey(obs);
+    return items.contains(obs);
   }
 
   /** @return true iff the set is empty */
@@ -69,7 +74,20 @@ public class ImmutableSet
 
   @Override
   public Iterator<fabric.lang.Object._Proxy> iterator() {
-    return items.values().iterator();
+    return new Iterator<fabric.lang.Object._Proxy>() {
+      Iterator<Oid> oidIter = items.iterator();
+
+      @Override
+      public boolean hasNext() {
+        return oidIter.hasNext();
+      }
+
+      @Override
+      public fabric.lang.Object._Proxy next() {
+        Oid oid = oidIter.next();
+        return new fabric.lang.Object._Proxy(oid.store, oid.onum);
+      }
+    };
   }
 
   private static final ImmutableSet EMPTY =
@@ -82,41 +100,17 @@ public class ImmutableSet
 
   /* Serializable definitions, need to special case fabric references. */
 
-  private void writeObject(ObjectOutputStream out) {
-    try {
-      out.writeInt(items.size());
-      for (Store s : items.storeSet()) {
-        LongKeyMap<fabric.lang.Object._Proxy> subMap = items.get(s);
-        out.writeUTF(s.name());
-        out.writeInt(subMap.size());
-        for (LongIterator iter = subMap.keySet().iterator(); iter.hasNext();) {
-          out.writeLong(iter.next());
-        }
-      }
-    } catch (IOException e) {
-      // TODO
-    }
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    write(out);
   }
 
-  private void readObject(ObjectInputStream in) {
-    try {
-      int size = in.readInt();
-      items = new OidKeyHashMap<>();
-      for (int i = 0; i < size; i++) {
-        Store s = Worker.getWorker().getStore(in.readUTF());
-        int subSize = in.readInt();
-        for (int j = 0; j < subSize; j++) {
-          long onum = in.readLong();
-          items.put(s, onum, new fabric.lang.Object._Proxy(s, onum));
-        }
-      }
-    } catch (IOException e) {
-      // TODO
-    }
+  private void readObject(ObjectInputStream in)
+      throws IOException, ClassNotFoundException {
+    this.items = new OidHashSet(in);
   }
 
-  private void readObjectNoData() {
-    items = new OidKeyHashMap<>();
+  private void readObjectNoData() throws ObjectStreamException {
+    items = new OidHashSet();
   }
 
   @Override
@@ -128,5 +122,10 @@ public class ImmutableSet
   @Override
   public int hashCode() {
     return this.items.hashCode();
+  }
+
+  @Override
+  public void write(DataOutput out) throws IOException {
+    items.write(out);
   }
 }

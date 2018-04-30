@@ -65,7 +65,8 @@ public class MetricEqualityContract extends Contract {
 
   /*@Override*/
   public void activate() {
-    MetricEqualityContract.static_activate(this);
+    //MetricEqualityContract.static_activate(this);
+    refresh(false);
   }
 
   private static void static_activate(MetricEqualityContract tmp) {

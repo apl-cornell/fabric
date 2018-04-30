@@ -87,7 +87,8 @@ public class ConjunctionContract extends Contract {
 
   /*@Override*/
   public void activate() {
-    ConjunctionContract.static_activate(this);
+    //ConjunctionContract.static_activate(this);
+    refresh(false);
   }
 
   private static void static_activate(ConjunctionContract tmp) {

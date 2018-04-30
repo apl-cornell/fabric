@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.Iterator;
 
@@ -109,7 +110,7 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     this.items = new OidHashSet(in);
   }
 
-  private void readObjectNoData() {
+  private void readObjectNoData() throws ObjectStreamException {
     items = new OidHashSet();
   }
 
@@ -127,5 +128,10 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   @Override
   public void write(DataOutput out) throws IOException {
     items.write(out);
+  }
+
+  @Override
+  public String toString() {
+    return items.toString();
   }
 }

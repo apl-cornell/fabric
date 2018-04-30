@@ -80,7 +80,8 @@ public class MetricContract extends Contract {
 
   /*@Override*/
   public void activate() {
-    MetricContract.static_activate(this);
+    //MetricContract.static_activate(this);
+    refresh(false);
   }
 
   private static void static_activate(MetricContract tmp) {
@@ -148,10 +149,9 @@ public class MetricContract extends Contract {
     if (currentPolicy != null) {
       long curExpiry = currentPolicy.expiry();
       if (curExpiry >= currentTime) {
-        //Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " +
-        //    currentPolicy);
+        boolean rtn = update(curExpiry, asyncExtension);
         currentPolicy.apply(this);
-        return update(curExpiry, asyncExtension);
+        return rtn;
       }
     }
     // Async extensions should only update to a new expiry using the existing

@@ -11,6 +11,9 @@ import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.transaction.TransactionManager;
 
+import java.util.logging.Level;
+import fabric.common.Logging;
+
 /**
  * A computation that uses {@link Contract}s to cache and reuse results.
  * <p>
@@ -26,7 +29,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
   // TODO: Consider keeping a cache of per-store proxies?
   /** The set of proxy computations for this computation. */
-  protected ImmutableSet/*<ProxyComp>*/ proxies;
+  protected ImmutableSet/*<WarrantyComp>*/ proxies;
 
   /**
    * Create a new updated result paired with a contract that would enforce it
@@ -68,125 +71,133 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
     return static_apply(this, time, autoRetry);
   }
 
+  // Flag to change behavior of proxy groups between being proactively updated
+  // and lazily updated.  With proactive, all computations get updated when a
+  // new treaty becomes available, otherwise each computation individually
+  // updates when first called after a treaty becomes possible/available.
+  private static final boolean PROACTIVE = true;
+
   private static WarrantyValue/*T*/ static_apply(WarrantyComp tmp, long time, boolean autoRetry) {
-    // TODO recompute but don't replace if current one is pending and we
-    // compute the same value
-    //Logging.METRICS_LOGGER.log(Level.FINER, "Starting " + tmp);
-    boolean loop = false;
+    TransactionManager.getInstance().resolveObservations();
+    int i = 0;
+    boolean loop = tmp.dropOldValue();
+    while (loop) {
+      i++;
+      //Logging.METRICS_LOGGER.log(Level.INFO, "RUNNING ATTEMPT " + i + " OF " + tmp + " IN " + Thread.currentThread());
+      WarrantyValue newVal = null;
+
+      if (!PROACTIVE) {
+        for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+          // If any proxy has a good value, steal it
+          WarrantyComp proxy = (WarrantyComp) iter.next();
+          if (!proxy.dropOldValue()) {
+            newVal = proxy.curVal;
+            //Logging.METRICS_LOGGER.log(Level.INFO, "USING RESULT FROM " + proxy + " IN " + Thread.currentThread());
+            // Try the value.  If we're handling updates, it's possible the proxy
+            // value is not good, despite appearances, so don't consider it done
+            // unless the result "sticks"
+            tmp.setNewValue(newVal);
+            if (!tmp.dropOldValue()) {
+              break;
+            } else {
+              newVal = null;
+            }
+          }
+        }
+      }
+
+      if (newVal == null) {
+        //Logging.METRICS_LOGGER.log(Level.INFO, "GENERATING RESULT FROM IN " + Thread.currentThread());
+        // Nobody had the result memoized, do it the old fashioned way.
+        newVal = tmp.updatedVal(System.currentTimeMillis());
+
+        // If newVal's contract is null, tmp indicates that the programmer
+        // doesn't want to memoize the result with a treaty.
+        if (newVal.contract == null) {
+          TransactionManager.getInstance().stats.addMsg("Memoized: false");
+          return newVal;
+        }
+
+        // Otherwise, updatedVal doesn't return the contract activated, so
+        // activate it now.
+        String contractStoreName = newVal.contract.$getStore().name();
+        if (!TransactionManager.getInstance().inTxn() &&
+            !(contractStoreName.equals(Worker.getWorkerName()))) {
+          RemoteWorker w = Worker.getWorker().getWorker(contractStoreName);
+          newVal.contract.activate_remote@w(null);
+        } else {
+          newVal.contract.activate();
+        }
+
+        tmp.setNewValue(newVal);
+        if (PROACTIVE) {
+          for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+            // Update proxies to new value
+            WarrantyComp proxy = (WarrantyComp) iter.next();
+            proxy.setNewValue(newVal);
+          }
+        }
+      }
+
+      // Only bother to retry if we're supposed to and we don't have a valid
+      // contract.
+      loop = autoRetry && tmp.dropOldValue();
+      if (!loop)
+        TransactionManager.getInstance().stats.addMsg("Memoized: true");
+    }
+    return tmp.curVal;
+  }
+
+  private boolean dropOldValue() {
+    return static_dropOldValue(this);
+  }
+
+  private static boolean static_dropOldValue(WarrantyComp tmp) {
+    boolean rtn = false;
     if (TransactionManager.getInstance().inTxn()) {
-      loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
+      rtn = inner_dropOldValue(tmp);
     } else {
       atomic {
-        loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
+        rtn = inner_dropOldValue(tmp);
       }
     }
-    //if (loop)
-    //  Logging.METRICS_LOGGER.log(Level.FINER, "Recomputing " + tmp);
-    //else
-    //  Logging.METRICS_LOGGER.log(Level.FINER, "Reusing " + tmp);
-    while (loop) {
-      //Logging.METRICS_LOGGER.log(Level.FINER, "Iterating " + tmp);
+    return rtn;
+  }
 
-      WarrantyValue newVal = tmp.updatedVal(System.currentTimeMillis());
-      //Logging.METRICS_LOGGER.log(Level.FINER, "Updating " + tmp + " to " +
-      //    newVal);
+  private static boolean inner_dropOldValue(WarrantyComp tmp) {
+    Contract curContract = tmp.curVal.contract;
+    if (curContract != null && !curContract.valid()) {
+      curContract.removeObserver(tmp);
+      tmp.curVal.contract = null;
+    }
+    return tmp.curVal.contract == null;
+  }
 
-      // If newVal's contract is null, this indicates that the programmer
-      // doesn't want to memoize the result with a treaty.
-      if (newVal.contract == null)
-        return newVal;
+  private void setNewValue(WarrantyValue newVal) {
+    static_setNewValue(this, newVal);
+  }
 
-      /* Commented out because API now expectes updatedVal to have run
-       * refreshWeakEstimates before returning.
-       *
-       * Estimated here so that we don't repeat work on activations of sub
-       * treaties.
-       */
-
-      //Logging.METRICS_LOGGER.log(Level.FINER, "Activating " + newVal + " for " +
-      //    tmp);
-      if (TransactionManager.getInstance().getCurrentLog() == null && !(newVal.contract.$getStore().name().equals(Worker.getWorkerName()))) {
-        RemoteWorker w = Worker.getWorker().getWorker(newVal.contract.$getStore().name());
-        newVal.contract.activate_remote@w(null);
-      } else {
-        newVal.contract.activate();
-      }
-
-      //Logging.METRICS_LOGGER.log(Level.FINER, "Setting " + tmp + " to " + newVal
-      //    + " and Observing");
-      if (TransactionManager.getInstance().inTxn()) {
-        // Need to double check we weren't scooped by another caller.  If we
-        // were, don't bother with our new value and go with the existing value.
-        if (tmp.curVal.contract == null || !tmp.curVal.contract.valid()) {
-          tmp.curVal.value = newVal.value;
-          if (tmp.curVal.contract != newVal.contract) {
-            if (tmp.curVal.contract != null) {
-              tmp.curVal.contract.removeObserver(tmp);
-            }
-            tmp.curVal.contract = newVal.contract;
-            tmp.curVal.contract.addObserver(tmp);
-            // New contract, so update proxies too.
-            for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
-              ProxyComp p = (ProxyComp) iter.next();
-              // Stop monitoring the old value.
-              if (p.curVal.contract != null) {
-                p.curVal.contract.removeObserver(p);
-              }
-              p.curVal.value = newVal.value;
-              p.curVal.contract = newVal.contract.getProxyContract(p.$getStore());
-              p.curVal.contract.addObserver(p);
-            }
-          }
-        }
-      } else {
-        atomic {
-          // Need to double check we weren't scooped by another caller.  If we
-          // were, don't bother with our new value and go with the existing value.
-          if (tmp.curVal.contract == null || !tmp.curVal.contract.valid()) {
-            tmp.curVal.value = newVal.value;
-            if (tmp.curVal.contract != newVal.contract) {
-              if (tmp.curVal.contract != null) {
-                tmp.curVal.contract.removeObserver(tmp);
-              }
-              tmp.curVal.contract = newVal.contract;
-              tmp.curVal.contract.addObserver(tmp);
-              // New contract, so update proxies too.
-              for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
-                ProxyComp p = (ProxyComp) iter.next();
-                // Stop monitoring the old value.
-                if (p.curVal.contract != null) {
-                  p.curVal.contract.removeObserver(p);
-                }
-                p.curVal.value = newVal.value;
-                p.curVal.contract = newVal.contract.getProxyContract(p.$getStore());
-                p.curVal.contract.addObserver(p);
-              }
-            }
-          }
-        }
-      }
-      //Logging.METRICS_LOGGER.log(Level.FINER, "Updated to " + tmp.curVal);
-
-      if (TransactionManager.getInstance().inTxn()) {
-        // Only bother to retry if we're supposed to and we don't have a valid
-        // contract.
-        loop = autoRetry && tmp.curVal.contract != null && !tmp.curVal.contract.valid();
-      } else {
-        atomic {
-          // Only bother to retry if we're supposed to and we don't have a valid
-          // contract.
-          loop = autoRetry && tmp.curVal.contract != null && !tmp.curVal.contract.valid();
-        }
+  private static void static_setNewValue(WarrantyComp tmp, WarrantyValue newVal) {
+    if (TransactionManager.getInstance().inTxn()) {
+      inner_setNewValue(tmp, newVal);
+    } else {
+      atomic {
+        inner_setNewValue(tmp, newVal);
       }
     }
-    //Logging.METRICS_LOGGER.log(Level.FINER, "Finished " + tmp + " with " +
-    //    tmp.curVal);
-    return tmp.curVal;
+  }
+
+  private static void inner_setNewValue(WarrantyComp tmp, WarrantyValue newVal) {
+    if (inner_dropOldValue(tmp) && newVal.contract != null && newVal.contract.valid()) {
+      tmp.curVal.value = newVal.value;
+      tmp.curVal.contract = newVal.contract.getProxyContract(tmp.$getStore());
+      //Logging.METRICS_LOGGER.log(Level.INFO, "SET CONTRACT FOR " + tmp + " TO " + tmp.curVal.contract + " BASED ON " + newVal + " IN " + Thread.currentThread());
+      tmp.curVal.contract.addObserver(tmp);
+    }
   }
 
   /*@Override*/
   public ImmutableMetricsVector/*<SampledMetric>*/ getLeafSubjects() {
-    // TODO: Is this right?
     if (curVal.contract != null)
       return curVal.contract.getLeafSubjects();
     return ImmutableMetricsVector.emptyVector();
@@ -194,13 +205,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
   /*@Override*/
   public boolean handleUpdates() {
-    // TODO: Is this right?
-    long time = System.currentTimeMillis();
-    if (curVal.contract == null) {
-      // This shouldn't be possible
-      return false;
-    } else if (!curVal.contract.valid(time)) {
-      curVal.contract.removeObserver(this);
+    if (this.dropOldValue()) {
       // try to get a new value
       apply(System.currentTimeMillis(), false);
       return true;
@@ -222,23 +227,66 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
    * Make a warranty comp that resides on another store that can be used locally
    * at that store when a memoized result is available.
    */
-  public ProxyComp makeProxy(final Store proxyStore) {
+  public WarrantyComp makeProxy(final Store proxyStore) {
     return static_makeProxy(this, proxyStore);
   }
 
-  private static ProxyComp static_makeProxy(WarrantyComp tmp, final Store proxyStore) {
+  private static WarrantyComp static_makeProxy(WarrantyComp tmp, final Store proxyStore) {
+    WarrantyComp rtn = null;
     if (TransactionManager.getInstance().inTxn()) {
-      ProxyComp p = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
-      tmp.proxies = tmp.proxies.add(p);
-      return p;
-    } else {
-      ProxyComp rtn = null;
-      atomic {
-        rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
-        tmp.proxies = tmp.proxies.add(rtn);
+      if (tmp.$getStore().equals(proxyStore)) {
+        rtn = tmp;
+      } else {
+        // See if we already have a proxy for that store.
+        for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+          WarrantyComp proxy = (WarrantyComp) iter.next();
+          if (proxy.$getStore().equals(proxyStore)) {
+            rtn = proxy;
+            break;
+          }
+        }
+        if (rtn == null) {
+          rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
+          // Update proxies
+          for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+            WarrantyComp proxy = (WarrantyComp) iter.next();
+            proxy.proxies = proxy.proxies.add(rtn);
+          }
+          // Update the new proxy
+          rtn.proxies = tmp.proxies.add(tmp);
+          // Update tmp
+          tmp.proxies = tmp.proxies.add(rtn);
+        }
       }
-      return rtn;
+    } else {
+      atomic {
+        if (tmp.$getStore().equals(proxyStore)) {
+          rtn = tmp;
+        } else {
+          // See if we already have a proxy for that store.
+          for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+            WarrantyComp proxy = (WarrantyComp) iter.next();
+            if (proxy.$getStore().equals(proxyStore)) {
+              rtn = proxy;
+              break;
+            }
+          }
+          if (rtn == null) {
+            rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
+            // Update proxies
+            for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+              WarrantyComp proxy = (WarrantyComp) iter.next();
+              proxy.proxies = proxy.proxies.add(rtn);
+            }
+            // Update the new proxy
+            rtn.proxies = tmp.proxies.add(tmp);
+            // Update tmp
+            tmp.proxies = tmp.proxies.add(rtn);
+          }
+        }
+      }
     }
+    return rtn;
   }
 
   protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$() {
@@ -258,51 +306,18 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
     protected final WarrantyComp baseComputation;
 
     protected ProxyComp fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(WarrantyComp baseComputation) {
-      this.baseComputation = baseComputation;
+      if (baseComputation instanceof ProxyComp) {
+        this.baseComputation = ((ProxyComp) baseComputation).baseComputation;
+      } else {
+        this.baseComputation = baseComputation;
+      }
       fabric$metrics$contracts$warranties$WarrantyComp$();
-      this.baseComputation.addObserver(this);
       return this;
     }
 
     /*@Override*/
     protected WarrantyValue/*<T>*/ updatedVal(long time) {
-      // XXX: This should never be called, proxy always reverts back to the
-      // primary.
       return this.baseComputation.updatedVal(time);
-    }
-
-    /*@Override*/
-    public WarrantyValue/*T*/ apply(long time, boolean autoRetry) {
-      return static_apply(this, time, autoRetry);
-    }
-
-    /*@Override?*/
-    private static WarrantyValue/*T*/ static_apply(ProxyComp tmp, long time, boolean autoRetry) {
-      // Proxy either has a cached result or it should return a new result from
-      // the primary (which will update the proxy's cached result.
-      if (tmp.curVal.contract != null && tmp.curVal.contract.valid()) {
-        return tmp.curVal;
-      }
-      return tmp.baseComputation.apply(time, autoRetry);
-    }
-
-    /*@Override*/
-    public ProxyComp makeProxy(final Store proxyStore) {
-      return static_makeProxy(this, proxyStore);
-    }
-
-    private static ProxyComp static_makeProxy(ProxyComp tmp, final Store proxyStore) {
-      if (TransactionManager.getInstance().inTxn()) {
-        // Avoid unnecessary indirection.
-        return tmp.baseComputation.makeProxy(proxyStore);
-      } else {
-        ProxyComp rtn = null;
-        atomic {
-          // Avoid unnecessary indirection.
-          rtn = tmp.baseComputation.makeProxy(proxyStore);
-        }
-        return rtn;
-      }
     }
   }
 }

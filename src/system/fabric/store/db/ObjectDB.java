@@ -494,8 +494,16 @@ public abstract class ObjectDB {
           "Object " + onum + " has been locked by an uncommitted transaction.");
     }
 
-    // Check if this is a "real" extension, otherwise we skip it.
+    // Check version numbers.
     SerializedObject storeCopy = read(onum);
+    int storeVersion = storeCopy.getVersion();
+    int workerVersion = extension.version;
+    if (storeVersion != workerVersion) {
+      versionConflicts.put(onum, storeCopy);
+      return;
+    }
+
+    // Check if this is a "real" extension, otherwise we skip it.
     long curExpiry = storeCopy.getExpiry();
     if (curExpiry >= extension.expiry) {
       if (curExpiry > extension.expiry) {
@@ -511,14 +519,6 @@ public abstract class ObjectDB {
 
     synchronized (submap) {
       submap.get(worker).extensions.add(extension);
-    }
-
-    // Check version numbers.
-    int storeVersion = storeCopy.getVersion();
-    int workerVersion = extension.version;
-    if (storeVersion != workerVersion) {
-      versionConflicts.put(onum, storeCopy);
-      return;
     }
   }
 

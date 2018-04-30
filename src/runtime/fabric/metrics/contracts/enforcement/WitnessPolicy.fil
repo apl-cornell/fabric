@@ -125,6 +125,8 @@ public class WitnessPolicy implements EnforcementPolicy {
   }
 
   private static long static_expiry(WitnessPolicy tmp) {
+    if (!tmp.activated)
+      tmp.activate();
     long expiry = -1;
     boolean atLeastOnce = false;
     if (TransactionManager.getInstance().inTxn()) {
@@ -152,7 +154,7 @@ public class WitnessPolicy implements EnforcementPolicy {
     if (!activated)
       activate();
     for (int i = 0; i < witnesses.length(); i++) {
-      witnesses.get(i).addObserver((fabric.metrics.util.Observer) mc.fetch());
+      witnesses.get(i).addObserver(mc);
     }
     //Logging.METRICS_LOGGER.finer("DEFENDING " + mc + " WITH " + this);
   }

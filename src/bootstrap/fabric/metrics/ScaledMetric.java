@@ -214,35 +214,35 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
             }
             else {
                 {
-                    fabric.metrics.DerivedMetric val$var386 = val;
-                    fabric.worker.transaction.TransactionManager $tm392 =
+                    fabric.metrics.DerivedMetric val$var358 = val;
+                    fabric.worker.transaction.TransactionManager $tm364 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
-                    boolean $backoffEnabled395 =
+                    boolean $backoffEnabled367 =
                       fabric.worker.Worker.getWorker().config.txRetryBackoff;
-                    int $backoff393 = 1;
-                    boolean $doBackoff394 = true;
-                    boolean $retry389 = true;
-                    $label387: for (boolean $commit388 = false; !$commit388; ) {
-                        if ($backoffEnabled395) {
-                            if ($doBackoff394) {
-                                if ($backoff393 > 32) {
+                    int $backoff365 = 1;
+                    boolean $doBackoff366 = true;
+                    boolean $retry361 = true;
+                    $label359: for (boolean $commit360 = false; !$commit360; ) {
+                        if ($backoffEnabled367) {
+                            if ($doBackoff366) {
+                                if ($backoff365 > 32) {
                                     while (true) {
                                         try {
-                                            java.lang.Thread.sleep($backoff393);
+                                            java.lang.Thread.sleep($backoff365);
                                             break;
                                         }
                                         catch (java.lang.
-                                                 InterruptedException $e390) {
+                                                 InterruptedException $e362) {
                                             
                                         }
                                     }
                                 }
-                                if ($backoff393 < 5000) $backoff393 *= 2;
+                                if ($backoff365 < 5000) $backoff365 *= 2;
                             }
-                            $doBackoff394 = $backoff393 <= 32 || !$doBackoff394;
+                            $doBackoff366 = $backoff365 <= 32 || !$doBackoff366;
                         }
-                        $commit388 = true;
+                        $commit360 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
@@ -253,20 +253,20 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                                                 otherScalar * tmp.get$scalar(),
                                                 tmp.term(0));
                         }
-                        catch (final fabric.worker.RetryException $e390) {
-                            $commit388 = false;
-                            continue $label387;
+                        catch (final fabric.worker.RetryException $e362) {
+                            $commit360 = false;
+                            continue $label359;
                         }
                         catch (final fabric.worker.
-                                 TransactionRestartingException $e390) {
-                            $commit388 = false;
-                            fabric.common.TransactionID $currentTid391 =
-                              $tm392.getCurrentTid();
-                            if ($e390.tid.isDescendantOf($currentTid391))
-                                continue $label387;
-                            if ($currentTid391.parent != null) {
-                                $retry389 = false;
-                                throw $e390;
+                                 TransactionRestartingException $e362) {
+                            $commit360 = false;
+                            fabric.common.TransactionID $currentTid363 =
+                              $tm364.getCurrentTid();
+                            if ($e362.tid.isDescendantOf($currentTid363))
+                                continue $label359;
+                            if ($currentTid363.parent != null) {
+                                $retry361 = false;
+                                throw $e362;
                             }
                             throw new InternalError(
                                     "Something is broken with " +
@@ -274,17 +274,17 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                                         "different transaction than the one being managed.");
                         }
                         catch (final fabric.worker.metrics.
-                                 LockConflictException $e390) {
-                            $commit388 = false;
-                            if ($tm392.checkForStaleObjects()) continue;
-                            fabric.common.TransactionID $currentTid391 =
-                              $tm392.getCurrentTid();
-                            if ($e390.tid.isDescendantOf($currentTid391)) {
-                                $retry389 = true;
+                                 LockConflictException $e362) {
+                            $commit360 = false;
+                            if ($tm364.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid363 =
+                              $tm364.getCurrentTid();
+                            if ($e362.tid.isDescendantOf($currentTid363)) {
+                                $retry361 = true;
                             }
-                            else if ($currentTid391.parent != null) {
-                                $retry389 = false;
-                                throw $e390;
+                            else if ($currentTid363.parent != null) {
+                                $retry361 = false;
+                                throw $e362;
                             }
                             else {
                                 throw new InternalError(
@@ -293,33 +293,33 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                                             "transaction than the one being managed.");
                             }
                         }
-                        catch (final Throwable $e390) {
-                            $commit388 = false;
-                            if ($tm392.checkForStaleObjects())
-                                continue $label387;
-                            $retry389 = false;
-                            throw new fabric.worker.AbortException($e390);
+                        catch (final Throwable $e362) {
+                            $commit360 = false;
+                            if ($tm364.checkForStaleObjects())
+                                continue $label359;
+                            $retry361 = false;
+                            throw new fabric.worker.AbortException($e362);
                         }
                         finally {
-                            if ($commit388) {
+                            if ($commit360) {
                                 try {
                                     fabric.worker.transaction.TransactionManager.
                                       getInstance().commitTransaction();
                                 }
                                 catch (final fabric.worker.
-                                         AbortException $e390) {
-                                    $commit388 = false;
+                                         AbortException $e362) {
+                                    $commit360 = false;
                                 }
                                 catch (final fabric.worker.
-                                         TransactionRestartingException $e390) {
-                                    $commit388 = false;
-                                    fabric.common.TransactionID $currentTid391 =
-                                      $tm392.getCurrentTid();
-                                    if ($currentTid391 != null) {
-                                        if ($e390.tid.equals($currentTid391) ||
-                                              !$e390.tid.isDescendantOf(
-                                                           $currentTid391)) {
-                                            throw $e390;
+                                         TransactionRestartingException $e362) {
+                                    $commit360 = false;
+                                    fabric.common.TransactionID $currentTid363 =
+                                      $tm364.getCurrentTid();
+                                    if ($currentTid363 != null) {
+                                        if ($e362.tid.equals($currentTid363) ||
+                                              !$e362.tid.isDescendantOf(
+                                                           $currentTid363)) {
+                                            throw $e362;
                                         }
                                     }
                                 }
@@ -328,9 +328,9 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                                 fabric.worker.transaction.TransactionManager.
                                   getInstance().abortTransaction();
                             }
-                            if (!$commit388 && $retry389) {
-                                { val = val$var386; }
-                                continue $label387;
+                            if (!$commit360 && $retry361) {
+                                { val = val$var358; }
+                                continue $label359;
                             }
                         }
                     }
@@ -379,39 +379,39 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                 }
                 else {
                     {
-                        fabric.metrics.DerivedMetric val$var396 = val;
-                        fabric.worker.transaction.TransactionManager $tm402 =
+                        fabric.metrics.DerivedMetric val$var368 = val;
+                        fabric.worker.transaction.TransactionManager $tm374 =
                           fabric.worker.transaction.TransactionManager.
                           getInstance();
-                        boolean $backoffEnabled405 =
+                        boolean $backoffEnabled377 =
                           fabric.worker.Worker.getWorker(
                                                  ).config.txRetryBackoff;
-                        int $backoff403 = 1;
-                        boolean $doBackoff404 = true;
-                        boolean $retry399 = true;
-                        $label397: for (boolean $commit398 = false; !$commit398;
+                        int $backoff375 = 1;
+                        boolean $doBackoff376 = true;
+                        boolean $retry371 = true;
+                        $label369: for (boolean $commit370 = false; !$commit370;
                                         ) {
-                            if ($backoffEnabled405) {
-                                if ($doBackoff404) {
-                                    if ($backoff403 > 32) {
+                            if ($backoffEnabled377) {
+                                if ($doBackoff376) {
+                                    if ($backoff375 > 32) {
                                         while (true) {
                                             try {
                                                 java.lang.Thread.sleep(
-                                                                   $backoff403);
+                                                                   $backoff375);
                                                 break;
                                             }
                                             catch (java.lang.
-                                                     InterruptedException $e400) {
+                                                     InterruptedException $e372) {
                                                 
                                             }
                                         }
                                     }
-                                    if ($backoff403 < 5000) $backoff403 *= 2;
+                                    if ($backoff375 < 5000) $backoff375 *= 2;
                                 }
-                                $doBackoff404 = $backoff403 <= 32 ||
-                                                  !$doBackoff404;
+                                $doBackoff376 = $backoff375 <= 32 ||
+                                                  !$doBackoff376;
                             }
-                            $commit398 = true;
+                            $commit370 = true;
                             fabric.worker.transaction.TransactionManager.
                               getInstance().startTransaction();
                             try {
@@ -423,20 +423,20 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                                                         tmp.get$scalar(),
                                                     tmp.term(0));
                             }
-                            catch (final fabric.worker.RetryException $e400) {
-                                $commit398 = false;
-                                continue $label397;
+                            catch (final fabric.worker.RetryException $e372) {
+                                $commit370 = false;
+                                continue $label369;
                             }
                             catch (final fabric.worker.
-                                     TransactionRestartingException $e400) {
-                                $commit398 = false;
-                                fabric.common.TransactionID $currentTid401 =
-                                  $tm402.getCurrentTid();
-                                if ($e400.tid.isDescendantOf($currentTid401))
-                                    continue $label397;
-                                if ($currentTid401.parent != null) {
-                                    $retry399 = false;
-                                    throw $e400;
+                                     TransactionRestartingException $e372) {
+                                $commit370 = false;
+                                fabric.common.TransactionID $currentTid373 =
+                                  $tm374.getCurrentTid();
+                                if ($e372.tid.isDescendantOf($currentTid373))
+                                    continue $label369;
+                                if ($currentTid373.parent != null) {
+                                    $retry371 = false;
+                                    throw $e372;
                                 }
                                 throw new InternalError(
                                         "Something is broken with " +
@@ -444,17 +444,17 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                                             "different transaction than the one being managed.");
                             }
                             catch (final fabric.worker.metrics.
-                                     LockConflictException $e400) {
-                                $commit398 = false;
-                                if ($tm402.checkForStaleObjects()) continue;
-                                fabric.common.TransactionID $currentTid401 =
-                                  $tm402.getCurrentTid();
-                                if ($e400.tid.isDescendantOf($currentTid401)) {
-                                    $retry399 = true;
+                                     LockConflictException $e372) {
+                                $commit370 = false;
+                                if ($tm374.checkForStaleObjects()) continue;
+                                fabric.common.TransactionID $currentTid373 =
+                                  $tm374.getCurrentTid();
+                                if ($e372.tid.isDescendantOf($currentTid373)) {
+                                    $retry371 = true;
                                 }
-                                else if ($currentTid401.parent != null) {
-                                    $retry399 = false;
-                                    throw $e400;
+                                else if ($currentTid373.parent != null) {
+                                    $retry371 = false;
+                                    throw $e372;
                                 }
                                 else {
                                     throw new InternalError(
@@ -463,45 +463,45 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                                                 "transaction than the one being managed.");
                                 }
                             }
-                            catch (final Throwable $e400) {
-                                $commit398 = false;
-                                if ($tm402.checkForStaleObjects())
-                                    continue $label397;
-                                $retry399 = false;
-                                throw new fabric.worker.AbortException($e400);
+                            catch (final Throwable $e372) {
+                                $commit370 = false;
+                                if ($tm374.checkForStaleObjects())
+                                    continue $label369;
+                                $retry371 = false;
+                                throw new fabric.worker.AbortException($e372);
                             }
                             finally {
-                                if ($commit398) {
+                                if ($commit370) {
                                     try {
                                         fabric.worker.transaction.TransactionManager.
                                           getInstance().commitTransaction();
                                     }
                                     catch (final fabric.worker.
-                                             AbortException $e400) {
-                                        $commit398 = false;
+                                             AbortException $e372) {
+                                        $commit370 = false;
                                     }
                                     catch (final fabric.worker.
-                                             TransactionRestartingException $e400) {
-                                        $commit398 = false;
+                                             TransactionRestartingException $e372) {
+                                        $commit370 = false;
                                         fabric.common.TransactionID
-                                          $currentTid401 =
-                                          $tm402.getCurrentTid();
-                                        if ($currentTid401 != null) {
-                                            if ($e400.tid.equals(
-                                                            $currentTid401) ||
-                                                  !$e400.tid.
+                                          $currentTid373 =
+                                          $tm374.getCurrentTid();
+                                        if ($currentTid373 != null) {
+                                            if ($e372.tid.equals(
+                                                            $currentTid373) ||
+                                                  !$e372.tid.
                                                   isDescendantOf(
-                                                    $currentTid401)) {
-                                                throw $e400;
+                                                    $currentTid373)) {
+                                                throw $e372;
                                             }
                                         }
                                     }
                                 } else {
                                     fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
                                 }
-                                if (!$commit398 && $retry399) {
-                                    { val = val$var396; }
-                                    continue $label397;
+                                if (!$commit370 && $retry371) {
+                                    { val = val$var368; }
+                                    continue $label369;
                                 }
                             }
                         }
