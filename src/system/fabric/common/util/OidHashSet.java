@@ -10,23 +10,21 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import fabric.common.FastSerializable;
+import fabric.common.Surrogate;
 import fabric.lang.Object;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
 /**
- * A map keyed on OIDs. Supports null keys.
+ * A map keyed on OIDs. Does not supports null keys.
  */
 public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   // Using strings to avoid trying to get the store object before the worker is
   // initialized (while deserializing objects from disk).
   HashMap<String, LongHashSet> map;
 
-  boolean hasNull;
-
   public OidHashSet() {
     map = new HashMap<>();
-    hasNull = false;
   }
 
   /**
@@ -55,8 +53,6 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
     for (Map.Entry<String, LongHashSet> entry : other.map.entrySet()) {
       this.map.put(entry.getKey(), new LongHashSet(entry.getValue()));
     }
-
-    this.hasNull = other.hasNull;
   }
 
   public LongSet get(Store store) {
@@ -69,12 +65,14 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
 
   public void clear() {
     map.clear();
-    hasNull = false;
   }
 
   public boolean contains(Object obj) {
-    return obj == null ? hasNull
-        : contains(obj.$getStore().name(), obj.$getOnum());
+    if (obj instanceof Surrogate) {
+      throw new InternalError("Surrogates should not be passed to OidHashSet");
+    }
+
+    return obj != null && contains(obj.$getStore().name(), obj.$getOnum());
   }
 
   public boolean contains(String storeName, long onum) {
@@ -92,9 +90,11 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
 
   public boolean add(Object obj) {
     if (obj == null) {
-      boolean val = hasNull;
-      hasNull = true;
-      return val;
+      throw new NullPointerException();
+    }
+
+    if (obj instanceof Surrogate) {
+      throw new InternalError("Surrogates should not be passed to OidHashSet");
     }
 
     return add(obj.$getStore(), obj.$getOnum());
@@ -109,7 +109,6 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
     return submap.add(onum);
   }
 
-
   public boolean add(Store store, long onum) {
     return add(store.name(), onum);
   }
@@ -120,9 +119,11 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
 
   public boolean remove(Object obj) {
     if (obj == null) {
-      boolean result = hasNull;
-      hasNull = false;
-      return result;
+      throw new NullPointerException();
+    }
+
+    if (obj instanceof Surrogate) {
+      throw new InternalError("Surrogates should not be passed to OidHashSet");
     }
 
     return remove(obj.$getStore(), obj.$getOnum());
@@ -130,7 +131,15 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
 
   public boolean remove(String storeName, long onum) {
     LongHashSet submap = map.get(storeName);
-    return submap != null && submap.remove(onum);
+    boolean result = submap != null && submap.remove(onum);
+    if (result && submap.isEmpty()) {
+      map.remove(storeName);
+    }
+    return result;
+  }
+
+  public boolean remove(Store store, long onum) {
+    return remove(store.name(), onum);
   }
 
   public boolean remove(Store store, long onum) {
@@ -188,11 +197,11 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   }
 
   public boolean isEmpty() {
-    return !hasNull && map.isEmpty();
+    return map.isEmpty();
   }
 
   public int size() {
-    int result = hasNull ? 1 : 0;
+    int result = 0;
 
     for (LongHashSet submap : this.map.values())
       result += submap.size();
@@ -201,10 +210,6 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   }
 
   public void putAll(OidHashSet m) {
-    if (m.hasNull) {
-      hasNull = true;
-    }
-
     for (Map.Entry<String, LongHashSet> entry : m.map.entrySet()) {
       String store = entry.getKey();
 
@@ -243,5 +248,24 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
         out.writeLong(iter.next());
       }
     }
+  }
+
+  @Override
+  public String toString() {
+    boolean first = true;
+    String result = "[";
+    for (Map.Entry<String, LongHashSet> e : map.entrySet()) {
+      String storeName = e.getKey();
+      for (LongIterator iter = e.getValue().iterator(); iter.hasNext();) {
+        long onum = iter.next();
+        if (first) {
+          first = false;
+        } else {
+          result += ", ";
+        }
+        result += "<" + storeName + "#" + onum + ">";
+      }
+    }
+    return result + "]";
   }
 }

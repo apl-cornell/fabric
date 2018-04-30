@@ -1778,6 +1778,8 @@ public final class TransactionManager {
       // Clear the read stamp -- the reader's read condition no longer holds.
       obj.$reader = Log.NO_READER;
     }
+    // Also grab a read lock so we can be preempted if the cache is updated.
+    ensureReadLock(obj);
   }
 
   /**
