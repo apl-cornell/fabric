@@ -142,10 +142,6 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
     return remove(store.name(), onum);
   }
 
-  public boolean remove(Store store, long onum) {
-    return remove(store.name(), onum);
-  }
-
   public boolean remove(Oid oid) {
     return remove(oid.store, oid.onum);
   }
