@@ -205,7 +205,7 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
     return result;
   }
 
-  public void putAll(OidHashSet m) {
+  public void addAll(OidHashSet m) {
     for (Map.Entry<String, LongHashSet> entry : m.map.entrySet()) {
       String store = entry.getKey();
 
@@ -215,6 +215,17 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
         map.put(store, new LongHashSet(entry.getValue()));
       }
     }
+  }
+
+  public boolean containsAll(OidHashSet m) {
+    for (Map.Entry<String, LongHashSet> entry : m.map.entrySet()) {
+      String store = entry.getKey();
+
+      if (!map.containsKey(store)
+          || !map.get(store).containsAll(entry.getValue()))
+        return false;
+    }
+    return true;
   }
 
   @Override
