@@ -56,15 +56,15 @@ final class ObjectLocks {
    *          requesting the lock.
    */
   synchronized void lockForWrite(long tid) throws UnableToLockException {
-    if (writeLock != null && writeLock != tid) {
+    if (writeLock != null && !writeLock.equals(tid)) {
       // Conflicting write lock.
       throw new UnableToLockException();
     }
 
     // We already have the write lock, don't bother with anything.
-    if (writeLock != null && writeLock == tid) return;
+    if (writeLock != null && writeLock.equals(tid)) return;
 
-    if (softWriteLock != null && softWriteLock != tid) {
+    if (softWriteLock != null && !softWriteLock.equals(tid)) {
       // Conflicting with a softWriteLock
       throw new UnableToLockException();
     }
@@ -84,7 +84,7 @@ final class ObjectLocks {
    * @return true iff a lock was found for the given TID.
    */
   synchronized boolean unlockForWrite(long tid) {
-    if (writeLock != null && writeLock == tid) {
+    if (writeLock != null && writeLock.equals(tid)) {
       writeLock = null;
       return true;
     }
@@ -100,12 +100,12 @@ final class ObjectLocks {
    *          considered conflicting with other write locks (hard or soft).
    */
   synchronized void lockForSoftWrite(long tid) throws UnableToLockException {
-    if (writeLock != null && writeLock != tid) {
+    if (writeLock != null && !writeLock.equals(tid)) {
       // Conflicting write lock.
       throw new UnableToLockException();
     }
 
-    if (softWriteLock != null && softWriteLock != tid) {
+    if (softWriteLock != null && !softWriteLock.equals(tid)) {
       // Conflicting with a softWriteLock
       throw new UnableToLockException();
     }
@@ -119,7 +119,7 @@ final class ObjectLocks {
    * @return true iff a lock was found for the given TID.
    */
   synchronized boolean unlockForSoftWrite(long tid) {
-    if (softWriteLock != null && softWriteLock == tid) {
+    if (softWriteLock != null && softWriteLock.equals(tid)) {
       softWriteLock = null;
       return true;
     }
@@ -136,13 +136,13 @@ final class ObjectLocks {
    */
   synchronized void lockForRead(long tid, Principal worker)
       throws UnableToLockException {
-    if (writeLock != null && writeLock != tid) {
+    if (writeLock != null && !writeLock.equals(tid)) {
       // Conflicting write lock.
       throw new UnableToLockException();
     }
 
     // We already have the write lock, don't bother with a read lock.
-    if (writeLock != null && writeLock == tid) return;
+    if (writeLock != null && writeLock.equals(tid)) return;
 
     List<Oid> pins = readLocks.get(tid);
     if (pins == null) {
