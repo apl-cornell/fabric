@@ -26,6 +26,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
+import fabric.common.util.OidHashSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.common.util.WeakReferenceArrayList;
@@ -137,12 +138,12 @@ public final class Log {
   /**
    * A collection of {@link Contract}s that are extended by this transaction
    */
-  protected final OidKeyHashMap<_Impl> extendedContracts;
+  protected final OidKeyHashMap<ExpiryExtension> extendedContracts;
 
   /**
    * A collection of {@link Contract}s that are retracted by this transaction
    */
-  protected final OidKeyHashMap<_Impl> retractedContracts;
+  protected final OidHashSet retractedContracts;
 
   /**
    * A collection of {@link Contract}s that should be extended after this
@@ -287,7 +288,7 @@ public final class Log {
     this.writes = new ArrayList<>();
     this.unobservedSamples = new OidKeyHashMap<>();
     this.extendedContracts = new OidKeyHashMap<>();
-    this.retractedContracts = new OidKeyHashMap<>();
+    this.retractedContracts = new OidHashSet();
     this.delayedExtensions = new OidKeyHashMap<>();
     this.extensionTriggers = new OidKeyHashMap<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
@@ -490,8 +491,8 @@ public final class Log {
     }
     List<ExpiryExtension> extensions =
         new ArrayList<>(extendedContracts.get(store).size());
-    for (_Impl obj : extendedContracts.get(store).values()) {
-      extensions.add(new ExpiryExtension(obj));
+    for (ExpiryExtension extension : extendedContracts.get(store).values()) {
+      extensions.add(extension);
     }
     return extensions;
   }
@@ -752,10 +753,10 @@ public final class Log {
       parent.unobservedSamples.putAll(unobservedSamples);
     }
 
-    for (_Impl obs : retractedContracts.values()) {
+    for (Oid obs : retractedContracts) {
       synchronized (parent.retractedContracts) {
-        if (!parent.retractedContracts.containsKey(obs))
-          parent.retractedContracts.put(obs, obs);
+        if (!parent.retractedContracts.contains(obs))
+          parent.retractedContracts.add(obs);
       }
       synchronized (parent.extendedContracts) {
         if (parent.extendedContracts.containsKey(obs))
@@ -767,17 +768,20 @@ public final class Log {
       }
     }
 
-    for (_Impl obs : extendedContracts.values()) {
-      synchronized (parent.delayedExtensions) {
-        if (parent.markedForDelayedExtension(obs))
-          parent.cancelDelayedExtension(obs);
-      }
-      synchronized (parent.retractedContracts) {
-        if (parent.retractedContracts.containsKey(obs)) continue;
-      }
-      synchronized (parent.extendedContracts) {
-        if (!parent.extendedContracts.containsKey(obs))
-          parent.extendedContracts.put(obs, obs);
+    for (Store s : extendedContracts.storeSet()) {
+      for (ExpiryExtension obs : extendedContracts.get(s).values()) {
+        synchronized (parent.delayedExtensions) {
+          if (parent.markedForDelayedExtension(new Oid(s, obs.onum)))
+            parent.cancelDelayedExtension(new Oid(s, obs.onum));
+        }
+        synchronized (parent.retractedContracts) {
+          if (parent.retractedContracts.contains(new Oid(s, obs.onum)))
+            continue;
+        }
+        synchronized (parent.extendedContracts) {
+          if (!parent.extendedContracts.containsKey(new Oid(s, obs.onum)))
+            parent.extendedContracts.put(new Oid(s, obs.onum), obs);
+        }
       }
     }
 
@@ -786,7 +790,7 @@ public final class Log {
         long onum = e.getKey();
         Oid oid = new Oid(s, onum);
         synchronized (parent.retractedContracts) {
-          if (parent.retractedContracts.containsKey(s, onum)) continue;
+          if (parent.retractedContracts.contains(s, onum)) continue;
         }
         synchronized (parent.extendedContracts) {
           if (parent.extendedContracts.containsKey(s, onum)) continue;

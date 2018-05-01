@@ -16,7 +16,7 @@ public class ExpiryExtension implements FastSerializable {
   /** Version of the extended object. */
   public final int version;
   /** (New) Expiry of the extended object. */
-  public final long expiry;
+  public long expiry;
 
   /** Create extension using values. */
   public ExpiryExtension(long onum, int version, long expiry) {

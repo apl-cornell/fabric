@@ -68,6 +68,11 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     return items.contains(obs);
   }
 
+  /** @return true iff the given set is fully contained in this set */
+  public boolean containsAll(ImmutableObserverSet other) {
+    return items.containsAll(other.items);
+  }
+
   /** @return true iff the set is empty */
   public boolean isEmpty() {
     return items.isEmpty();

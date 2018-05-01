@@ -488,10 +488,21 @@ public abstract class ObjectDB {
     // First, read lock the object
     try {
       objectLocksFor(onum).lockForSoftWrite(tid);
+      objectLocksFor(onum).lockForRead(tid, worker);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
           longerContracts,
           "Object " + onum + " has been locked by an uncommitted transaction.");
+    }
+
+    // Record the updated object. Doing so will also register that the
+    // transaction has locked the object.
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+
+    synchronized (submap) {
+      // Act as both a read and an extension.
+      submap.get(worker).reads.add(onum);
+      submap.get(worker).extensions.add(extension);
     }
 
     // Check version numbers.
@@ -509,16 +520,12 @@ public abstract class ObjectDB {
       if (curExpiry > extension.expiry) {
         longerContracts.put(onum, curExpiry);
       }
+      // Only a read, demote from an extension.
+      synchronized (submap) {
+        submap.get(worker).extensions.remove(extension);
+      }
       objectLocksFor(onum).unlockForSoftWrite(tid);
       return;
-    }
-
-    // Record the updated object. Doing so will also register that the
-    // transaction has locked the object.
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-
-    synchronized (submap) {
-      submap.get(worker).extensions.add(extension);
     }
   }
 

@@ -1587,15 +1587,19 @@ public final class TransactionManager {
     boolean needTransaction = (current == null);
     if (needTransaction) startTransaction();
 
+    ExpiryExtension clobberedExtension = null;
     synchronized (obj) {
       // The object is being written, so it's not being extended.
       synchronized (current.extendedContracts) {
-        current.extendedContracts.remove(obj);
+        clobberedExtension = current.extendedContracts.remove(obj);
       }
       current.cancelDelayedExtension(obj);
       if (obj.$writer == current
-          && obj.writerMapVersion == current.writerMap.version && obj.$isOwned)
+          && obj.writerMapVersion == current.writerMap.version
+          && obj.$isOwned) {
+        if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
         return needTransaction;
+      }
 
       try {
         Timing.TXLOG.begin();
@@ -1606,6 +1610,7 @@ public final class TransactionManager {
         Timing.TXLOG.end();
       }
     }
+    if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
 
     return needTransaction;
 
@@ -1621,21 +1626,25 @@ public final class TransactionManager {
     boolean needTransaction = (current == null);
     if (needTransaction) startTransaction();
 
+    ExpiryExtension clobberedExtension = null;
     synchronized (obj) {
       boolean extending = newExpiry > oldExpiry;
       if (!extending) {
         synchronized (current.extendedContracts) {
-          current.extendedContracts.remove(obj);
+          clobberedExtension = current.extendedContracts.remove(obj);
         }
         synchronized (current.retractedContracts) {
-          current.retractedContracts.put(obj, obj);
+          current.retractedContracts.add(obj);
         }
         current.cancelDelayedExtension(obj);
       }
 
       if (obj.$writer == current
-          && obj.writerMapVersion == current.writerMap.version && obj.$isOwned)
+          && obj.writerMapVersion == current.writerMap.version
+          && obj.$isOwned) {
+        if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
         return needTransaction;
+      }
 
       boolean alreadyWritten = false;
       synchronized (current.writes) {
@@ -1644,19 +1653,22 @@ public final class TransactionManager {
       // If this wasn't written and sets a longer expiry, it's an extension.
       if (!alreadyWritten && extending) {
         synchronized (current.extendedContracts) {
-          current.extendedContracts.put(obj, obj);
+          current.extendedContracts.put(obj, new ExpiryExtension(obj));
         }
       }
 
       try {
         Timing.TXLOG.begin();
-        ensureWriteLock(obj);
+        if (extending)
+          ensureReadLock(obj);
+        else ensureWriteLock(obj);
         ensureObjectUpToDate(obj);
-        ensureOwnership(obj);
+        if (!extending) ensureOwnership(obj);
       } finally {
         Timing.TXLOG.end();
       }
     }
+    if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
 
     return needTransaction;
 
@@ -2199,5 +2211,12 @@ public final class TransactionManager {
    */
   public void markCoordination() {
     // TODO: This is deprecated.
+  }
+
+  /**
+   * Allow for an object to see the current pending extension for itself.
+   */
+  public ExpiryExtension getPendingExtension(_Impl obj) {
+    return current != null ? current.extendedContracts.get(obj) : null;
   }
 }

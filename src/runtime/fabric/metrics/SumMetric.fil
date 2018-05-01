@@ -298,8 +298,6 @@ public class SumMetric extends DerivedMetric {
         for (int j = 0; j < numTerms; j++) {
           Metric m = term(j);
           double scaledX = m.value(useWeakCache);
-          double scaledV = m.velocity(useWeakCache);
-          double scaledN = m.noise(useWeakCache);
 
           //// Adaptive version
           // Corrected for the way this metric is shifting relative to
@@ -372,8 +370,6 @@ public class SumMetric extends DerivedMetric {
         for (int j = 0; j < numTerms; j++) {
           Metric m = term(j);
           double scaledX = m.value(useWeakCache);
-          double scaledV = m.velocity(useWeakCache);
-          double scaledN = m.noise(useWeakCache);
 
           //// Adaptive version
           // Corrected for the way this metric is shifting relative to
@@ -410,7 +406,7 @@ public class SumMetric extends DerivedMetric {
 
         // Size should be the same for either option.
         Contract native[] finalWitnesses = new Contract native[adaptiveWitnesses.size()];
-        if (adaptiveTimeout >= staticTimeout && adaptiveTimeout - System.currentTimeMillis() > MIN_ADAPTIVE_EXPIRY) {
+        if (adaptiveTimeout > staticTimeout && adaptiveTimeout - System.currentTimeMillis() > MIN_ADAPTIVE_EXPIRY) {
           int i = 0;
           for (java.util.Iterator iter = adaptiveWitnesses.values().iterator(); iter.hasNext();) {
             finalWitnesses[i++] = (Contract) iter.next();

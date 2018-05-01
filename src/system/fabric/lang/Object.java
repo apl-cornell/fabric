@@ -31,6 +31,7 @@ import fabric.worker.LocalStore;
 import fabric.worker.ObjectCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.Log;
@@ -732,7 +733,10 @@ public interface Object {
 
     @Override
     public final long get$$expiry() {
-      TransactionManager.getInstance().registerRead(this);
+      TransactionManager tm = TransactionManager.getInstance();
+      tm.registerRead(this);
+      ExpiryExtension ex = tm.getPendingExtension(this);
+      if (ex != null) return ex.expiry;
       return $expiry;
     }
 
@@ -741,9 +745,14 @@ public interface Object {
       TransactionManager tm = TransactionManager.getInstance();
       boolean transactionCreated =
           tm.registerExpiryWrite(this, this.$expiry, expiry);
-      this.$expiry = expiry;
+      long rtn = expiry;
+      if (expiry > this.$expiry && tm.getPendingExtension(this) != null) {
+        tm.getPendingExtension(this).expiry = expiry;
+      } else {
+        this.$expiry = expiry;
+      }
       if (transactionCreated) tm.commitTransaction();
-      return $expiry;
+      return rtn;
     }
 
     @Override
