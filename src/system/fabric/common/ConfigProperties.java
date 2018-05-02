@@ -56,6 +56,11 @@ public class ConfigProperties {
    */
   public final boolean txRetryBackoff;
 
+  /**
+   * Whether to use the subscription service.
+   */
+  public final boolean useSubscriptions;
+
   static {
     //
     // load the default properties files
@@ -107,6 +112,9 @@ public class ConfigProperties {
 
     this.txRetryBackoff = Boolean
         .parseBoolean(removeProperty(p, "fabric.node.txRetryBackoff", "true"));
+
+    this.useSubscriptions = Boolean.parseBoolean(
+        removeProperty(p, "fabric.node.useSubscriptions", "false"));
 
     // Collect network-delay properties.
     Map<String, Short> inDelays = new HashMap<>();
