@@ -63,14 +63,6 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
      */
     public fabric.metrics.DerivedMetric plus(fabric.metrics.Metric other);
     
-    public long get$MIN_ADAPTIVE_EXPIRY();
-    
-    public long set$MIN_ADAPTIVE_EXPIRY(long val);
-    
-    public long postInc$MIN_ADAPTIVE_EXPIRY();
-    
-    public long postDec$MIN_ADAPTIVE_EXPIRY();
-    
     public fabric.metrics.contracts.enforcement.EnforcementPolicy
       thresholdPolicy(double rate, double base, boolean useWeakCache,
                       final fabric.worker.Store s);
@@ -81,26 +73,6 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
     
     public static class _Proxy extends fabric.metrics.DerivedMetric._Proxy
       implements fabric.metrics.SumMetric {
-        public long get$MIN_ADAPTIVE_EXPIRY() {
-            return ((fabric.metrics.SumMetric._Impl) fetch()).
-              get$MIN_ADAPTIVE_EXPIRY();
-        }
-        
-        public long set$MIN_ADAPTIVE_EXPIRY(long val) {
-            return ((fabric.metrics.SumMetric._Impl) fetch()).
-              set$MIN_ADAPTIVE_EXPIRY(val);
-        }
-        
-        public long postInc$MIN_ADAPTIVE_EXPIRY() {
-            return ((fabric.metrics.SumMetric._Impl) fetch()).
-              postInc$MIN_ADAPTIVE_EXPIRY();
-        }
-        
-        public long postDec$MIN_ADAPTIVE_EXPIRY() {
-            return ((fabric.metrics.SumMetric._Impl) fetch()).
-              postDec$MIN_ADAPTIVE_EXPIRY();
-        }
-        
         public fabric.metrics.SumMetric fabric$metrics$SumMetric$(
           fabric.metrics.Metric[] arg1) {
             return ((fabric.metrics.SumMetric) fetch()).
@@ -619,33 +591,6 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
             return fabric.metrics.Metric._Impl.findDerivedMetric(s, val);
         }
         
-        public long get$MIN_ADAPTIVE_EXPIRY() {
-            return this.MIN_ADAPTIVE_EXPIRY;
-        }
-        
-        public long set$MIN_ADAPTIVE_EXPIRY(long val) {
-            fabric.worker.transaction.TransactionManager tm =
-              fabric.worker.transaction.TransactionManager.getInstance();
-            boolean transactionCreated = tm.registerWrite(this);
-            this.MIN_ADAPTIVE_EXPIRY = val;
-            if (transactionCreated) tm.commitTransaction();
-            return val;
-        }
-        
-        public long postInc$MIN_ADAPTIVE_EXPIRY() {
-            long tmp = this.get$MIN_ADAPTIVE_EXPIRY();
-            this.set$MIN_ADAPTIVE_EXPIRY((long) (tmp + 1));
-            return tmp;
-        }
-        
-        public long postDec$MIN_ADAPTIVE_EXPIRY() {
-            long tmp = this.get$MIN_ADAPTIVE_EXPIRY();
-            this.set$MIN_ADAPTIVE_EXPIRY((long) (tmp - 1));
-            return tmp;
-        }
-        
-        public long MIN_ADAPTIVE_EXPIRY = 1000;
-        
         public fabric.metrics.contracts.enforcement.EnforcementPolicy
           thresholdPolicy(double rate, double base, boolean useWeakCache,
                           final fabric.worker.Store s) {
@@ -850,9 +795,12 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                 fabric.metrics.contracts.Contract[] finalWitnesses =
                   new fabric.metrics.contracts.Contract[adaptiveWitnesses.size(
                                                                             )];
-                if (adaptiveTimeout > staticTimeout && adaptiveTimeout -
+                if (adaptiveTimeout >
+                      staticTimeout &&
+                      adaptiveTimeout -
                       java.lang.System.currentTimeMillis() >
-                      this.get$MIN_ADAPTIVE_EXPIRY()) {
+                      fabric.metrics.SumMetric._Static._Proxy.$instance.
+                      get$MIN_ADAPTIVE_EXPIRY()) {
                     int i = 0;
                     for (java.util.Iterator iter =
                            adaptiveWitnesses.values().iterator();
@@ -922,7 +870,6 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                                java.util.List interStoreRefs)
               throws java.io.IOException {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
-            out.writeLong(this.MIN_ADAPTIVE_EXPIRY);
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
@@ -939,20 +886,40 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
             super(store, onum, version, expiry, observers, labelStore,
                   labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
-            this.MIN_ADAPTIVE_EXPIRY = in.readLong();
-        }
-        
-        public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
-            super.$copyAppStateFrom(other);
-            fabric.metrics.SumMetric._Impl src =
-              (fabric.metrics.SumMetric._Impl) other;
-            this.MIN_ADAPTIVE_EXPIRY = src.MIN_ADAPTIVE_EXPIRY;
         }
     }
     
     interface _Static extends fabric.lang.Object, Cloneable {
+        public long get$MIN_ADAPTIVE_EXPIRY();
+        
+        public long set$MIN_ADAPTIVE_EXPIRY(long val);
+        
+        public long postInc$MIN_ADAPTIVE_EXPIRY();
+        
+        public long postDec$MIN_ADAPTIVE_EXPIRY();
+        
         final class _Proxy extends fabric.lang.Object._Proxy
           implements fabric.metrics.SumMetric._Static {
+            public long get$MIN_ADAPTIVE_EXPIRY() {
+                return ((fabric.metrics.SumMetric._Static._Impl) fetch()).
+                  get$MIN_ADAPTIVE_EXPIRY();
+            }
+            
+            public long set$MIN_ADAPTIVE_EXPIRY(long val) {
+                return ((fabric.metrics.SumMetric._Static._Impl) fetch()).
+                  set$MIN_ADAPTIVE_EXPIRY(val);
+            }
+            
+            public long postInc$MIN_ADAPTIVE_EXPIRY() {
+                return ((fabric.metrics.SumMetric._Static._Impl) fetch()).
+                  postInc$MIN_ADAPTIVE_EXPIRY();
+            }
+            
+            public long postDec$MIN_ADAPTIVE_EXPIRY() {
+                return ((fabric.metrics.SumMetric._Static._Impl) fetch()).
+                  postDec$MIN_ADAPTIVE_EXPIRY();
+            }
+            
             public _Proxy(fabric.metrics.SumMetric._Static._Impl impl) {
                 super(impl);
             }
@@ -981,12 +948,40 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
         
         class _Impl extends fabric.lang.Object._Impl
           implements fabric.metrics.SumMetric._Static {
+            public long get$MIN_ADAPTIVE_EXPIRY() {
+                return this.MIN_ADAPTIVE_EXPIRY;
+            }
+            
+            public long set$MIN_ADAPTIVE_EXPIRY(long val) {
+                fabric.worker.transaction.TransactionManager tm =
+                  fabric.worker.transaction.TransactionManager.getInstance();
+                boolean transactionCreated = tm.registerWrite(this);
+                this.MIN_ADAPTIVE_EXPIRY = val;
+                if (transactionCreated) tm.commitTransaction();
+                return val;
+            }
+            
+            public long postInc$MIN_ADAPTIVE_EXPIRY() {
+                long tmp = this.get$MIN_ADAPTIVE_EXPIRY();
+                this.set$MIN_ADAPTIVE_EXPIRY((long) (tmp + 1));
+                return tmp;
+            }
+            
+            public long postDec$MIN_ADAPTIVE_EXPIRY() {
+                long tmp = this.get$MIN_ADAPTIVE_EXPIRY();
+                this.set$MIN_ADAPTIVE_EXPIRY((long) (tmp - 1));
+                return tmp;
+            }
+            
+            public long MIN_ADAPTIVE_EXPIRY;
+            
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
                                    java.util.List interStoreRefs)
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
+                out.writeLong(this.MIN_ADAPTIVE_EXPIRY);
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
@@ -1003,6 +998,7 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                 super(store, onum, version, expiry, observers, labelStore,
                       labelOnum, accessPolicyStore, accessPolicyOnum, in,
                       refTypes, intraStoreRefs, interStoreRefs);
+                this.MIN_ADAPTIVE_EXPIRY = in.readLong();
             }
             
             public _Impl(fabric.worker.Store store) { super(store); }
@@ -1011,16 +1007,140 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                 return new fabric.metrics.SumMetric._Static._Proxy(this);
             }
             
-            private void $init() {  }
+            private void $init() {
+                {
+                    {
+                        fabric.worker.transaction.TransactionManager $tm27 =
+                          fabric.worker.transaction.TransactionManager.
+                          getInstance();
+                        boolean $backoffEnabled30 =
+                          fabric.worker.Worker.getWorker(
+                                                 ).config.txRetryBackoff;
+                        int $backoff28 = 1;
+                        boolean $doBackoff29 = true;
+                        boolean $retry24 = true;
+                        $label22: for (boolean $commit23 = false; !$commit23;
+                                       ) {
+                            if ($backoffEnabled30) {
+                                if ($doBackoff29) {
+                                    if ($backoff28 > 32) {
+                                        while (true) {
+                                            try {
+                                                java.lang.Thread.sleep(
+                                                                   $backoff28);
+                                                break;
+                                            }
+                                            catch (java.lang.
+                                                     InterruptedException $e25) {
+                                                
+                                            }
+                                        }
+                                    }
+                                    if ($backoff28 < 5000) $backoff28 *= 2;
+                                }
+                                $doBackoff29 = $backoff28 <= 32 ||
+                                                 !$doBackoff29;
+                            }
+                            $commit23 = true;
+                            fabric.worker.transaction.TransactionManager.
+                              getInstance().startTransaction();
+                            try {
+                                fabric.metrics.SumMetric._Static._Proxy.
+                                  $instance.
+                                  set$MIN_ADAPTIVE_EXPIRY((long) 1000);
+                            }
+                            catch (final fabric.worker.RetryException $e25) {
+                                $commit23 = false;
+                                continue $label22;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e25) {
+                                $commit23 = false;
+                                fabric.common.TransactionID $currentTid26 =
+                                  $tm27.getCurrentTid();
+                                if ($e25.tid.isDescendantOf($currentTid26))
+                                    continue $label22;
+                                if ($currentTid26.parent != null) {
+                                    $retry24 = false;
+                                    throw $e25;
+                                }
+                                throw new InternalError(
+                                        "Something is broken with " +
+                                            "transaction management. Got a signal to restart a " +
+                                            "different transaction than the one being managed.");
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e25) {
+                                $commit23 = false;
+                                if ($tm27.checkForStaleObjects()) continue;
+                                fabric.common.TransactionID $currentTid26 =
+                                  $tm27.getCurrentTid();
+                                if ($e25.tid.isDescendantOf($currentTid26)) {
+                                    $retry24 = true;
+                                }
+                                else if ($currentTid26.parent != null) {
+                                    $retry24 = false;
+                                    throw $e25;
+                                }
+                                else {
+                                    throw new InternalError(
+                                            "Something is broken with transaction " +
+                                                "management. Got a signal for a lock conflict in a different " +
+                                                "transaction than the one being managed.");
+                                }
+                            }
+                            catch (final Throwable $e25) {
+                                $commit23 = false;
+                                if ($tm27.checkForStaleObjects())
+                                    continue $label22;
+                                $retry24 = false;
+                                throw new fabric.worker.AbortException($e25);
+                            }
+                            finally {
+                                if ($commit23) {
+                                    try {
+                                        fabric.worker.transaction.TransactionManager.
+                                          getInstance().commitTransaction();
+                                    }
+                                    catch (final fabric.worker.
+                                             AbortException $e25) {
+                                        $commit23 = false;
+                                    }
+                                    catch (final fabric.worker.
+                                             TransactionRestartingException $e25) {
+                                        $commit23 = false;
+                                        fabric.common.TransactionID
+                                          $currentTid26 = $tm27.getCurrentTid();
+                                        if ($currentTid26 != null) {
+                                            if ($e25.tid.equals(
+                                                           $currentTid26) ||
+                                                  !$e25.tid.isDescendantOf(
+                                                              $currentTid26)) {
+                                                throw $e25;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
+                                }
+                                if (!$commit23 && $retry24) {
+                                    {  }
+                                    continue $label22;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         
     }
     
-    public static final byte[] $classHash = new byte[] { 106, 9, 44, 91, -37,
-    81, 85, 31, 21, -79, 18, -107, -113, 93, 71, -58, 81, 62, -28, -121, 80,
-    -52, -6, -42, 0, -101, 49, -98, 41, 110, -91, -1 };
+    public static final byte[] $classHash = new byte[] { -126, 0, 4, -15, -9,
+    -22, 122, 96, -74, 76, 124, -116, -45, 99, 37, 87, 10, -114, -78, -83, 83,
+    -30, 116, -60, -118, 92, -66, 65, 26, 56, -118, 27 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1525208526000L;
+    public static final long jlc$SourceLastModified$fabil = 1525218898000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

@@ -268,7 +268,7 @@ public class SumMetric extends DerivedMetric {
         return Metric.findDerivedMetric(s, val);
     }
 
-    public final long MIN_ADAPTIVE_EXPIRY = 1000;
+    public static final long MIN_ADAPTIVE_EXPIRY = 1000;
 
     /*@Override*/
     public EnforcementPolicy thresholdPolicy(double rate, double base, boolean useWeakCache, final Store s) {

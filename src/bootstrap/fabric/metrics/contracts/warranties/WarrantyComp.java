@@ -13,6 +13,7 @@ import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableSet;
+import fabric.worker.metrics.WarrantyValue;
 import fabric.worker.transaction.TransactionManager;
 import java.util.logging.Level;
 import fabric.common.Logging;
@@ -27,10 +28,14 @@ import fabric.common.Logging;
  */
 public interface WarrantyComp
   extends fabric.metrics.util.Observer, fabric.metrics.util.AbstractSubject {
-    public fabric.metrics.contracts.warranties.WarrantyValue get$curVal();
+    public fabric.lang.Object get$curVal();
     
-    public fabric.metrics.contracts.warranties.WarrantyValue set$curVal(
-      fabric.metrics.contracts.warranties.WarrantyValue val);
+    public fabric.lang.Object set$curVal(fabric.lang.Object val);
+    
+    public fabric.metrics.contracts.Contract get$curContract();
+    
+    public fabric.metrics.contracts.Contract set$curContract(
+      fabric.metrics.contracts.Contract val);
     
     public fabric.worker.metrics.ImmutableSet get$proxies();
     
@@ -43,8 +48,7 @@ public interface WarrantyComp
    * @param time
    *            the current time we're running a new update at.
    */
-    public abstract fabric.metrics.contracts.warranties.WarrantyValue
-      updatedVal(long time);
+    public abstract fabric.worker.metrics.WarrantyValue updatedVal(long time);
     
     /**
    * Run this warranty computation at the given time.
@@ -55,7 +59,7 @@ public interface WarrantyComp
    * contract associated with it (guaranteed active when returned) that asserts
    * that the return value is consistent.
    */
-    public fabric.metrics.contracts.warranties.WarrantyValue apply(long time);
+    public fabric.worker.metrics.WarrantyValue apply(long time);
     
     /**
    * Run this warranty computation at the given time.
@@ -69,8 +73,8 @@ public interface WarrantyComp
    * contract associated with it (guaranteed active when returned) that asserts
    * that the return value is consistent.
    */
-    public fabric.metrics.contracts.warranties.WarrantyValue apply(
-      long time, boolean autoRetry);
+    public fabric.worker.metrics.WarrantyValue apply(long time,
+                                                     boolean autoRetry);
     
     public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects();
     
@@ -83,7 +87,7 @@ public interface WarrantyComp
    * this to make and return copy on the proxyStore.
    */
     public fabric.lang.Object makeProxyResult(
-      fabric.metrics.contracts.warranties.WarrantyValue val, final fabric.worker.Store proxyStore);
+      fabric.worker.metrics.WarrantyValue val, final fabric.worker.Store proxyStore);
     
     /**
    * Make a warranty comp that resides on another store that can be used locally
@@ -112,8 +116,7 @@ public interface WarrantyComp
           fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(
           fabric.metrics.contracts.warranties.WarrantyComp baseComputation);
         
-        public fabric.metrics.contracts.warranties.WarrantyValue updatedVal(
-          long time);
+        public fabric.worker.metrics.WarrantyValue updatedVal(long time);
         
         public static class _Proxy
         extends fabric.metrics.contracts.warranties.WarrantyComp._Proxy
@@ -191,8 +194,7 @@ public interface WarrantyComp
                 return (ProxyComp) this.$getProxy();
             }
             
-            public fabric.metrics.contracts.warranties.WarrantyValue updatedVal(
-              long time) {
+            public fabric.worker.metrics.WarrantyValue updatedVal(long time) {
                 return this.get$baseComputation().updatedVal(time);
             }
             
@@ -356,28 +358,38 @@ public interface WarrantyComp
             
         }
         
-        public static final byte[] $classHash = new byte[] { -6, -110, 2, 20,
-        93, -114, -79, 1, 35, -106, 127, 64, 102, -51, -101, -119, -17, 31, -14,
-        43, 17, -81, 118, -98, -41, 0, -23, 8, 18, 59, -51, -71 };
+        public static final byte[] $classHash = new byte[] { -112, -60, 60, 33,
+        -52, 72, 75, -44, 37, -41, 127, -87, 46, -74, 77, 15, -85, -77, 23, -17,
+        -101, -40, -48, 112, 95, -40, 103, 110, -60, -12, 111, 70 };
         public static final java.lang.String jlc$CompilerVersion$fabil =
           "0.3.0";
-        public static final long jlc$SourceLastModified$fabil = 1525097266000L;
+        public static final long jlc$SourceLastModified$fabil = 1525215695000L;
         public static final java.lang.String jlc$ClassType$fabil =
-          "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";
+          "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";
     }
     
     public static class _Proxy
     extends fabric.metrics.util.AbstractSubject._Proxy
       implements fabric.metrics.contracts.warranties.WarrantyComp {
-        public fabric.metrics.contracts.warranties.WarrantyValue get$curVal() {
+        public fabric.lang.Object get$curVal() {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).get$curVal();
         }
         
-        public fabric.metrics.contracts.warranties.WarrantyValue set$curVal(
-          fabric.metrics.contracts.warranties.WarrantyValue val) {
+        public fabric.lang.Object set$curVal(fabric.lang.Object val) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).set$curVal(val);
+        }
+        
+        public fabric.metrics.contracts.Contract get$curContract() {
+            return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
+                      fetch()).get$curContract();
+        }
+        
+        public fabric.metrics.contracts.Contract set$curContract(
+          fabric.metrics.contracts.Contract val) {
+            return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
+                      fetch()).set$curContract(val);
         }
         
         public fabric.worker.metrics.ImmutableSet get$proxies() {
@@ -391,20 +403,18 @@ public interface WarrantyComp
                       fetch()).set$proxies(val);
         }
         
-        public fabric.metrics.contracts.warranties.WarrantyValue updatedVal(
-          long arg1) {
+        public fabric.worker.metrics.WarrantyValue updatedVal(long arg1) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               updatedVal(arg1);
         }
         
-        public fabric.metrics.contracts.warranties.WarrantyValue apply(
-          long arg1) {
+        public fabric.worker.metrics.WarrantyValue apply(long arg1) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               apply(arg1);
         }
         
-        public fabric.metrics.contracts.warranties.WarrantyValue apply(
-          long arg1, boolean arg2) {
+        public fabric.worker.metrics.WarrantyValue apply(long arg1,
+                                                         boolean arg2) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               apply(arg1, arg2);
         }
@@ -420,8 +430,7 @@ public interface WarrantyComp
         }
         
         public fabric.lang.Object makeProxyResult(
-          fabric.metrics.contracts.warranties.WarrantyValue arg1,
-          fabric.worker.Store arg2) {
+          fabric.worker.metrics.WarrantyValue arg1, fabric.worker.Store arg2) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               makeProxyResult(arg1, arg2);
         }
@@ -448,12 +457,13 @@ public interface WarrantyComp
     public abstract static class _Impl
     extends fabric.metrics.util.AbstractSubject._Impl
       implements fabric.metrics.contracts.warranties.WarrantyComp {
-        public fabric.metrics.contracts.warranties.WarrantyValue get$curVal() {
+        public fabric.lang.Object get$curVal() {
+            fabric.worker.transaction.TransactionManager.getInstance().
+              registerRead(this);
             return this.curVal;
         }
         
-        public fabric.metrics.contracts.warranties.WarrantyValue set$curVal(
-          fabric.metrics.contracts.warranties.WarrantyValue val) {
+        public fabric.lang.Object set$curVal(fabric.lang.Object val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
             boolean transactionCreated = tm.registerWrite(this);
@@ -462,7 +472,27 @@ public interface WarrantyComp
             return val;
         }
         
-        protected fabric.metrics.contracts.warranties.WarrantyValue curVal;
+        /** The currently cached result. */
+        protected fabric.lang.Object curVal;
+        
+        public fabric.metrics.contracts.Contract get$curContract() {
+            fabric.worker.transaction.TransactionManager.getInstance().
+              registerRead(this);
+            return this.curContract;
+        }
+        
+        public fabric.metrics.contracts.Contract set$curContract(
+          fabric.metrics.contracts.Contract val) {
+            fabric.worker.transaction.TransactionManager tm =
+              fabric.worker.transaction.TransactionManager.getInstance();
+            boolean transactionCreated = tm.registerWrite(this);
+            this.curContract = val;
+            if (transactionCreated) tm.commitTransaction();
+            return val;
+        }
+        
+        /** The currently cached result. */
+        protected fabric.metrics.contracts.Contract curContract;
         
         public fabric.worker.metrics.ImmutableSet get$proxies() {
             fabric.worker.transaction.TransactionManager.getInstance().
@@ -490,8 +520,7 @@ public interface WarrantyComp
    * @param time
    *            the current time we're running a new update at.
    */
-        public abstract fabric.metrics.contracts.warranties.WarrantyValue
-          updatedVal(long time);
+        public abstract fabric.worker.metrics.WarrantyValue updatedVal(long time);
         
         /**
    * Run this warranty computation at the given time.
@@ -502,8 +531,7 @@ public interface WarrantyComp
    * contract associated with it (guaranteed active when returned) that asserts
    * that the return value is consistent.
    */
-        public fabric.metrics.contracts.warranties.WarrantyValue apply(
-          long time) {
+        public fabric.worker.metrics.WarrantyValue apply(long time) {
             return apply(time, true);
         }
         
@@ -519,16 +547,16 @@ public interface WarrantyComp
    * contract associated with it (guaranteed active when returned) that asserts
    * that the return value is consistent.
    */
-        public fabric.metrics.contracts.warranties.WarrantyValue apply(
-          long time, boolean autoRetry) {
+        public fabric.worker.metrics.WarrantyValue apply(long time,
+                                                         boolean autoRetry) {
             return fabric.metrics.contracts.warranties.WarrantyComp._Impl.
               static_apply((fabric.metrics.contracts.warranties.WarrantyComp)
                              this.$getProxy(), time, autoRetry);
         }
         
-        private static fabric.metrics.contracts.warranties.WarrantyValue
-          static_apply(fabric.metrics.contracts.warranties.WarrantyComp tmp,
-                       long time, boolean autoRetry) {
+        private static fabric.worker.metrics.WarrantyValue static_apply(
+          fabric.metrics.contracts.warranties.WarrantyComp tmp, long time,
+          boolean autoRetry) {
             fabric.worker.transaction.TransactionManager.getInstance().
               resolveObservations();
             int i = 0;
@@ -537,7 +565,6 @@ public interface WarrantyComp
                  tmp.fetch()).dropOldValue();
             while (loop) {
                 i++;
-                fabric.metrics.contracts.warranties.WarrantyValue newVal = null;
                 if (!fabric.metrics.contracts.warranties.WarrantyComp._Static._Proxy.$instance.
                       get$PROACTIVE()) {
                     for (java.util.Iterator iter = tmp.get$proxies().iterator();
@@ -551,31 +578,31 @@ public interface WarrantyComp
                                                                   iter.next()));
                         if (!((fabric.metrics.contracts.warranties.WarrantyComp.
                                 _Impl) proxy.fetch()).dropOldValue()) {
-                            newVal = proxy.get$curVal();
+                            fabric.lang.Object newVal = proxy.get$curVal();
+                            fabric.metrics.contracts.Contract newContract =
+                              proxy.get$curContract();
                             ((fabric.metrics.contracts.warranties.WarrantyComp.
-                               _Impl) tmp.fetch()).setNewValue(newVal);
+                               _Impl) tmp.fetch()).setNewValue(newVal, newContract);
                             if (!((fabric.metrics.contracts.warranties.WarrantyComp.
                                     _Impl) tmp.fetch()).dropOldValue()) {
                                 break;
-                            } else {
-                                newVal = null;
                             }
                         }
                     }
                 }
-                if (fabric.lang.Object._Proxy.idEquals(newVal, null)) {
-                    newVal =
+                if (fabric.lang.Object._Proxy.idEquals(tmp.get$curContract(),
+                                                       null)) {
+                    fabric.worker.metrics.WarrantyValue computed =
                       tmp.updatedVal(java.lang.System.currentTimeMillis());
-                    if (fabric.lang.Object._Proxy.idEquals(
-                                                    newVal.get$contract(),
-                                                    null)) {
+                    if (fabric.lang.Object._Proxy.idEquals(computed.contract,
+                                                           null)) {
                         fabric.worker.transaction.TransactionManager.
                           getInstance().stats.
                           addMsg("Memoized: false");
-                        return newVal;
+                        return computed;
                     }
                     java.lang.String contractStoreName =
-                      newVal.get$contract().$getStore().name();
+                      computed.contract.$getStore().name();
                     if (!fabric.worker.transaction.TransactionManager.
                           getInstance().inTxn() &&
                           !contractStoreName.
@@ -584,13 +611,13 @@ public interface WarrantyComp
                           fabric.worker.Worker.getWorker().getWorker(
                                                              contractStoreName);
                         ((fabric.metrics.contracts.Contract._Proxy)
-                           newVal.get$contract()).activate$remote(w, null);
+                           computed.contract).activate$remote(w, null);
                     }
                     else {
-                        newVal.get$contract().activate();
+                        computed.contract.activate();
                     }
                     ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
-                       tmp.fetch()).setNewValue(newVal);
+                       tmp.fetch()).setNewValue(computed.value, computed.contract);
                     if (fabric.metrics.contracts.warranties.WarrantyComp._Static._Proxy.$instance.
                           get$PROACTIVE()) {
                         for (java.util.Iterator iter =
@@ -605,7 +632,9 @@ public interface WarrantyComp
                                   fabric.lang.WrappedJavaInlineable.
                                       $wrap(iter.next()));
                             ((fabric.metrics.contracts.warranties.WarrantyComp.
-                               _Impl) proxy.fetch()).setNewValue(newVal);
+                               _Impl) proxy.fetch()).setNewValue(
+                                                       computed.value,
+                                                       computed.contract);
                         }
                     }
                 }
@@ -618,7 +647,9 @@ public interface WarrantyComp
                       stats.
                       addMsg("Memoized: true");
             }
-            return tmp.get$curVal();
+            return fabric.worker.metrics.WarrantyValue.newValue(
+                                                         tmp.get$curVal(),
+                                                         tmp.get$curContract());
         }
         
         private boolean dropOldValue() {
@@ -764,32 +795,33 @@ public interface WarrantyComp
         private static boolean inner_dropOldValue(
           fabric.metrics.contracts.warranties.WarrantyComp tmp) {
             fabric.metrics.contracts.Contract curContract =
-              tmp.get$curVal().get$contract();
+              tmp.get$curContract();
             if (!fabric.lang.Object._Proxy.idEquals(curContract, null) &&
                   !curContract.valid()) {
                 curContract.removeObserver(tmp);
-                tmp.get$curVal().set$contract(null);
+                tmp.set$curContract(null);
             }
-            return fabric.lang.Object._Proxy.idEquals(
-                                               tmp.get$curVal().get$contract(),
-                                               null);
+            return fabric.lang.Object._Proxy.idEquals(tmp.get$curContract(),
+                                                      null);
         }
         
         private void setNewValue(
-          fabric.metrics.contracts.warranties.WarrantyValue newVal) {
+          fabric.lang.Object newVal,
+          fabric.metrics.contracts.Contract newContract) {
             fabric.metrics.contracts.warranties.WarrantyComp._Impl.
               static_setNewValue(
                 (fabric.metrics.contracts.warranties.WarrantyComp)
-                  this.$getProxy(), newVal);
+                  this.$getProxy(), newVal, newContract);
         }
         
         private static void static_setNewValue(
           fabric.metrics.contracts.warranties.WarrantyComp tmp,
-          fabric.metrics.contracts.warranties.WarrantyValue newVal) {
+          fabric.lang.Object newVal,
+          fabric.metrics.contracts.Contract newContract) {
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
                 fabric.metrics.contracts.warranties.WarrantyComp._Impl.
-                  inner_setNewValue(tmp, newVal);
+                  inner_setNewValue(tmp, newVal, newContract);
             }
             else {
                 {
@@ -825,7 +857,7 @@ public interface WarrantyComp
                           getInstance().startTransaction();
                         try {
                             fabric.metrics.contracts.warranties.WarrantyComp._Impl.
-                              inner_setNewValue(tmp, newVal);
+                              inner_setNewValue(tmp, newVal, newContract);
                         }
                         catch (final fabric.worker.RetryException $e653) {
                             $commit651 = false;
@@ -914,25 +946,23 @@ public interface WarrantyComp
         
         private static void inner_setNewValue(
           fabric.metrics.contracts.warranties.WarrantyComp tmp,
-          fabric.metrics.contracts.warranties.WarrantyValue newVal) {
+          fabric.lang.Object newVal,
+          fabric.metrics.contracts.Contract newContract) {
             if (fabric.metrics.contracts.warranties.WarrantyComp._Impl.
                   inner_dropOldValue(tmp) &&
-                  !fabric.lang.Object._Proxy.idEquals(newVal.get$contract(),
-                                                      null) &&
-                  newVal.get$contract().valid()) {
-                tmp.get$curVal().set$value(newVal.get$value());
-                tmp.get$curVal().set$contract(
-                                   newVal.get$contract().getProxyContract(
-                                                           tmp.$getStore()));
-                tmp.get$curVal().get$contract().addObserver(tmp);
+                  !fabric.lang.Object._Proxy.idEquals(newContract, null) &&
+                  newContract.valid()) {
+                tmp.set$curVal(newVal);
+                tmp.set$curContract(
+                      newContract.getProxyContract(tmp.$getStore()));
+                tmp.get$curContract().addObserver(tmp);
             }
         }
         
         public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
-            if (!fabric.lang.Object._Proxy.idEquals(
-                                             this.get$curVal().get$contract(),
-                                             null))
-                return this.get$curVal().get$contract().getLeafSubjects();
+            if (!fabric.lang.Object._Proxy.idEquals(this.get$curContract(),
+                                                    null))
+                return this.get$curContract().getLeafSubjects();
             return fabric.worker.metrics.ImmutableMetricsVector.emptyVector();
         }
         
@@ -952,9 +982,9 @@ public interface WarrantyComp
    * this to make and return copy on the proxyStore.
    */
         public fabric.lang.Object makeProxyResult(
-          fabric.metrics.contracts.warranties.WarrantyValue val,
+          fabric.worker.metrics.WarrantyValue val,
           final fabric.worker.Store proxyStore) {
-            return val.get$value();
+            return val.value;
         }
         
         /**
@@ -1193,13 +1223,6 @@ public interface WarrantyComp
         
         public fabric.metrics.contracts.warranties.WarrantyComp
           fabric$metrics$contracts$warranties$WarrantyComp$() {
-            this.
-              set$curVal(
-                ((fabric.metrics.contracts.warranties.WarrantyValue)
-                   new fabric.metrics.contracts.warranties.WarrantyValue._Impl(
-                     this.$getStore()).$getProxy()).
-                    fabric$metrics$contracts$warranties$WarrantyValue$(null,
-                                                                       null));
             this.set$proxies(fabric.worker.metrics.ImmutableSet.emptySet());
             fabric$metrics$util$AbstractSubject$();
             return (fabric.metrics.contracts.warranties.WarrantyComp)
@@ -1221,6 +1244,8 @@ public interface WarrantyComp
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             $writeRef($getStore(), this.curVal, refTypes, out, intraStoreRefs,
                       interStoreRefs);
+            $writeRef($getStore(), this.curContract, refTypes, out,
+                      intraStoreRefs, interStoreRefs);
             $writeInline(out, this.proxies);
         }
         
@@ -1238,16 +1263,16 @@ public interface WarrantyComp
             super(store, onum, version, expiry, observers, labelStore,
                   labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
-            this.curVal =
-              (fabric.
-                metrics.
-                contracts.
-                warranties.
-                WarrantyValue)
-                $readRef(
-                  fabric.metrics.contracts.warranties.WarrantyValue.
-                    _Proxy.class, (fabric.common.RefTypeEnum) refTypes.next(),
-                  in, store, intraStoreRefs, interStoreRefs);
+            this.curVal = (fabric.lang.Object)
+                            $readRef(fabric.lang.Object._Proxy.class,
+                                     (fabric.common.RefTypeEnum)
+                                       refTypes.next(), in, store,
+                                     intraStoreRefs, interStoreRefs);
+            this.curContract =
+              (fabric.metrics.contracts.Contract)
+                $readRef(fabric.metrics.contracts.Contract._Proxy.class,
+                         (fabric.common.RefTypeEnum) refTypes.next(), in, store,
+                         intraStoreRefs, interStoreRefs);
             this.proxies = (fabric.worker.metrics.ImmutableSet) in.readObject();
         }
         
@@ -1256,6 +1281,7 @@ public interface WarrantyComp
             fabric.metrics.contracts.warranties.WarrantyComp._Impl src =
               (fabric.metrics.contracts.warranties.WarrantyComp._Impl) other;
             this.curVal = src.curVal;
+            this.curContract = src.curContract;
             this.proxies = src.proxies;
         }
     }
@@ -1495,11 +1521,11 @@ public interface WarrantyComp
         
     }
     
-    public static final byte[] $classHash = new byte[] { -124, 70, 108, 45, -71,
-    -123, -92, 22, -80, 58, 110, -41, -31, 30, -47, -118, -22, -88, -41, -30,
-    -116, 87, -113, -70, 37, -85, 90, 101, -19, -77, -49, 123 };
+    public static final byte[] $classHash = new byte[] { -25, -29, 23, -23, 127,
+    9, -36, -77, 44, -85, -43, 20, 4, 109, -46, 123, -31, 119, 55, -25, -17, -6,
+    -118, -75, 83, -78, -14, -125, 19, -25, -25, 3 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1525097266000L;
+    public static final long jlc$SourceLastModified$fabil = 1525215695000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }
