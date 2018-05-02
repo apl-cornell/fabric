@@ -1,8 +1,6 @@
 package fabric.store;
 
 import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
-import static fabric.store.db.ObjectDB.UpdateMode.CREATE;
-import static fabric.store.db.ObjectDB.UpdateMode.WRITE;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,6 +8,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
+
+import com.sleepycat.je.LockConflictException;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.Logging;
@@ -22,7 +22,6 @@ import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
@@ -40,7 +39,6 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.LockConflictException;
 import fabric.worker.remote.RemoteWorker;
 
 public class TransactionManager {
@@ -55,8 +53,6 @@ public class TransactionManager {
    * transactions.
    */
   private final SubscriptionManager sm;
-
-  // protected final ReadHistory readHistory;
 
   public TransactionManager(ObjectDB database) {
     this.database = database;
@@ -127,107 +123,14 @@ public class TransactionManager {
    */
   public LongKeyMap<Long> prepare(Principal worker, PrepareRequest req)
       throws TransactionPrepareFailedException {
-    LongKeyMap<Long> longerContracts = new LongKeyHashMap<>();
-    final long tid = req.tid;
-
-    // First, check read and write permissions. We do this before we attempt to
-    // do the actual prepare because we want to run the permissions check in a
-    // transaction outside of the worker's transaction.
-    Store store = Worker.getWorker().getStore(database.getName());
-    if (worker == null || worker.$getStore() != store
-        || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
-      try {
-        checkPerms(worker, req.reads.keySet(), req.writes, req.extensions);
-      } catch (AccessException e) {
-        throw new TransactionPrepareFailedException(e.getMessage());
-      }
-    }
-
-    try {
-      database.beginTransaction(tid, worker);
-    } catch (final AccessException e) {
-      throw new TransactionPrepareFailedException("Insufficient privileges");
-    }
-
-    try {
-      // This will store the set of onums of objects that were out of date.
-      LongKeyMap<SerializedObject> versionConflicts = new LongKeyHashMap<>();
-      List<TransactionPrepareFailedException> failures = new ArrayList<>();
-
-      // Prepare writes.
-      for (SerializedObject o : req.writes) {
-        try {
-          database.prepareUpdate(tid, worker, o, versionConflicts,
-              longerContracts, WRITE);
-        } catch (TransactionPrepareFailedException e) {
-          failures.add(e);
-        }
-      }
-
-      // Prepare creates.
-      for (SerializedObject o : req.creates) {
-        try {
-          database.prepareUpdate(tid, worker, o, versionConflicts,
-              longerContracts, CREATE);
-        } catch (TransactionPrepareFailedException e) {
-          failures.add(e);
-        }
-      }
-
-      // Prepare extensions.
-      for (ExpiryExtension e : req.extensions) {
-        try {
-          database.prepareExtension(tid, worker, e, versionConflicts,
-              longerContracts);
-        } catch (TransactionPrepareFailedException err) {
-          failures.add(err);
-        }
-      }
-
-      // Check reads
-      for (LongKeyMap.Entry<Pair<Integer, Long>> entry : req.reads.entrySet()) {
-        long onum = entry.getKey();
-        int version = entry.getValue().first.intValue();
-        long expiry = entry.getValue().second.longValue();
-
-        try {
-          database.prepareRead(tid, worker, onum, version, expiry,
-              versionConflicts, longerContracts);
-        } catch (TransactionPrepareFailedException e) {
-          failures.add(e);
-        }
-      }
-
-      if (!versionConflicts.isEmpty() || !failures.isEmpty()) {
-        TransactionPrepareFailedException fail =
-            new TransactionPrepareFailedException(failures);
-        fail.versionConflicts.putAll(versionConflicts);
-        fail.longerContracts.putAll(longerContracts);
-        database.abortPrepare(tid, worker);
-        throw fail;
-      }
-
-      // Dont' bother with these if there's already a failure.
-      database.prepareDelayedExtensions(tid, worker, req.extensionsTriggered,
-          req.delayedExtensions);
-
-      // readHistory.record(req);
-      database.finishPrepare(tid, worker);
-
-      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}", tid);
-    } catch (RuntimeException e) {
-      e.printStackTrace();
-      database.abortPrepare(tid, worker);
-      throw e;
-    }
-    return longerContracts;
+    return req.runPrepare(this, database, worker);
   }
 
   /**
    * Checks that the worker principal has permissions to read/write the given
    * objects. If it doesn't, an AccessException is thrown.
    */
-  private void checkPerms(final Principal worker, final LongSet reads,
+  protected void checkPerms(final Principal worker, final LongSet reads,
       final Collection<SerializedObject> writes,
       final Collection<ExpiryExtension> extensions) throws AccessException {
     // The code that does the actual checking.
