@@ -102,7 +102,8 @@ class Store extends MessageToStoreHandler {
     this.node = node;
     this.os = loadStore();
     this.tm = new TransactionManager(this.os);
-    this.sm = new SimpleSurrogateManager(tm);
+    //this.sm = new SimpleSurrogateManager(tm);
+    this.sm = new DummySurrogateManager();
   }
 
   // ////////////////////////////////////////////////////////////////////////////
