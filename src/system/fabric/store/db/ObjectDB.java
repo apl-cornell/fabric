@@ -492,7 +492,7 @@ public abstract class ObjectDB {
     // Remove from the glob table the glob associated with the onum.
     LongSet groupOnums = objectGrouper.removeGroup(onum);
 
-    if (SubscriptionManager.ENABLE_OBJECT_UPDATES) {
+    if (Worker.getWorker().config.useSubscriptions) {
       // Notify the subscription manager that the group has been updated.
       LongSet updatedOnums = new LongHashSet();
       updatedOnums.add(onum);
