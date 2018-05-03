@@ -699,7 +699,7 @@ public abstract class ObjectDB {
       objectLocksFor(onum).notifyAll();
     }
 
-    if (SubscriptionManager.ENABLE_OBJECT_UPDATES) {
+    if (Worker.getWorker().config.useSubscriptions) {
       // Notify the subscription manager that the group has been updated.
       LongSet updatedOnums = new LongHashSet();
       updatedOnums.add(onum);
