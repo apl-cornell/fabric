@@ -16,6 +16,7 @@ import fabric.util.List;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.transaction.TransactionManager;
 
 import java.util.logging.Level;
@@ -143,6 +144,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
           tmp.currentPolicy.apply(tmp);
         } else {
           tmp.currentPolicy = null;
+          tmp.$associated = null;
         }
         Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATED {0} IN {1}", new java.lang.Object native[] { tmp, TransactionManager.getInstance().getCurrentLog() });
       //}
@@ -162,6 +164,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
             tmp.currentPolicy.apply(tmp);
           } else {
             tmp.currentPolicy = null;
+            tmp.$associated = null;
           }
           Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATED {0} IN {1}", new java.lang.Object native[] { tmp, TransactionManager.getInstance().getCurrentLog() });
         }
@@ -189,6 +192,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
         if (tmp.currentPolicy != null) {
           tmp.currentPolicy.unapply(tmp);
           tmp.currentPolicy = null;
+          tmp.$associated = null;
         }
       }
     } else {
@@ -199,6 +203,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
           if (tmp.currentPolicy != null) {
             tmp.currentPolicy.unapply(tmp);
             tmp.currentPolicy = null;
+            tmp.$associated = null;
           }
         }
       }
@@ -337,6 +342,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
     if (currentPolicy != null) {
       currentPolicy.unapply(this);
       currentPolicy = null;
+      $associated = null;
       return true; // Might need to clear out parents.
     }
 
@@ -392,6 +398,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
         // Otherwise, we need to make sure we're not stuck observing anything.
         tmp.currentPolicy.unapply(tmp);
         tmp.currentPolicy = null;
+        tmp.$associated = null;
       }
     } else {
       atomic {
@@ -404,6 +411,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
           // Otherwise, we need to make sure we're not stuck observing anything.
           tmp.currentPolicy.unapply(tmp);
           tmp.currentPolicy = null;
+          tmp.$associated = null;
         }
       }
     }
@@ -486,6 +494,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
       }
       fabric$metrics$contracts$Contract$();
       this.currentPolicy = new WitnessPolicy().fabric$metrics$contracts$enforcement$WitnessPolicy$(new Contract native[] { this.target });
+      this.$associated = ImmutableSet.emptySet().add(this.currentPolicy);
       return this;
     }
 
@@ -505,6 +514,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
         if (curExpiry < currentTime) {
           currentPolicy.unapply(this);
           currentPolicy = null;
+          $associated = null;
         } else {
           currentPolicy.apply(this);
         }

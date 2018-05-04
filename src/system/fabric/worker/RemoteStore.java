@@ -158,17 +158,23 @@ public class RemoteStore extends RemoteNode<RemoteStore>
 
   @Override
   public final ObjectCache.Entry readObject(long onum) throws AccessException {
-    return readObject(true, onum);
+    return readObject(true, onum, true);
+  }
+
+  @Override
+  public final ObjectCache.Entry readObjectNoWait(long onum)
+      throws AccessException {
+    return readObject(true, onum, false);
   }
 
   @Override
   public final ObjectCache.Entry readObjectNoDissem(long onum)
       throws AccessException {
-    return readObject(false, onum);
+    return readObject(false, onum, true);
   }
 
-  private final ObjectCache.Entry readObject(boolean useDissem, long onum)
-      throws AccessException {
+  private final ObjectCache.Entry readObject(boolean useDissem, long onum,
+      boolean wait) throws AccessException {
     // Get/create a mutex for fetching the object.
     FetchLock fetchLock = new FetchLock();
     FetchLock existingFetchLock = fetchLocks.putIfAbsent(onum, fetchLock);
@@ -201,7 +207,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
       synchronized (fetchLock) {
         fetchLock.notifyAll();
       }
-    } else {
+    } else if (wait) {
       // Wait for another thread to fetch the object for us.
       synchronized (fetchLock) {
         while (fetchLock.object == null && fetchLock.error == null) {
@@ -212,6 +218,8 @@ public class RemoteStore extends RemoteNode<RemoteStore>
           }
         }
       }
+    } else {
+      return null;
     }
 
     if (fetchLock.error != null) throw fetchLock.error;

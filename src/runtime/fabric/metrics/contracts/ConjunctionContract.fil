@@ -14,6 +14,7 @@ import fabric.common.TransactionID;
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableContractsVector;
+import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.transaction.TransactionManager;
 
 import java.util.logging.Level;
@@ -82,6 +83,7 @@ public class ConjunctionContract extends Contract {
     fabric$metrics$contracts$Contract$();
     observing = false;
     this.currentPolicy = new WitnessPolicy().fabric$metrics$contracts$enforcement$WitnessPolicy$(conjuncts1);
+    this.$associated = ImmutableSet.emptySet().add(this.currentPolicy);
     return this;
   }
 
@@ -141,6 +143,7 @@ public class ConjunctionContract extends Contract {
       if (curExpiry < currentTime) {
         currentPolicy.unapply(this);
         currentPolicy = null;
+        $associated = null;
         observing = false;
       } else {
         currentPolicy.apply(this);

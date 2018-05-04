@@ -130,6 +130,17 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
         if (worker.updateCaches(store, onum, glob)) {
           response.add(onum);
+          // Also force the updates for associated onums.
+          for (LongIterator iter = associatedOnums.get(onum).iterator(); iter
+              .hasNext();) {
+            long associated = iter.next();
+            updates.get(associated).verifySignature(storeKey);
+            for (SerializedObject obj : updates.get(associated).decrypt()
+                .objects().values()) {
+              if (response.contains(obj.getOnum())) continue;
+              store.forceCache(obj);
+            }
+          }
         }
       } catch (InvalidKeyException e) {
         e.printStackTrace();
@@ -163,7 +174,9 @@ public class InProcessRemoteWorker extends RemoteWorker {
     for (Long onum : updated) {
       for (LongIterator iter = associatedOnums.get(onum).iterator(); iter
           .hasNext();) {
-        ObjectGroup group = gMap.get(iter.next());
+        long associated = iter.next();
+        if (updated.contains(associated)) continue;
+        ObjectGroup group = gMap.get(associated);
         for (SerializedObject obj : group.objects().values()) {
           store.forceCache(obj);
         }

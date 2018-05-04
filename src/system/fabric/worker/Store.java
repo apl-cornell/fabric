@@ -65,6 +65,20 @@ public interface Store extends Serializable {
   ObjectCache.Entry readObject(long onum) throws AccessException;
 
   /**
+   * Returns the cache entry for the given onum. If the object is not resident,
+   * it is fetched from the store via dissemination.  If the object is already
+   * being fetched by another thread, return null.
+   * <p>
+   * This is primarily intended for allowing prefetching without prefetch
+   * threads piling up.
+   *
+   * @param onum
+   *          The identifier of the requested object
+   * @return cache entry for the requested object.
+   */
+  ObjectCache.Entry readObjectNoWait(long onum) throws AccessException;
+
+  /**
    * Returns the cache entry for the requested object. If the object is not
    * resident, it is fetched directly from the store.
    *

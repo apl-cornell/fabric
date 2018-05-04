@@ -13,7 +13,6 @@ import fabric.common.FastSerializable;
 import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.OidHashSet;
-import fabric.metrics.util.Observer;
 import fabric.worker.Store;
 
 /**
@@ -27,13 +26,13 @@ public class ImmutableSet implements FastSerializable, Serializable,
   /** Provided since you can't mark constructors as native for the fabil
    * signatures
    */
-  public static ImmutableSet createSet(Observer[] items) {
+  public static ImmutableSet createSet(fabric.lang.Object[] items) {
     return new ImmutableSet(items);
   }
 
-  public ImmutableSet(Observer[] items) {
+  public ImmutableSet(fabric.lang.Object[] items) {
     this.items = new OidHashSet();
-    for (Observer item : items) {
+    for (fabric.lang.Object item : items) {
       this.items.add(item);
     }
   }
@@ -52,21 +51,21 @@ public class ImmutableSet implements FastSerializable, Serializable,
   }
 
   /** @return a new set with the given item added. */
-  public ImmutableSet add(Observer obs) {
+  public ImmutableSet add(fabric.lang.Object obs) {
     ImmutableSet updated = new ImmutableSet(items);
     updated.items.add(obs);
     return updated;
   }
 
   /** @return a new set with the given item removed. */
-  public ImmutableSet remove(Observer obs) {
+  public ImmutableSet remove(fabric.lang.Object obs) {
     ImmutableSet updated = new ImmutableSet(items);
     updated.items.remove(obs);
     return updated;
   }
 
   /** @return true iff the given observer is in the set */
-  public boolean contains(Observer obs) {
+  public boolean contains(fabric.lang.Object obs) {
     return items.contains(obs);
   }
 
@@ -93,12 +92,13 @@ public class ImmutableSet implements FastSerializable, Serializable,
       @Override
       public fabric.lang.Object._Proxy next() {
         Oid oid = oidIter.next();
-        return new Observer._Proxy(oid.store, oid.onum);
+        return new fabric.lang.Object._Proxy(oid.store, oid.onum);
       }
     };
   }
 
-  private static final ImmutableSet EMPTY = new ImmutableSet(new Observer[0]);
+  private static final ImmutableSet EMPTY =
+      new ImmutableSet(new fabric.lang.Object[0]);
 
   /** @return a value to use for an empty vector */
   public static ImmutableSet emptySet() {

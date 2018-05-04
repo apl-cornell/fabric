@@ -99,6 +99,11 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
+  public ObjectCache.Entry readObjectNoWait(long onum) {
+    return readObjectNoDissem(onum);
+  }
+
+  @Override
   public ObjectCache.Entry readObjectNoDissem(long onum) {
     return readImplNoDissem(onum).$cacheEntry;
   }

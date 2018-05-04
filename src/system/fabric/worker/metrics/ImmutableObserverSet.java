@@ -160,7 +160,7 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
         @Override
         public void run() {
           try {
-            o.store.readObject(o.onum);
+            o.store.readObjectNoWait(o.onum);
           } catch (AccessException e) {
             throw new InternalError(e);
           }

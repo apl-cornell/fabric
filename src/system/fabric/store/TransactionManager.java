@@ -209,20 +209,28 @@ public class TransactionManager {
    * store.
    */
   LongSet getAssociatedOnums(long onum) throws AccessException {
+    LongSet result = new LongHashSet();
+    result.add(onum);
+    getAssociatedOnums(onum, result);
+    result.remove(onum);
+    return result;
+  }
+
+  private void getAssociatedOnums(long onum, LongSet explored)
+      throws AccessException {
     SerializedObject obj = database.read(onum);
     if (obj == null) throw new AccessException(database.getName(), onum);
 
     Store store = Worker.getWorker().getStore(database.getName());
-    LongSet result = new LongHashSet();
     ImmutableObserverSet set = obj.getObservers();
     if (set != null) {
       LongSet subSet = set.onumsForStore(store);
       if (subSet != null) {
-        result.addAll(subSet);
-        // ADDED
         for (LongIterator iter = subSet.iterator(); iter.hasNext();) {
           long associate = iter.next();
-          result.addAll(getAssociatedOnums(associate));
+          if (explored.contains(associate)) continue;
+          explored.add(associate);
+          getAssociatedOnums(associate, explored);
         }
       }
     }
@@ -230,10 +238,14 @@ public class TransactionManager {
     if (set2 != null) {
       LongSet subSet = set2.onumsForStore(store);
       if (subSet != null) {
-        result.addAll(subSet);
+        for (LongIterator iter = subSet.iterator(); iter.hasNext();) {
+          long associate = iter.next();
+          if (explored.contains(associate)) continue;
+          explored.add(associate);
+          getAssociatedOnums(associate, explored);
+        }
       }
     }
-    return result;
   }
 
   /**
@@ -447,9 +459,6 @@ public class TransactionManager {
               // have been sufficient and that second request is unlikely to be
               // very expensive to process.
               final DelayedExtension extension = waitingExtensions.take();
-              synchronized (extension) {
-                unresolvedExtensions.remove(extension.onum, extension);
-              }
               long curTime = System.currentTimeMillis();
               long exp = extension.time + EXTENSION_WINDOW;
               try {
@@ -460,6 +469,9 @@ public class TransactionManager {
                 // nonexistent value.
                 System.err.println("Bad onum for extension! " + extension.onum);
                 ae.printStackTrace();
+                synchronized (extension) {
+                  unresolvedExtensions.remove(extension.onum, extension);
+                }
                 continue;
               }
               if (exp - curTime <= EXTENSION_WINDOW
@@ -506,6 +518,9 @@ public class TransactionManager {
                       fabric.worker.transaction.TransactionManager.getInstance()
                           .clearLockObjectState();
                     }
+                    synchronized (extension) {
+                      unresolvedExtensions.remove(extension.onum, extension);
+                    }
                     if (nameAndNewExpiry != null) {
                       Logging.METRICS_LOGGER.log(Level.INFO,
                           "FINISHED EXTENSION OF {0} IN {1}ms from {4} to {5} {6} (success {2}) STATS: {3}",
@@ -528,6 +543,9 @@ public class TransactionManager {
                   }
                 });
               } else {
+                synchronized (extension) {
+                  unresolvedExtensions.remove(extension.onum, extension);
+                }
                 // If too early, requeue it.
                 if (exp > curTime)
                   queueExtension(extension.onum);
