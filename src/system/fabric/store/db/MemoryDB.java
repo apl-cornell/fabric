@@ -10,6 +10,7 @@ import java.security.PrivateKey;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
+import fabric.common.SysUtil;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
@@ -98,9 +99,6 @@ public class MemoryDB extends ObjectDB {
     // dangling references in update objects.
     for (SerializedObject o : tx.creates) {
       objectTable.put(o.getOnum(), o);
-
-      // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
     }
     for (SerializedObject o : tx.writes) {
       objectTable.put(o.getOnum(), o);
@@ -111,14 +109,16 @@ public class MemoryDB extends ObjectDB {
       // version in the worker transaction will be in the cache after 2PC.
       if (!workerIdentity.node.equals(Worker.getWorker().inProcessRemoteWorker))
         Worker.getWorker().getStore(getName()).updateCache(o);
-
-      // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
     }
 
     // Update extended objects.
     for (ExpiryExtension extension : tx.extensions) {
       objectTable.get(extension.onum).setExpiry(extension.expiry);
+    }
+
+    for (SerializedObject o : SysUtil.chain(tx.writes, tx.creates)) {
+      // Remove any cached globs containing the old version of this object.
+      notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
     }
 
     sendTriggeredExtensions(tid);

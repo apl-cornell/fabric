@@ -2,6 +2,7 @@ package fabric.store;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +13,7 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
@@ -139,18 +141,34 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public ObjectGroup readObjectFromStore(long onum) throws AccessException {
+  public Collection<ObjectGroup> readObjectFromStore(long onum)
+      throws AccessException {
     LongKeyMap<SerializedObject> map = new LongKeyHashMap<>();
     SerializedObject obj = tm.read(onum);
     if (obj == null) throw new AccessException(this, onum);
     map.put(onum, obj);
-    return new ObjectGroup(map);
+    for (LongIterator iter = tm.getAssociatedOnums(onum).iterator(); iter
+        .hasNext();) {
+      long relatedOnum = iter.next();
+      SerializedObject related = tm.read(relatedOnum);
+      if (related == null) throw new AccessException(this, relatedOnum);
+      map.put(relatedOnum, related);
+    }
+    return Collections.singletonList(new ObjectGroup(map));
   }
 
   @Override
-  public ObjectGlob readEncryptedObjectFromStore(long onum)
+  public LongKeyMap<ObjectGlob> readEncryptedObjectFromStore(long onum)
       throws AccessException {
-    return tm.getGlob(onum, getLocalWorkerIdentity().node);
+    LongKeyMap<ObjectGlob> result = new LongKeyHashMap<>();
+    result.put(onum, tm.getGlob(onum, getLocalWorkerIdentity().node));
+    for (LongIterator iter = tm.getAssociatedOnums(onum).iterator(); iter
+        .hasNext();) {
+      long relatedOnum = iter.next();
+      result.put(relatedOnum,
+          tm.getGlob(relatedOnum, getLocalWorkerIdentity().node));
+    }
+    return result;
   }
 
   @Override

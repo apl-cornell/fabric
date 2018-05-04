@@ -33,6 +33,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.ReadMap;
@@ -67,6 +68,11 @@ public interface Object {
   ImmutableObserverSet get$$observers();
 
   ImmutableObserverSet set$$observers(ImmutableObserverSet observers);
+
+  /** The associated objects. */
+  ImmutableSet get$$associated();
+
+  ImmutableSet set$$associated(ImmutableSet associated);
 
   /**
    * The object's access policy, specifying the program contexts in which it is
@@ -312,6 +318,16 @@ public interface Object {
     }
 
     @Override
+    public final ImmutableSet get$$associated() {
+      return fetch().get$$associated();
+    }
+
+    @Override
+    public final ImmutableSet set$$associated(ImmutableSet associated) {
+      return fetch().set$$associated(associated);
+    }
+
+    @Override
     public final ConfPolicy get$$accessPolicy() {
       // If the object hasn't been deserialized yet, avoid deserialization by
       // obtaining a reference to the object's access label directly from the
@@ -544,6 +560,11 @@ public interface Object {
     public ImmutableObserverSet $observers;
 
     /**
+     * The observers field, to be used by Contracts and Metrics.
+     */
+    public ImmutableSet $associated;
+
+    /**
      * A private constructor for initializing transaction-management state.
      */
     private _Impl(Store store, long onum, int version, long expiry,
@@ -702,6 +723,7 @@ public interface Object {
       $copyAppStateFrom(other);
       $expiry = other.$expiry;
       $observers = other.$observers;
+      $associated = other.$associated;
     }
 
     /**
@@ -772,6 +794,24 @@ public interface Object {
       this.$observers = observers;
       if (transactionCreated) tm.commitTransaction();
       return $observers;
+    }
+
+    @Override
+    public final ImmutableSet get$$associated() {
+      TransactionManager.getInstance().registerRead(this);
+      return $associated;
+    }
+
+    @Override
+    public final ImmutableSet set$$associated(ImmutableSet observers) {
+      TransactionManager tm = TransactionManager.getInstance();
+      boolean transactionCreated = tm.registerWrite(this);
+      // TODO something like the below.
+      //boolean transactionCreated =
+      //    tm.registerExpiryWrite(this, this.$expiry, expiry);
+      this.$associated = observers;
+      if (transactionCreated) tm.commitTransaction();
+      return $associated;
     }
 
     @Override

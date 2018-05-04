@@ -21,6 +21,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
@@ -39,6 +40,8 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.remote.RemoteWorker;
 
 public class TransactionManager {
@@ -199,6 +202,38 @@ public class TransactionManager {
   GroupContainer getGroupContainer(long onum) throws AccessException {
     return getGroupContainerAndSubscribe(onum, null,
         false /* this argument doesn't matter */);
+  }
+
+  /**
+   * Returns the set of onums that observe the given onum that are on this
+   * store.
+   */
+  LongSet getAssociatedOnums(long onum) throws AccessException {
+    SerializedObject obj = database.read(onum);
+    if (obj == null) throw new AccessException(database.getName(), onum);
+
+    Store store = Worker.getWorker().getStore(database.getName());
+    LongSet result = new LongHashSet();
+    ImmutableObserverSet set = obj.getObservers();
+    if (set != null) {
+      LongSet subSet = set.onumsForStore(store);
+      if (subSet != null) {
+        result.addAll(subSet);
+        // ADDED
+        for (LongIterator iter = subSet.iterator(); iter.hasNext();) {
+          long associate = iter.next();
+          result.addAll(getAssociatedOnums(associate));
+        }
+      }
+    }
+    ImmutableSet set2 = obj.getAssociated();
+    if (set2 != null) {
+      LongSet subSet = set2.onumsForStore(store);
+      if (subSet != null) {
+        result.addAll(subSet);
+      }
+    }
+    return result;
   }
 
   /**

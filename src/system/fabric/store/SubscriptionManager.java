@@ -77,16 +77,31 @@ public class SubscriptionManager extends FabricThread.Impl {
       Map<RemoteWorker, LongKeyMap<ObjectGlob>> dissemNotificationMap =
           new HashMap<>();
 
+      final LongKeyMap<LongSet> associatedOnumsMap = new LongKeyHashMap<>();
+
       for (LongIterator it = onums.iterator(); it.hasNext();) {
         long onum = it.next();
         GroupContainer groupContainer;
+        LongKeyMap<GroupContainer> associatedContainers =
+            new LongKeyHashMap<>();
         ObjectGlob glob;
+        LongKeyMap<ObjectGlob> associatedGlobs = new LongKeyHashMap<>();
         try {
           // Skip if the onum represents a surrogate.
           if (tm.read(onum).isSurrogate()) continue;
 
           groupContainer = tm.getGroupContainer(onum);
           glob = groupContainer.getGlob();
+          LongSet associatedOnums = tm.getAssociatedOnums(onum);
+          associatedOnumsMap.put(onum, associatedOnums);
+          for (LongIterator iter = associatedOnums.iterator(); iter
+              .hasNext();) {
+            long associatedOnum = iter.next();
+            GroupContainer associatedContainer =
+                tm.getGroupContainer(associatedOnum);
+            associatedContainers.put(associatedOnum, associatedContainer);
+            associatedGlobs.put(associatedOnum, associatedContainer.getGlob());
+          }
         } catch (AccessException e) {
           throw new InternalError(e);
         }
@@ -123,6 +138,12 @@ public class SubscriptionManager extends FabricThread.Impl {
                 }
                 toNotify.add(onum);
 
+                // Add associated onums to onumsToNotify.
+                for (LongIterator iter =
+                    associatedContainers.keySet().iterator(); iter.hasNext();) {
+                  toNotify.add(iter.next());
+                }
+
                 // Check whether onum is already being sent.
                 LongSet toSend = groupedOnumsToSend.get(subscribingNode);
                 if (toSend == null) {
@@ -147,6 +168,20 @@ public class SubscriptionManager extends FabricThread.Impl {
                   // Add group's onums to onumsToSend.
                   toSend.addAll(group.objects().keySet());
                 }
+
+                for (LongKeyMap.Entry<GroupContainer> e : associatedContainers
+                    .entrySet()) {
+                  if (!toSend.contains(e.getKey())) {
+                    ObjectGroup associatedGroup =
+                        e.getValue().getGroup(subscribingNode.getPrincipal());
+                    List<ObjectGroup> groups =
+                        workerNotificationMap.get(subscribingNode);
+                    groups.add(associatedGroup);
+
+                    // Add associated group to onumsToSend.
+                    toSend.addAll(associatedGroup.objects().keySet());
+                  }
+                }
               }
             }
           }
@@ -163,13 +198,17 @@ public class SubscriptionManager extends FabricThread.Impl {
           @Override
           public void run() {
             // Notify.
-            List<Long> resubscriptions =
-                worker.notifyObjectUpdates(updatedOnums, updates);
+            List<Long> resubscriptions = worker
+                .notifyObjectUpdates(updatedOnums, updates, associatedOnumsMap);
             resubscriptions.retainAll(new HashSet<>(updatedOnums));
 
             // Resubscribe.
             for (long onum : resubscriptions) {
               subscribe(onum, worker, false);
+              for (LongIterator iter =
+                  associatedOnumsMap.get(onum).iterator(); iter.hasNext();) {
+                subscribe(iter.next(), worker, false);
+              }
             }
           }
         });
@@ -184,13 +223,17 @@ public class SubscriptionManager extends FabricThread.Impl {
           @Override
           public void run() {
             // Notify.
-            List<Long> resubscriptions =
-                dissemNode.notifyObjectUpdates(store, updates);
+            List<Long> resubscriptions = dissemNode.notifyObjectUpdates(store,
+                updates, associatedOnumsMap);
 
             // Resubscribe.
             for (long onum : resubscriptions) {
               if (updates.containsKey(onum)) {
                 subscribe(onum, dissemNode, true);
+                for (LongIterator iter =
+                    associatedOnumsMap.get(onum).iterator(); iter.hasNext();) {
+                  subscribe(iter.next(), dissemNode, true);
+                }
               }
             }
           }

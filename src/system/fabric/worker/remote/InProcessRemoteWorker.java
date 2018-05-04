@@ -11,7 +11,10 @@ import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.NotImplementedException;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
@@ -63,22 +66,22 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
-  public long prepareTransaction(long tid) throws UnreachableNodeException,
-      TransactionPrepareFailedException {
+  public long prepareTransaction(long tid)
+      throws UnreachableNodeException, TransactionPrepareFailedException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
 
   @Override
-  public void commitTransaction(long tid) throws UnreachableNodeException,
-      TransactionCommitFailedException {
+  public void commitTransaction(long tid)
+      throws UnreachableNodeException, TransactionCommitFailedException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
 
   @Override
-  public void abortTransaction(TransactionID tid) throws AccessException,
-      UnreachableNodeException {
+  public void abortTransaction(TransactionID tid)
+      throws AccessException, UnreachableNodeException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
@@ -114,7 +117,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public List<Long> notifyObjectUpdates(String storeName,
-      LongKeyMap<ObjectGlob> updates) {
+      LongKeyMap<ObjectGlob> updates, LongKeyMap<LongSet> associatedOnums) {
     List<Long> response = new ArrayList<>();
 
     RemoteStore store = worker.getStore(storeName);
@@ -140,17 +143,33 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public List<Long> notifyObjectUpdates(List<Long> updatedOnums,
-      List<ObjectGroup> updates) {
-    return notifyObjectUpdates(inProcessStore, updatedOnums, updates);
+      List<ObjectGroup> updates, LongKeyMap<LongSet> associatedOnums) {
+    return notifyObjectUpdates(inProcessStore, updatedOnums, updates,
+        associatedOnums);
   }
 
   List<Long> notifyObjectUpdates(RemoteStore store, List<Long> updatedOnums,
-      List<ObjectGroup> updates) {
+      List<ObjectGroup> updates, LongKeyMap<LongSet> associatedOnums) {
+    LongKeyMap<ObjectGroup> gMap = new LongKeyHashMap<>();
     for (ObjectGroup group : updates) {
+      for (LongIterator iter = group.objects().keySet().iterator(); iter
+          .hasNext();) {
+        gMap.put(iter.next(), group);
+      }
       worker.updateCache(store, group);
     }
 
-    return worker.findOnumsInCache(store, updatedOnums);
+    List<Long> updated = worker.findOnumsInCache(store, updatedOnums);
+    for (Long onum : updated) {
+      for (LongIterator iter = associatedOnums.get(onum).iterator(); iter
+          .hasNext();) {
+        ObjectGroup group = gMap.get(iter.next());
+        for (SerializedObject obj : group.objects().values()) {
+          store.forceCache(obj);
+        }
+      }
+    }
+    return updated;
   }
 
   @Override

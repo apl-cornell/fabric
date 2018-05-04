@@ -10,9 +10,13 @@ import java.io.Serializable;
 import java.util.Iterator;
 
 import fabric.common.FastSerializable;
+import fabric.common.Threading;
+import fabric.common.exceptions.AccessException;
+import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.OidHashSet;
 import fabric.metrics.util.Observer;
+import fabric.worker.Store;
 
 /**
  * Utility class to easily express an immutable vector of items.
@@ -138,5 +142,30 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   @Override
   public String toString() {
     return items.toString();
+  }
+
+  public LongSet onumsForStore(Store s) {
+    return onumsForStore(s.name());
+  }
+
+  public LongSet onumsForStore(String s) {
+    return items.get(s);
+  }
+
+  public void prefetch(Store triggeringStore) {
+    // Hack to prefetch observers into cache.
+    for (final Oid o : items) {
+      if (o.store.equals(triggeringStore)) continue;
+      Threading.getPool().submit(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            o.store.readObject(o.onum);
+          } catch (AccessException e) {
+            throw new InternalError(e);
+          }
+        }
+      });
+    }
   }
 }

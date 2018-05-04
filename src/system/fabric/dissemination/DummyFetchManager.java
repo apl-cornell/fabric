@@ -17,7 +17,8 @@ public class DummyFetchManager implements FetchManager {
     this(worker, dissemConfig, new Cache());
   }
 
-  public DummyFetchManager(Worker worker, Properties dissemConfig, Cache cache) {
+  public DummyFetchManager(Worker worker, Properties dissemConfig,
+      Cache cache) {
     this.cache = cache;
   }
 

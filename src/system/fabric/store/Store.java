@@ -10,6 +10,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -34,6 +35,7 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
@@ -264,8 +266,14 @@ class Store extends MessageToStoreHandler {
         "Handling Read Message from {0}, onum={1}", nameOf(client.principal),
         msg.onum);
 
-    ObjectGroup group = tm.getGroup(client.principal, client.node, msg.onum);
-    return new ReadMessage.Response(group);
+    HashSet<ObjectGroup> groups = new HashSet<>();
+    groups.add(tm.getGroup(client.principal, client.node, msg.onum));
+    for (LongIterator iter = tm.getAssociatedOnums(msg.onum).iterator(); iter
+        .hasNext();) {
+      long relatedOnum = iter.next();
+      groups.add(tm.getGroup(client.principal, client.node, relatedOnum));
+    }
+    return new ReadMessage.Response(groups);
   }
 
   /**
@@ -278,8 +286,14 @@ class Store extends MessageToStoreHandler {
         "Handling DissemRead message from {0}, onum={1}",
         nameOf(client.principal), msg.onum);
 
-    ObjectGlob glob = tm.getGlob(msg.onum, client.node);
-    return new DissemReadMessage.Response(glob);
+    LongKeyMap<ObjectGlob> result = new LongKeyHashMap<>();
+    result.put(msg.onum, tm.getGlob(msg.onum, client.node));
+    for (LongIterator iter = tm.getAssociatedOnums(msg.onum).iterator(); iter
+        .hasNext();) {
+      long relatedOnum = iter.next();
+      result.put(relatedOnum, tm.getGlob(relatedOnum, client.node));
+    }
+    return new DissemReadMessage.Response(result);
   }
 
   /**

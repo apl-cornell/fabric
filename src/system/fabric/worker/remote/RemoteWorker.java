@@ -15,6 +15,7 @@ import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
@@ -218,10 +219,10 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
    * @return whether the node is resubscribing to the object.
    */
   public List<Long> notifyObjectUpdates(String store,
-      LongKeyMap<ObjectGlob> updates) {
+      LongKeyMap<ObjectGlob> updates, LongKeyMap<LongSet> associatedOnums) {
     ObjectUpdateMessage.Response response;
     try {
-      response = send(new ObjectUpdateMessage(store, updates));
+      response = send(new ObjectUpdateMessage(store, updates, associatedOnums));
     } catch (NoException e) {
       // This is not possible.
       throw new InternalError(e);
@@ -235,10 +236,11 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
    * @return whether the node is resubscribing to the object.
    */
   public List<Long> notifyObjectUpdates(List<Long> updatedOnums,
-      List<ObjectGroup> updates) {
+      List<ObjectGroup> updates, LongKeyMap<LongSet> associatedOnums) {
     ObjectUpdateMessage.Response response;
     try {
-      response = send(new ObjectUpdateMessage(updatedOnums, updates));
+      response =
+          send(new ObjectUpdateMessage(updatedOnums, updates, associatedOnums));
     } catch (NoException e) {
       // This is not possible.
       throw new InternalError(e);

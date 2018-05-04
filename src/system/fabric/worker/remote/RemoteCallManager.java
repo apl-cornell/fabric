@@ -367,12 +367,14 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     final List<Long> response;
 
     if (objectUpdateMessage.groups == null) {
-      response = inProcessRemoteWorker.notifyObjectUpdates(
-          objectUpdateMessage.store, objectUpdateMessage.globs);
+      response =
+          inProcessRemoteWorker.notifyObjectUpdates(objectUpdateMessage.store,
+              objectUpdateMessage.globs, objectUpdateMessage.associatedOnums);
     } else {
       RemoteStore store = worker.getStore(client.node.name);
       response = inProcessRemoteWorker.notifyObjectUpdates(store,
-          objectUpdateMessage.onums, objectUpdateMessage.groups);
+          objectUpdateMessage.onums, objectUpdateMessage.groups,
+          objectUpdateMessage.associatedOnums);
     }
 
     return new ObjectUpdateMessage.Response(response);

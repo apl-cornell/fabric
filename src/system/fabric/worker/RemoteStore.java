@@ -8,6 +8,7 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -236,12 +237,12 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   private ObjectCache.Entry fetchObject(boolean useDissem, long onum)
       throws AccessException {
     TransactionManager tm = TransactionManager.getInstance();
-    if (tm != null)
-      tm.stats.markFetch();
-    ObjectGroup g;
+    if (tm != null) tm.stats.markFetch();
+    Collection<ObjectGroup> g;
     if (useDissem) {
-      g = Worker.getWorker().fetchManager().fetch(this, onum);
-      if (g == null) throw new AccessException(this, onum);
+      ObjectGroup grp = Worker.getWorker().fetchManager().fetch(this, onum);
+      if (grp == null) throw new AccessException(this, onum);
+      g = Collections.singletonList(grp);
     } else {
       g = readObjectFromStore(onum);
     }
@@ -258,10 +259,11 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    * @throws FetchException
    *           if there was an error while fetching the object from the store.
    */
-  public ObjectGroup readObjectFromStore(long onum) throws AccessException {
+  public Collection<ObjectGroup> readObjectFromStore(long onum)
+      throws AccessException {
     ReadMessage.Response response =
         send(Worker.getWorker().authToStore, new ReadMessage(onum));
-    return response.group;
+    return response.groups;
   }
 
   /**
@@ -270,18 +272,20 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    * @param onum
    *          The object number to fetch.
    */
-  public ObjectGlob readEncryptedObjectFromStore(long onum)
+  public LongKeyMap<ObjectGlob> readEncryptedObjectFromStore(long onum)
       throws AccessException {
     DissemReadMessage.Response response =
         send(Worker.getWorker().unauthToStore, new DissemReadMessage(onum));
 
     PublicKey key = getPublicKey();
     try {
-      response.glob.verifySignature(key);
+      for (ObjectGlob glob : response.globs.values()) {
+        glob.verifySignature(key);
+      }
     } catch (GeneralSecurityException e) {
       return null;
     }
-    return response.glob;
+    return response.globs;
   }
 
   /**
@@ -420,7 +424,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    * replaced. Any transactions currently using the object are aborted and
    * retried.
    */
-  void forceCache(SerializedObject obj) {
+  public void forceCache(SerializedObject obj) {
     cache.forcePut(obj);
   }
 

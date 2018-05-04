@@ -1,6 +1,7 @@
 package fabric.lang;
 
 import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.worker.metrics.ImmutableSet;
 
 public class Object extends java.lang.Object {
   /**
@@ -17,6 +18,11 @@ public class Object extends java.lang.Object {
    * The observers for contracts and metrics
    */
   protected ImmutableObserverSet $observers;
+
+  /**
+   * The associated for contracts and metrics
+   */
+  protected ImmutableSet $associated;
 
   /**
    * The object's access policy, specifying the program contexts in which it is

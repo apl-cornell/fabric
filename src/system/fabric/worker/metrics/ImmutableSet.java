@@ -10,8 +10,11 @@ import java.io.Serializable;
 import java.util.Iterator;
 
 import fabric.common.FastSerializable;
+import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.OidHashSet;
+import fabric.metrics.util.Observer;
+import fabric.worker.Store;
 
 /**
  * Utility class to easily express an immutable vector of items.
@@ -24,13 +27,13 @@ public class ImmutableSet implements FastSerializable, Serializable,
   /** Provided since you can't mark constructors as native for the fabil
    * signatures
    */
-  public static ImmutableSet createSet(fabric.lang.Object[] items) {
+  public static ImmutableSet createSet(Observer[] items) {
     return new ImmutableSet(items);
   }
 
-  public ImmutableSet(fabric.lang.Object[] items) {
+  public ImmutableSet(Observer[] items) {
     this.items = new OidHashSet();
-    for (fabric.lang.Object item : items) {
+    for (Observer item : items) {
       this.items.add(item);
     }
   }
@@ -49,22 +52,27 @@ public class ImmutableSet implements FastSerializable, Serializable,
   }
 
   /** @return a new set with the given item added. */
-  public ImmutableSet add(fabric.lang.Object obs) {
+  public ImmutableSet add(Observer obs) {
     ImmutableSet updated = new ImmutableSet(items);
     updated.items.add(obs);
     return updated;
   }
 
   /** @return a new set with the given item removed. */
-  public ImmutableSet remove(fabric.lang.Object obs) {
+  public ImmutableSet remove(Observer obs) {
     ImmutableSet updated = new ImmutableSet(items);
     updated.items.remove(obs);
     return updated;
   }
 
   /** @return true iff the given observer is in the set */
-  public boolean contains(fabric.lang.Object obs) {
+  public boolean contains(Observer obs) {
     return items.contains(obs);
+  }
+
+  /** @return true iff the given set is fully contained in this set */
+  public boolean containsAll(ImmutableSet other) {
+    return items.containsAll(other.items);
   }
 
   /** @return true iff the set is empty */
@@ -85,13 +93,12 @@ public class ImmutableSet implements FastSerializable, Serializable,
       @Override
       public fabric.lang.Object._Proxy next() {
         Oid oid = oidIter.next();
-        return new fabric.lang.Object._Proxy(oid.store, oid.onum);
+        return new Observer._Proxy(oid.store, oid.onum);
       }
     };
   }
 
-  private static final ImmutableSet EMPTY =
-      new ImmutableSet(new fabric.lang.Object[0]);
+  private static final ImmutableSet EMPTY = new ImmutableSet(new Observer[0]);
 
   /** @return a value to use for an empty vector */
   public static ImmutableSet emptySet() {
@@ -127,5 +134,18 @@ public class ImmutableSet implements FastSerializable, Serializable,
   @Override
   public void write(DataOutput out) throws IOException {
     items.write(out);
+  }
+
+  @Override
+  public String toString() {
+    return items.toString();
+  }
+
+  public LongSet onumsForStore(Store s) {
+    return onumsForStore(s.name());
+  }
+
+  public LongSet onumsForStore(String s) {
+    return items.get(s);
   }
 }

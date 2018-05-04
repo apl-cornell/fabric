@@ -19,7 +19,8 @@ public interface FetchManager {
    *          the store.
    * @param onum
    *          the object identifier.
-   * @return the requested glob if fetch was successful.
+   * @return the requested glob along with any other associated globs if fetch
+   * was successful.
    * @throws AccessException
    * @throws UnreachableNodeException
    */

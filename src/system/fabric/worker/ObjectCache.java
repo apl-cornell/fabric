@@ -4,6 +4,7 @@ import static fabric.common.Logging.TIMING_LOGGER;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.logging.Level;
 
 import fabric.common.ObjectGroup;
@@ -19,6 +20,7 @@ import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
+import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.transaction.TransactionManager;
 
 /**
@@ -224,6 +226,18 @@ public final class ObjectCache {
       if (next != null) return next.getVersion();
       if (impl != null) return impl.$version;
       if (serialized != null) return serialized.getVersion();
+      return null;
+    }
+
+    /**
+     * Obtains the object's expiry. (Returns null if this entry has been
+     * evicted.)
+     */
+    public synchronized ImmutableObserverSet getObservers() {
+      if (next != null) return next.getObservers();
+      if (impl != null) return impl.$writer == null ? impl.$observers
+          : impl.$history.$observers;
+      if (serialized != null) return serialized.getObservers();
       return null;
     }
 
@@ -441,12 +455,14 @@ public final class ObjectCache {
    * @param onum the onum of the entry to return. This should be a member of the
    *          given group.
    */
-  Entry put(ObjectGroup group, long onum) {
+  Entry put(Collection<ObjectGroup> groups, long onum) {
     Entry result = null;
-    for (SerializedObject obj : group.objects().values()) {
-      Entry curEntry = putIfAbsent(obj, true);
-      if (result == null && onum == obj.getOnum()) {
-        result = curEntry;
+    for (ObjectGroup group : groups) {
+      for (SerializedObject obj : group.objects().values()) {
+        Entry curEntry = putIfAbsent(obj, true);
+        if (result == null && onum == obj.getOnum()) {
+          result = curEntry;
+        }
       }
     }
 
@@ -482,36 +498,47 @@ public final class ObjectCache {
    * any transactions currently using the object are aborted and retried.
    */
   void update(SerializedObject update, boolean replaceOnly) {
-    long onum = update.getOnum();
+    final long onum = update.getOnum();
     Entry curEntry = entries.get(onum);
 
-    if (curEntry == null) {
-      if (!replaceOnly) putIfAbsent(update, true);
-      return;
-    }
-
-    synchronized (curEntry) {
-      if (replaceOnly && curEntry.isEvicted()) return;
-
-      // Check if object in current entry is an older version.
-      if (curEntry.getVersion() > update.getVersion()
-          || (curEntry.getVersion() == update.getVersion()
-              && curEntry.getExpiry() >= update.getExpiry()))
-        return;
-
-      if (curEntry.getVersion() == update.getVersion()
-          && curEntry.getExpiry() < update.getExpiry()) {
-        curEntry.setExpiry(update.getExpiry());
+    try {
+      if (curEntry == null) {
+        if (!replaceOnly) putIfAbsent(update, true);
         return;
       }
 
-      curEntry.evict();
+      synchronized (curEntry) {
+        if (replaceOnly && curEntry.isEvicted()) return;
+
+        // Check if object in current entry is an older version.
+        if (curEntry.getVersion() > update.getVersion()
+            || (curEntry.getVersion() == update.getVersion()
+                && curEntry.getExpiry() >= update.getExpiry()))
+          return;
+
+        if (curEntry.getVersion() == update.getVersion()
+            && curEntry.getExpiry() < update.getExpiry()) {
+          curEntry.setExpiry(update.getExpiry());
+          return;
+        }
+
+        curEntry.evict();
+      }
+
+      Entry newEntry = new Entry(update);
+      entries.replace(onum, curEntry, newEntry);
+
+      TransactionManager.abortReaders(store, update.getOnum());
+    } finally {
+      // Prefetch observers.
+      Entry e = entries.get(onum);
+      if (e != null) {
+        ImmutableObserverSet obs = e.getObservers();
+        if (obs != null) {
+          obs.prefetch(store);
+        }
+      }
     }
-
-    Entry newEntry = new Entry(update);
-    entries.replace(onum, curEntry, newEntry);
-
-    TransactionManager.abortReaders(store, update.getOnum());
   }
 
   /**

@@ -33,6 +33,7 @@ import fabric.worker.LocalStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.worker.metrics.ImmutableSet;
 
 /**
  * <code>_Impl</code> objects are stored on stores in serialized form as
@@ -89,6 +90,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     private int version;
     private long expiry;
     private ImmutableObserverSet observers;
+    private ImmutableSet associated;
 
     /**
      * Construct default with onum
@@ -98,6 +100,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.version = 0;
       this.expiry = 0;
       this.observers = null;
+      this.associated = null;
     }
 
     /**
@@ -108,6 +111,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.version = obj.$version;
       this.expiry = obj.$expiry;
       this.observers = obj.$observers;
+      this.associated = obj.$associated;
     }
 
     /**
@@ -120,6 +124,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
         this.expiry = in.readLong();
         if (in.readBoolean()) {
           this.observers = new ImmutableObserverSet(in);
+        }
+        if (in.readBoolean()) {
+          this.associated = new ImmutableSet(in);
         }
       } catch (IOException e) {
         throw new InternalError("This shouldn't be possible", e);
@@ -135,6 +142,12 @@ public final class SerializedObject implements FastSerializable, Serializable {
         if (observers != null) {
           out.writeBoolean(true);
           observers.write(out);
+        } else {
+          out.writeBoolean(false);
+        }
+        if (associated != null) {
+          out.writeBoolean(true);
+          associated.write(out);
         } else {
           out.writeBoolean(false);
         }
@@ -192,6 +205,20 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.observers = observers;
     }
 
+    /**
+     * @return the associated
+     */
+    public ImmutableSet getAssociated() {
+      return associated;
+    }
+
+    /**
+     * @param associated the associated to set
+     */
+    public void setAssociated(ImmutableSet associated) {
+      this.associated = associated;
+    }
+
     private void writeObject(ObjectOutputStream out) throws IOException {
       write(out);
     }
@@ -203,6 +230,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.expiry = in.readLong();
       if (in.readBoolean()) {
         this.observers = new ImmutableObserverSet(in);
+      }
+      if (in.readBoolean()) {
+        this.associated = new ImmutableSet(in);
       }
     }
 
@@ -426,6 +456,22 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public void setObservers(ImmutableObserverSet observers) {
     header.setObservers(observers);
+  }
+
+  /**
+   * @return the serialized object's associated
+   */
+  public ImmutableSet getAssociated() {
+    return header.getAssociated();
+  }
+
+  /**
+   * Modifies the serialized object's associated
+   *
+   * @param associated
+   */
+  public void setAssociated(ImmutableSet associated) {
+    header.setAssociated(associated);
   }
 
   /**
@@ -1305,6 +1351,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
           new ObjectInputStream(getSerializedDataStream()),
           getRefTypeIterator(), getIntraStoreRefIterator(),
           getInterStoreRefIterator());
+      result.$associated = getAssociated();
 
       if (chaseSurrogates && (result instanceof Surrogate)) {
         // Chase the surrogate pointer.

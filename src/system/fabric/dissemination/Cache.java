@@ -11,7 +11,9 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
+import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.worker.RemoteStore;
@@ -161,7 +163,7 @@ public class Cache {
    * Fetches a glob from the store and caches it.
    */
   private Entry fetch(Pair<RemoteStore, Long> oid) {
-    ObjectGlob g = null;
+    LongKeyMap<ObjectGlob> g = null;
     RemoteStore store = oid.first;
     long onum = oid.second;
 
@@ -177,7 +179,19 @@ public class Cache {
       // this return happens.
       return null;
     }
-    return put(oid, g, false);
+    Entry result = null;
+    for (LongKeyMap.Entry<ObjectGlob> e : g.entrySet()) {
+      if (e.getKey() == onum) {
+        result = put(oid, e.getValue(), false);
+      } else {
+        // Otherwise, decrypt eagerly to update the cache.
+        put(new Pair<>(store, e.getKey()), e.getValue(), false);
+        for (SerializedObject obj : e.getValue().decrypt().objects().values()) {
+          store.forceCache(obj);
+        }
+      }
+    }
+    return result;
   }
 
   /**

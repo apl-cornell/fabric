@@ -170,6 +170,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
     if (curContract != null && !curContract.valid()) {
       curContract.removeObserver(tmp);
       tmp.curContract = null;
+      tmp.$associated = null;
     }
     return tmp.curContract == null;
   }
@@ -193,6 +194,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
       tmp.curVal = newVal;
       tmp.curContract = newContract.getProxyContract(tmp.$getStore());
       tmp.curContract.addObserver(tmp);
+      tmp.$associated = ImmutableSet.emptySet().add(tmp.curContract);
     }
   }
 

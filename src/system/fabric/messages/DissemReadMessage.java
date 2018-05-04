@@ -7,6 +7,8 @@ import java.io.IOException;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.dissemination.ObjectGlob;
 import fabric.worker.remote.RemoteWorker;
 
@@ -15,8 +17,8 @@ import fabric.worker.remote.RemoteWorker;
  * node to read an object at a store. This implicitly subscribes the worker to
  * receive the next update to the object.
  */
-public final class DissemReadMessage extends
-Message<DissemReadMessage.Response, AccessException> {
+public final class DissemReadMessage
+    extends Message<DissemReadMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -35,10 +37,10 @@ Message<DissemReadMessage.Response, AccessException> {
 
   public static class Response implements Message.Response {
 
-    public final ObjectGlob glob;
+    public final LongKeyMap<ObjectGlob> globs;
 
-    public Response(ObjectGlob glob) {
-      this.glob = glob;
+    public Response(LongKeyMap<ObjectGlob> globs) {
+      this.globs = globs;
     }
 
   }
@@ -48,8 +50,8 @@ Message<DissemReadMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
-      throws ProtocolError, AccessException {
+  public Response dispatch(RemoteIdentity<RemoteWorker> client,
+      MessageHandler h) throws ProtocolError, AccessException {
     return h.handle(client, this);
   }
 
@@ -69,13 +71,22 @@ Message<DissemReadMessage.Response, AccessException> {
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    ObjectGlob glob = new ObjectGlob(in);
-    return new Response(glob);
+    int size = in.readInt();
+    LongKeyMap<ObjectGlob> globs = new LongKeyHashMap<>(size);
+    for (int i = 0; i < size; i++) {
+      long onum = in.readLong();
+      globs.put(onum, new ObjectGlob(in));
+    }
+    return new Response(globs);
   }
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
-    r.glob.write(out);
+    out.writeInt(r.globs.size());
+    for (LongKeyMap.Entry<ObjectGlob> entry : r.globs.entrySet()) {
+      out.writeLong(entry.getKey());
+      entry.getValue().write(out);
+    }
   }
 
 }
