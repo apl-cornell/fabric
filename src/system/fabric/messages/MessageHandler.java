@@ -22,6 +22,23 @@ import fabric.worker.transaction.TakeOwnershipFailedException;
  * and there is one such method for each message type that can be handled.
  */
 public interface MessageHandler {
+  /////////////////////////////////////////////////////////////////////
+  // Asynchronous Messages
+  /////////////////////////////////////////////////////////////////////
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      ObjectUpdateMessage msg) throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      UnsubscribeMessage msg) throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      ContractExtensionMessage msg) throws ProtocolError;
+
+  /////////////////////////////////////////////////////////////////////
+  // Synchronous Messages
+  /////////////////////////////////////////////////////////////////////
+
   public AbortTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, AbortTransactionMessage msg)
       throws AccessException;
@@ -55,10 +72,6 @@ public interface MessageHandler {
       RemoteIdentity<RemoteWorker> client, StalenessCheckMessage msg)
       throws ProtocolError, AccessException;
 
-  public ObjectUpdateMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, ObjectUpdateMessage msg)
-      throws ProtocolError;
-
   public DirtyReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       DirtyReadMessage msg) throws ProtocolError, AccessException;
 
@@ -74,10 +87,6 @@ public interface MessageHandler {
 
   public InterWorkerStalenessMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, InterWorkerStalenessMessage msg)
-      throws ProtocolError;
-
-  public ContractExtensionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, ContractExtensionMessage msg)
       throws ProtocolError;
 
   public WaitForUpdateMessage.Response handle(

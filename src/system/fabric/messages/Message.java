@@ -86,6 +86,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
     // Write this message out.
+    out.writeBoolean(true); // This requires response.
     out.writeByte(messageType.ordinal());
     writeMessage(out);
     out.flush();
@@ -267,12 +268,6 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
         return new TakeOwnershipMessage(in);
       }
     },
-    OBJECT_UPDATE {
-      @Override
-      ObjectUpdateMessage parse(DataInput in) throws IOException {
-        return new ObjectUpdateMessage(in);
-      }
-    },
     GET_CERT_CHAIN {
       @Override
       GetCertChainMessage parse(DataInput in) throws IOException {
@@ -295,12 +290,6 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
       @Override
       InterWorkerStalenessMessage parse(DataInput in) throws IOException {
         return new InterWorkerStalenessMessage(in);
-      }
-    },
-    CONTRACT_EXTENSION {
-      @Override
-      ContractExtensionMessage parse(DataInput in) throws IOException {
-        return new ContractExtensionMessage(in);
       }
     },
     WAIT_FOR_UPDATE {

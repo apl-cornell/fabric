@@ -40,8 +40,8 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
       throws TransactionCommitFailedException;
 
   @Override
-  public abstract ObjectUpdateMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, ObjectUpdateMessage msg);
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      ObjectUpdateMessage msg);
 
   @Override
   public abstract PrepareTransactionMessage.Response handle(
@@ -114,9 +114,8 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
   }
 
   @Override
-  public fabric.messages.ContractExtensionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, ContractExtensionMessage msg)
-      throws ProtocolError {
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      ContractExtensionMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
@@ -127,7 +126,17 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
     throw error(msg);
   }
 
+  @Override
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      UnsubscribeMessage msg) throws ProtocolError {
+    throw error(msg);
+  }
+
   private final ProtocolError error(Message<?, ?> msg) {
+    return new ProtocolError("Invalid message to worker: " + msg);
+  }
+
+  private final ProtocolError error(AsyncMessage msg) {
     return new ProtocolError("Invalid message to worker: " + msg);
   }
 }

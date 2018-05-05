@@ -15,7 +15,6 @@ import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
-import fabric.messages.Message.NoException;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
@@ -24,8 +23,7 @@ import fabric.worker.remote.RemoteWorker;
  * A <code>ContractExtensionMessage</code> represents a request to
  * refresh a contract's expiry at the store.
  */
-public class ContractExtensionMessage
-    extends Message<ContractExtensionMessage.Response, NoException> {
+public class ContractExtensionMessage extends AsyncMessage {
   /* message contents */
 
   /**
@@ -43,24 +41,15 @@ public class ContractExtensionMessage
    */
   public ContractExtensionMessage(LongSet extensions,
       Map<RemoteStore, Collection<SerializedObject>> updates) {
-    super(MessageType.CONTRACT_EXTENSION, NoException.class);
+    super(MessageType.CONTRACT_EXTENSION);
     this.extensions = extensions;
     this.updates = updates;
   }
 
-  /** Response */
-  public static class Response implements Message.Response {
-    /**
-     * Creates a Response indicating extension has been queued.
-     */
-    public Response() {
-    }
-  }
-
   @Override
-  public Response dispatch(RemoteIdentity<RemoteWorker> client,
-      MessageHandler h) throws ProtocolError {
-    return h.handle(client, this);
+  public void dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
+      throws ProtocolError {
+    h.handle(client, this);
   }
 
   @Override
@@ -83,7 +72,7 @@ public class ContractExtensionMessage
 
   /* readMessage */
   protected ContractExtensionMessage(DataInput in) throws IOException {
-    super(MessageType.CONTRACT_EXTENSION, NoException.class);
+    super(MessageType.CONTRACT_EXTENSION);
     int size = in.readInt();
     extensions = new LongHashSet(size);
     for (int i = 0; i < size; i++) {
@@ -101,14 +90,5 @@ public class ContractExtensionMessage
       }
       updates.put(s, vals);
     }
-  }
-
-  @Override
-  protected void writeResponse(DataOutput out, Response r) throws IOException {
-  }
-
-  @Override
-  protected Response readResponse(DataInput in) throws IOException {
-    return new Response();
   }
 }

@@ -3,7 +3,6 @@ package fabric.worker.remote;
 import java.security.InvalidKeyException;
 import java.security.PublicKey;
 import java.security.SignatureException;
-import java.util.ArrayList;
 import java.util.List;
 
 import fabric.common.ObjectGroup;
@@ -11,6 +10,7 @@ import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.NotImplementedException;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -116,50 +116,59 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
-  public List<Long> notifyObjectUpdates(String storeName,
-      LongKeyMap<ObjectGlob> updates, LongKeyMap<LongSet> associatedOnums) {
-    List<Long> response = new ArrayList<>();
+  public void notifyObjectUpdates(String storeName,
+      LongKeyMap<ObjectGlob> updates, LongSet updatedOnums,
+      List<ObjectGroup> groups, LongKeyMap<LongSet> associatedOnums) {
+    LongSet response = new LongHashSet(updates.keySet());
+    for (LongSet s : associatedOnums.values()) {
+      response.addAll(s);
+    }
+    response.addAll(updatedOnums);
 
     RemoteStore store = worker.getStore(storeName);
     PublicKey storeKey = store.getPublicKey();
     for (LongKeyMap.Entry<ObjectGlob> entry : updates.entrySet()) {
       long onum = entry.getKey();
-      ObjectGlob glob = entry.getValue();
-      try {
-        glob.verifySignature(storeKey);
+      // Skip over elements we've managed to handle below.
+      if (response.contains(onum)) {
+        ObjectGlob glob = entry.getValue();
+        try {
+          glob.verifySignature(storeKey);
 
-        if (worker.updateCaches(store, onum, glob)) {
-          response.add(onum);
-          // Also force the updates for associated onums.
-          for (LongIterator iter = associatedOnums.get(onum).iterator(); iter
-              .hasNext();) {
-            long associated = iter.next();
-            updates.get(associated).verifySignature(storeKey);
-            for (SerializedObject obj : updates.get(associated).decrypt()
-                .objects().values()) {
-              if (response.contains(obj.getOnum())) continue;
-              store.forceCache(obj);
+          if (worker.updateCaches(store, onum, glob)) {
+            response.remove(onum);
+            // Also force the updates for associated onums.
+            if (associatedOnums.containsKey(onum)) {
+              for (LongIterator iter = associatedOnums.get(onum).iterator(); iter
+                  .hasNext();) {
+                long associated = iter.next();
+                if (response.contains(associated)) {
+                  updates.get(associated).verifySignature(storeKey);
+                  for (SerializedObject obj : updates.get(associated).decrypt()
+                      .objects().values()) {
+                    store.forceCache(obj);
+                  }
+                  response.remove(associated);
+                }
+              }
             }
           }
+        } catch (InvalidKeyException e) {
+          e.printStackTrace();
+        } catch (SignatureException e) {
+          e.printStackTrace();
         }
-      } catch (InvalidKeyException e) {
-        e.printStackTrace();
-      } catch (SignatureException e) {
-        e.printStackTrace();
       }
     }
 
-    return response;
+    response.removeAll(
+        notifyObjectUpdates(store, updatedOnums, groups, associatedOnums));
+    if (!response.isEmpty()) {
+      store.unsubscribe(response);
+    }
   }
 
-  @Override
-  public List<Long> notifyObjectUpdates(List<Long> updatedOnums,
-      List<ObjectGroup> updates, LongKeyMap<LongSet> associatedOnums) {
-    return notifyObjectUpdates(inProcessStore, updatedOnums, updates,
-        associatedOnums);
-  }
-
-  List<Long> notifyObjectUpdates(RemoteStore store, List<Long> updatedOnums,
+  LongSet notifyObjectUpdates(RemoteStore store, LongSet updatedOnums,
       List<ObjectGroup> updates, LongKeyMap<LongSet> associatedOnums) {
     LongKeyMap<ObjectGroup> gMap = new LongKeyHashMap<>();
     for (ObjectGroup group : updates) {
@@ -170,19 +179,24 @@ public class InProcessRemoteWorker extends RemoteWorker {
       worker.updateCache(store, group);
     }
 
-    List<Long> updated = worker.findOnumsInCache(store, updatedOnums);
-    for (Long onum : updated) {
-      for (LongIterator iter = associatedOnums.get(onum).iterator(); iter
-          .hasNext();) {
-        long associated = iter.next();
-        if (updated.contains(associated)) continue;
-        ObjectGroup group = gMap.get(associated);
-        for (SerializedObject obj : group.objects().values()) {
-          store.forceCache(obj);
+    LongSet updated = worker.findOnumsInCache(store, updatedOnums);
+    LongSet result = new LongHashSet(updated);
+    for (LongIterator iter1 = updated.iterator(); iter1.hasNext();) {
+      long onum = iter1.next();
+      if (associatedOnums.containsKey(onum)) {
+        for (LongIterator iter = associatedOnums.get(onum).iterator(); iter
+            .hasNext();) {
+          long associated = iter.next();
+          if (result.contains(associated)) continue;
+          ObjectGroup group = gMap.get(associated);
+          for (SerializedObject obj : group.objects().values()) {
+            store.forceCache(obj);
+          }
+          result.add(associated);
         }
       }
     }
-    return updated;
+    return result;
   }
 
   @Override

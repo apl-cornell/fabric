@@ -216,6 +216,21 @@ public class TransactionManager {
     return result;
   }
 
+  /**
+   * Returns the set of onums that observe the given onum that are on this
+   * store.  Does not include graph reached past the given set.
+   */
+  LongSet getAssociatedOnumsExcluded(long onum, LongSet excluded)
+      throws AccessException {
+    LongSet result = new LongHashSet();
+    result.add(onum);
+    result.addAll(excluded);
+    getAssociatedOnums(onum, result);
+    result.removeAll(excluded);
+    result.remove(onum);
+    return result;
+  }
+
   private void getAssociatedOnums(long onum, LongSet explored)
       throws AccessException {
     SerializedObject obj = database.read(onum);
@@ -246,6 +261,18 @@ public class TransactionManager {
         }
       }
     }
+  }
+
+  /**
+   * Unsubscribe the given worker from updates for the given
+   *
+   * @param client
+   *          the {@link RemoteWorker} to be unsubscribed
+   * @param unsubscribes
+   *          the set of onums to be unsubscribed from.
+   */
+  void unsubscribe(RemoteWorker client, LongSet unsubscribes) {
+    sm.unsubscribe(client, unsubscribes);
   }
 
   /**

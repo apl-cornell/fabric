@@ -19,7 +19,6 @@ import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
-import fabric.common.Threading;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
@@ -48,6 +47,7 @@ import fabric.messages.Message.NoException;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
+import fabric.messages.UnsubscribeMessage;
 import fabric.messages.WaitForUpdateMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
@@ -368,17 +368,8 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   @Override
   public void sendExtensions(final LongSet extensions,
       final java.util.Map<RemoteStore, Collection<SerializedObject>> updates) {
-    Threading.getPool().submit(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          send(Worker.getWorker().authToStore,
-              new ContractExtensionMessage(extensions, updates));
-        } catch (NoException e) {
-        }
-      }
-    });
-
+    send(Worker.getWorker().authToStore,
+        new ContractExtensionMessage(extensions, updates));
   }
 
   @Override
@@ -544,6 +535,13 @@ public class RemoteStore extends RemoteNode<RemoteStore>
     }
 
     return result;
+  }
+
+  /**
+   * Send an unsubscribe message.
+   */
+  public void unsubscribe(LongSet onums) {
+    send(Worker.getWorker().authToStore, new UnsubscribeMessage(onums));
   }
 
   // ////////////////////////////////

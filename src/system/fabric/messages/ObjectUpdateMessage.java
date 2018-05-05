@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fabric.common.ObjectGroup;
-import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongHashSet;
@@ -19,74 +18,42 @@ import fabric.dissemination.ObjectGlob;
 import fabric.worker.remote.RemoteWorker;
 
 /**
- * Represents push notification that an object has been updated.
+ * Represents push notification that some objects have been updated.
  */
-public class ObjectUpdateMessage extends
-    Message<ObjectUpdateMessage.Response, fabric.messages.Message.NoException> {
+public class ObjectUpdateMessage extends AsyncMessage {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
 
   public final String store;
   public final LongKeyMap<ObjectGlob> globs;
-  public final List<Long> onums;
+  public final LongSet onums;
   public final List<ObjectGroup> groups;
   public final LongKeyMap<LongSet> associatedOnums;
-
-  private ObjectUpdateMessage(String store, LongKeyMap<ObjectGlob> globs,
-      List<Long> onums, List<ObjectGroup> groups,
-      LongKeyMap<LongSet> associatedOnums) {
-    super(MessageType.OBJECT_UPDATE, NoException.class);
-    this.store = store;
-    this.globs = globs;
-    this.onums = onums;
-    this.groups = groups;
-    this.associatedOnums = associatedOnums;
-
-    // Exactly one of glob and group needs to be null.
-    if ((globs == null) == (groups == null)) {
-      throw new InternalError();
-    }
-  }
 
   /**
    * Creates an object-update notification to be sent to a dissemination node.
    *
    * @param store
    *          the store from which the notification originated.
-   * @param updates
+   * @param globs
    *          the set of encrypted object updates, keyed by the head object's
    *          onum.
-   */
-  public ObjectUpdateMessage(String store, LongKeyMap<ObjectGlob> updates,
-      LongKeyMap<LongSet> associatedOnums) {
-    this(store, updates, null, null, associatedOnums);
-  }
-
-  /**
-   * Creates an object-update notification to be sent to a worker node.
-   *
    * @param onums
-   *          the onums being updated to which the worker has subscribed.
-   * @param updates
+   *          the unencrypted onums being updated to which the worker has
+   *          subscribed.
+   * @param groups
    *          the set of object updates.
    */
-  public ObjectUpdateMessage(List<Long> onums, List<ObjectGroup> updates,
+  public ObjectUpdateMessage(String store, LongKeyMap<ObjectGlob> globs,
+      LongSet onums, List<ObjectGroup> groups,
       LongKeyMap<LongSet> associatedOnums) {
-    this(null, null, onums, updates, associatedOnums);
-  }
-
-  // ////////////////////////////////////////////////////////////////////////////
-  // response contents //
-  // ////////////////////////////////////////////////////////////////////////////
-
-  public static class Response implements Message.Response {
-    public final List<Long> resubscriptions;
-
-    public Response(List<Long> resubscribes) {
-      this.resubscriptions = resubscribes;
-    }
-
+    super(MessageType.OBJECT_UPDATE);
+    this.store = store;
+    this.globs = globs;
+    this.onums = onums;
+    this.groups = groups;
+    this.associatedOnums = associatedOnums;
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -94,9 +61,9 @@ public class ObjectUpdateMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity<RemoteWorker> client,
-      MessageHandler h) throws ProtocolError {
-    return h.handle(client, this);
+  public void dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
+      throws ProtocolError {
+    h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -105,29 +72,24 @@ public class ObjectUpdateMessage extends
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
-    if (store == null) {
-      out.writeBoolean(true);
+    out.writeUTF(store);
 
-      out.writeInt(onums.size());
-      for (long onum : onums) {
-        out.writeLong(onum);
-      }
-
-      out.writeInt(groups.size());
-      for (ObjectGroup group : groups) {
-        group.write(out);
-      }
-    } else {
-      out.writeBoolean(false);
-
-      out.writeUTF(store);
-
-      out.writeInt(globs.size());
-      for (LongKeyMap.Entry<ObjectGlob> entry : globs.entrySet()) {
-        out.writeLong(entry.getKey());
-        entry.getValue().write(out);
-      }
+    out.writeInt(globs.size());
+    for (LongKeyMap.Entry<ObjectGlob> entry : globs.entrySet()) {
+      out.writeLong(entry.getKey());
+      entry.getValue().write(out);
     }
+
+    out.writeInt(onums.size());
+    for (LongIterator iter = onums.iterator(); iter.hasNext();) {
+      out.writeLong(iter.next());
+    }
+
+    out.writeInt(groups.size());
+    for (ObjectGroup group : groups) {
+      group.write(out);
+    }
+
     out.writeInt(associatedOnums.size());
     for (LongKeyMap.Entry<LongSet> e : associatedOnums.entrySet()) {
       out.writeLong(e.getKey());
@@ -140,38 +102,31 @@ public class ObjectUpdateMessage extends
 
   /* readMessage */
   protected ObjectUpdateMessage(DataInput in) throws IOException {
-    super(MessageType.OBJECT_UPDATE, NoException.class);
+    super(MessageType.OBJECT_UPDATE);
 
     int size = 0;
-    if (in.readBoolean()) {
-      store = null;
-      globs = null;
 
-      size = in.readInt();
-      onums = new ArrayList<>(size);
-      for (int i = 0; i < size; i++) {
-        onums.add(in.readLong());
-      }
+    store = in.readUTF();
 
-      size = in.readInt();
-      groups = new ArrayList<>(size);
-      for (int i = 0; i < size; i++) {
-        groups.add(new ObjectGroup(in));
-      }
-    } else {
-      onums = null;
-      groups = null;
+    size = in.readInt();
+    globs = new LongKeyHashMap<>(size);
+    for (int i = 0; i < size; i++) {
+      long key = in.readLong();
+      ObjectGlob glob = new ObjectGlob(in);
 
-      store = in.readUTF();
+      globs.put(key, glob);
+    }
 
-      size = in.readInt();
-      globs = new LongKeyHashMap<>(size);
-      for (int i = 0; i < size; i++) {
-        long key = in.readLong();
-        ObjectGlob glob = new ObjectGlob(in);
+    size = in.readInt();
+    onums = new LongHashSet(size);
+    for (int i = 0; i < size; i++) {
+      onums.add(in.readLong());
+    }
 
-        globs.put(key, glob);
-      }
+    size = in.readInt();
+    groups = new ArrayList<>(size);
+    for (int i = 0; i < size; i++) {
+      groups.add(new ObjectGroup(in));
     }
 
     size = in.readInt();
@@ -186,24 +141,4 @@ public class ObjectUpdateMessage extends
       associatedOnums.put(onum, s);
     }
   }
-
-  @Override
-  protected void writeResponse(DataOutput out, Response r) throws IOException {
-    out.writeInt(r.resubscriptions.size());
-    for (long onum : r.resubscriptions) {
-      out.writeLong(onum);
-    }
-  }
-
-  @Override
-  protected Response readResponse(DataInput in) throws IOException {
-    int size = in.readInt();
-    List<Long> resubscribes = new ArrayList<>(size);
-    for (int i = 0; i < size; i++) {
-      resubscribes.add(in.readLong());
-    }
-
-    return new Response(resubscribes);
-  }
-
 }

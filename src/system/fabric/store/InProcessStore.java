@@ -191,4 +191,8 @@ public class InProcessStore extends RemoteStore {
     tm.queueExtensions(extensions);
   }
 
+  @Override
+  public void unsubscribe(LongSet onums) {
+    tm.unsubscribe(Worker.getWorker().getLocalWorker(), onums);
+  }
 }

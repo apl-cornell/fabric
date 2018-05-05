@@ -5,7 +5,6 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
-import fabric.messages.ObjectUpdateMessage.Response;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.remote.RemoteWorker;
@@ -73,11 +72,11 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
       throws AccessException;
 
   @Override
-  public abstract ContractExtensionMessage.Response handle(
+  public abstract void handle(
       RemoteIdentity<RemoteWorker> client, ContractExtensionMessage msg);
 
   @Override
-  public final Response handle(RemoteIdentity<RemoteWorker> client,
+  public final void handle(RemoteIdentity<RemoteWorker> client,
       ObjectUpdateMessage msg) throws ProtocolError {
     throw error(msg);
   }
@@ -120,4 +119,12 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
   private final ProtocolError error(Message<?, ?> msg) {
     return new ProtocolError("Invalid message to store: " + msg);
   }
+
+  private final ProtocolError error(AsyncMessage msg) {
+    return new ProtocolError("Invalid message to store: " + msg);
+  }
+
+  @Override
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      UnsubscribeMessage msg);
 }

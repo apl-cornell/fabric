@@ -2,7 +2,6 @@ package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
-import java.util.List;
 import java.util.Map;
 
 import fabric.common.AuthorizationUtil;
@@ -359,25 +358,12 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public ObjectUpdateMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client,
+  public void handle(RemoteIdentity<RemoteWorker> client,
       ObjectUpdateMessage objectUpdateMessage) {
 
-    Worker worker = Worker.getWorker();
-    final List<Long> response;
-
-    if (objectUpdateMessage.groups == null) {
-      response =
-          inProcessRemoteWorker.notifyObjectUpdates(objectUpdateMessage.store,
-              objectUpdateMessage.globs, objectUpdateMessage.associatedOnums);
-    } else {
-      RemoteStore store = worker.getStore(client.node.name);
-      response = inProcessRemoteWorker.notifyObjectUpdates(store,
-          objectUpdateMessage.onums, objectUpdateMessage.groups,
-          objectUpdateMessage.associatedOnums);
-    }
-
-    return new ObjectUpdateMessage.Response(response);
+    inProcessRemoteWorker.notifyObjectUpdates(objectUpdateMessage.store,
+        objectUpdateMessage.globs, objectUpdateMessage.onums,
+        objectUpdateMessage.groups, objectUpdateMessage.associatedOnums);
   }
 
   @Override
