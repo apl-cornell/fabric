@@ -3,7 +3,6 @@ package fabric.worker.remote;
 import java.security.InvalidKeyException;
 import java.security.PublicKey;
 import java.security.SignatureException;
-import java.util.ArrayList;
 import java.util.List;
 
 import fabric.common.ObjectGroup;
@@ -11,7 +10,11 @@ import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.NotImplementedException;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
@@ -63,22 +66,22 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
-  public void prepareTransaction(long tid) throws UnreachableNodeException,
-      TransactionPrepareFailedException {
+  public void prepareTransaction(long tid)
+      throws UnreachableNodeException, TransactionPrepareFailedException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
 
   @Override
-  public void commitTransaction(long tid) throws UnreachableNodeException,
-      TransactionCommitFailedException {
+  public void commitTransaction(long tid)
+      throws UnreachableNodeException, TransactionCommitFailedException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
 
   @Override
-  public void abortTransaction(TransactionID tid) throws AccessException,
-      UnreachableNodeException {
+  public void abortTransaction(TransactionID tid)
+      throws AccessException, UnreachableNodeException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
@@ -113,40 +116,47 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
-  public List<Long> notifyObjectUpdates(String storeName,
-      LongKeyMap<ObjectGlob> updates) {
-    List<Long> response = new ArrayList<>();
+  public void notifyObjectUpdates(String storeName,
+      LongKeyMap<ObjectGlob> updates, LongSet updatedOnums,
+      List<ObjectGroup> groups) {
+    LongSet response = new LongHashSet(updates.keySet());
+    response.addAll(updatedOnums);
 
     RemoteStore store = worker.getStore(storeName);
     PublicKey storeKey = store.getPublicKey();
     for (LongKeyMap.Entry<ObjectGlob> entry : updates.entrySet()) {
       long onum = entry.getKey();
-      ObjectGlob glob = entry.getValue();
-      try {
-        glob.verifySignature(storeKey);
+      // Skip over elements we've managed to handle below.
+      if (response.contains(onum)) {
+        ObjectGlob glob = entry.getValue();
+        try {
+          glob.verifySignature(storeKey);
 
-        if (worker.updateCaches(store, onum, glob)) {
-          response.add(onum);
+          if (worker.updateCaches(store, onum, glob)) {
+            response.remove(onum);
+          }
+        } catch (InvalidKeyException e) {
+          e.printStackTrace();
+        } catch (SignatureException e) {
+          e.printStackTrace();
         }
-      } catch (InvalidKeyException e) {
-        e.printStackTrace();
-      } catch (SignatureException e) {
-        e.printStackTrace();
       }
     }
 
-    return response;
+    response.removeAll(notifyObjectUpdates(store, updatedOnums, groups));
+    if (!response.isEmpty()) {
+      store.unsubscribe(response);
+    }
   }
 
-  @Override
-  public List<Long> notifyObjectUpdates(List<Long> updatedOnums,
+  LongSet notifyObjectUpdates(RemoteStore store, LongSet updatedOnums,
       List<ObjectGroup> updates) {
-    return notifyObjectUpdates(inProcessStore, updatedOnums, updates);
-  }
-
-  List<Long> notifyObjectUpdates(RemoteStore store, List<Long> updatedOnums,
-      List<ObjectGroup> updates) {
+    LongKeyMap<ObjectGroup> gMap = new LongKeyHashMap<>();
     for (ObjectGroup group : updates) {
+      for (LongIterator iter = group.objects().keySet().iterator(); iter
+          .hasNext();) {
+        gMap.put(iter.next(), group);
+      }
       worker.updateCache(store, group);
     }
 

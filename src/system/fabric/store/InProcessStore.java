@@ -12,6 +12,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.worker.RemoteStore;
@@ -143,4 +144,8 @@ public class InProcessStore extends RemoteStore {
     return new SerializationProxy(name);
   }
 
+  @Override
+  public void unsubscribe(LongSet onums) {
+    tm.unsubscribe(Worker.getWorker().getLocalWorker(), onums);
+  }
 }

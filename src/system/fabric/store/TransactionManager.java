@@ -170,6 +170,18 @@ public class TransactionManager {
   }
 
   /**
+   * Unsubscribe the given worker from updates for the given
+   *
+   * @param client
+   *          the {@link RemoteWorker} to be unsubscribed
+   * @param unsubscribes
+   *          the set of onums to be unsubscribed from.
+   */
+  void unsubscribe(RemoteWorker client, LongSet unsubscribes) {
+    sm.unsubscribe(client, unsubscribes);
+  }
+
+  /**
    * Returns a GroupContainer containing the specified object. All surrogates
    * referenced by any object in the group will also be in the group. This
    * ensures that the worker will not reveal information when dereferencing

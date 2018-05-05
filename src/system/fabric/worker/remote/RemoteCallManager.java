@@ -2,7 +2,6 @@ package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
-import java.util.List;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.TransactionID;
@@ -25,7 +24,6 @@ import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
-import fabric.worker.RemoteStore;
 import fabric.worker.RetryException;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
@@ -351,23 +349,12 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public ObjectUpdateMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client,
+  public void handle(RemoteIdentity<RemoteWorker> client,
       ObjectUpdateMessage objectUpdateMessage) {
 
-    Worker worker = Worker.getWorker();
-    final List<Long> response;
-
-    if (objectUpdateMessage.groups == null) {
-      response = inProcessRemoteWorker.notifyObjectUpdates(
-          objectUpdateMessage.store, objectUpdateMessage.globs);
-    } else {
-      RemoteStore store = worker.getStore(client.node.name);
-      response = inProcessRemoteWorker.notifyObjectUpdates(store,
-          objectUpdateMessage.onums, objectUpdateMessage.groups);
-    }
-
-    return new ObjectUpdateMessage.Response(response);
+    inProcessRemoteWorker.notifyObjectUpdates(objectUpdateMessage.store,
+        objectUpdateMessage.globs, objectUpdateMessage.onums,
+        objectUpdateMessage.groups);
   }
 
   @Override

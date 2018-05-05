@@ -15,6 +15,7 @@ import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
@@ -22,6 +23,7 @@ import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AsyncCallMessage;
+import fabric.messages.AsyncMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DirtyReadMessage;
 import fabric.messages.InterWorkerStalenessMessage;
@@ -211,38 +213,11 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   }
 
   /**
-   * Notifies the dissemination node at the given worker that an object has been
-   * updated.
-   *
-   * @return whether the node is resubscribing to the object.
+   * Notifies the worker of updates.
    */
-  public List<Long> notifyObjectUpdates(String store,
-      LongKeyMap<ObjectGlob> updates) {
-    ObjectUpdateMessage.Response response;
-    try {
-      response = send(new ObjectUpdateMessage(store, updates));
-    } catch (NoException e) {
-      // This is not possible.
-      throw new InternalError(e);
-    }
-    return response.resubscriptions;
-  }
-
-  /**
-   * Notifies the worker that a set of objects has been updated.
-   *
-   * @return whether the node is resubscribing to the object.
-   */
-  public List<Long> notifyObjectUpdates(List<Long> updatedOnums,
-      List<ObjectGroup> updates) {
-    ObjectUpdateMessage.Response response;
-    try {
-      response = send(new ObjectUpdateMessage(updatedOnums, updates));
-    } catch (NoException e) {
-      // This is not possible.
-      throw new InternalError(e);
-    }
-    return response.resubscriptions;
+  public void notifyObjectUpdates(String store, LongKeyMap<ObjectGlob> globs,
+      LongSet updatedOnums, List<ObjectGroup> groups) {
+    send(new ObjectUpdateMessage(store, globs, updatedOnums, groups));
   }
 
   /**
@@ -263,6 +238,10 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   private <R extends Message.Response, E extends FabricException> R send(
       Message<R, E> message) throws E {
     return send(subSocketFactory, message);
+  }
+
+  private void send(AsyncMessage message) {
+    send(subSocketFactory, message);
   }
 
   // ////////////////////////////////

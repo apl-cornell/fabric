@@ -27,6 +27,7 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
@@ -41,6 +42,7 @@ import fabric.messages.Message.NoException;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
+import fabric.messages.UnsubscribeMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
@@ -491,6 +493,13 @@ public class RemoteStore extends RemoteNode<RemoteStore>
     }
 
     return result;
+  }
+
+  /**
+   * Send an unsubscribe message.
+   */
+  public void unsubscribe(LongSet onums) {
+    send(Worker.getWorker().authToStore, new UnsubscribeMessage(onums));
   }
 
   // ////////////////////////////////

@@ -22,42 +22,52 @@ import fabric.worker.transaction.TakeOwnershipFailedException;
  * and there is one such method for each message type that can be handled.
  */
 public interface MessageHandler {
+  /////////////////////////////////////////////////////////////////////
+  // Asynchronous Messages
+  /////////////////////////////////////////////////////////////////////
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      ObjectUpdateMessage msg) throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      UnsubscribeMessage msg) throws ProtocolError;
+
+  /////////////////////////////////////////////////////////////////////
+  // Synchronous Messages
+  /////////////////////////////////////////////////////////////////////
+
   public AbortTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, AbortTransactionMessage msg)
-          throws AccessException;
+      throws AccessException;
 
   public AllocateMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       AllocateMessage msg) throws ProtocolError, AccessException;
 
   public CommitTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, CommitTransactionMessage msg)
-          throws TransactionCommitFailedException;
+      throws TransactionCommitFailedException;
 
   public DissemReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       DissemReadMessage msg) throws ProtocolError, AccessException;
 
   public GetCertChainMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, GetCertChainMessage msg)
-          throws ProtocolError;
+      throws ProtocolError;
 
   public PrepareTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
-          throws TransactionPrepareFailedException;
+      throws TransactionPrepareFailedException;
 
   public ReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       ReadMessage msg) throws ProtocolError, AccessException;
 
   public MakePrincipalMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, MakePrincipalMessage msg)
-          throws ProtocolError, FabricGeneralSecurityException;
+      throws ProtocolError, FabricGeneralSecurityException;
 
   public StalenessCheckMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, StalenessCheckMessage msg)
-          throws ProtocolError, AccessException;
-
-  public ObjectUpdateMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, ObjectUpdateMessage msg)
-          throws ProtocolError;
+      throws ProtocolError, AccessException;
 
   public DirtyReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       DirtyReadMessage msg) throws ProtocolError, AccessException;
@@ -70,9 +80,9 @@ public interface MessageHandler {
 
   public TakeOwnershipMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
-          throws ProtocolError, TakeOwnershipFailedException;
+      throws ProtocolError, TakeOwnershipFailedException;
 
   public InterWorkerStalenessMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, InterWorkerStalenessMessage msg)
-          throws ProtocolError;
+      throws ProtocolError;
 }

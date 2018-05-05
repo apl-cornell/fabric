@@ -47,6 +47,7 @@ import fabric.messages.MessageToStoreHandler;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
+import fabric.messages.UnsubscribeMessage;
 import fabric.store.db.ObjectDB;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -341,5 +342,11 @@ class Store extends MessageToStoreHandler {
   private String nameOf(Principal p) {
     return p == null ? "BOTTOM"
         : ("fab://" + p.$getStore().name() + "/" + p.$getOnum());
+  }
+
+  @Override
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      UnsubscribeMessage msg) {
+    tm.unsubscribe(client.node, msg.unsubscribes);
   }
 }

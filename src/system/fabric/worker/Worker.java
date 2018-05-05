@@ -11,8 +11,6 @@ import java.lang.reflect.Method;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
@@ -44,6 +42,9 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongSet;
 import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.FetchManager;
 import fabric.lang.FabricClassLoader;
@@ -431,9 +432,10 @@ public final class Worker {
   /**
    * Detemines which of a given set of onums are resident in cache.
    */
-  public List<Long> findOnumsInCache(RemoteStore store, List<Long> onums) {
-    List<Long> result = new ArrayList<>();
-    for (long onum : onums) {
+  public LongSet findOnumsInCache(RemoteStore store, LongSet onums) {
+    LongSet result = new LongHashSet();
+    for (LongIterator iter = onums.iterator(); iter.hasNext();) {
+      long onum = iter.next();
       if (store.readFromCache(onum) != null) result.add(onum);
     }
 
