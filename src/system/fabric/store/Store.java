@@ -292,7 +292,10 @@ class Store extends MessageToStoreHandler {
     for (LongIterator iter = tm.getAssociatedOnums(msg.onum).iterator(); iter
         .hasNext();) {
       long relatedOnum = iter.next();
-      result.put(relatedOnum, tm.getGlob(relatedOnum, client.node));
+      ObjectGlob relatedGlob = tm.getGlob(relatedOnum, client.node);
+      // Only add it if it's distinct from other globs we're already sending
+      if (!result.values().contains(relatedGlob))
+        result.put(relatedOnum, relatedGlob);
     }
     return new DissemReadMessage.Response(result);
   }
