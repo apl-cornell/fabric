@@ -47,4 +47,18 @@ public class ObjectGroup implements FastSerializable {
       objects.put(obj.getOnum(), obj);
     }
   }
+
+  @Override
+  public int hashCode() {
+    return objects.values().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other instanceof ObjectGroup) {
+      ObjectGroup that = (ObjectGroup) other;
+      return this.objects.equals(that.objects);
+    }
+    return false;
+  }
 }
