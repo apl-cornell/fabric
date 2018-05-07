@@ -1,12 +1,11 @@
 package fabric.store;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
@@ -62,7 +61,7 @@ public class SubscriptionManager {
   }
 
   /**
-   * Subscribes the given worker to the given onum.
+   * Unsubscribes the given worker to the given onums.
    *
    * @param worker
    * the worker being unsubscribed.
@@ -81,7 +80,7 @@ public class SubscriptionManager {
   }
 
   /**
-   * Unsubscribes the given worker to the given onums.
+   * Subscribes the given worker to the given onum.
    *
    * @param dissemSubscribe
    *          If true, then the given subscriber will be subscribed as a
@@ -117,28 +116,32 @@ public class SubscriptionManager {
     }
 
     protected void handle() {
-      while (true) {
-        LongSet curGroup = new LongHashSet();
-        synchronized (queue) {
-          while (queue.isEmpty()) {
-            try {
-              queue.wait();
-            } catch (InterruptedException e) {
-              Logging.logIgnoredInterruptedException(e);
+      try {
+        while (true) {
+          LongSet curGroup = new LongHashSet();
+          synchronized (queue) {
+            while (queue.isEmpty()) {
+              try {
+                queue.wait();
+              } catch (InterruptedException e) {
+                Logging.logIgnoredInterruptedException(e);
+              }
             }
+            curGroup.addAll(queue);
           }
-          curGroup.addAll(queue);
+          runGroup(curGroup);
         }
-        runGroup(curGroup);
+      } catch (Throwable t) {
+        Logging.MISC_LOGGER.log(Level.SEVERE,
+            "Subscription runner exited with exception", t);
       }
     }
 
     protected void runGroup(LongSet onums) {
       LongKeyMap<ObjectGlob> globs = new LongKeyHashMap<>();
       LongSet onumsSent = new LongHashSet();
-      List<ObjectGroup> groups = new ArrayList<>();
+      Set<ObjectGroup> groups = new HashSet<>();
       // Gather the updates.
-      LongKeyMap<Boolean> wasDissemMap = new LongKeyHashMap<>();
       for (LongIterator it = onums.iterator(); it.hasNext();) {
         long onum = it.next();
 
@@ -150,7 +153,6 @@ public class SubscriptionManager {
           continue;
         }
         boolean isDissem = subMap.get(worker);
-        wasDissemMap.put(onum, isDissem);
 
         GroupContainer groupContainer;
         try {

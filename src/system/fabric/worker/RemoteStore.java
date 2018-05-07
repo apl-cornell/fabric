@@ -214,8 +214,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   private ObjectCache.Entry fetchObject(boolean useDissem, long onum)
       throws AccessException {
     TransactionManager tm = TransactionManager.getInstance();
-    if (tm != null)
-      tm.stats.markFetch();
+    if (tm != null) tm.stats.markFetch();
     ObjectGroup g;
     if (useDissem) {
       g = Worker.getWorker().fetchManager().fetch(this, onum);
@@ -499,7 +498,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    * Send an unsubscribe message.
    */
   public void unsubscribe(LongSet onums) {
-    send(Worker.getWorker().authToStore, new UnsubscribeMessage(onums));
+    sendAsync(Worker.getWorker().authToStore, new UnsubscribeMessage(onums));
   }
 
   // ////////////////////////////////

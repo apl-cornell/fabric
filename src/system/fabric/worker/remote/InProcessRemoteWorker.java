@@ -3,10 +3,11 @@ package fabric.worker.remote;
 import java.security.InvalidKeyException;
 import java.security.PublicKey;
 import java.security.SignatureException;
-import java.util.List;
+import java.util.Collection;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.NotImplementedException;
@@ -116,9 +117,25 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
-  public void notifyObjectUpdates(String storeName,
-      LongKeyMap<ObjectGlob> updates, LongSet updatedOnums,
-      List<ObjectGroup> groups) {
+  public void notifyObjectUpdates(final String storeName,
+      final LongKeyMap<ObjectGlob> updates, final LongSet updatedOnums,
+      final Collection<ObjectGroup> groups) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        notifyObjectUpdatesSync(storeName, updates, updatedOnums, groups);
+      }
+    });
+  }
+
+  /**
+   * Run an update notification in the current thread.  This is intended to
+   * avoid an unnecessary Thread fork when handling an ObjectUpdateMessage from
+   * the network, which already creates a separate thread.
+   */
+  public void notifyObjectUpdatesSync(final String storeName,
+      final LongKeyMap<ObjectGlob> updates, final LongSet updatedOnums,
+      final Collection<ObjectGroup> groups) {
     LongSet response = new LongHashSet(updates.keySet());
     response.addAll(updatedOnums);
 
@@ -150,7 +167,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   LongSet notifyObjectUpdates(RemoteStore store, LongSet updatedOnums,
-      List<ObjectGroup> updates) {
+      Collection<ObjectGroup> updates) {
     LongKeyMap<ObjectGroup> gMap = new LongKeyHashMap<>();
     for (ObjectGroup group : updates) {
       for (LongIterator iter = group.objects().keySet().iterator(); iter

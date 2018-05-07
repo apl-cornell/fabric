@@ -73,8 +73,8 @@ public abstract class ObjectDB {
   /**
    * The data stored for a partially prepared transaction.
    */
-  protected static final class PendingTransaction implements FastSerializable,
-      Iterable<Long> {
+  protected static final class PendingTransaction
+      implements FastSerializable, Iterable<Long> {
     public final long tid;
     public final Principal owner;
     public final Collection<Long> reads;
@@ -282,8 +282,8 @@ public abstract class ObjectDB {
     try {
       objectLocksFor(onum).lockForRead(tid, worker);
     } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts, "Object "
-          + onum + " has been locked by an uncommitted transaction.");
+      throw new TransactionPrepareFailedException(versionConflicts,
+          "Object " + onum + " has been locked by an uncommitted transaction.");
     }
 
     // Register that the transaction has locked the object.
@@ -331,8 +331,8 @@ public abstract class ObjectDB {
     try {
       objectLocksFor(onum).lockForWrite(tid);
     } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts, "Object "
-          + onum + " has been locked by an uncommitted transaction.");
+      throw new TransactionPrepareFailedException(versionConflicts,
+          "Object " + onum + " has been locked by an uncommitted transaction.");
     }
 
     // Record the updated object. Doing so will also register that the
@@ -347,8 +347,8 @@ public abstract class ObjectDB {
 
       // Make sure the onum doesn't already exist in the database.
       if (exists(onum)) {
-        throw new TransactionPrepareFailedException(versionConflicts, "Object "
-            + onum + " already exists.");
+        throw new TransactionPrepareFailedException(versionConflicts,
+            "Object " + onum + " already exists.");
       }
 
       // Set the object's initial version number.
@@ -487,25 +487,28 @@ public abstract class ObjectDB {
    * @param worker
    *          the worker that performed the update.
    */
-  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum,
-      RemoteWorker worker) {
+  protected final void notifyCommittedUpdates(SubscriptionManager sm,
+      LongSet onums, RemoteWorker worker) {
     // Remove from the glob table the glob associated with the onum.
-    LongSet groupOnums = objectGrouper.removeGroup(onum);
+    LongSet groupOnums = new LongHashSet();
+    for (LongIterator iter = onums.iterator(); iter.hasNext();) {
+      long onum = iter.next();
+      if (Worker.getWorker().config.useSubscriptions) {
+        // Make sure the worker performing these updates is subscribed to future
+        // updates.
+        // TODO: Running it as a dissem subscription right now... that should be
+        // revisited.
+        sm.subscribe(onum, worker, true);
+      }
+      if (!groupOnums.contains(onum)) {
+        LongSet group = objectGrouper.removeGroup(onum);
+        if (group != null) groupOnums.addAll(group);
+      }
+    }
 
     if (Worker.getWorker().config.useSubscriptions) {
       // Notify the subscription manager that the group has been updated.
-      LongSet updatedOnums = new LongHashSet();
-      updatedOnums.add(onum);
-      if (groupOnums != null) {
-        for (LongIterator onumIt = groupOnums.iterator(); onumIt.hasNext();) {
-          long relatedOnum = onumIt.next();
-          if (relatedOnum == onum) continue;
-
-          updatedOnums.add(relatedOnum);
-        }
-      }
-
-      sm.notifyUpdate(updatedOnums, worker);
+      sm.notifyUpdate(groupOnums, worker);
     }
   }
 

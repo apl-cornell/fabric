@@ -10,16 +10,18 @@ import java.security.PrivateKey;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
+import fabric.common.SysUtil;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
-import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
@@ -98,9 +100,6 @@ public class MemoryDB extends ObjectDB {
     // dangling references in update objects.
     for (SerializedObject o : tx.creates) {
       objectTable.put(o.getOnum(), o);
-
-      // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
     }
     for (SerializedObject o : tx.writes) {
       objectTable.put(o.getOnum(), o);
@@ -111,10 +110,17 @@ public class MemoryDB extends ObjectDB {
       // version in the worker transaction will be in the cache after 2PC.
       if (!workerIdentity.node.equals(Worker.getWorker().inProcessRemoteWorker))
         Worker.getWorker().getStore(getName()).updateCache(o);
-
-      // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
     }
+
+    LongSet writtenOnums = new LongHashSet();
+
+    for (SerializedObject o : SysUtil.chain(tx.writes, tx.creates)) {
+      writtenOnums.add(o.getOnum());
+    }
+
+    // Remove any cached globs containing the old version of this object and
+    // notify subscribed workers.
+    notifyCommittedUpdates(sm, writtenOnums, workerIdentity.node);
 
     remove(workerIdentity.principal, tid);
   }
@@ -185,8 +191,7 @@ public class MemoryDB extends ObjectDB {
       if (submap.isEmpty()) pendingByTid.remove(tid, submap);
     }
 
-    if (tx == null)
-      throw new AccessException("Invalid transaction id: " + tid);
+    if (tx == null) throw new AccessException("Invalid transaction id: " + tid);
 
     // XXX Check if the worker acts for the owner.
 

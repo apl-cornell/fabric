@@ -146,6 +146,8 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   public void unsubscribe(LongSet onums) {
+    // Running this in the current thread because it should only be called in
+    // the dedicated thread for InProcessRemoteWorker's handling of updates.
     tm.unsubscribe(Worker.getWorker().getLocalWorker(), onums);
   }
 }

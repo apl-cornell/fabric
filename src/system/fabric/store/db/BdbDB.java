@@ -44,7 +44,9 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.Cache;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyCache;
+import fabric.common.util.LongSet;
 import fabric.common.util.MutableInteger;
 import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
@@ -244,31 +246,35 @@ public class BdbDB extends ObjectDB {
                 // If the update is from the local worker, the already
                 // deserialized version in the worker transaction will be in the
                 // cache after 2PC.
-                if (!workerIdentity.node.equals(
-                      Worker.getWorker().inProcessRemoteWorker))
+                if (!workerIdentity.node
+                    .equals(Worker.getWorker().inProcessRemoteWorker))
                   Worker.getWorker().getStore(getName()).updateCache(o);
               }
 
               return pending;
             } else {
-              STORE_DB_LOGGER.log(Level.WARNING,
-                  "Bdb commit not found tid {0}", tid);
+              STORE_DB_LOGGER.log(Level.WARNING, "Bdb commit not found tid {0}",
+                  tid);
               throw new InternalError("Unknown transaction id " + tid);
             }
           }
         });
 
+    LongSet writtenOnums = new LongHashSet();
+
     // Fix up caches.
     for (SerializedObject o : SysUtil.chain(pending.creates, pending.writes)) {
       long onum = o.getOnum();
 
-      // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, onum, workerIdentity.node);
+      writtenOnums.add(onum);
 
       // Update the version-number cache.
       cacheVersionNumber(onum, o.getVersion());
 
     }
+
+    // Remove any cached globs containing the old version of this object.
+    notifyCommittedUpdates(sm, writtenOnums, workerIdentity.node);
 
     STORE_DB_LOGGER.log(Level.FINER, "Bdb commit success tid {0}", tid);
   }
@@ -362,7 +368,8 @@ public class BdbDB extends ObjectDB {
                 DatabaseEntry data = new DatabaseEntry();
                 nextOnum.value = ONumConstants.FIRST_UNRESERVED;
 
-                if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
+                if (meta.get(txn, onumCounter, data,
+                    LockMode.DEFAULT) == SUCCESS) {
                   nextOnum.value = LongBinding.entryToLong(data);
                 }
 
@@ -414,7 +421,8 @@ public class BdbDB extends ObjectDB {
       public Boolean run(Transaction txn) throws RuntimeException {
         DatabaseEntry data = new DatabaseEntry();
 
-        if (meta.get(txn, initializationStatus, data, LockMode.DEFAULT) == SUCCESS) {
+        if (meta.get(txn, initializationStatus, data,
+            LockMode.DEFAULT) == SUCCESS) {
           return BooleanBinding.entryToBoolean(data);
         }
 
@@ -471,15 +479,17 @@ public class BdbDB extends ObjectDB {
       pending = toPendingTransaction(data.getData());
 
       Cursor cursor = preparedCreates.openCursor(txn, null);
-      for (OperationStatus result = cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
-          cursor.getNextDup(bdbKey, data, null)) {
+      for (OperationStatus result =
+          cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
+              cursor.getNextDup(bdbKey, data, null)) {
         pending.creates.add(toSerializedObject(data.getData()));
       }
       cursor.close();
 
       cursor = preparedWrites.openCursor(txn, null);
-      for (OperationStatus result = cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
-          cursor.getNextDup(bdbKey, data, null)) {
+      for (OperationStatus result =
+          cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
+              cursor.getNextDup(bdbKey, data, null)) {
         pending.writes.add(toSerializedObject(data.getData()));
       }
       cursor.close();
