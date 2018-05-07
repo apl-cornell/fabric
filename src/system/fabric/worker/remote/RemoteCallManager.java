@@ -361,7 +361,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   public void handle(RemoteIdentity<RemoteWorker> client,
       ObjectUpdateMessage objectUpdateMessage) {
 
-    inProcessRemoteWorker.notifyObjectUpdates(objectUpdateMessage.store,
+    inProcessRemoteWorker.notifyObjectUpdatesSync(objectUpdateMessage.store,
         objectUpdateMessage.globs, objectUpdateMessage.onums,
         objectUpdateMessage.groups, objectUpdateMessage.associatedOnums);
   }

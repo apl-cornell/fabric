@@ -4,7 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.ProtocolError;
@@ -28,7 +28,7 @@ public class ObjectUpdateMessage extends AsyncMessage {
   public final String store;
   public final LongKeyMap<ObjectGlob> globs;
   public final LongSet onums;
-  public final List<ObjectGroup> groups;
+  public final Collection<ObjectGroup> groups;
   public final LongKeyMap<LongSet> associatedOnums;
 
   /**
@@ -46,7 +46,7 @@ public class ObjectUpdateMessage extends AsyncMessage {
    *          the set of object updates.
    */
   public ObjectUpdateMessage(String store, LongKeyMap<ObjectGlob> globs,
-      LongSet onums, List<ObjectGroup> groups,
+      LongSet onums, Collection<ObjectGroup> groups,
       LongKeyMap<LongSet> associatedOnums) {
     super(MessageType.OBJECT_UPDATE);
     this.store = store;
@@ -72,24 +72,29 @@ public class ObjectUpdateMessage extends AsyncMessage {
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
+    // Store
     out.writeUTF(store);
 
+    // Globs
     out.writeInt(globs.size());
     for (LongKeyMap.Entry<ObjectGlob> entry : globs.entrySet()) {
       out.writeLong(entry.getKey());
       entry.getValue().write(out);
     }
 
+    // Onums
     out.writeInt(onums.size());
     for (LongIterator iter = onums.iterator(); iter.hasNext();) {
       out.writeLong(iter.next());
     }
 
+    // Groups
     out.writeInt(groups.size());
     for (ObjectGroup group : groups) {
       group.write(out);
     }
 
+    // Associated
     out.writeInt(associatedOnums.size());
     for (LongKeyMap.Entry<LongSet> e : associatedOnums.entrySet()) {
       out.writeLong(e.getKey());
@@ -103,38 +108,40 @@ public class ObjectUpdateMessage extends AsyncMessage {
   /* readMessage */
   protected ObjectUpdateMessage(DataInput in) throws IOException {
     super(MessageType.OBJECT_UPDATE);
-
     int size = 0;
 
+    // Store
     store = in.readUTF();
 
+    // Globs
     size = in.readInt();
     globs = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++) {
       long key = in.readLong();
-      ObjectGlob glob = new ObjectGlob(in);
-
-      globs.put(key, glob);
+      globs.put(key, new ObjectGlob(in));
     }
 
+    // Onums
     size = in.readInt();
     onums = new LongHashSet(size);
     for (int i = 0; i < size; i++) {
       onums.add(in.readLong());
     }
 
+    // Groups
     size = in.readInt();
     groups = new ArrayList<>(size);
     for (int i = 0; i < size; i++) {
       groups.add(new ObjectGroup(in));
     }
 
+    // Associated
     size = in.readInt();
     associatedOnums = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++) {
       long onum = in.readLong();
       int size2 = in.readInt();
-      LongSet s = new LongHashSet();
+      LongSet s = new LongHashSet(size2);
       for (int j = 0; j < size2; j++) {
         s.add(in.readLong());
       }

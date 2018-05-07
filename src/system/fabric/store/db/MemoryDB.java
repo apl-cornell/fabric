@@ -15,7 +15,9 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Principal;
@@ -111,15 +113,21 @@ public class MemoryDB extends ObjectDB {
         Worker.getWorker().getStore(getName()).updateCache(o);
     }
 
+    LongSet writtenOnums = new LongHashSet();
+
     // Update extended objects.
     for (ExpiryExtension extension : tx.extensions) {
       objectTable.get(extension.onum).setExpiry(extension.expiry);
+      writtenOnums.add(extension.onum);
     }
 
     for (SerializedObject o : SysUtil.chain(tx.writes, tx.creates)) {
-      // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
+      writtenOnums.add(o.getOnum());
     }
+
+    // Remove any cached globs containing the old version of this object and
+    // notify subscribed workers.
+    notifyCommittedUpdates(sm, writtenOnums, workerIdentity.node);
 
     sendTriggeredExtensions(tid);
 

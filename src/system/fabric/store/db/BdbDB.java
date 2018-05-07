@@ -44,7 +44,9 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.Cache;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyCache;
+import fabric.common.util.LongSet;
 import fabric.common.util.MutableInteger;
 import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
@@ -289,12 +291,13 @@ public class BdbDB extends ObjectDB {
           }
         });
 
+    LongSet writtenOnums = new LongHashSet();
+
     // Fix up caches.
     for (SerializedObject o : SysUtil.chain(pending.creates, pending.writes)) {
       long onum = o.getOnum();
 
-      // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, onum, workerIdentity.node);
+      writtenOnums.add(onum);
 
       // Update the version-number cache.
       cacheVersionNumber(onum, o.getVersion());
@@ -304,13 +307,14 @@ public class BdbDB extends ObjectDB {
     for (ExpiryExtension e : pending.extensions) {
       long onum = e.onum;
 
-      // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, onum, workerIdentity.node);
+      writtenOnums.add(onum);
 
       // Update the version-number cache.
       cacheVersionNumber(onum, e.version);
-
     }
+
+    // Remove any cached globs containing the old version of this object.
+    notifyCommittedUpdates(sm, writtenOnums, workerIdentity.node);
 
     sendTriggeredExtensions(tid);
 

@@ -2,7 +2,7 @@ package fabric.worker.remote;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.List;
+import java.util.Collection;
 
 import fabric.common.ClassRef;
 import fabric.common.ObjectGroup;
@@ -217,9 +217,9 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
    * Notifies the worker of updates.
    */
   public void notifyObjectUpdates(String store, LongKeyMap<ObjectGlob> globs,
-      LongSet updatedOnums, List<ObjectGroup> groups,
+      LongSet updatedOnums, Collection<ObjectGroup> groups,
       LongKeyMap<LongSet> associatedOnums) {
-    send(new ObjectUpdateMessage(store, globs, updatedOnums, groups,
+    sendAsync(new ObjectUpdateMessage(store, globs, updatedOnums, groups,
         associatedOnums));
   }
 
@@ -243,8 +243,8 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     return send(subSocketFactory, message);
   }
 
-  private void send(AsyncMessage message) {
-    send(subSocketFactory, message);
+  private void sendAsync(AsyncMessage message) {
+    sendAsync(subSocketFactory, message);
   }
 
   // ////////////////////////////////

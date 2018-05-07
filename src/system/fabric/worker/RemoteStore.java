@@ -368,7 +368,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   @Override
   public void sendExtensions(final LongSet extensions,
       final java.util.Map<RemoteStore, Collection<SerializedObject>> updates) {
-    send(Worker.getWorker().authToStore,
+    sendAsync(Worker.getWorker().authToStore,
         new ContractExtensionMessage(extensions, updates));
   }
 
@@ -541,7 +541,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    * Send an unsubscribe message.
    */
   public void unsubscribe(LongSet onums) {
-    send(Worker.getWorker().authToStore, new UnsubscribeMessage(onums));
+    sendAsync(Worker.getWorker().authToStore, new UnsubscribeMessage(onums));
   }
 
   // ////////////////////////////////

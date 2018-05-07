@@ -67,6 +67,7 @@ public abstract class AbstractMessageServer
             } catch (IOException e) {
               throw new InternalError(e);
             }
+            final RemoteIdentity<RemoteWorker> clientF = client;
 
             try {
               // Handle the connection.
@@ -88,13 +89,19 @@ public abstract class AbstractMessageServer
 
                   out.flush();
                 } else {
-                  AsyncMessage message = AsyncMessage.receive(in, client);
-                  try {
-                    message.dispatch(client, AbstractMessageServer.this);
-                  } catch (ProtocolError e) {
-                    // TODO
-                    throw new InternalError(e);
-                  }
+                  final AsyncMessage message = AsyncMessage.receive(in, client);
+                  // Run in a new thread, we don't need to block to respond.
+                  Threading.getPool().submit(new Runnable() {
+                    @Override
+                    public void run() {
+                      try {
+                        message.dispatch(clientF, AbstractMessageServer.this);
+                      } catch (ProtocolError e) {
+                        // TODO
+                        throw new InternalError(e);
+                      }
+                    }
+                  });
                 }
               }
             } catch (EOFException e) {

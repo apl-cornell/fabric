@@ -97,7 +97,7 @@ public abstract class RemoteNode<This extends RemoteNode<This>>
     }
   }
 
-  protected void send(SubSocketFactory<This> subSocketFactory,
+  protected void sendAsync(SubSocketFactory<This> subSocketFactory,
       AsyncMessage message) {
     try {
       SubSocket<This> socket = getSocket(subSocketFactory);

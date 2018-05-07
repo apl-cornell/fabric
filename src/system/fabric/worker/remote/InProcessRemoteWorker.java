@@ -3,10 +3,11 @@ package fabric.worker.remote;
 import java.security.InvalidKeyException;
 import java.security.PublicKey;
 import java.security.SignatureException;
-import java.util.List;
+import java.util.Collection;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.NotImplementedException;
@@ -116,13 +117,29 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
-  public void notifyObjectUpdates(String storeName,
-      LongKeyMap<ObjectGlob> updates, LongSet updatedOnums,
-      List<ObjectGroup> groups, LongKeyMap<LongSet> associatedOnums) {
+  public void notifyObjectUpdates(final String storeName,
+      final LongKeyMap<ObjectGlob> updates, final LongSet updatedOnums,
+      final Collection<ObjectGroup> groups,
+      final LongKeyMap<LongSet> associatedOnums) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        notifyObjectUpdatesSync(storeName, updates, updatedOnums, groups,
+            associatedOnums);
+      }
+    });
+  }
+
+  /**
+   * Run an update notification in the current thread.  This is intended to
+   * avoid an unnecessary Thread fork when handling an ObjectUpdateMessage from
+   * the network, which already creates a separate thread.
+   */
+  public void notifyObjectUpdatesSync(final String storeName,
+      final LongKeyMap<ObjectGlob> updates, final LongSet updatedOnums,
+      final Collection<ObjectGroup> groups,
+      final LongKeyMap<LongSet> associatedOnums) {
     LongSet response = new LongHashSet(updates.keySet());
-    for (LongSet s : associatedOnums.values()) {
-      response.addAll(s);
-    }
     response.addAll(updatedOnums);
 
     RemoteStore store = worker.getStore(storeName);
@@ -139,8 +156,8 @@ public class InProcessRemoteWorker extends RemoteWorker {
             response.remove(onum);
             // Also force the updates for associated onums.
             if (associatedOnums.containsKey(onum)) {
-              for (LongIterator iter = associatedOnums.get(onum).iterator(); iter
-                  .hasNext();) {
+              for (LongIterator iter =
+                  associatedOnums.get(onum).iterator(); iter.hasNext();) {
                 long associated = iter.next();
                 if (response.contains(associated)) {
                   updates.get(associated).verifySignature(storeKey);
@@ -169,7 +186,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   LongSet notifyObjectUpdates(RemoteStore store, LongSet updatedOnums,
-      List<ObjectGroup> updates, LongKeyMap<LongSet> associatedOnums) {
+      Collection<ObjectGroup> updates, LongKeyMap<LongSet> associatedOnums) {
     LongKeyMap<ObjectGroup> gMap = new LongKeyHashMap<>();
     for (ObjectGroup group : updates) {
       for (LongIterator iter = group.objects().keySet().iterator(); iter

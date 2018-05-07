@@ -83,7 +83,7 @@ public abstract class AsyncMessage {
       m = messageType.parse(in);
 
       Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
-          "Received {0} from {1}", messageType, client);
+          "Received async message {0} from {1}", messageType, client);
 
       return m;
 
