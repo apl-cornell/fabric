@@ -174,27 +174,33 @@ public class SubscriptionManager {
               globs.put(glob, new LongHashSet());
             }
             globs.get(glob).add(onum);
+            LongSet trueOnums = new LongHashSet(curAssociatedOnums);
             for (LongIterator iter = curAssociatedOnums.iterator(); iter
                 .hasNext();) {
               long associated = iter.next();
+              // Subscribe the worker to the associated, if it wasn't already.
+              subscribe(associated, worker, true);
+              if (!trueOnums.contains(associated)) continue;
+              // Don't bother packaging each onum separately
               GroupContainer associatedContainer =
                   tm.getGroupContainer(associated);
-              // Don't bother packaging each onum separately
-              curAssociatedOnums.removeAll(associatedContainer.onums);
-              curAssociatedOnums.add(associated);
+              trueOnums.removeAll(associatedContainer.onums);
+              trueOnums.add(associated);
               ObjectGlob associatedGlob = associatedContainer.getGlob();
               if (!globs.containsKey(associatedGlob)) {
                 globs.put(associatedGlob, new LongHashSet());
               }
-              // TODO: add _all_ associated onums to the set.
               globs.get(associatedGlob).add(associated);
             }
+            curAssociatedOnums = trueOnums;
           } else {
             onumsSent.add(onum);
             groups.add(groupContainer.getGroup(worker.getPrincipal()));
             for (LongIterator iter = curAssociatedOnums.iterator(); iter
                 .hasNext();) {
               long associated = iter.next();
+              // Subscribe the worker to the associated, if it wasn't already.
+              subscribe(associated, worker, false);
               GroupContainer associatedContainer =
                   tm.getGroupContainer(associated);
               groups.add(associatedContainer.getGroup(worker.getPrincipal()));
