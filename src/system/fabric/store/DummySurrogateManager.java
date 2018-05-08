@@ -6,7 +6,7 @@ package fabric.store;
  */
 public class DummySurrogateManager implements SurrogateManager {
 
-  public DummySurrogateManager() {
+  public DummySurrogateManager(final TransactionManager tm) {
   }
 
   @Override

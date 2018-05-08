@@ -113,8 +113,7 @@ class Store extends MessageToStoreHandler {
     this.node = node;
     this.os = loadStore();
     this.tm = new TransactionManager(this.os);
-    //this.sm = new SimpleSurrogateManager(tm);
-    this.sm = new DummySurrogateManager();
+    this.sm = loadSurrogateManager();
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -150,6 +149,21 @@ class Store extends MessageToStoreHandler {
       return os;
     } catch (Exception exc) {
       throw new InternalError("could not initialize store", exc);
+    }
+  }
+
+  private SurrogateManager loadSurrogateManager() {
+    try {
+      // construct SurrogateManager with class specified by properties file
+      final Class<?> smClass = Class.forName(config.surrogateManagerClass);
+      final Constructor<?> smCons =
+          smClass.getConstructor(TransactionManager.class);
+      final SurrogateManager sm =
+          (SurrogateManager) smCons.newInstance(this.tm);
+
+      return sm;
+    } catch (Exception exc) {
+      throw new InternalError("could not initialize surrogate manager", exc);
     }
   }
 
