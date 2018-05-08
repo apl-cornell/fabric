@@ -4,6 +4,7 @@ import java.security.InvalidKeyException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.Collection;
+import java.util.Map;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -118,7 +119,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public void notifyObjectUpdates(final String storeName,
-      final LongKeyMap<ObjectGlob> updates, final LongSet updatedOnums,
+      final Map<ObjectGlob, LongSet> updates, final LongSet updatedOnums,
       final Collection<ObjectGroup> groups) {
     Threading.getPool().submit(new Runnable() {
       @Override
@@ -134,23 +135,32 @@ public class InProcessRemoteWorker extends RemoteWorker {
    * the network, which already creates a separate thread.
    */
   public void notifyObjectUpdatesSync(final String storeName,
-      final LongKeyMap<ObjectGlob> updates, final LongSet updatedOnums,
+      final Map<ObjectGlob, LongSet> updates, final LongSet updatedOnums,
       final Collection<ObjectGroup> groups) {
-    LongSet response = new LongHashSet(updates.keySet());
+    LongSet response = new LongHashSet();
+    for (LongSet value : updates.values()) {
+      response.addAll(value);
+    }
     response.addAll(updatedOnums);
 
     RemoteStore store = worker.getStore(storeName);
     PublicKey storeKey = store.getPublicKey();
-    for (LongKeyMap.Entry<ObjectGlob> entry : updates.entrySet()) {
-      long onum = entry.getKey();
-      // Skip over elements we've managed to handle below.
-      if (response.contains(onum)) {
-        ObjectGlob glob = entry.getValue();
+    for (ObjectGlob glob : updates.keySet()) {
+      LongSet onums = updates.get(glob);
+      // Skip over elements we've already managed to handle.
+      boolean needsProcessing = false;
+      for (LongIterator iter = onums.iterator(); iter.hasNext();) {
+        if (response.contains(iter.next())) {
+          needsProcessing = true;
+          break;
+        }
+      }
+      if (needsProcessing) {
         try {
           glob.verifySignature(storeKey);
 
-          if (worker.updateCaches(store, onum, glob)) {
-            response.remove(onum);
+          if (worker.updateCaches(store, onums, glob)) {
+            response.removeAll(onums);
           }
         } catch (InvalidKeyException e) {
           e.printStackTrace();

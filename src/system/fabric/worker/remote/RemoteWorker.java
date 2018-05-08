@@ -3,6 +3,7 @@ package fabric.worker.remote;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
 
 import fabric.common.ClassRef;
 import fabric.common.ObjectGroup;
@@ -215,7 +216,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   /**
    * Notifies the worker of updates.
    */
-  public void notifyObjectUpdates(String store, LongKeyMap<ObjectGlob> globs,
+  public void notifyObjectUpdates(String store, Map<ObjectGlob, LongSet> globs,
       LongSet updatedOnums, Collection<ObjectGroup> groups) {
     sendAsync(new ObjectUpdateMessage(store, globs, updatedOnums, groups));
   }

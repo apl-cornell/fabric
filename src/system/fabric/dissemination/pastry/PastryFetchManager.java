@@ -6,6 +6,7 @@ import java.util.Properties;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongSet;
 import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.Cache;
 import fabric.dissemination.DummyFetchManager;
@@ -60,9 +61,9 @@ public class PastryFetchManager implements FetchManager {
   }
 
   @Override
-  public boolean updateCaches(RemoteStore store, long onum,
+  public boolean updateCaches(RemoteStore store, LongSet onums,
       AbstractGlob<?> update) {
-    return node.disseminator.updateCaches(store, onum, update);
+    return node.disseminator.updateCaches(store, onums, update);
   }
 
 }

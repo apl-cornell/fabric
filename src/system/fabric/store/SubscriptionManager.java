@@ -1,5 +1,6 @@
 package fabric.store;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -14,8 +15,6 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyCache;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.dissemination.ObjectGlob;
 import fabric.store.db.GroupContainer;
@@ -138,7 +137,7 @@ public class SubscriptionManager {
     }
 
     protected void runGroup(LongSet onums) {
-      LongKeyMap<ObjectGlob> globs = new LongKeyHashMap<>();
+      Map<ObjectGlob, LongSet> globs = new HashMap<>();
       LongSet onumsSent = new LongHashSet();
       Set<ObjectGroup> groups = new HashSet<>();
       // Gather the updates.
@@ -165,7 +164,11 @@ public class SubscriptionManager {
           }
           groupContainer = tm.getGroupContainer(onum);
           if (isDissem) {
-            globs.put(onum, groupContainer.getGlob());
+            ObjectGlob glob = groupContainer.getGlob();
+            if (!globs.containsKey(glob)) {
+              globs.put(glob, new LongHashSet());
+            }
+            globs.get(glob).add(onum);
           } else {
             onumsSent.add(onum);
             groups.add(groupContainer.getGroup(worker.getPrincipal()));

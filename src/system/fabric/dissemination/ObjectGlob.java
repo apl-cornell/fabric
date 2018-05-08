@@ -9,6 +9,7 @@ import java.security.SignatureException;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.util.LongSet;
 import fabric.lang.security.Label;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
@@ -63,7 +64,8 @@ public class ObjectGlob extends AbstractGlob<ObjectGroup> {
   }
 
   @Override
-  public boolean updateCache(Cache dissemCache, RemoteStore store, long onum) {
-    return dissemCache.updateEntry(store, onum, this);
+  public boolean updateCache(Cache dissemCache, RemoteStore store,
+      LongSet onums) {
+    return dissemCache.updateEntry(store, onums, this);
   }
 }
