@@ -178,9 +178,9 @@ public class SubscriptionManager {
             for (LongIterator iter = curAssociatedOnums.iterator(); iter
                 .hasNext();) {
               long associated = iter.next();
+              if (!trueOnums.contains(associated)) continue;
               // Subscribe the worker to the associated, if it wasn't already.
               subscribe(associated, worker, true);
-              if (!trueOnums.contains(associated)) continue;
               // Don't bother packaging each onum separately
               GroupContainer associatedContainer =
                   tm.getGroupContainer(associated);
