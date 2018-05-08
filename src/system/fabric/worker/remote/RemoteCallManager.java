@@ -14,12 +14,12 @@ import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
-import fabric.messages.AsyncCallMessage;
 import fabric.messages.CallMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DirtyReadMessage;
 import fabric.messages.InterWorkerStalenessMessage;
 import fabric.messages.MessageToWorkerHandler;
+import fabric.messages.NonAtomicCallMessage;
 import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
@@ -159,9 +159,9 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public AsyncCallMessage.Response handle(
+  public NonAtomicCallMessage.Response handle(
       final RemoteIdentity<RemoteWorker> client,
-      final AsyncCallMessage remoteCallMessage) throws RemoteCallException {
+      final NonAtomicCallMessage remoteCallMessage) throws RemoteCallException {
     // We assume that this thread's transaction manager is free (i.e., it's not
     // managing any tranaction's log) at the start of the method and ensure that
     // it will be free at the end of the method.
@@ -169,15 +169,15 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     // XXX TODO Security checks.
 
     try {
-      TransactionManager.getInstance().startAsyncCall();
+      TransactionManager.getInstance().startNonAtomicCall();
 
       // Execute the requested method.
       Object result = runRemoteCall(client, remoteCallMessage);
 
       // Return the result.
       OidKeyHashMap<Integer> remoteWrites =
-          TransactionManager.getInstance().finishAsyncCall();
-      return new AsyncCallMessage.Response(result, remoteWrites);
+          TransactionManager.getInstance().finishNonAtomicCall();
+      return new NonAtomicCallMessage.Response(result, remoteWrites);
     } catch (RuntimeException e) {
       Throwable cause = e.getCause();
       if (cause instanceof IllegalArgumentException

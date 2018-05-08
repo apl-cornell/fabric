@@ -40,7 +40,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecurityCache;
-import fabric.messages.AsyncCallMessage;
+import fabric.messages.NonAtomicCallMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
@@ -118,7 +118,7 @@ public final class TransactionManager {
   public final TxnStats stats = new TxnStats();
 
   /**
-   * If this thread is handling an {@link AsyncCallMessage}, this is the list of
+   * If this thread is handling an {@link NonAtomicCallMessage}, this is the list of
    * oids for which writes have committed.
    */
   protected OidKeyHashMap<Integer> committedWrites;
@@ -1348,18 +1348,18 @@ public final class TransactionManager {
   }
 
   /**
-   * Starts tracking for a new async call being handled in this thread.
+   * Starts tracking for a new nonatomic call being handled in this thread.
    * Initializes a new committedWrites list.
    */
-  public void startAsyncCall() {
+  public void startNonAtomicCall() {
     if (committedWrites == null) committedWrites = new OidKeyHashMap<>();
   }
 
   /**
-   * Finishes tracking for a new async call being handled in this thread.
+   * Finishes tracking for a new nonatomic call being handled in this thread.
    * @return The list of oids for which writes have been committed.
    */
-  public OidKeyHashMap<Integer> finishAsyncCall() {
+  public OidKeyHashMap<Integer> finishNonAtomicCall() {
     OidKeyHashMap<Integer> writes = committedWrites;
     committedWrites = null;
     return writes;

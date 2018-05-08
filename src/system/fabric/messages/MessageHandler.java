@@ -72,8 +72,9 @@ public interface MessageHandler {
   public DirtyReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       DirtyReadMessage msg) throws ProtocolError, AccessException;
 
-  public AsyncCallMessage.Response handle(RemoteIdentity<RemoteWorker> client,
-      AsyncCallMessage msg) throws ProtocolError, RemoteCallException;
+  public NonAtomicCallMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, NonAtomicCallMessage msg)
+      throws ProtocolError, RemoteCallException;
 
   public RemoteCallMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       RemoteCallMessage msg) throws ProtocolError, RemoteCallException;
