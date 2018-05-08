@@ -89,8 +89,8 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
   }
 
   @Override
-  public final fabric.messages.AsyncCallMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, AsyncCallMessage msg)
+  public final fabric.messages.NonAtomicCallMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, NonAtomicCallMessage msg)
       throws ProtocolError {
     throw error(msg);
   }

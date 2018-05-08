@@ -25,8 +25,8 @@ import fabric.worker.remote.RemoteWorker;
 /**
  * A remote call that does not happen in a single top-level transaction.
  */
-public class AsyncCallMessage
-    extends Message<AsyncCallMessage.Response, RemoteCallException>
+public class NonAtomicCallMessage
+    extends Message<NonAtomicCallMessage.Response, RemoteCallException>
     implements CallMessage {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
@@ -46,9 +46,9 @@ public class AsyncCallMessage
    * @param args
    *          The arguments to the method.
    */
-  public AsyncCallMessage(ClassRef receiverType, _Proxy receiver,
+  public NonAtomicCallMessage(ClassRef receiverType, _Proxy receiver,
       String methodName, Class<?>[] parameterTypes, Object[] args) {
-    super(MessageType.ASYNC_CALL, RemoteCallException.class);
+    super(MessageType.NONATOMIC_CALL, RemoteCallException.class);
 
     if (parameterTypes == null ? args != null
         : parameterTypes.length != args.length)
@@ -121,8 +121,8 @@ public class AsyncCallMessage
   }
 
   /* readMessage */
-  protected AsyncCallMessage(DataInput in) throws IOException {
-    super(MessageType.ASYNC_CALL, RemoteCallException.class);
+  protected NonAtomicCallMessage(DataInput in) throws IOException {
+    super(MessageType.NONATOMIC_CALL, RemoteCallException.class);
 
     byte[] buf = new byte[in.readInt()];
     in.readFully(buf);

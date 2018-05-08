@@ -22,13 +22,13 @@ import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
-import fabric.messages.AsyncCallMessage;
 import fabric.messages.AsyncMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DirtyReadMessage;
 import fabric.messages.InterWorkerStalenessMessage;
 import fabric.messages.Message;
 import fabric.messages.Message.NoException;
+import fabric.messages.NonAtomicCallMessage;
 import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
@@ -109,8 +109,8 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
               .getClass().getEnclosingClass();
       ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
 
-      AsyncCallMessage.Response response =
-          send(new AsyncCallMessage(receiverClassRef, receiver, methodName,
+      NonAtomicCallMessage.Response response =
+          send(new NonAtomicCallMessage(receiverClassRef, receiver, methodName,
               parameterTypes, args));
 
       // Evict modified objects from the cache.

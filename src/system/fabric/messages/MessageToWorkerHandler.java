@@ -59,8 +59,8 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
       throws RemoteCallException;
 
   @Override
-  public abstract AsyncCallMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, AsyncCallMessage msg)
+  public abstract NonAtomicCallMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, NonAtomicCallMessage msg)
       throws RemoteCallException;
 
   @Override
