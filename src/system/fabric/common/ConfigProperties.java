@@ -35,6 +35,7 @@ public class ConfigProperties {
   public final String hostname;
 
   public final String backendClass;
+  public final String surrogateManagerClass;
   public final int storePort;
 
   public final String homeStore;
@@ -144,6 +145,9 @@ public class ConfigProperties {
         Integer.parseInt(removeProperty(p, "fabric.store.port", "3472"));
     this.backendClass =
         removeProperty(p, "fabric.store.db.class", "fabric.store.db.BdbDB");
+    this.surrogateManagerClass =
+        removeProperty(p, "fabric.store.SurrogateManager.class",
+            "fabric.store.DummySurrogateManager");
 
     //
     // Collect dissemination properties while printing other unused properties.
