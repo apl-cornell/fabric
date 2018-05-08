@@ -3,14 +3,38 @@ package fabric.dissemination.pastry;
 import static fabric.common.Logging.MISC_LOGGER;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import fabric.common.FastSerializable;
+import fabric.common.Logging;
+import fabric.common.Threading;
+import fabric.common.util.Cache;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongSet;
+import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Pair;
+import fabric.dissemination.AbstractGlob;
+import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.pastry.messages.AbstractUpdate;
+import fabric.dissemination.pastry.messages.AggregateInterval;
+import fabric.dissemination.pastry.messages.Fetch;
+import fabric.dissemination.pastry.messages.RawMessageType;
+import fabric.dissemination.pastry.messages.Replicate;
+import fabric.dissemination.pastry.messages.ReplicateInterval;
+import fabric.worker.RemoteStore;
+import fabric.worker.Worker;
 
 import rice.Continuation;
 import rice.Executable;
@@ -30,21 +54,6 @@ import rice.pastry.commonapi.PastryIdFactory;
 import rice.pastry.leafset.LeafSet;
 import rice.pastry.routing.RouteSet;
 import rice.pastry.routing.RoutingTable;
-import fabric.common.FastSerializable;
-import fabric.common.Logging;
-import fabric.common.util.Cache;
-import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
-import fabric.dissemination.AbstractGlob;
-import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.pastry.messages.AbstractUpdate;
-import fabric.dissemination.pastry.messages.AggregateInterval;
-import fabric.dissemination.pastry.messages.Fetch;
-import fabric.dissemination.pastry.messages.RawMessageType;
-import fabric.dissemination.pastry.messages.Replicate;
-import fabric.dissemination.pastry.messages.ReplicateInterval;
-import fabric.worker.RemoteStore;
-import fabric.worker.Worker;
 
 /**
  * A pastry application that implements the functionality of a Fabric
@@ -325,49 +334,76 @@ public class Disseminator implements Application {
    * @return true iff there was a dissemination-cache entry for the given oid or
    *          if the update was forwarded to another node.
    */
-  <UpdateType extends FastSerializable> boolean updateCaches(RemoteStore store,
-      long onum, AbstractGlob<UpdateType> update) {
+  <UpdateType extends FastSerializable> boolean updateCaches(
+      final RemoteStore store, LongSet onums,
+      final AbstractGlob<UpdateType> update) {
     // Update the local caches.
-    boolean result = update.updateCache(cache, store, onum);
+    final boolean localResult = update.updateCache(cache, store, onums);
 
-    // Find the set of subscribers.
-    Set<NodeHandle> subscribers = subscriptions.get(new Pair<>(store, onum));
-    if (subscribers != null) {
-      int numSubscribers;
-      BlockingQueue<AbstractUpdate.Reply> replyQueue;
-      synchronized (subscribers) {
-        numSubscribers = subscribers.size();
-        if (numSubscribers == 0) return result;
+    // Find the sets of subscribers and forward the message to them.
+    List<Future<Boolean>> futures = new ArrayList<>();
+    for (LongIterator iter = onums.iterator(); iter.hasNext();) {
+      final long onum = iter.next();
+      // TODO: we should batch these forwarding messages rather than sending
+      // separate messages for each onum.
+      futures
+          .add(Threading.getPool().submit(new Threading.NamedCallable<Boolean>(
+              "Dissemination forwarding for " + onum) {
+            @Override
+            public Boolean callImpl() {
+              Set<NodeHandle> subscribers =
+                  subscriptions.get(new Pair<>(store, onum));
+              if (subscribers != null) {
+                int numSubscribers;
+                BlockingQueue<AbstractUpdate.Reply> replyQueue;
+                synchronized (subscribers) {
+                  numSubscribers = subscribers.size();
+                  if (numSubscribers == 0) return localResult;
 
-        replyQueue = new ArrayBlockingQueue<>(numSubscribers);
+                  replyQueue = new ArrayBlockingQueue<>(numSubscribers);
 
-        // Forward to subscribers.
-        for (NodeHandle subscriber : subscribers) {
-          Id id = idf.buildRandomId(rand);
-          AbstractUpdate<UpdateType> msg =
-              AbstractUpdate.getInstance(localHandle(), id, store.name(), onum,
-                  update);
+                  // Forward to subscribers.
+                  for (NodeHandle subscriber : subscribers) {
+                    Id id = idf.buildRandomId(rand);
+                    AbstractUpdate<UpdateType> msg = AbstractUpdate.getInstance(
+                        localHandle(), id, store.name(), onum, update);
 
-          // TODO: Set up a timeout mechanism that removes entries for dead nodes.
-          outstandingUpdates.put(id, replyQueue);
+                    // TODO: Set up a timeout mechanism that removes entries for dead nodes.
+                    outstandingUpdates.put(id, replyQueue);
 
-          route(null, msg, subscriber);
-        }
+                    route(null, msg, subscriber);
+                  }
+                }
+
+                // Wait until we know we're subscribed, we get all replies back, or our
+                // update messages time out.
+                // TODO: Set up a timeout mechanism that unsubscribes dead nodes.
+                for (int i = 0; !localResult && i < numSubscribers; i++) {
+                  try {
+                    // Wait at most one second for a reply.
+                    AbstractUpdate.Reply reply =
+                        replyQueue.poll(1, TimeUnit.SECONDS);
+                    return reply != null && reply.resubscribe();
+                  } catch (InterruptedException e) {
+                    Logging.logIgnoredInterruptedException(e);
+                  }
+                }
+              }
+              return localResult;
+            }
+          }));
+    }
+
+    boolean result = localResult;
+    for (Future<Boolean> f : futures) {
+      try {
+        result |= f.get();
+      } catch (ExecutionException e) {
+        throw new InternalError(e);
+      } catch (InterruptedException e) {
+        Logging.logIgnoredInterruptedException(e);
+        // TODO anything else?
       }
-
-      // Wait until we know we're subscribed, we get all replies back, or our
-      // update messages time out.
-      // TODO: Set up a timeout mechanism that unsubscribes dead nodes.
-      for (int i = 0; !result && i < numSubscribers; i++) {
-        try {
-          // Wait at most one second for a reply.
-          AbstractUpdate.Reply reply = replyQueue.poll(1, TimeUnit.SECONDS);
-          result = reply != null && reply.resubscribe();
-        } catch (InterruptedException e) {
-          Logging.logIgnoredInterruptedException(e);
-        }
-      }
-
     }
 
     return result;
@@ -385,9 +421,11 @@ public class Disseminator implements Application {
         Worker worker = Worker.getWorker();
         RemoteStore store = worker.getStore(msg.store());
         long onum = msg.onum();
+        LongSet singleton = new LongHashSet();
+        singleton.add(onum);
         AbstractGlob<UpdateType> update = msg.update();
 
-        boolean result = updateCaches(store, onum, update);
+        boolean result = updateCaches(store, singleton, update);
         AbstractUpdate.Reply reply =
             new AbstractUpdate.Reply(localHandle(), msg, result);
         route(null, reply, msg.sender());

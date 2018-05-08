@@ -2,6 +2,7 @@ package fabric.dissemination;
 
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
+import fabric.common.util.LongSet;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.RemoteStore;
 
@@ -34,9 +35,10 @@ public interface FetchManager {
   /**
    * Updates the dissemination and worker caches with the given glob.
    *
-   * @return true iff there was a dissemination-cache entry for the given oid.
+   * @return true iff there was a dissemination-cache entry for any of the given
+   * oids.
    */
-  public boolean updateCaches(RemoteStore store, long onum,
+  public boolean updateCaches(RemoteStore store, LongSet onums,
       AbstractGlob<?> update);
 
 }

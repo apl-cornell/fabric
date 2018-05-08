@@ -26,6 +26,7 @@ import javax.crypto.SecretKey;
 import fabric.common.Crypto;
 import fabric.common.FastSerializable;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongSet;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
 import fabric.worker.RemoteStore;
@@ -307,7 +308,7 @@ public abstract class AbstractGlob<Payload extends FastSerializable>
    * @return true iff either cache was changed.
    */
   public abstract boolean updateCache(Cache dissemCache, RemoteStore store,
-      long onum);
+      LongSet onums);
 
   @Override
   public int hashCode() {

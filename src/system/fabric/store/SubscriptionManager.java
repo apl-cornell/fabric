@@ -1,5 +1,6 @@
 package fabric.store;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -138,7 +139,7 @@ public class SubscriptionManager {
     }
 
     protected void runGroup(LongSet onums) {
-      LongKeyMap<ObjectGlob> globs = new LongKeyHashMap<>();
+      Map<ObjectGlob, LongSet> globs = new HashMap<>();
       LongSet onumsSent = new LongHashSet();
       Set<ObjectGroup> groups = new HashSet<>();
       LongKeyMap<LongSet> associatedOnums = new LongKeyHashMap<>();
@@ -168,18 +169,25 @@ public class SubscriptionManager {
           LongSet curAssociatedOnums =
               tm.getAssociatedOnumsExcluded(onum, onums);
           if (isDissem) {
-            globs.put(onum, groupContainer.getGlob());
+            ObjectGlob glob = groupContainer.getGlob();
+            if (!globs.containsKey(glob)) {
+              globs.put(glob, new LongHashSet());
+            }
+            globs.get(glob).add(onum);
             for (LongIterator iter = curAssociatedOnums.iterator(); iter
                 .hasNext();) {
               long associated = iter.next();
               GroupContainer associatedContainer =
                   tm.getGroupContainer(associated);
               // Don't bother packaging each onum separately
-              // TODO: Check if we had this in another glob already and use that
-              // instead?
               curAssociatedOnums.removeAll(associatedContainer.onums);
               curAssociatedOnums.add(associated);
-              globs.put(associated, associatedContainer.getGlob());
+              ObjectGlob associatedGlob = associatedContainer.getGlob();
+              if (!globs.containsKey(associatedGlob)) {
+                globs.put(associatedGlob, new LongHashSet());
+              }
+              // TODO: add _all_ associated onums to the set.
+              globs.get(associatedGlob).add(associated);
             }
           } else {
             onumsSent.add(onum);

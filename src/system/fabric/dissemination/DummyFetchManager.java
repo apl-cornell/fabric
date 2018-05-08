@@ -3,6 +3,7 @@ package fabric.dissemination;
 import java.util.Properties;
 
 import fabric.common.ObjectGroup;
+import fabric.common.util.LongSet;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 
@@ -34,9 +35,9 @@ public class DummyFetchManager implements FetchManager {
   }
 
   @Override
-  public boolean updateCaches(RemoteStore store, long onum,
+  public boolean updateCaches(RemoteStore store, LongSet onums,
       AbstractGlob<?> update) {
-    return update.updateCache(cache, store, onum);
+    return update.updateCache(cache, store, onums);
   }
 
 }

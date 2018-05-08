@@ -5,6 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.ProtocolError;
@@ -26,7 +28,7 @@ public class ObjectUpdateMessage extends AsyncMessage {
   // ////////////////////////////////////////////////////////////////////////////
 
   public final String store;
-  public final LongKeyMap<ObjectGlob> globs;
+  public final Map<ObjectGlob, LongSet> globs;
   public final LongSet onums;
   public final Collection<ObjectGroup> groups;
   public final LongKeyMap<LongSet> associatedOnums;
@@ -37,15 +39,15 @@ public class ObjectUpdateMessage extends AsyncMessage {
    * @param store
    *          the store from which the notification originated.
    * @param globs
-   *          the set of encrypted object updates, keyed by the head object's
-   *          onum.
+   *          the set of encrypted object updates, mapped to the set of onums
+   *          contained that the store believes the worker is subscribed to.
    * @param onums
    *          the unencrypted onums being updated to which the worker has
    *          subscribed.
    * @param groups
    *          the set of object updates.
    */
-  public ObjectUpdateMessage(String store, LongKeyMap<ObjectGlob> globs,
+  public ObjectUpdateMessage(String store, Map<ObjectGlob, LongSet> globs,
       LongSet onums, Collection<ObjectGroup> groups,
       LongKeyMap<LongSet> associatedOnums) {
     super(MessageType.OBJECT_UPDATE);
@@ -77,9 +79,12 @@ public class ObjectUpdateMessage extends AsyncMessage {
 
     // Globs
     out.writeInt(globs.size());
-    for (LongKeyMap.Entry<ObjectGlob> entry : globs.entrySet()) {
-      out.writeLong(entry.getKey());
-      entry.getValue().write(out);
+    for (Map.Entry<ObjectGlob, LongSet> entry : globs.entrySet()) {
+      entry.getKey().write(out);
+      out.writeInt(entry.getValue().size());
+      for (LongIterator iter = entry.getValue().iterator(); iter.hasNext();) {
+        out.writeLong(iter.next());
+      }
     }
 
     // Onums
@@ -115,10 +120,15 @@ public class ObjectUpdateMessage extends AsyncMessage {
 
     // Globs
     size = in.readInt();
-    globs = new LongKeyHashMap<>(size);
+    globs = new HashMap<>(size);
     for (int i = 0; i < size; i++) {
-      long key = in.readLong();
-      globs.put(key, new ObjectGlob(in));
+      ObjectGlob key = new ObjectGlob(in);
+      int size2 = in.readInt();
+      LongSet values = new LongHashSet(size2);
+      for (int j = 0; j < size2; j++) {
+        values.add(in.readLong());
+      }
+      globs.put(key, values);
     }
 
     // Onums

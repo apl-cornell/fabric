@@ -13,7 +13,9 @@ import java.util.logging.Level;
 import fabric.common.Logging;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.worker.RemoteStore;
@@ -256,15 +258,18 @@ public class Cache {
    *
    * @return true iff either of the caches was changed.
    */
-  public boolean updateEntry(RemoteStore store, long onum, ObjectGlob g) {
+  public boolean updateEntry(RemoteStore store, LongSet onums, ObjectGlob g) {
     // Update the local worker's cache.
     // XXX What happens if the worker isn't trusted to decrypt the glob?
-    boolean workerCacheUpdated =
-        Worker.getWorker().updateCache(store, g.decrypt());
+    boolean updated = Worker.getWorker().updateCache(store, g.decrypt());
 
-    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
+    for (LongIterator iter = onums.iterator(); iter.hasNext();) {
+      long onum = iter.next();
+      Pair<RemoteStore, Long> key = new Pair<>(store, onum);
+      updated |= put(key, g, true) != null;
+    }
 
-    return put(key, g, true) != null || workerCacheUpdated;
+    return updated;
   }
 
   /**

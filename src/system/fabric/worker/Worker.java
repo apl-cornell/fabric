@@ -401,9 +401,9 @@ public final class Worker {
    *
    * @return true iff either of the caches were updated.
    */
-  public boolean updateCaches(RemoteStore store, long onum,
+  public boolean updateCaches(RemoteStore store, LongSet onums,
       AbstractGlob<?> update) {
-    return fetchManager.updateCaches(store, onum, update);
+    return fetchManager.updateCaches(store, onums, update);
   }
 
   /**

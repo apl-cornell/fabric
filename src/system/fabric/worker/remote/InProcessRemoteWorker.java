@@ -4,6 +4,7 @@ import java.security.InvalidKeyException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.Collection;
+import java.util.Map;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -118,7 +119,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public void notifyObjectUpdates(final String storeName,
-      final LongKeyMap<ObjectGlob> updates, final LongSet updatedOnums,
+      final Map<ObjectGlob, LongSet> updates, final LongSet updatedOnums,
       final Collection<ObjectGroup> groups,
       final LongKeyMap<LongSet> associatedOnums) {
     Threading.getPool().submit(new Runnable() {
@@ -136,39 +137,37 @@ public class InProcessRemoteWorker extends RemoteWorker {
    * the network, which already creates a separate thread.
    */
   public void notifyObjectUpdatesSync(final String storeName,
-      final LongKeyMap<ObjectGlob> updates, final LongSet updatedOnums,
+      final Map<ObjectGlob, LongSet> updates, final LongSet updatedOnums,
       final Collection<ObjectGroup> groups,
       final LongKeyMap<LongSet> associatedOnums) {
-    LongSet response = new LongHashSet(updates.keySet());
+    LongSet response = new LongHashSet();
+    for (LongSet value : updates.values()) {
+      response.addAll(value);
+    }
     response.addAll(updatedOnums);
 
+    LongSet processed = new LongHashSet();
     RemoteStore store = worker.getStore(storeName);
     PublicKey storeKey = store.getPublicKey();
-    for (LongKeyMap.Entry<ObjectGlob> entry : updates.entrySet()) {
-      long onum = entry.getKey();
-      // Skip over elements we've managed to handle below.
-      if (response.contains(onum)) {
-        ObjectGlob glob = entry.getValue();
+    // Map from onums to globs, to use to force associated onum updates.
+    LongKeyMap<ObjectGlob> gMap = new LongKeyHashMap<>();
+    for (ObjectGlob glob : updates.keySet()) {
+      LongSet onums = updates.get(glob);
+      // Skip over elements we've already managed to handle.
+      boolean needsProcessing = false;
+      for (LongIterator iter = onums.iterator(); iter.hasNext();) {
+        long onum = iter.next();
+        if (!processed.contains(onum)) {
+          needsProcessing = true;
+        }
+        gMap.put(onum, glob);
+      }
+      if (needsProcessing) {
         try {
           glob.verifySignature(storeKey);
 
-          if (worker.updateCaches(store, onum, glob)) {
-            response.remove(onum);
-            // Also force the updates for associated onums.
-            if (associatedOnums.containsKey(onum)) {
-              for (LongIterator iter =
-                  associatedOnums.get(onum).iterator(); iter.hasNext();) {
-                long associated = iter.next();
-                if (response.contains(associated)) {
-                  updates.get(associated).verifySignature(storeKey);
-                  for (SerializedObject obj : updates.get(associated).decrypt()
-                      .objects().values()) {
-                    store.forceCache(obj);
-                  }
-                  response.remove(associated);
-                }
-              }
-            }
+          if (worker.updateCaches(store, onums, glob)) {
+            processed.addAll(onums);
           }
         } catch (InvalidKeyException e) {
           e.printStackTrace();
@@ -178,6 +177,33 @@ public class InProcessRemoteWorker extends RemoteWorker {
       }
     }
 
+    // Go back and make sure associated globs are forced into cache.
+    for (LongIterator iter = processed.iterator(); iter.hasNext();) {
+      long onum = iter.next();
+      if (associatedOnums.containsKey(onum)) {
+        for (LongIterator iter2 = associatedOnums.get(onum).iterator(); iter2
+            .hasNext();) {
+          long associated = iter2.next();
+          if (processed.contains(associated)) continue;
+          ObjectGlob associatedGlob = gMap.get(associated);
+          try {
+            associatedGlob.verifySignature(storeKey);
+            // TODO: Force dissem cache too.
+            for (SerializedObject obj : associatedGlob.decrypt().objects()
+                .values()) {
+              store.forceCache(obj);
+            }
+            processed.addAll(updates.get(associatedGlob));
+          } catch (InvalidKeyException e) {
+            e.printStackTrace();
+          } catch (SignatureException e) {
+            e.printStackTrace();
+          }
+        }
+      }
+    }
+
+    response.removeAll(processed);
     response.removeAll(
         notifyObjectUpdates(store, updatedOnums, groups, associatedOnums));
     if (!response.isEmpty()) {
