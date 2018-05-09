@@ -1,6 +1,7 @@
 package fabric.worker.transaction;
 
 import static fabric.common.Logging.WORKER_DEADLOCK_LOGGER;
+import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +27,7 @@ import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.Store;
+import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
@@ -409,6 +411,17 @@ public final class Log {
     }
 
     return result.values();
+  }
+
+  public void checkRetrySignal() throws TransactionRestartingException {
+    if (this.retrySignal != null) {
+      synchronized (this) {
+        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got retry signal",
+            this);
+
+        throw new TransactionRestartingException(this.retrySignal);
+      }
+    }
   }
 
   /**
@@ -802,6 +815,18 @@ public final class Log {
       result = result.parent;
     }
     return result;
+  }
+
+  /**
+   * Changes the waitsFor set to an empty set.  This is for waiting on objects
+   * which are not necessarily held by other worker transactions, such as
+   * waiting for a fetch to complete.
+   */
+  public void setWaitsFor(Object obj) {
+    synchronized (this.waitsFor) {
+      this.waitsFor.clear();
+      this.waitsOn = obj;
+    }
   }
 
   /**
