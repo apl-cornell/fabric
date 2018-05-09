@@ -10,7 +10,10 @@ import java.util.logging.Level;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
+import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyCache;
@@ -359,9 +362,35 @@ public final class ObjectCache {
   private final Store store;
   private final LongKeyCache<Entry> entries;
 
+  /**
+   * The set of fetch locks. Used to prevent threads from concurrently
+   * attempting to fetch the same object.
+   */
+  final ConcurrentLongKeyMap<FetchLock> fetchLocks;
+
+  static class FetchLock {
+    volatile ObjectCache.Entry object;
+    volatile AccessException error;
+  }
+
   ObjectCache(Store store) {
     this.store = store;
     this.entries = new LongKeyCache<>();
+    this.fetchLocks = new ConcurrentLongKeyHashMap<>();
+  }
+
+  /**
+   * Notify waiters that the onum has been fetched into cache.
+   */
+  void notifyFetched(long onum) {
+    FetchLock curLock = fetchLocks.get(onum);
+    if (curLock != null) {
+      synchronized (curLock) {
+        curLock.object = get(onum);
+        curLock.notifyAll();
+        fetchLocks.remove(onum, curLock);
+      }
+    }
   }
 
   /**
@@ -399,15 +428,19 @@ public final class ObjectCache {
   void put(Object._Impl impl) {
     long onum = impl.$getOnum();
 
-    while (true) {
-      Entry existingEntry = entries.putIfAbsent(onum, impl.$cacheEntry);
-      if (existingEntry == null) return;
+    try {
+      while (true) {
+        Entry existingEntry = entries.putIfAbsent(onum, impl.$cacheEntry);
+        if (existingEntry == null) return;
 
-      if (existingEntry.getImpl(false) != impl) {
-        throw new InternalError("Conflicting cache entry");
+        if (existingEntry.getImpl(false) != impl) {
+          throw new InternalError("Conflicting cache entry");
+        }
+
+        if (entries.replace(onum, existingEntry, impl.$cacheEntry)) return;
       }
-
-      if (entries.replace(onum, existingEntry, impl.$cacheEntry)) return;
+    } finally {
+      notifyFetched(onum);
     }
   }
 
@@ -443,6 +476,7 @@ public final class ObjectCache {
       return existingEntry;
     }
 
+    notifyFetched(obj.getOnum());
     return newEntry;
   }
 

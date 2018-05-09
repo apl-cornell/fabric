@@ -596,14 +596,7 @@ public final class TransactionManager {
   }
 
   private void checkRetrySignal() {
-    if (current.retrySignal != null) {
-      synchronized (current) {
-        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got retry signal",
-            current);
-
-        throw new TransactionRestartingException(current.retrySignal);
-      }
-    }
+    current.checkRetrySignal();
   }
 
   /**
