@@ -186,7 +186,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
           }
         }
       } finally {
-        curLog.clearWaitsFor();
+        if (curLog != null) curLog.clearWaitsFor();
       }
     }
 
