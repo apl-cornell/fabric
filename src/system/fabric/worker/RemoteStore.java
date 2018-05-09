@@ -173,16 +173,20 @@ public class RemoteStore extends RemoteNode<RemoteStore>
 
       // Wait for object to be fetched.
       Log curLog = TransactionManager.getInstance().getCurrentLog();
-      while (fetchLock.object == null && fetchLock.error == null) {
-        try {
-          if (curLog != null) {
-            curLog.checkRetrySignal();
-            curLog.setWaitsFor(lock);
+      try {
+        while (fetchLock.object == null && fetchLock.error == null) {
+          try {
+            if (curLog != null) {
+              curLog.checkRetrySignal();
+              curLog.setWaitsFor(lock);
+            }
+            lock.wait();
+          } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
-          lock.wait();
-        } catch (InterruptedException e) {
-          Logging.logIgnoredInterruptedException(e);
         }
+      } finally {
+        curLog.clearWaitsFor();
       }
     }
 
