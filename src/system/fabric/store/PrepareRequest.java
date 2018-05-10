@@ -35,18 +35,12 @@ public final class PrepareRequest {
    */
   public static abstract class ItemPrepare implements Comparable<ItemPrepare> {
     public static enum PrepareType {
-      READ(0, "READ"), WRITE(1, "WRITE"), CREATE(2, "CREATE");
+      READ("READ"), WRITE("WRITE"), CREATE("CREATE");
 
-      private final int level;
       private final String name;
 
-      PrepareType(int level, String name) {
-        this.level = level;
+      PrepareType(String name) {
         this.name = name;
-      }
-
-      public int level() {
-        return this.level;
       }
 
       @Override
@@ -127,7 +121,7 @@ public final class PrepareRequest {
     public int compareTo(ItemPrepare other) {
       int onumCompare = Long.compare(getOnum(), other.getOnum());
       if (onumCompare == 0) {
-        onumCompare = Integer.compare(type().level(), other.type().level());
+        onumCompare = Integer.compare(type().ordinal(), other.type().ordinal());
       }
       return onumCompare;
     }
