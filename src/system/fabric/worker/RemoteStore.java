@@ -162,7 +162,11 @@ public class RemoteStore extends RemoteNode<RemoteStore>
               try {
                 fetchObject(useDissem, onum);
               } catch (AccessException e) {
-                lock.error = e;
+                synchronized (lock) {
+                  lock.error = e;
+                  lock.notifyAll();
+                  cache.fetchLocks.remove(onum, lock);
+                }
               }
             } else {
               cache.notifyFetched(onum);
