@@ -1,5 +1,7 @@
 package fabric.common;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -43,9 +45,14 @@ public class Threading {
           }
         }
 
-        if (t != null)
-          Logging.MISC_LOGGER.log(Level.SEVERE, "Thread exited with exception",
+        if (t != null) {
+          StringWriter sw = new StringWriter();
+          PrintWriter pw = new PrintWriter(sw);
+          t.printStackTrace(pw);
+          Logging.MISC_LOGGER.log(Level.SEVERE,
+              "Thread exited with exception " + t + " stack:\n" + sw.toString(),
               t);
+        }
       }
     };
   }
@@ -72,8 +79,8 @@ public class Threading {
 
     @Override
     public synchronized Thread newThread(Runnable r) {
-      return new FabricThread.Impl(threadGroup, r, "Thread-pool thread "
-          + (nextID++));
+      return new FabricThread.Impl(threadGroup, r,
+          "Thread-pool thread " + (nextID++));
     }
   }
 
