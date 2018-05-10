@@ -221,15 +221,14 @@ public abstract class ObjectDB {
   protected final ConcurrentLongKeyMap<OidKeyHashMap<PendingTransaction>> pendingByTid;
 
   /**
-   * Maps onums to ObjectLocks. This should be recomputed from the set of
-   * prepared transactions when restoring from stable storage.
+   * Table holding locks for ongoing transactions.
    */
-  protected final ConcurrentLongKeyMap<ObjectLocks> rwLocks;
+  protected final ObjectLocksTable rwLocks;
 
   protected ObjectDB(String name, PrivateKey privateKey) {
     this.name = name;
     this.pendingByTid = new ConcurrentLongKeyHashMap<>();
-    this.rwLocks = new ConcurrentLongKeyHashMap<>();
+    this.rwLocks = new ObjectLocksTable();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
   }
 
@@ -280,7 +279,7 @@ public abstract class ObjectDB {
       throws TransactionPrepareFailedException {
     // First, lock the object.
     try {
-      objectLocksFor(onum).lockForRead(tid, worker);
+      rwLocks.acquireReadLock(onum, tid, worker);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
           "Object " + onum + " has been locked by an uncommitted transaction.");
@@ -329,7 +328,7 @@ public abstract class ObjectDB {
 
     // First, lock the object.
     try {
-      objectLocksFor(onum).lockForWrite(tid);
+      rwLocks.acquireWriteLock(onum, tid, worker);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
           "Object " + onum + " has been locked by an uncommitted transaction.");
@@ -377,18 +376,6 @@ public abstract class ObjectDB {
     }
 
     throw new InternalError("Unknown update mode.");
-  }
-
-  /**
-   * Obtains the ObjectLocks for a given onum, creating one if it doesn't
-   * already exist.
-   */
-  private ObjectLocks objectLocksFor(long onum) {
-    ObjectLocks newLocks = new ObjectLocks();
-    ObjectLocks curLocks = rwLocks.putIfAbsent(onum, newLocks);
-
-    if (curLocks != null) return curLocks;
-    return newLocks;
   }
 
   /**
@@ -513,72 +500,17 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Determines whether an onum has an outstanding uncommitted conflicting
-   * change or read. Outstanding uncommitted changes are always considered
-   * conflicting. Outstanding uncommitted reads are considered conflicting if
-   * they are by transactions whose tid is different from the one given.
-   *
-   * @param onum
-   *          the object number in question
-   */
-  public final boolean isPrepared(long onum, long tid) {
-    ObjectLocks locks = rwLocks.get(onum);
-
-    if (locks == null) return false;
-
-    synchronized (locks) {
-      if (locks.writeLock != null) return true;
-
-      if (locks.readLocks.isEmpty()) return false;
-      if (locks.readLocks.size() > 1) return true;
-      return !locks.readLocks.containsKey(tid);
-    }
-  }
-
-  /**
-   * Determines whether an onum has outstanding uncommitted changes.
-   *
-   * @param onum
-   *          the object number in question
-   * @return true if the object has been changed by a transaction that hasn't
-   *         been committed or rolled back.
-   */
-  public final boolean isWritten(long onum) {
-    ObjectLocks locks = rwLocks.get(onum);
-
-    if (locks == null) return false;
-
-    synchronized (locks) {
-      return locks.writeLock != null;
-    }
-  }
-
-  /**
    * Adjusts rwLocks to account for the fact that the given transaction is about
    * to be committed or aborted.
    */
   protected final void unpin(PendingTransaction tx) {
-    for (long readOnum : tx.reads) {
-      ObjectLocks locks = rwLocks.get(readOnum);
-      if (locks != null) {
-        synchronized (locks) {
-          locks.unlockForRead(tx.tid, tx.owner);
-
-          if (!locks.isLocked()) rwLocks.remove(readOnum, locks);
-        }
-      }
+    for (long onum : tx.reads) {
+      rwLocks.releaseReadLock(onum, tx.tid, tx.owner);
     }
 
     for (SerializedObject update : SysUtil.chain(tx.creates, tx.writes)) {
       long onum = update.getOnum();
-      ObjectLocks locks = rwLocks.get(onum);
-      if (locks != null) {
-        synchronized (locks) {
-          locks.unlockForWrite(tx.tid);
-
-          if (!locks.isLocked()) rwLocks.remove(onum, locks);
-        }
-      }
+      rwLocks.releaseWriteLock(onum, tx.tid, tx.owner);
     }
   }
 
