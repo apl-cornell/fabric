@@ -1,7 +1,5 @@
 package fabric.store.db;
 
-import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
-
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -13,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -295,15 +292,14 @@ public abstract class ObjectDB {
   protected final ConcurrentLongKeyMap<OidKeyHashMap<PendingTransaction>> pendingByTid;
 
   /**
-   * Maps onums to ObjectLocks. This should be recomputed from the set of
-   * prepared transactions when restoring from stable storage.
+   * Table holding locks for ongoing transactions.
    */
-  protected final ConcurrentLongKeyMap<ObjectLocks> rwLocks;
+  protected final ObjectLocksTable rwLocks;
 
   protected ObjectDB(String name, PrivateKey privateKey) {
     this.name = name;
     this.pendingByTid = new ConcurrentLongKeyHashMap<>();
-    this.rwLocks = new ConcurrentLongKeyHashMap<>();
+    this.rwLocks = new ObjectLocksTable();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
   }
 
@@ -355,7 +351,7 @@ public abstract class ObjectDB {
       throws TransactionPrepareFailedException {
     // First, lock the object.
     try {
-      objectLocksFor(onum).lockForRead(tid, worker);
+      rwLocks.acquireReadLock(onum, tid, worker);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
           longerContracts, read(onum).getClassName() + " " + onum
@@ -410,7 +406,7 @@ public abstract class ObjectDB {
 
     // First, lock the object.
     try {
-      objectLocksFor(onum).lockForWrite(tid);
+      rwLocks.acquireWriteLock(onum, tid, worker);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
           longerContracts, obj.getClassName() + " " + onum
@@ -487,8 +483,8 @@ public abstract class ObjectDB {
 
     // First, read lock the object
     try {
-      objectLocksFor(onum).lockForSoftWrite(tid);
-      objectLocksFor(onum).lockForRead(tid, worker);
+      rwLocks.acquireSoftWriteLock(onum, tid, worker);
+      rwLocks.acquireReadLock(onum, tid, worker);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
           longerContracts,
@@ -524,7 +520,7 @@ public abstract class ObjectDB {
       synchronized (submap) {
         submap.get(worker).extensions.remove(extension);
       }
-      objectLocksFor(onum).unlockForSoftWrite(tid);
+      rwLocks.releaseSoftWriteLock(onum, tid, worker);
       return;
     }
   }
@@ -567,18 +563,6 @@ public abstract class ObjectDB {
       }
       submap.get(worker).extensionsTriggered.get(curStore).first.add(it.next());
     }
-  }
-
-  /**
-   * Obtains the ObjectLocks for a given onum, creating one if it doesn't
-   * already exist.
-   */
-  private ObjectLocks objectLocksFor(long onum) {
-    ObjectLocks newLocks = new ObjectLocks();
-    ObjectLocks curLocks = rwLocks.putIfAbsent(onum, newLocks);
-
-    if (curLocks != null) return curLocks;
-    return newLocks;
   }
 
   /**
@@ -707,9 +691,10 @@ public abstract class ObjectDB {
         LongSet group = objectGrouper.removeGroup(onum);
         if (group != null) groupOnums.addAll(group);
       }
-      synchronized (objectLocksFor(onum)) {
-        objectLocksFor(onum).notifyAll();
-      }
+      // TODO: this is now defunct, is there a new way to do this?
+      //synchronized (objectLocksFor(onum)) {
+      //  objectLocksFor(onum).notifyAll();
+      //}
     }
 
     if (Worker.getWorker().config.useSubscriptions) {
@@ -759,84 +744,22 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Determines whether an onum has an outstanding uncommitted conflicting
-   * change or read. Outstanding uncommitted changes are always considered
-   * conflicting. Outstanding uncommitted reads are considered conflicting if
-   * they are by transactions whose tid is different from the one given.
-   *
-   * @param onum
-   *          the object number in question
-   */
-  public final boolean isPrepared(long onum, long tid) {
-    ObjectLocks locks = rwLocks.get(onum);
-
-    if (locks == null) return false;
-
-    synchronized (locks) {
-      if (locks.writeLock != null) return true;
-
-      if (locks.readLocks.isEmpty()) return false;
-      if (locks.readLocks.size() > 1) return true;
-      return !locks.readLocks.containsKey(tid);
-    }
-  }
-
-  /**
-   * Determines whether an onum has outstanding uncommitted changes.
-   *
-   * @param onum
-   *          the object number in question
-   * @return true if the object has been changed by a transaction that hasn't
-   *         been committed or rolled back.
-   */
-  public final boolean isWritten(long onum) {
-    ObjectLocks locks = rwLocks.get(onum);
-
-    if (locks == null) return false;
-
-    synchronized (locks) {
-      return locks.writeLock != null;
-    }
-  }
-
-  /**
    * Adjusts rwLocks to account for the fact that the given transaction is about
    * to be committed or aborted.
    */
   protected final void unpin(PendingTransaction tx) {
-    for (long readOnum : tx.reads) {
-      ObjectLocks locks = rwLocks.get(readOnum);
-      if (locks != null) {
-        synchronized (locks) {
-          locks.unlockForRead(tx.tid, tx.owner);
-
-          if (!locks.isLocked()) rwLocks.remove(readOnum, locks);
-        }
-      }
+    for (long onum : tx.reads) {
+      rwLocks.releaseReadLock(onum, tx.tid, tx.owner);
     }
 
     for (SerializedObject update : SysUtil.chain(tx.creates, tx.writes)) {
       long onum = update.getOnum();
-      ObjectLocks locks = rwLocks.get(onum);
-      if (locks != null) {
-        synchronized (locks) {
-          locks.unlockForWrite(tx.tid);
-
-          if (!locks.isLocked()) rwLocks.remove(onum, locks);
-        }
-      }
+      rwLocks.releaseWriteLock(onum, tx.tid, tx.owner);
     }
 
     for (ExpiryExtension extension : tx.extensions) {
       long onum = extension.onum;
-      ObjectLocks locks = rwLocks.get(onum);
-      if (locks != null) {
-        synchronized (locks) {
-          locks.unlockForSoftWrite(tx.tid);
-
-          if (!locks.isLocked()) rwLocks.remove(onum, locks);
-        }
-      }
+      rwLocks.releaseSoftWriteLock(onum, tx.tid, tx.owner);
     }
   }
 
@@ -930,16 +853,17 @@ public abstract class ObjectDB {
 
   public final SerializedObject waitForUpdate(long onum, int version)
       throws AccessException {
-    synchronized (objectLocksFor(onum)) {
-      while (getVersion(onum) <= version) {
-        try {
-          objectLocksFor(onum).wait();
-        } catch (InterruptedException e) {
-          STORE_TRANSACTION_LOGGER.log(Level.SEVERE,
-              "Handling Wait For Update Message interrupted! {0}", e);
-        }
-      }
-    }
+    // TODO: this is now defunct, is there a new way to do this?
+    //synchronized (objectLocksFor(onum)) {
+    //  while (getVersion(onum) <= version) {
+    //    try {
+    //      objectLocksFor(onum).wait();
+    //    } catch (InterruptedException e) {
+    //      STORE_TRANSACTION_LOGGER.log(Level.SEVERE,
+    //          "Handling Wait For Update Message interrupted! {0}", e);
+    //    }
+    //  }
+    //}
     return read(onum);
   }
 }

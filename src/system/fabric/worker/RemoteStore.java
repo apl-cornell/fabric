@@ -51,6 +51,7 @@ import fabric.messages.WaitForUpdateMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
+import fabric.worker.ObjectCache.FetchLock;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
@@ -88,11 +89,6 @@ public class RemoteStore extends RemoteNode<RemoteStore>
     for (SerializedObject o : updates) {
       updateCache(o);
     }
-  }
-
-  private static class FetchLock {
-    private volatile ObjectCache.Entry object;
-    private volatile AccessException error;
   }
 
   /**
@@ -195,7 +191,11 @@ public class RemoteStore extends RemoteNode<RemoteStore>
               try {
                 fetchObject(useDissem, onum);
               } catch (AccessException e) {
-                lock.error = e;
+                synchronized (lock) {
+                  lock.error = e;
+                  lock.notifyAll();
+                  cache.fetchLocks.remove(onum, lock);
+                }
               }
             } else {
               cache.notifyFetched(onum);
@@ -203,19 +203,24 @@ public class RemoteStore extends RemoteNode<RemoteStore>
           }
         });
       }
+
       if (wait) {
         // Wait for object to be fetched.
         Log curLog = TransactionManager.getInstance().getCurrentLog();
-        while (fetchLock.object == null && fetchLock.error == null) {
-          try {
-            if (curLog != null) {
-              curLog.checkRetrySignal();
-              curLog.setWaitsFor(lock);
+        try {
+          while (fetchLock.object == null && fetchLock.error == null) {
+            try {
+              if (curLog != null) {
+                curLog.checkRetrySignal();
+                curLog.setWaitsFor(lock);
+              }
+              lock.wait();
+            } catch (InterruptedException e) {
+              Logging.logIgnoredInterruptedException(e);
             }
-            lock.wait();
-          } catch (InterruptedException e) {
-            Logging.logIgnoredInterruptedException(e);
           }
+        } finally {
+          if (curLog != null) curLog.clearWaitsFor();
         }
       } else {
         return null;
