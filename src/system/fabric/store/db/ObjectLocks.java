@@ -157,6 +157,11 @@ final class ObjectLocks {
     while (!lockedByAnotherWorker(worker) && lockedByAnotherTid(tid)) {
       waiters++;
       try {
+        if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINEST)) {
+          STORE_TRANSACTION_LOGGER.log(Level.FINEST,
+              "{1} waiting for write lock of {0}",
+              new Object[] { this, Long.toHexString(tid) });
+        }
         // See if we can just wait for the other transaction from the same
         // worker to abort/commit.
         wait();
@@ -231,6 +236,11 @@ final class ObjectLocks {
     while (!writeLockedByAnotherWorker(worker) && lockedByAnotherTid(tid)) {
       waiters++;
       try {
+        if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINEST)) {
+          STORE_TRANSACTION_LOGGER.log(Level.FINEST,
+              "{1} waiting for soft write lock of {0}",
+              new Object[] { this, Long.toHexString(tid) });
+        }
         // See if we can just wait for the other transaction from the same
         // worker to abort/commit.
         wait();
@@ -295,6 +305,11 @@ final class ObjectLocks {
         && writeLockedByAnotherTid(tid)) {
       waiters++;
       try {
+        if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINEST)) {
+          STORE_TRANSACTION_LOGGER.log(Level.FINEST,
+              "{1} waiting for read lock of {0}",
+              new Object[] { this, Long.toHexString(tid) });
+        }
         // See if we can just wait for the other transaction from the same
         // worker to abort/commit.
         wait();
