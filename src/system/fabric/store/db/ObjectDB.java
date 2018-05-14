@@ -378,45 +378,134 @@ public abstract class ObjectDB {
     /**
      * Add a create.
      */
-    public synchronized void addCreate(SerializedObject obj)
+    public void addCreate(ObjectDB db, SerializedObject obj)
         throws TransactionPrepareFailedException {
-      if (state == State.ABORTING) throw new TransactionPrepareFailedException(
-          "Trying to add a create for an aborting transaction.");
-      // Don't freak out on prepared, this is called to deserialize in BdbDB
-      creates.add(obj);
+      // First, lock the object.
+      try {
+        db.rwLocks.acquireWriteLock(obj.getOnum(), this);
+      } catch (UnableToLockException e) {
+        throw new TransactionPrepareFailedException("Object " + obj.getOnum()
+            + " has been locked by an uncommitted transaction.");
+      }
+
+      try {
+        synchronized (this) {
+          if (state == State.ABORTING) {
+            throw new TransactionPrepareFailedException(
+                "Trying to add a create for an aborting transaction.");
+          }
+          // Don't freak out on prepared, this is called to deserialize in BdbDB
+          creates.add(obj);
+        }
+      } catch (TransactionPrepareFailedException e) {
+        // Release lock, since it won't be added to the pending set.
+        db.rwLocks.releaseWriteLock(obj.getOnum(), this);
+        throw e;
+      }
     }
 
     /**
      * Add a write.
      */
-    public synchronized void addWrite(SerializedObject obj)
+    public synchronized void addWrite(ObjectDB db, SerializedObject obj)
         throws TransactionPrepareFailedException {
-      if (state == State.ABORTING) throw new TransactionPrepareFailedException(
-          "Trying to add a write for an aborting transaction.");
-      // Don't freak out on prepared, this is called to deserialize in BdbDB
-      writes.add(obj);
+      // First, lock the object.
+      try {
+        db.rwLocks.acquireWriteLock(obj.getOnum(), this);
+      } catch (UnableToLockException e) {
+        throw new TransactionPrepareFailedException("Object " + obj.getOnum()
+            + " has been locked by an uncommitted transaction.");
+      }
+
+      try {
+        synchronized (this) {
+          if (state == State.ABORTING) {
+            throw new TransactionPrepareFailedException(
+                "Trying to add a write for an aborting transaction.");
+          }
+          // Don't freak out on prepared, this is called to deserialize in BdbDB
+          writes.add(obj);
+        }
+      } catch (TransactionPrepareFailedException e) {
+        // Release lock, since it won't be added to the pending set.
+        db.rwLocks.releaseWriteLock(obj.getOnum(), this);
+        throw e;
+      }
     }
 
     /**
      * Add a read.
      */
-    public synchronized void addRead(long onum)
+    public synchronized void addRead(ObjectDB db, long onum)
         throws TransactionPrepareFailedException {
-      if (state == State.ABORTING) throw new TransactionPrepareFailedException(
-          "Trying to add a read for an aborting transaction.");
-      // Don't freak out on prepared, this is called to deserialize in BdbDB
-      reads.add(onum);
+      // First, lock the object.
+      try {
+        db.rwLocks.acquireReadLock(onum, this);
+      } catch (UnableToLockException e) {
+        throw new TransactionPrepareFailedException("Object " + onum
+            + " has been write-locked by an uncommitted transaction.");
+      }
+
+      try {
+        synchronized (this) {
+          if (state == State.ABORTING) {
+            throw new TransactionPrepareFailedException(
+                "Trying to add a read for an aborting transaction.");
+          }
+          // Don't freak out on prepared, this is called to deserialize in BdbDB
+          reads.add(onum);
+        }
+      } catch (TransactionPrepareFailedException e) {
+        // Release lock, since it won't be added to the pending set.
+        db.rwLocks.releaseReadLock(onum, this);
+        throw e;
+      }
     }
 
     /**
      * Add an extension.
      */
-    public synchronized void addExtension(ExpiryExtension extension)
+    public void addExtension(ObjectDB db, ExpiryExtension extension)
         throws TransactionPrepareFailedException {
-      if (state == State.ABORTING) throw new TransactionPrepareFailedException(
-          "Trying to add an extension for an aborting transaction.");
-      // Don't freak out on prepared, this is called to deserialize in BdbDB
-      extensions.add(extension);
+      // First, lock the object.
+      try {
+        db.rwLocks.acquireSoftWriteLock(extension.onum, this);
+        db.rwLocks.acquireReadLock(extension.onum, this);
+      } catch (UnableToLockException e) {
+        throw new TransactionPrepareFailedException("Object " + extension.onum
+            + " has been locked by an uncommitted transaction.");
+      }
+
+      try {
+        synchronized (this) {
+          if (state == State.ABORTING)
+            throw new TransactionPrepareFailedException(
+                "Trying to add an extension for an aborting transaction.");
+          // Don't freak out on prepared, this is called to deserialize in BdbDB
+          extensions.add(extension);
+          reads.add(extension.onum);
+        }
+      } catch (TransactionPrepareFailedException e) {
+        // Release lock, since it won't be added to the pending set.
+        db.rwLocks.releaseSoftWriteLock(extension.onum, this);
+        db.rwLocks.releaseReadLock(extension.onum, this);
+        throw e;
+      }
+    }
+
+    /**
+     * Downgrade an extension to a read.
+     */
+    public void downgradeExtension(ObjectDB db, ExpiryExtension extension) {
+      boolean removed;
+      synchronized (this) {
+        removed = extensions.remove(extension);
+      }
+
+      if (removed) {
+        // First, lock the object.
+        db.rwLocks.releaseSoftWriteLock(extension.onum, this);
+      }
     }
 
     /**
@@ -585,22 +674,8 @@ public abstract class ObjectDB {
       tx = submap.get(worker);
     }
 
-    // First, lock the object.
-    try {
-      rwLocks.acquireReadLock(onum, tx);
-    } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, read(onum).getClassName() + " " + onum
-              + " has been write-locked by an uncommitted transaction.");
-    }
-
-    // Register that the transaction has locked the object.
-    try {
-      tx.addRead(onum);
-    } catch (TransactionPrepareFailedException e) {
-      rwLocks.releaseReadLock(onum, tx);
-      throw e;
-    }
+    // First, lock the object and register it.
+    tx.addRead(this, onum);
 
     // Check version numbers.
     int curVersion;
@@ -658,25 +733,11 @@ public abstract class ObjectDB {
       tx = submap.get(worker);
     }
 
-    // First, lock the object.
-    try {
-      rwLocks.acquireWriteLock(onum, tx);
-    } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, obj.getClassName() + " " + onum
-              + " has been locked by an uncommitted transaction.");
-    }
-
     // Record the updated object. Doing so will also register that the
     // transaction has locked the object.
     switch (mode) {
     case CREATE:
-      try {
-        tx.addCreate(obj);
-      } catch (TransactionPrepareFailedException e) {
-        rwLocks.releaseWriteLock(onum, tx);
-        throw e;
-      }
+      tx.addCreate(this, obj);
 
       // Make sure the onum doesn't already exist in the database.
       if (exists(onum)) {
@@ -690,12 +751,7 @@ public abstract class ObjectDB {
       return;
 
     case WRITE:
-      try {
-        tx.addWrite(obj);
-      } catch (TransactionPrepareFailedException e) {
-        rwLocks.releaseWriteLock(onum, tx);
-        throw e;
-      }
+      tx.addWrite(this, obj);
 
       // Read the old copy from the database.
       SerializedObject storeCopy = read(onum);
@@ -768,17 +824,7 @@ public abstract class ObjectDB {
 
     // Record the updated object. Doing so will also register that the
     // transaction has locked the object.
-    synchronized (submap) {
-      // Act as both a read and an extension.
-      try {
-        submap.get(worker).addRead(onum);
-        submap.get(worker).addExtension(extension);
-      } catch (TransactionPrepareFailedException e) {
-        rwLocks.releaseReadLock(onum, tx);
-        rwLocks.releaseSoftWriteLock(onum, tx);
-        throw e;
-      }
-    }
+    tx.addExtension(this, extension);
 
     // Check version numbers.
     SerializedObject storeCopy = read(onum);
@@ -798,10 +844,7 @@ public abstract class ObjectDB {
             curExpiry);
       }
       // Only a read, demote from an extension.
-      synchronized (submap) {
-        submap.get(worker).extensions.remove(extension);
-      }
-      rwLocks.releaseSoftWriteLock(onum, tx);
+      tx.downgradeExtension(this, extension);
       return;
     }
   }
@@ -1059,7 +1102,7 @@ public abstract class ObjectDB {
       rwLocks.releaseWriteLock(onum, tx);
     }
 
-    for (ExpiryExtension extension : tx.extensions) {
+    for (ExpiryExtension extension : tx.getExtensions()) {
       long onum = extension.onum;
       rwLocks.releaseSoftWriteLock(onum, tx);
     }
