@@ -67,6 +67,17 @@ public final class Log {
   Thread thread;
 
   /**
+   * The TxnStats associated with this transaction.
+   */
+  TxnStats stats;
+
+  /**
+   * Prepare object associated with this log.  Allows for remote workers to
+   * initiate second phase of commit protocol through log.
+   */
+  TransactionPrepare prepare;
+
+  /**
    * A flag indicating whether this transaction should abort or be retried. This
    * flag should be checked before each operation. This flag is set when it's
    * non-null and indicates the transaction in the stack that is to be retried;
@@ -231,6 +242,7 @@ public final class Log {
       } finally {
         Timing.SUBTX.end();
       }
+      stats = parent.stats;
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
@@ -240,6 +252,7 @@ public final class Log {
 
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
+      stats = TransactionManager.getInstance().stats;
     }
   }
 
@@ -413,6 +426,10 @@ public final class Log {
     return result.values();
   }
 
+  /**
+   * Check if this transaction has been told to abort and retry.
+   * @throws TransactionRestartingException if a retry was flagged.
+   */
   public void checkRetrySignal() throws TransactionRestartingException {
     if (this.retrySignal != null) {
       synchronized (this) {
@@ -494,6 +511,8 @@ public final class Log {
           write.notifyAll();
       }
     }
+
+    prepare = null;
 
     if (parent != null && parent.tid.equals(tid.parent)) {
       // The parent frame represents the parent transaction. Null out its child.
@@ -713,6 +732,8 @@ public final class Log {
         if (obj.$numWaiting > 0) obj.notifyAll();
       }
     }
+
+    prepare = null;
 
     // Merge the security cache into the top-level label cache.
     securityCache.mergeWithTopLevel();

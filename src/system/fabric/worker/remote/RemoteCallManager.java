@@ -234,7 +234,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     tm.associateAndSyncLog(log, topTid);
 
     try {
-      tm.sendPrepareMessages();
+      tm.sendPrepareMessages(client.node);
     } catch (TransactionRestartingException e) {
       throw new TransactionPrepareFailedException(e);
     } finally {
@@ -265,7 +265,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     TransactionManager tm = TransactionManager.getInstance();
     tm.associateLog(log);
     try {
-      tm.sendCommitMessagesAndCleanUp();
+      tm.commitAndCleanUp();
     } catch (TransactionAtomicityViolationException e) {
       tm.associateLog(null);
       throw new TransactionCommitFailedException("Atomicity violation");
