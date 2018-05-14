@@ -86,7 +86,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   }
 
   public void notifyStorePrepareSuccess(long tid, long time,
-      LongKeyMap<Long> longerContracts) {
+      OidKeyHashMap<Long> longerContracts) {
     sendAsync(new StorePrepareSuccessMessage(tid, time, longerContracts));
   }
 

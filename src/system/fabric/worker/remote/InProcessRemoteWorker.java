@@ -73,7 +73,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public void notifyStorePrepareSuccess(long tid, long time,
-      LongKeyMap<Long> longerContracts) {
+      OidKeyHashMap<Long> longerContracts) {
     // Don't bother with another thread, a thread would have been created for
     // the prepare processing already.
     TransactionManager.pendingPrepares.get(tid).markSuccess(

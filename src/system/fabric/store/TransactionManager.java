@@ -25,6 +25,7 @@ import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.common.util.Triple;
 import fabric.dissemination.ObjectGlob;
@@ -127,7 +128,7 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public LongKeyMap<Long> prepare(Principal worker, PrepareRequest req)
+  public OidKeyHashMap<Long> prepare(Principal worker, PrepareRequest req)
       throws TransactionPrepareFailedException {
     return req.runPrepare(this, database, worker);
   }

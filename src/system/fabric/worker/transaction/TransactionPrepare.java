@@ -115,11 +115,14 @@ public class TransactionPrepare {
     outstandingStores.remove(s);
     respondedStores.add(s);
     commitTime = Math.max(commitTime, m.time);
-    for (LongKeyMap.Entry<Long> entry : m.longerContracts.entrySet()) {
-      long onum = entry.getKey();
-      long expiry = entry.getValue();
-      s.readFromCache(onum).setExpiry(expiry);
-      this.longerContracts.put(s, onum, expiry);
+    for (Store store : m.longerContracts.storeSet()) {
+      for (LongKeyMap.Entry<Long> entry : m.longerContracts.get(store)
+          .entrySet()) {
+        long onum = entry.getKey();
+        long expiry = entry.getValue();
+        store.readFromCache(onum).setExpiry(expiry);
+        this.longerContracts.put(store, onum, expiry);
+      }
     }
     cleanUp();
     if (currentStatus == Status.PREPARING && outstandingWorkers.isEmpty()
@@ -157,7 +160,7 @@ public class TransactionPrepare {
     if (s instanceof RemoteStore) {
       // Remove old objects from our cache.
       RemoteStore store = (RemoteStore) s;
-      LongKeyMap<SerializedObject> versionConflicts = m.conflicts;
+      OidKeyHashMap<SerializedObject> versionConflicts = m.conflicts;
       String conflictsString = "";
       for (SerializedObject obj : versionConflicts.values()) {
         store.updateCache(obj);

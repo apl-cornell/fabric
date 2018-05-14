@@ -42,6 +42,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.NodePrincipal;
@@ -245,7 +246,7 @@ class Store extends MessageToStoreHandler {
         nameOf(client.principal), Long.toHexString(msg.tid));
 
     try {
-      LongKeyMap<Long> longerContracts = prepareTransaction(client.principal,
+      OidKeyHashMap<Long> longerContracts = prepareTransaction(client.principal,
           msg.tid, msg.serializedCreates, msg.serializedWrites, msg.reads,
           msg.extensions, msg.extensionsTriggered, msg.delayedExtensions);
 
@@ -408,7 +409,7 @@ class Store extends MessageToStoreHandler {
         tm.waitForUpdates(message.onumsAndVersions));
   }
 
-  private LongKeyMap<Long> prepareTransaction(Principal p, long tid,
+  private OidKeyHashMap<Long> prepareTransaction(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites,
       LongKeyMap<Pair<Integer, Long>> reads,

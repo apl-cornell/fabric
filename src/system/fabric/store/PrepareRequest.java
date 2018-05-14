@@ -15,10 +15,10 @@ import java.util.logging.Level;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.security.Principal;
 import fabric.store.db.ObjectDB;
@@ -75,8 +75,8 @@ public final class PrepareRequest {
      *          request.
      */
     public void prepareOrCheck(ObjectDB database, Principal worker,
-        LongKeyMap<SerializedObject> versionConflicts,
-        LongKeyMap<Long> longerContracts,
+        OidKeyHashMap<SerializedObject> versionConflicts,
+        OidKeyHashMap<Long> longerContracts,
         List<TransactionPrepareFailedException> failures, long tid) {
       if (versionConflicts.isEmpty() && failures.isEmpty()) {
         try {
@@ -90,9 +90,12 @@ public final class PrepareRequest {
         SerializedObject value = database.read(getOnum());
         if (value != null) {
           if (value.getVersion() != getVersion()) {
-            versionConflicts.put(getOnum(), value);
+            versionConflicts.put(
+                Worker.getWorker().getStore(database.getName()), getOnum(),
+                value);
           } else if (value.getExpiry() > getExpiry()) {
-            longerContracts.put(getOnum(), value.getExpiry());
+            longerContracts.put(Worker.getWorker().getStore(database.getName()),
+                getOnum(), value.getExpiry());
           }
         }
       }
@@ -115,8 +118,8 @@ public final class PrepareRequest {
      *          than the value seen by the worker.
      */
     public abstract void prepare(ObjectDB database, Principal worker,
-        LongKeyMap<SerializedObject> versionConflicts,
-        LongKeyMap<Long> longerContracts)
+        OidKeyHashMap<SerializedObject> versionConflicts,
+        OidKeyHashMap<Long> longerContracts)
         throws TransactionPrepareFailedException;
 
     /**
@@ -171,8 +174,8 @@ public final class PrepareRequest {
 
     @Override
     public void prepare(ObjectDB database, Principal worker,
-        LongKeyMap<SerializedObject> versionConflicts,
-        LongKeyMap<Long> longerContracts)
+        OidKeyHashMap<SerializedObject> versionConflicts,
+        OidKeyHashMap<Long> longerContracts)
         throws TransactionPrepareFailedException {
       database.prepareRead(tid, worker, onum, version, expiry, versionConflicts,
           longerContracts);
@@ -211,8 +214,8 @@ public final class PrepareRequest {
 
     @Override
     public void prepare(ObjectDB database, Principal worker,
-        LongKeyMap<SerializedObject> versionConflicts,
-        LongKeyMap<Long> longerContracts)
+        OidKeyHashMap<SerializedObject> versionConflicts,
+        OidKeyHashMap<Long> longerContracts)
         throws TransactionPrepareFailedException {
       database.prepareExtension(tid, worker, extension, versionConflicts,
           longerContracts);
@@ -251,8 +254,8 @@ public final class PrepareRequest {
 
     @Override
     public void prepare(ObjectDB database, Principal worker,
-        LongKeyMap<SerializedObject> versionConflicts,
-        LongKeyMap<Long> longerContracts)
+        OidKeyHashMap<SerializedObject> versionConflicts,
+        OidKeyHashMap<Long> longerContracts)
         throws TransactionPrepareFailedException {
       database.prepareUpdate(tid, worker, val, versionConflicts,
           longerContracts, WRITE);
@@ -291,8 +294,8 @@ public final class PrepareRequest {
 
     @Override
     public void prepare(ObjectDB database, Principal worker,
-        LongKeyMap<SerializedObject> versionConflicts,
-        LongKeyMap<Long> longerContracts)
+        OidKeyHashMap<SerializedObject> versionConflicts,
+        OidKeyHashMap<Long> longerContracts)
         throws TransactionPrepareFailedException {
       database.prepareUpdate(tid, worker, val, versionConflicts,
           longerContracts, CREATE);
@@ -368,9 +371,10 @@ public final class PrepareRequest {
    * Run the prepare.
    * @return a set of longer contracts to notify the worker about.
    */
-  public LongKeyMap<Long> runPrepare(TransactionManager tm, ObjectDB database,
-      Principal worker) throws TransactionPrepareFailedException {
-    LongKeyMap<Long> longerContracts = new LongKeyHashMap<>();
+  public OidKeyHashMap<Long> runPrepare(TransactionManager tm,
+      ObjectDB database, Principal worker)
+      throws TransactionPrepareFailedException {
+    OidKeyHashMap<Long> longerContracts = new OidKeyHashMap<>();
 
     // First, check read and write permissions. We do this before we attempt to
     // do the actual prepare because we want to run the permissions check in a
@@ -393,7 +397,7 @@ public final class PrepareRequest {
 
     try {
       // This will store the set of onums of objects that were out of date.
-      LongKeyMap<SerializedObject> versionConflicts = new LongKeyHashMap<>();
+      OidKeyHashMap<SerializedObject> versionConflicts = new OidKeyHashMap<>();
       List<TransactionPrepareFailedException> failures = new ArrayList<>();
 
       // Sort the objects being prepared.
@@ -422,11 +426,7 @@ public final class PrepareRequest {
         TransactionPrepareFailedException fail =
             new TransactionPrepareFailedException(failures);
         fail.versionConflicts.putAll(versionConflicts);
-        for (LongKeyMap.Entry<Long> entry : longerContracts.entrySet()) {
-          fail.longerContracts.put(
-              Worker.getWorker().getStore(Worker.getWorkerName()),
-              entry.getKey(), entry.getValue());
-        }
+        fail.longerContracts.putAll(longerContracts);
         database.abortPrepare(tid, worker);
         throw fail;
       }

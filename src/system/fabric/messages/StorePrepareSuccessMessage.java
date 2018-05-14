@@ -6,8 +6,10 @@ import java.io.IOException;
 
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -22,13 +24,13 @@ public class StorePrepareSuccessMessage extends AsyncMessage {
   public final long tid;
   public final long time;
   // Map from onum to new, longer, expiration time
-  public final LongKeyMap<Long> longerContracts;
+  public final OidKeyHashMap<Long> longerContracts;
 
   /**
    * Used to prepare transactions at remote workers.
    */
   public StorePrepareSuccessMessage(long tid, long time,
-      LongKeyMap<Long> longerContracts) {
+      OidKeyHashMap<Long> longerContracts) {
     super(MessageType.STORE_PREPARE_SUCCESS);
     this.tid = tid;
     this.time = time;
@@ -58,10 +60,14 @@ public class StorePrepareSuccessMessage extends AsyncMessage {
     out.writeLong(time);
 
     // Serialize longer contracts.
-    out.writeInt(longerContracts.size());
-    for (LongKeyMap.Entry<Long> entry : longerContracts.entrySet()) {
-      out.writeLong(entry.getKey());
-      out.writeLong(entry.getValue());
+    out.writeInt(longerContracts.storeSet().size());
+    for (Store s : longerContracts.storeSet()) {
+      out.writeUTF(s.name());
+      out.writeInt(longerContracts.get(s).size());
+      for (LongKeyMap.Entry<Long> entry : longerContracts.get(s).entrySet()) {
+        out.writeLong(entry.getKey());
+        out.writeLong(entry.getValue());
+      }
     }
   }
 
@@ -71,10 +77,14 @@ public class StorePrepareSuccessMessage extends AsyncMessage {
     this.tid = in.readLong();
     this.time = in.readLong();
     int size = in.readInt();
-    this.longerContracts = new LongKeyHashMap<>(size);
+    this.longerContracts = new OidKeyHashMap<>();
     for (int i = 0; i < size; i++) {
-      long onum = in.readLong();
-      this.longerContracts.put(onum, in.readLong());
+      Store s = Worker.getWorker().getStore(in.readUTF());
+      int size2 = in.readInt();
+      for (int j = 0; j < size2; j++) {
+        long onum = in.readLong();
+        this.longerContracts.put(s, onum, in.readLong());
+      }
     }
   }
 }

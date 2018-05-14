@@ -21,10 +21,10 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
@@ -84,7 +84,7 @@ public final class LocalStore implements Store, Serializable {
         WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
         TransactionManager.pendingPrepares.get(tid).markSuccess(name(),
             new StorePrepareSuccessMessage(tid, System.currentTimeMillis(),
-                new LongKeyHashMap<Long>()));
+                new OidKeyHashMap<Long>()));
       }
     });
   }
@@ -232,26 +232,56 @@ public final class LocalStore implements Store, Serializable {
    * {@code DelayedExtension}'s time, handles the extension in a transaction,
    * then dequeues the extension.
    */
-  private final Threading.NamedRunnable extensionsRunner=new Threading.NamedRunnable("Extensions runner"){@Override protected void runImpl(){while(true){try{
-  // Get the next delayed extension item.
-  // XXX: In an ideal world, the extension item isn't taken off the
-  // queue until we've synchronized on it.  However, this doesn't
-  // hurt correctness although its a little inefficient.
-  //
-  // I'm not too worried about this because the stars would have to
-  // align so that:
-  //   - The second request comes in between those lines
-  //   - The second request is marked to be handled before the
-  //   current request
-  // At worst, this causes two requests to be handled when on would
-  // have been sufficient and that second request is unlikely to be
-  // very expensive to process.
-  final DelayedExtension extension=waitingExtensions.take();Threading.getPool().submit(new Threading.NamedRunnable("Extension of "+extension.onum){@Override protected void runImpl(){
-  // Don't want new extensions to walk away after this is
-  // done before we remove the mapping.
-  synchronized(extension){
-  // Run a transaction handling updates
-  Logging.METRICS_LOGGER.log(Level.FINER,"RUNNING EXTENSION OF {0}",extension.onum);Worker.runInTopLevelTransaction(new Code<Void>(){@Override public Void run(){Store store=LocalStore.this;final Contract._Proxy target=new Contract._Proxy(store,extension.onum);target.attemptExtension();return null;}},true);unresolvedExtensions.remove(extension.onum,extension);}}});}catch(InterruptedException e){Logging.logIgnoredInterruptedException(e);}}}};
+  private final Threading.NamedRunnable extensionsRunner =
+      new Threading.NamedRunnable("Extensions runner") {
+        @Override
+        protected void runImpl() {
+          while (true) {
+            try {
+              // Get the next delayed extension item.
+              // XXX: In an ideal world, the extension item isn't taken off the
+              // queue until we've synchronized on it.  However, this doesn't
+              // hurt correctness although its a little inefficient.
+              //
+              // I'm not too worried about this because the stars would have to
+              // align so that:
+              //   - The second request comes in between those lines
+              //   - The second request is marked to be handled before the
+              //   current request
+              // At worst, this causes two requests to be handled when on would
+              // have been sufficient and that second request is unlikely to be
+              // very expensive to process.
+              final DelayedExtension extension = waitingExtensions.take();
+              Threading.getPool().submit(new Threading.NamedRunnable(
+                  "Extension of " + extension.onum) {
+                @Override
+                protected void runImpl() {
+                  // Don't want new extensions to walk away after this is
+                  // done before we remove the mapping.
+                  synchronized (extension) {
+                    // Run a transaction handling updates
+                    Logging.METRICS_LOGGER.log(Level.FINER,
+                        "RUNNING EXTENSION OF {0}", extension.onum);
+                    Worker.runInTopLevelTransaction(new Code<Void>() {
+                      @Override
+                      public Void run() {
+                        Store store = LocalStore.this;
+                        final Contract._Proxy target =
+                            new Contract._Proxy(store, extension.onum);
+                        target.attemptExtension();
+                        return null;
+                      }
+                    }, true);
+                    unresolvedExtensions.remove(extension.onum, extension);
+                  }
+                }
+              });
+            } catch (InterruptedException e) {
+              Logging.logIgnoredInterruptedException(e);
+            }
+          }
+        }
+      };
 
   /**
    * The singleton LocalStore object is managed by the Worker class.

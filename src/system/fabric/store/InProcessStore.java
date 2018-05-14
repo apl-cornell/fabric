@@ -22,6 +22,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
@@ -138,7 +139,7 @@ public class InProcessStore extends RemoteStore {
         sm.createSurrogates(req);
 
         try {
-          LongKeyMap<Long> longerContracts =
+          OidKeyHashMap<Long> longerContracts =
               tm.prepare(Worker.getWorker().getPrincipal(), req);
 
           long prepareTime = System.currentTimeMillis();
