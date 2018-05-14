@@ -30,6 +30,8 @@ import fabric.common.Threading.NamedRunnable;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.Object._Impl;
@@ -122,6 +124,20 @@ public final class TransactionManager {
    * to the node.
    */
   public static boolean TRACE_WRITE_LOCKS = false;
+
+  /**
+   * A map from tids to objects representing currently pending prepare phases.
+   */
+  public static final ConcurrentLongKeyMap<TransactionPrepare> pendingPrepares =
+      new ConcurrentLongKeyHashMap<>();
+
+  /**
+   * A map from tids to a boolean, if an entry exists, it means that the tid has
+   * not been committed at stores.  Worker should not successfully complete a
+   * "normal" shutdown while this is nonempty.
+   */
+  public static final ConcurrentLongKeyMap<TransactionPrepare> outstandingCommits =
+      new ConcurrentLongKeyHashMap<>();
 
   /**
    * A map from OIDs to a version number and a list of logs for transactions

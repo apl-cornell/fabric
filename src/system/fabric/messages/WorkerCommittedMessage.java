@@ -4,21 +4,26 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.worker.remote.RemoteWorker;
 
-public class AbortTransactionMessage extends AsyncMessage {
+/**
+ * A <code>WorkerCommittedMessage</code> represents a successful prepare for the
+ * given tid.
+ */
+public class WorkerCommittedMessage extends AsyncMessage {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
 
-  /** The tid for the transaction that is aborting. */
-  public final TransactionID tid;
+  public final long tid;
 
-  public AbortTransactionMessage(TransactionID tid) {
-    super(MessageType.ABORT_TRANSACTION);
+  /**
+   * Used to prepare transactions at remote workers.
+   */
+  public WorkerCommittedMessage(long tid) {
+    super(MessageType.WORKER_COMMITTED);
     this.tid = tid;
   }
 
@@ -38,11 +43,13 @@ public class AbortTransactionMessage extends AsyncMessage {
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
-    tid.write(out);
+    // Serialize tid.
+    out.writeLong(tid);
   }
 
   /* readMessage */
-  protected AbortTransactionMessage(DataInput in) throws IOException {
-    this(new TransactionID(in));
+  protected WorkerCommittedMessage(DataInput in) throws IOException {
+    super(MessageType.WORKER_COMMITTED);
+    this.tid = in.readLong();
   }
 }

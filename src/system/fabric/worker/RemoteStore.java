@@ -112,8 +112,8 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   public void prepareTransaction(long tid, boolean singleStore,
       boolean readOnly, Collection<Object._Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object._Impl> writes)
-      throws TransactionPrepareFailedException, UnreachableNodeException {
-    send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
+      throws UnreachableNodeException {
+    sendAsync(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
         singleStore, readOnly, toCreate, reads, writes));
   }
 
@@ -299,14 +299,13 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   @Override
-  public void abortTransaction(TransactionID tid) throws AccessException {
-    send(Worker.getWorker().authToStore, new AbortTransactionMessage(tid));
+  public void abortTransaction(TransactionID tid) {
+    sendAsync(Worker.getWorker().authToStore, new AbortTransactionMessage(tid));
   }
 
   @Override
-  public void commitTransaction(long transactionID)
-      throws UnreachableNodeException, TransactionCommitFailedException {
-    send(Worker.getWorker().authToStore,
+  public void commitTransaction(long transactionID) {
+    sendAsync(Worker.getWorker().authToStore,
         new CommitTransactionMessage(transactionID));
   }
 

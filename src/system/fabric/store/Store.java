@@ -1,6 +1,7 @@
 package fabric.store;
 
 import static fabric.common.Logging.STORE_REQUEST_LOGGER;
+import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
 import static fabric.common.ONumConstants.STORE_PRINCIPAL;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ import fabric.common.SysUtil;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
@@ -180,15 +182,13 @@ class Store extends MessageToStoreHandler {
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public AbortTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, AbortTransactionMessage message)
-      throws AccessException {
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      AbortTransactionMessage message) {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Abort Message from {0} for tid={1}", nameOf(client.principal),
-        message.tid.topTid);
+        Long.toHexString(message.tid.topTid));
 
     tm.abortTransaction(client.principal, message.tid.topTid);
-    return new AbortTransactionMessage.Response();
   }
 
   /**
@@ -208,41 +208,46 @@ class Store extends MessageToStoreHandler {
    * Processes the given commit request
    */
   @Override
-  public CommitTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, CommitTransactionMessage message)
-      throws TransactionCommitFailedException {
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      CommitTransactionMessage message) throws ProtocolError {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Commit Message from {0} for tid={1}",
         nameOf(client.principal), message.transactionID);
 
-    tm.commitTransaction(client, message.transactionID);
-    return new CommitTransactionMessage.Response();
+    try {
+      tm.commitTransaction(client, message.transactionID);
+      client.node.notifyStoreCommitted(message.transactionID);
+    } catch (TransactionCommitFailedException e) {
+      STORE_TRANSACTION_LOGGER.log(Level.FINE,
+          "Commit of transaction {0} failed.",
+          Long.toHexString(message.transactionID));
+    }
   }
 
   /**
    * Processes the given PREPARE request.
    */
   @Override
-  public PrepareTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
-      throws TransactionPrepareFailedException {
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      PrepareTransactionMessage msg) {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Prepare Message, worker={0}, tid={1}",
-        nameOf(client.principal), msg.tid);
+        nameOf(client.principal), Long.toHexString(msg.tid));
 
-    prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
-        msg.serializedWrites, msg.reads);
+    try {
+      prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
+          msg.serializedWrites, msg.reads);
 
-    if (msg.singleStore || msg.readOnly) {
-      try {
+      if (msg.singleStore || msg.readOnly) {
         tm.commitTransaction(client, msg.tid);
-      } catch (TransactionCommitFailedException e) {
-        // Shouldn't happen.
-        throw new InternalError("Single-store commit failed unexpectedly.", e);
       }
+      client.node.notifyStorePrepareSuccess(msg.tid);
+    } catch (TransactionPrepareFailedException e) {
+      client.node.notifyStorePrepareFailed(msg.tid, e);
+    } catch (TransactionCommitFailedException e) {
+      // Shouldn't happen.
+      throw new InternalError("Single-store commit failed unexpectedly.", e);
     }
-
-    return new PrepareTransactionMessage.Response();
   }
 
   /**

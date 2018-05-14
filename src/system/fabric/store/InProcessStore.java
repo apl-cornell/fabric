@@ -1,11 +1,15 @@
 package fabric.store;
 
+import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
@@ -54,14 +58,31 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void abortTransaction(TransactionID tid) {
-    tm.abortTransaction(Worker.getWorker().getPrincipal(), tid.topTid);
+  public void abortTransaction(final TransactionID tid) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        tm.abortTransaction(Worker.getWorker().getPrincipal(), tid.topTid);
+      }
+    });
   }
 
   @Override
-  public void commitTransaction(long transactionID)
-      throws TransactionCommitFailedException {
-    tm.commitTransaction(getLocalWorkerIdentity(), transactionID);
+  public void commitTransaction(final long transactionID) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          tm.commitTransaction(getLocalWorkerIdentity(), transactionID);
+          Worker.getWorker().getLocalWorker()
+              .notifyStoreCommitted(transactionID);
+        } catch (TransactionCommitFailedException e) {
+          STORE_TRANSACTION_LOGGER.log(Level.FINE,
+              "Commit of transaction {0} failed.",
+              Long.toHexString(transactionID));
+        }
+      }
+    });
   }
 
   @Override
@@ -74,42 +95,51 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void prepareTransaction(long tid, boolean singleStore,
-      boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<_Impl> writes) throws TransactionPrepareFailedException {
-    Collection<SerializedObject> serializedCreates =
-        new ArrayList<>(toCreate.size());
-    Collection<SerializedObject> serializedWrites =
-        new ArrayList<>(writes.size());
+  public void prepareTransaction(final long tid, final boolean singleStore,
+      final boolean readOnly, final Collection<_Impl> toCreate,
+      final LongKeyMap<Integer> reads, final Collection<_Impl> writes) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        Collection<SerializedObject> serializedCreates =
+            new ArrayList<>(toCreate.size());
+        Collection<SerializedObject> serializedWrites =
+            new ArrayList<>(writes.size());
 
-    for (_Impl o : toCreate) {
-      @SuppressWarnings("deprecation")
-      SerializedObject serialized = new SerializedObject(o);
-      serializedCreates.add(serialized);
-    }
+        for (_Impl o : toCreate) {
+          @SuppressWarnings("deprecation")
+          SerializedObject serialized = new SerializedObject(o);
+          serializedCreates.add(serialized);
+        }
 
-    for (_Impl o : writes) {
-      @SuppressWarnings("deprecation")
-      SerializedObject serialized = new SerializedObject(o);
-      serializedWrites.add(serialized);
-    }
+        for (_Impl o : writes) {
+          @SuppressWarnings("deprecation")
+          SerializedObject serialized = new SerializedObject(o);
+          serializedWrites.add(serialized);
+        }
 
-    PrepareRequest req =
-        new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
+        PrepareRequest req =
+            new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
 
-    // Swizzle remote pointers.
-    sm.createSurrogates(req);
+        // Swizzle remote pointers.
+        sm.createSurrogates(req);
 
-    tm.prepare(Worker.getWorker().getPrincipal(), req);
+        try {
+          tm.prepare(Worker.getWorker().getPrincipal(), req);
 
-    if (singleStore || readOnly) {
-      try {
-        commitTransaction(tid);
-      } catch (TransactionCommitFailedException e) {
-        // Shouldn't happen.
-        throw new InternalError("Single-store commit failed unexpectedly.", e);
+          if (singleStore || readOnly) {
+            tm.commitTransaction(getLocalWorkerIdentity(), tid);
+          }
+          Worker.getWorker().inProcessRemoteWorker
+              .notifyStorePrepareSuccess(tid);
+        } catch (TransactionPrepareFailedException e) {
+          Worker.getWorker().inProcessRemoteWorker.notifyStorePrepareFailed(tid,
+              e);
+        } catch (TransactionCommitFailedException e) {
+          throw new InternalError(e);
+        }
       }
-    }
+    });
   }
 
   @Override

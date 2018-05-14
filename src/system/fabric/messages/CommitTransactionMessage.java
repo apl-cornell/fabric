@@ -4,13 +4,11 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
-import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.remote.RemoteWorker;
 
-public class CommitTransactionMessage
-extends
-Message<CommitTransactionMessage.Response, TransactionCommitFailedException> {
+public class CommitTransactionMessage extends AsyncMessage {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -18,16 +16,8 @@ Message<CommitTransactionMessage.Response, TransactionCommitFailedException> {
   public final long transactionID;
 
   public CommitTransactionMessage(long transactionID) {
-    super(MessageType.COMMIT_TRANSACTION,
-        TransactionCommitFailedException.class);
+    super(MessageType.COMMIT_TRANSACTION);
     this.transactionID = transactionID;
-  }
-
-  // ////////////////////////////////////////////////////////////////////////////
-  // response contents //
-  // ////////////////////////////////////////////////////////////////////////////
-
-  public static class Response implements Message.Response {
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -35,9 +25,9 @@ Message<CommitTransactionMessage.Response, TransactionCommitFailedException> {
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
-      throws TransactionCommitFailedException {
-    return h.handle(client, this);
+  public void dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
+      throws ProtocolError {
+    h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -52,16 +42,6 @@ Message<CommitTransactionMessage.Response, TransactionCommitFailedException> {
   /* readMessage */
   protected CommitTransactionMessage(DataInput in) throws IOException {
     this(in.readLong());
-  }
-
-  @Override
-  protected void writeResponse(DataOutput out, Response r) {
-    // do nothing
-  }
-
-  @Override
-  protected Response readResponse(DataInput in) {
-    return new Response();
   }
 
 }

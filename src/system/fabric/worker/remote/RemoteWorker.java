@@ -33,11 +33,16 @@ import fabric.messages.NonAtomicCallMessage;
 import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
+import fabric.messages.StoreCommittedMessage;
+import fabric.messages.StorePrepareFailedMessage;
+import fabric.messages.StorePrepareSuccessMessage;
 import fabric.messages.TakeOwnershipMessage;
+import fabric.messages.WorkerCommittedMessage;
+import fabric.messages.WorkerPrepareFailedMessage;
+import fabric.messages.WorkerPrepareSuccessMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
-import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.transaction.Log;
@@ -72,6 +77,32 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
       SubSocketFactory<RemoteWorker> subSocketFactory) {
     super(name);
     this.subSocketFactory = subSocketFactory;
+  }
+
+  public void notifyStorePrepareFailed(long tid,
+      TransactionPrepareFailedException e) {
+    sendAsync(new StorePrepareFailedMessage(tid, e));
+  }
+
+  public void notifyStorePrepareSuccess(long tid) {
+    sendAsync(new StorePrepareSuccessMessage(tid));
+  }
+
+  public void notifyStoreCommitted(long tid) {
+    sendAsync(new StoreCommittedMessage(tid));
+  }
+
+  public void notifyWorkerPrepareFailed(long tid,
+      TransactionPrepareFailedException e) {
+    sendAsync(new WorkerPrepareFailedMessage(tid, e));
+  }
+
+  public void notifyWorkerPrepareSuccess(long tid) {
+    sendAsync(new WorkerPrepareSuccessMessage(tid));
+  }
+
+  public void notifyWorkerCommitted(long tid) {
+    sendAsync(new WorkerCommittedMessage(tid));
   }
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
@@ -128,14 +159,12 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     }
   }
 
-  public void prepareTransaction(long tid)
-      throws UnreachableNodeException, TransactionPrepareFailedException {
-    send(new PrepareTransactionMessage(tid));
+  public void prepareTransaction(long tid) throws UnreachableNodeException {
+    sendAsync(new PrepareTransactionMessage(tid));
   }
 
-  public void commitTransaction(long tid)
-      throws UnreachableNodeException, TransactionCommitFailedException {
-    send(new CommitTransactionMessage(tid));
+  public void commitTransaction(long tid) {
+    sendAsync(new CommitTransactionMessage(tid));
   }
 
   /**
@@ -144,9 +173,8 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
    * @param tid
    *          the tid for the transaction that is aborting.
    */
-  public void abortTransaction(TransactionID tid)
-      throws AccessException, UnreachableNodeException {
-    send(new AbortTransactionMessage(tid));
+  public void abortTransaction(TransactionID tid) {
+    sendAsync(new AbortTransactionMessage(tid));
   }
 
   /**

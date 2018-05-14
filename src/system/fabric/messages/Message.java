@@ -226,24 +226,6 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
         return new ReadMessage(in);
       }
     },
-    PREPARE_TRANSACTION {
-      @Override
-      PrepareTransactionMessage parse(DataInput in) throws IOException {
-        return new PrepareTransactionMessage(in);
-      }
-    },
-    COMMIT_TRANSACTION {
-      @Override
-      CommitTransactionMessage parse(DataInput in) throws IOException {
-        return new CommitTransactionMessage(in);
-      }
-    },
-    ABORT_TRANSACTION {
-      @Override
-      AbortTransactionMessage parse(DataInput in) throws IOException {
-        return new AbortTransactionMessage(in);
-      }
-    },
     DISSEM_READ_ONUM {
       @Override
       DissemReadMessage parse(DataInput in) throws IOException {

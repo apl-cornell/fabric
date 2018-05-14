@@ -110,6 +110,60 @@ public abstract class AsyncMessage {
         return new ObjectUpdateMessage(in);
       }
     },
+    PREPARE_TRANSACTION {
+      @Override
+      PrepareTransactionMessage parse(DataInput in) throws IOException {
+        return new PrepareTransactionMessage(in);
+      }
+    },
+    STORE_PREPARE_FAILED {
+      @Override
+      StorePrepareFailedMessage parse(DataInput in) throws IOException {
+        return new StorePrepareFailedMessage(in);
+      }
+    },
+    STORE_PREPARE_SUCCESS {
+      @Override
+      StorePrepareSuccessMessage parse(DataInput in) throws IOException {
+        return new StorePrepareSuccessMessage(in);
+      }
+    },
+    WORKER_PREPARE_FAILED {
+      @Override
+      WorkerPrepareFailedMessage parse(DataInput in) throws IOException {
+        return new WorkerPrepareFailedMessage(in);
+      }
+    },
+    WORKER_PREPARE_SUCCESS {
+      @Override
+      WorkerPrepareSuccessMessage parse(DataInput in) throws IOException {
+        return new WorkerPrepareSuccessMessage(in);
+      }
+    },
+    COMMIT_TRANSACTION {
+      @Override
+      CommitTransactionMessage parse(DataInput in) throws IOException {
+        return new CommitTransactionMessage(in);
+      }
+    },
+    STORE_COMMITTED {
+      @Override
+      StoreCommittedMessage parse(DataInput in) throws IOException {
+        return new StoreCommittedMessage(in);
+      }
+    },
+    WORKER_COMMITTED {
+      @Override
+      WorkerCommittedMessage parse(DataInput in) throws IOException {
+        return new WorkerCommittedMessage(in);
+      }
+    },
+    ABORT_TRANSACTION {
+      @Override
+      AbortTransactionMessage parse(DataInput in) throws IOException {
+        return new AbortTransactionMessage(in);
+      }
+    },
     UNSUBSCRIBE {
       @Override
       UnsubscribeMessage parse(DataInput in) throws IOException {

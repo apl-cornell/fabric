@@ -22,14 +22,21 @@ import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
+import fabric.messages.StoreCommittedMessage;
+import fabric.messages.StorePrepareFailedMessage;
+import fabric.messages.StorePrepareSuccessMessage;
+import fabric.messages.WorkerCommittedMessage;
+import fabric.messages.WorkerPrepareFailedMessage;
+import fabric.messages.WorkerPrepareSuccessMessage;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
-import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
+import fabric.worker.transaction.TransactionManager;
+import fabric.worker.transaction.TransactionPrepare;
 
 /**
  * In-process implementation of RemoteWorker. This is so that a store or
@@ -55,6 +62,60 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
+  public void notifyStorePrepareFailed(long tid,
+      TransactionPrepareFailedException e) {
+    // Don't bother with another thread, a thread would have been created for
+    // the prepare processing already.
+    TransactionManager.pendingPrepares.get(tid).markFail(inProcessStore.name(),
+        new StorePrepareFailedMessage(tid, e));
+  }
+
+  @Override
+  public void notifyStorePrepareSuccess(long tid) {
+    // Don't bother with another thread, a thread would have been created for
+    // the prepare processing already.
+    TransactionManager.pendingPrepares.get(tid).markSuccess(
+        inProcessStore.name(), new StorePrepareSuccessMessage(tid));
+  }
+
+  @Override
+  public void notifyStoreCommitted(long tid) {
+    // Don't bother with another thread, a thread would have been created for
+    // the commit processing already.
+    TransactionPrepare p = TransactionManager.outstandingCommits.get(tid);
+    if (p != null) {
+      p.markCommitted(Worker.getWorkerName(), new StoreCommittedMessage(tid));
+    }
+  }
+
+  @Override
+  public void notifyWorkerPrepareFailed(long tid,
+      TransactionPrepareFailedException e) {
+    // Don't bother with another thread, a thread would have been created for
+    // the prepare processing already.
+    TransactionManager.pendingPrepares.get(tid).markFail(Worker.getWorkerName(),
+        new WorkerPrepareFailedMessage(tid, e));
+  }
+
+  @Override
+  public void notifyWorkerPrepareSuccess(long tid) {
+    // Don't bother with another thread, a thread would have been created for
+    // the prepare processing already.
+    TransactionManager.pendingPrepares.get(tid).markSuccess(
+        Worker.getWorkerName(), new WorkerPrepareSuccessMessage(tid));
+  }
+
+  @Override
+  public void notifyWorkerCommitted(long tid) {
+    // Don't bother with another thread, a thread would have been created for
+    // the commit processing already.
+    TransactionPrepare p = TransactionManager.outstandingCommits.get(tid);
+    if (p != null) {
+      p.markCommitted(Worker.getWorkerName(), new WorkerCommittedMessage(tid));
+    }
+  }
+
+  @Override
   public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
       throws UnreachableNodeException, RemoteCallException {
@@ -68,22 +129,19 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
-  public void prepareTransaction(long tid)
-      throws UnreachableNodeException, TransactionPrepareFailedException {
+  public void prepareTransaction(long tid) throws UnreachableNodeException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
 
   @Override
-  public void commitTransaction(long tid)
-      throws UnreachableNodeException, TransactionCommitFailedException {
+  public void commitTransaction(long tid) {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
 
   @Override
-  public void abortTransaction(TransactionID tid)
-      throws AccessException, UnreachableNodeException {
+  public void abortTransaction(TransactionID tid) {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
