@@ -53,6 +53,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.lang.FClass;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
+import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
@@ -172,13 +173,30 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void finishPrepare(final long tid, final Principal worker) {
+  public void finishPrepare(final long tid, final Principal worker)
+      throws TransactionPrepareFailedException {
     // Copy the transaction data into BDB.
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     final PendingTransaction pending;
     synchronized (submap) {
       pending = submap.remove(worker);
-      if (submap.isEmpty()) pendingByTid.remove(tid, submap);
+      if (pending != null) {
+        synchronized (pending) {
+          switch (pending.state) {
+          case ABORTING:
+            // Should clean up here.  This means the abort message was handled
+            // after prepare was done but before this call.
+            abortPrepare(tid, worker);
+            throw new TransactionPrepareFailedException(
+                "Aborted by another thread");
+          case PREPARED:
+            throw new InternalError(
+                "Attempting to finish an already finished prepare.");
+          case PREPARING:
+            pending.state = PendingTransaction.State.PREPARED;
+          }
+        }
+      }
     }
 
     final DatabaseEntry key = new DatabaseEntry(toBytes(tid, worker));
@@ -190,16 +208,16 @@ public class BdbDB extends ObjectDB {
         prepared.put(txn, key, data);
 
         Serializer<SerializedObject> serializer = new Serializer<>();
-        for (SerializedObject obj : pending.creates) {
+        for (SerializedObject obj : pending.getCreates()) {
           data.setData(serializer.toBytes(obj));
           preparedCreates.put(txn, key, data);
         }
-        for (SerializedObject obj : pending.writes) {
+        for (SerializedObject obj : pending.getWrites()) {
           data.setData(serializer.toBytes(obj));
           preparedWrites.put(txn, key, data);
         }
         Serializer<ExpiryExtension> serializer2 = new Serializer<>();
-        for (ExpiryExtension extension : pending.extensions) {
+        for (ExpiryExtension extension : pending.getExtensions()) {
           data.setData(serializer2.toBytes(extension));
           preparedExtensions.put(txn, key, data);
         }
@@ -227,7 +245,7 @@ public class BdbDB extends ObjectDB {
 
             if (pending != null) {
               Serializer<SerializedObject> serializer = new Serializer<>();
-              for (SerializedObject o : pending.creates) {
+              for (SerializedObject o : pending.getCreates()) {
                 long onum = o.getOnum();
                 STORE_DB_LOGGER.log(Level.FINEST, "Bdb committing onum {0}",
                     onum);
@@ -240,7 +258,7 @@ public class BdbDB extends ObjectDB {
 
                 db.put(txn, onumData, objData);
               }
-              for (SerializedObject o : pending.writes) {
+              for (SerializedObject o : pending.getWrites()) {
                 long onum = o.getOnum();
                 STORE_DB_LOGGER.log(Level.FINEST, "Bdb committing onum {0}",
                     onum);
@@ -264,7 +282,7 @@ public class BdbDB extends ObjectDB {
               }
 
               // Apply extensions
-              for (ExpiryExtension e : pending.extensions) {
+              for (ExpiryExtension e : pending.getExtensions()) {
                 long onum = e.onum;
                 STORE_DB_LOGGER.log(Level.FINEST, "Bdb committing onum {0}",
                     onum);
@@ -294,7 +312,8 @@ public class BdbDB extends ObjectDB {
     LongSet writtenOnums = new LongHashSet();
 
     // Fix up caches.
-    for (SerializedObject o : SysUtil.chain(pending.creates, pending.writes)) {
+    for (SerializedObject o : SysUtil.chain(pending.getCreates(),
+        pending.getWrites())) {
       long onum = o.getOnum();
 
       writtenOnums.add(onum);
@@ -304,7 +323,7 @@ public class BdbDB extends ObjectDB {
 
     }
 
-    for (ExpiryExtension e : pending.extensions) {
+    for (ExpiryExtension e : pending.getExtensions()) {
       long onum = e.onum;
 
       writtenOnums.add(onum);
@@ -514,6 +533,20 @@ public class BdbDB extends ObjectDB {
     DatabaseEntry bdbKey = new DatabaseEntry(key);
     DatabaseEntry data = new DatabaseEntry();
 
+    // Also remove value from the table if it's in the "cache"
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    synchronized (submap) {
+      PendingTransaction cached = submap.remove(worker);
+      if (cached != null) {
+        synchronized (cached) {
+          cached.unpin(this);
+        }
+      }
+      if (submap.isEmpty()) pendingByTid.remove(tid, submap);
+    }
+
+    // TODO: is this ever different from the above value? Does BDB spill to disk
+    // for these?
     PendingTransaction pending =
         preparedTransactions.remove(new ByteArray(key));
 
@@ -525,7 +558,11 @@ public class BdbDB extends ObjectDB {
       for (OperationStatus result =
           cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
               cursor.getNextDup(bdbKey, data, null)) {
-        pending.creates.add(toSerializedObject(data.getData()));
+        try {
+          pending.addCreate(toSerializedObject(data.getData()));
+        } catch (TransactionPrepareFailedException e) {
+          throw new InternalError("This should not happen here", e);
+        }
       }
       cursor.close();
 
@@ -533,7 +570,11 @@ public class BdbDB extends ObjectDB {
       for (OperationStatus result =
           cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
               cursor.getNextDup(bdbKey, data, null)) {
-        pending.writes.add(toSerializedObject(data.getData()));
+        try {
+          pending.addWrite(toSerializedObject(data.getData()));
+        } catch (TransactionPrepareFailedException e) {
+          throw new InternalError("This should not happen here", e);
+        }
       }
       cursor.close();
 
@@ -541,7 +582,11 @@ public class BdbDB extends ObjectDB {
       for (OperationStatus result =
           cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
               cursor.getNextDup(bdbKey, data, null)) {
-        pending.extensions.add(toExpiryExtension(data.getData()));
+        try {
+          pending.addExtension(toExpiryExtension(data.getData()));
+        } catch (TransactionPrepareFailedException e) {
+          throw new InternalError("This should not happen here", e);
+        }
       }
       cursor.close();
     }
@@ -552,7 +597,7 @@ public class BdbDB extends ObjectDB {
     preparedWrites.delete(txn, bdbKey);
     preparedExtensions.delete(txn, bdbKey);
 
-    unpin(pending);
+    pending.unpin(this);
     return pending;
   }
 

@@ -3,6 +3,7 @@ package fabric.store.db;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.lang.security.Principal;
+import fabric.store.db.ObjectDB.PendingTransaction;
 
 /**
  * A table of read/write locks, with proper memory management.
@@ -73,12 +74,12 @@ final class ObjectLocksTable {
    * @param worker the {@link Principal} of the worker performing this write in
    * the transaction.
    */
-  public void acquireWriteLock(long onum, long tid, Principal worker)
+  public void acquireWriteLock(long onum, PendingTransaction tx)
       throws UnableToLockException {
     ObjectLocks locks;
     synchronized (locks = getLocks(onum)) {
       try {
-        locks.lockForWrite(tid, worker);
+        locks.lockForWrite(tx);
       } finally {
         if (!locks.inUse()) table.remove(onum, locks);
       }
@@ -92,11 +93,11 @@ final class ObjectLocksTable {
    * @param worker the {@link Principal} of the worker that was performing this
    * write in the transaction.
    */
-  public void releaseWriteLock(long onum, long tid, Principal worker) {
+  public void releaseWriteLock(long onum, PendingTransaction tx) {
     ObjectLocks locks;
     synchronized (locks = getLocks(onum)) {
       try {
-        locks.unlockForWrite(tid, worker);
+        locks.unlockForWrite(tx);
       } finally {
         if (!locks.inUse()) table.remove(onum, locks);
       }
@@ -110,12 +111,12 @@ final class ObjectLocksTable {
    * @param worker the {@link Principal} of the worker performing this soft
    * write in the transaction.
    */
-  public void acquireSoftWriteLock(long onum, long tid, Principal worker)
+  public void acquireSoftWriteLock(long onum, PendingTransaction tx)
       throws UnableToLockException {
     ObjectLocks locks;
     synchronized (locks = getLocks(onum)) {
       try {
-        locks.lockForSoftWrite(tid, worker);
+        locks.lockForSoftWrite(tx);
       } finally {
         if (!locks.inUse()) table.remove(onum, locks);
       }
@@ -129,11 +130,11 @@ final class ObjectLocksTable {
    * @param worker the {@link Principal} of the worker that was performing this
    * soft write in the transaction.
    */
-  public void releaseSoftWriteLock(long onum, long tid, Principal worker) {
+  public void releaseSoftWriteLock(long onum, PendingTransaction tx) {
     ObjectLocks locks;
     synchronized (locks = getLocks(onum)) {
       try {
-        locks.unlockForSoftWrite(tid, worker);
+        locks.unlockForSoftWrite(tx);
       } finally {
         if (!locks.inUse()) table.remove(onum, locks);
       }
@@ -147,12 +148,12 @@ final class ObjectLocksTable {
    * @param worker the {@link Principal} of the worker performing this read in
    * the transaction.
    */
-  public void acquireReadLock(long onum, long tid, Principal worker)
+  public void acquireReadLock(long onum, PendingTransaction tx)
       throws UnableToLockException {
     ObjectLocks locks;
     synchronized (locks = getLocks(onum)) {
       try {
-        locks.lockForRead(tid, worker);
+        locks.lockForRead(tx);
       } finally {
         if (!locks.inUse()) table.remove(onum, locks);
       }
@@ -166,11 +167,11 @@ final class ObjectLocksTable {
    * @param worker the {@link Principal} of the worker that was performing this
    * read in the transaction.
    */
-  public void releaseReadLock(long onum, long tid, Principal worker) {
+  public void releaseReadLock(long onum, PendingTransaction tx) {
     ObjectLocks locks;
     synchronized (locks = getLocks(onum)) {
       try {
-        locks.unlockForRead(tid, worker);
+        locks.unlockForRead(tx);
       } finally {
         if (!locks.inUse()) table.remove(onum, locks);
       }
