@@ -39,7 +39,7 @@ public class StorePrepareFailedMessage extends AsyncMessage {
    */
   public StorePrepareFailedMessage(long tid,
       TransactionPrepareFailedException e) {
-    super(MessageType.WORKER_PREPARE_FAILED);
+    super(MessageType.STORE_PREPARE_FAILED);
     this.tid = tid;
     this.conflicts = e.versionConflicts;
     this.longerContracts = e.longerContracts;
@@ -95,7 +95,7 @@ public class StorePrepareFailedMessage extends AsyncMessage {
 
   /* readMessage */
   protected StorePrepareFailedMessage(DataInput in) throws IOException {
-    super(MessageType.WORKER_PREPARE_FAILED);
+    super(MessageType.STORE_PREPARE_FAILED);
     this.tid = in.readLong();
 
     int size = in.readInt();

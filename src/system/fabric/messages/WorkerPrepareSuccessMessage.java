@@ -31,7 +31,7 @@ public class WorkerPrepareSuccessMessage extends AsyncMessage {
    */
   public WorkerPrepareSuccessMessage(long tid, long time,
       OidKeyHashMap<Long> longerContracts) {
-    super(MessageType.STORE_PREPARE_SUCCESS);
+    super(MessageType.WORKER_PREPARE_SUCCESS);
     this.tid = tid;
     this.time = time;
     this.longerContracts = longerContracts;
@@ -73,7 +73,7 @@ public class WorkerPrepareSuccessMessage extends AsyncMessage {
 
   /* readMessage */
   protected WorkerPrepareSuccessMessage(DataInput in) throws IOException {
-    super(MessageType.STORE_PREPARE_SUCCESS);
+    super(MessageType.WORKER_PREPARE_SUCCESS);
     this.tid = in.readLong();
     this.time = in.readLong();
     this.longerContracts = new OidKeyHashMap<>();
