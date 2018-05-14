@@ -1079,26 +1079,6 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Adjusts rwLocks to account for the fact that the given transaction is about
-   * to be committed or aborted.
-   */
-  protected final void unpin(PendingTransaction tx) {
-    for (long onum : tx.reads) {
-      rwLocks.releaseReadLock(onum, tx);
-    }
-
-    for (SerializedObject update : SysUtil.chain(tx.creates, tx.writes)) {
-      long onum = update.getOnum();
-      rwLocks.releaseWriteLock(onum, tx);
-    }
-
-    for (ExpiryExtension extension : tx.getExtensions()) {
-      long onum = extension.onum;
-      rwLocks.releaseSoftWriteLock(onum, tx);
-    }
-  }
-
-  /**
    * <p>
    * Returns a set of onums that aren't currently occupied. The ObjectDB may
    * return the same onum more than once from this method, althogh doing so
