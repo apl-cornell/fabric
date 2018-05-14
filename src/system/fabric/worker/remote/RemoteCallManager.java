@@ -2,7 +2,6 @@ package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
-import java.util.Map;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.TransactionID;
@@ -10,9 +9,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -28,7 +25,6 @@ import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
-import fabric.worker.RemoteStore;
 import fabric.worker.RetryException;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
@@ -239,17 +235,15 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       topTid = topTid.parent;
     tm.associateAndSyncLog(log, topTid);
 
-    Pair<Map<RemoteStore, LongKeyMap<Long>>, Long> p = null;
     try {
-      p = tm.sendPrepareMessages();
-      tm.getCurrentLog().longerContracts = p.first;
+      tm.sendPrepareMessages(client.node);
     } catch (TransactionRestartingException e) {
       throw new TransactionPrepareFailedException(e);
     } finally {
       tm.associateLog(null);
     }
 
-    return new PrepareTransactionMessage.Response(p.second,
+    return new PrepareTransactionMessage.Response(tm.getCurrentLog().commitTime,
         new LongKeyHashMap<Long>());
   }
 
@@ -274,7 +268,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     TransactionManager tm = TransactionManager.getInstance();
     tm.associateLog(log);
     try {
-      tm.sendCommitMessagesAndCleanUp();
+      tm.commitAndCleanUp();
     } catch (TransactionAtomicityViolationException e) {
       tm.associateLog(null);
       throw new TransactionCommitFailedException("Atomicity violation");

@@ -82,6 +82,17 @@ public final class Log {
   Thread thread;
 
   /**
+   * The TxnStats associated with this transaction.
+   */
+  TxnStats stats;
+
+  /**
+   * Prepare object associated with this log.  Allows for remote workers to
+   * initiate second phase of commit protocol through log.
+   */
+  TransactionPrepare prepare;
+
+  /**
    * A flag indicating whether this transaction should abort or be retried. This
    * flag should be checked before each operation. This flag is set when it's
    * non-null and indicates the transaction in the stack that is to be retried;
@@ -165,6 +176,11 @@ public final class Log {
    * the store, to update after we commit this transaction.
    */
   public Map<RemoteStore, LongKeyMap<Long>> longerContracts;
+
+  /**
+   * Commit time across stores.
+   */
+  public long commitTime;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -317,6 +333,7 @@ public final class Log {
       this.resolving = parent.resolving;
       this.locksCreated.putAll(parent.locksCreated);
       this.acquires.putAll(parent.acquires);
+      stats = parent.stats;
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
@@ -326,6 +343,7 @@ public final class Log {
 
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
+      stats = TransactionManager.getInstance().stats;
     }
   }
 
@@ -539,6 +557,10 @@ public final class Log {
     return result.values();
   }
 
+  /**
+   * Check if this transaction has been told to abort and retry.
+   * @throws TransactionRestartingException if a retry was flagged.
+   */
   public void checkRetrySignal() throws TransactionRestartingException {
     if (this.retrySignal != null) {
       synchronized (this) {
@@ -630,6 +652,8 @@ public final class Log {
     }
     // Reset the expiry to check.
     expiryToCheck = Long.MAX_VALUE;
+
+    prepare = null;
 
     if (parent != null && parent.tid.equals(tid.parent)) {
       // The parent frame represents the parent transaction. Null out its child.
@@ -1027,6 +1051,7 @@ public final class Log {
     // Update this thread's lock state in the TransactionManager.
     TransactionManager tm = TransactionManager.getInstance();
     tm.updateLockState(acquires, pendingReleases);
+    prepare = null;
 
     // Merge the security cache into the top-level label cache.
     securityCache.mergeWithTopLevel();
