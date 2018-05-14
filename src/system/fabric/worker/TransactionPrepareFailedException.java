@@ -18,20 +18,27 @@ public class TransactionPrepareFailedException extends FabricException {
 
   public final List<String> messages;
 
-  public TransactionPrepareFailedException(TransactionRestartingException cause) {
-    this.messages = null;
-    this.versionConflicts = null;
+  public TransactionPrepareFailedException(
+      TransactionRestartingException cause) {
+    this.messages = new ArrayList<>();
+    this.versionConflicts = new LongKeyHashMap<>();
   }
 
   public TransactionPrepareFailedException(
       LongKeyMap<SerializedObject> versionConflicts) {
     this.versionConflicts = versionConflicts;
-    this.messages = null;
+    this.messages = new ArrayList<>();
+  }
+
+  public TransactionPrepareFailedException(
+      LongKeyMap<SerializedObject> versionConflicts, List<String> messages) {
+    this.versionConflicts = versionConflicts;
+    this.messages = messages;
   }
 
   public TransactionPrepareFailedException(
       Map<RemoteNode<?>, TransactionPrepareFailedException> failures) {
-    this.versionConflicts = null;
+    this.versionConflicts = new LongKeyHashMap<>();
 
     messages = new ArrayList<>();
     for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
@@ -65,7 +72,7 @@ public class TransactionPrepareFailedException extends FabricException {
   }
 
   public TransactionPrepareFailedException(String message) {
-    this(null, message);
+    this(new LongKeyHashMap<SerializedObject>(), message);
   }
 
   @Override
