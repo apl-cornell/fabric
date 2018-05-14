@@ -127,7 +127,7 @@ public class TransactionPrepare {
     cleanUp();
     if (currentStatus == Status.PREPARING && outstandingWorkers.isEmpty()
         && outstandingStores.isEmpty()) {
-      if (commitTime > txnLog.expiry()) {
+      if (commitTime > txnLog.expiry() && !singleStore && !readOnly) {
         abortForTimeout();
       } else {
         currentStatus = Status.PREPARED;
@@ -219,7 +219,7 @@ public class TransactionPrepare {
     cleanUp();
     if (currentStatus == Status.PREPARING && outstandingWorkers.isEmpty()
         && outstandingStores.isEmpty()) {
-      if (commitTime > txnLog.expiry()) {
+      if (commitTime > txnLog.expiry() && !singleStore && !readOnly) {
         abortForTimeout();
       } else {
         currentStatus = Status.PREPARED;
