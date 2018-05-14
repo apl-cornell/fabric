@@ -571,7 +571,8 @@ public abstract class ObjectDB {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, "Aborted by another thread");
+          Worker.getWorker().getStore(Worker.getWorkerName()), longerContracts,
+          "Aborted by another thread");
     }
 
     PendingTransaction tx;
@@ -579,6 +580,7 @@ public abstract class ObjectDB {
       if (!submap.containsKey(worker)
           || submap.get(worker).state == PendingTransaction.State.ABORTING)
         throw new TransactionPrepareFailedException(versionConflicts,
+            Worker.getWorker().getStore(Worker.getWorkerName()),
             longerContracts, "Aborted by another thread");
 
       tx = submap.get(worker);
@@ -589,7 +591,8 @@ public abstract class ObjectDB {
       rwLocks.acquireReadLock(onum, tx);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, read(onum).getClassName() + " " + onum
+          Worker.getWorker().getStore(Worker.getWorkerName()), longerContracts,
+          read(onum).getClassName() + " " + onum
               + " has been write-locked by an uncommitted transaction.");
     }
 
@@ -609,7 +612,8 @@ public abstract class ObjectDB {
       curExpiry = getExpiry(onum);
     } catch (AccessException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, e.getMessage());
+          Worker.getWorker().getStore(Worker.getWorkerName()), longerContracts,
+          e.getMessage());
     }
 
     if (curVersion != version) {
@@ -641,7 +645,8 @@ public abstract class ObjectDB {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, "Aborted by another thread");
+          Worker.getWorker().getStore(Worker.getWorkerName()), longerContracts,
+          "Aborted by another thread");
     }
 
     long onum = obj.getOnum();
@@ -650,6 +655,7 @@ public abstract class ObjectDB {
       if (!submap.containsKey(worker)
           || submap.get(worker).state == PendingTransaction.State.ABORTING)
         throw new TransactionPrepareFailedException(versionConflicts,
+            Worker.getWorker().getStore(Worker.getWorkerName()),
             longerContracts, "Aborted by another thread");
       tx = submap.get(worker);
     }
@@ -659,7 +665,8 @@ public abstract class ObjectDB {
       rwLocks.acquireWriteLock(onum, tx);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, obj.getClassName() + " " + onum
+          Worker.getWorker().getStore(Worker.getWorkerName()), longerContracts,
+          obj.getClassName() + " " + onum
               + " has been locked by an uncommitted transaction.");
     }
 
@@ -677,6 +684,7 @@ public abstract class ObjectDB {
       // Make sure the onum doesn't already exist in the database.
       if (exists(onum)) {
         throw new TransactionPrepareFailedException(versionConflicts,
+            Worker.getWorker().getStore(Worker.getWorkerName()),
             longerContracts, "Object " + onum + " already exists.");
       }
 
@@ -712,7 +720,6 @@ public abstract class ObjectDB {
   }
 
   /**
-  <<<<<<< HEAD
    * Prepares an extension against the database.
    *
    * @param tid
@@ -737,7 +744,8 @@ public abstract class ObjectDB {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, "Aborted by another thread");
+          Worker.getWorker().getStore(Worker.getWorkerName()), longerContracts,
+          "Aborted by another thread");
     }
 
     long onum = extension.onum;
@@ -746,6 +754,7 @@ public abstract class ObjectDB {
       if (!submap.containsKey(worker)
           || submap.get(worker).state == PendingTransaction.State.ABORTING)
         throw new TransactionPrepareFailedException(versionConflicts,
+            Worker.getWorker().getStore(Worker.getWorkerName()),
             longerContracts, "Aborted by another thread");
       tx = submap.get(worker);
     }
@@ -756,7 +765,7 @@ public abstract class ObjectDB {
       rwLocks.acquireReadLock(onum, tx);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts,
+          Worker.getWorker().getStore(Worker.getWorkerName()), longerContracts,
           "Object " + onum + " has been locked by an uncommitted transaction.");
     }
 
@@ -764,8 +773,14 @@ public abstract class ObjectDB {
     // transaction has locked the object.
     synchronized (submap) {
       // Act as both a read and an extension.
-      submap.get(worker).addRead(onum);
-      submap.get(worker).addExtension(extension);
+      try {
+        submap.get(worker).addRead(onum);
+        submap.get(worker).addExtension(extension);
+      } catch (TransactionPrepareFailedException e) {
+        rwLocks.releaseReadLock(onum, tx);
+        rwLocks.releaseSoftWriteLock(onum, tx);
+        throw e;
+      }
     }
 
     // Check version numbers.

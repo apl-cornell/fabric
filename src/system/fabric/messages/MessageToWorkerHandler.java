@@ -5,8 +5,6 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.messages.AllocateMessage.Response;
-import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TakeOwnershipFailedException;
@@ -30,23 +28,44 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
   }
 
   @Override
-  public abstract AbortTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, AbortTransactionMessage msg)
-      throws AccessException;
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      AbortTransactionMessage msg) throws ProtocolError;
 
   @Override
-  public abstract CommitTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, CommitTransactionMessage msg)
-      throws TransactionCommitFailedException;
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      CommitTransactionMessage msg) throws ProtocolError;
+
+  @Override
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      StoreCommittedMessage msg) throws ProtocolError;
+
+  @Override
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      WorkerCommittedMessage msg) throws ProtocolError;
 
   @Override
   public abstract void handle(RemoteIdentity<RemoteWorker> client,
       ObjectUpdateMessage msg);
 
   @Override
-  public abstract PrepareTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
-      throws TransactionPrepareFailedException;
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      PrepareTransactionMessage msg) throws ProtocolError;
+
+  @Override
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      StorePrepareFailedMessage msg) throws ProtocolError;
+
+  @Override
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      StorePrepareSuccessMessage msg) throws ProtocolError;
+
+  @Override
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      WorkerPrepareFailedMessage msg) throws ProtocolError;
+
+  @Override
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      WorkerPrepareSuccessMessage msg) throws ProtocolError;
 
   @Override
   public abstract DirtyReadMessage.Response handle(

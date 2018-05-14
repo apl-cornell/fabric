@@ -44,15 +44,17 @@ public abstract class AsyncMessage {
    */
   public final void send(SubSocket<?> s) throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
+    long msgId = Message.msgCount.incrementAndGet();
 
     // Write this message out.
     out.writeBoolean(false); // This does not require response.
+    out.writeLong(msgId);
     out.writeByte(messageType.ordinal());
     writeMessage(out);
     out.flush();
 
     Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
-        "Sent async message {0} to {1}", messageType, s);
+        "Sent async message {0} {1} to {2}", msgId, messageType, s);
   }
 
   /**
@@ -75,7 +77,7 @@ public abstract class AsyncMessage {
    *           the <code>DataInput</code> provided.
    */
   public static AsyncMessage receive(DataInput in,
-      RemoteIdentity<RemoteWorker> client) throws IOException {
+      SubSocket<RemoteWorker> connection, long msgId) throws IOException {
     AsyncMessage m = null;
     try {
       MessageType messageType = MessageType.values()[in.readByte()];
@@ -83,7 +85,8 @@ public abstract class AsyncMessage {
       m = messageType.parse(in);
 
       Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
-          "Received async message {0} from {1}", messageType, client);
+          "Received async message {0} {1} on {2}", msgId, messageType,
+          connection);
 
       return m;
 
@@ -111,6 +114,60 @@ public abstract class AsyncMessage {
       @Override
       ObjectUpdateMessage parse(DataInput in) throws IOException {
         return new ObjectUpdateMessage(in);
+      }
+    },
+    PREPARE_TRANSACTION {
+      @Override
+      PrepareTransactionMessage parse(DataInput in) throws IOException {
+        return new PrepareTransactionMessage(in);
+      }
+    },
+    STORE_PREPARE_FAILED {
+      @Override
+      StorePrepareFailedMessage parse(DataInput in) throws IOException {
+        return new StorePrepareFailedMessage(in);
+      }
+    },
+    STORE_PREPARE_SUCCESS {
+      @Override
+      StorePrepareSuccessMessage parse(DataInput in) throws IOException {
+        return new StorePrepareSuccessMessage(in);
+      }
+    },
+    WORKER_PREPARE_FAILED {
+      @Override
+      WorkerPrepareFailedMessage parse(DataInput in) throws IOException {
+        return new WorkerPrepareFailedMessage(in);
+      }
+    },
+    WORKER_PREPARE_SUCCESS {
+      @Override
+      WorkerPrepareSuccessMessage parse(DataInput in) throws IOException {
+        return new WorkerPrepareSuccessMessage(in);
+      }
+    },
+    COMMIT_TRANSACTION {
+      @Override
+      CommitTransactionMessage parse(DataInput in) throws IOException {
+        return new CommitTransactionMessage(in);
+      }
+    },
+    STORE_COMMITTED {
+      @Override
+      StoreCommittedMessage parse(DataInput in) throws IOException {
+        return new StoreCommittedMessage(in);
+      }
+    },
+    WORKER_COMMITTED {
+      @Override
+      WorkerCommittedMessage parse(DataInput in) throws IOException {
+        return new WorkerCommittedMessage(in);
+      }
+    },
+    ABORT_TRANSACTION {
+      @Override
+      AbortTransactionMessage parse(DataInput in) throws IOException {
+        return new AbortTransactionMessage(in);
       }
     },
     UNSUBSCRIBE {

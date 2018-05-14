@@ -181,8 +181,13 @@ public final class ReadMap {
      * Aborts all transactions that have this entry in their logs.
      */
     synchronized void abortReaders() {
-      for (Log reader : readLocks)
+      for (Log reader : readLocks) {
+        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+              "Cache updated for {0}, aborting reader {1}", obj.onum, reader);
+        }
         reader.flagRetry();
+      }
     }
 
     /**

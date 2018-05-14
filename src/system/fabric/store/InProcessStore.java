@@ -1,14 +1,18 @@
 package fabric.store;
 
+import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
@@ -61,18 +65,31 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void abortTransaction(TransactionID tid) {
-    try {
-      tm.abortTransaction(Worker.getWorker().getPrincipal(), tid.topTid);
-    } catch (AccessException e) {
-      throw new InternalError(e);
-    }
+  public void abortTransaction(final TransactionID tid) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        tm.abortTransaction(Worker.getWorker().getPrincipal(), tid.topTid);
+      }
+    });
   }
 
   @Override
-  public void commitTransaction(long transactionID)
-      throws TransactionCommitFailedException {
-    tm.commitTransaction(getLocalWorkerIdentity(), transactionID);
+  public void commitTransaction(final long transactionID) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          tm.commitTransaction(getLocalWorkerIdentity(), transactionID);
+          Worker.getWorker().getLocalWorker()
+              .notifyStoreCommitted(transactionID);
+        } catch (TransactionCommitFailedException e) {
+          STORE_TRANSACTION_LOGGER.log(Level.FINE,
+              "Commit of transaction {0} failed.",
+              Long.toHexString(transactionID));
+        }
+      }
+    });
   }
 
   @Override
@@ -85,59 +102,60 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public Pair<LongKeyMap<Long>, Long> prepareTransaction(long tid,
-      boolean singleStore, boolean readOnly, long expiryToCheck,
-      Collection<_Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
-      Collection<_Impl> writes, Collection<ExpiryExtension> extensions,
-      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions)
-      throws TransactionPrepareFailedException {
-    Collection<SerializedObject> serializedCreates =
-        new ArrayList<>(toCreate.size());
-    Collection<SerializedObject> serializedWrites =
-        new ArrayList<>(writes.size());
+  public void prepareTransaction(final long tid, final boolean singleStore,
+      final boolean readOnly, final long expiryToCheck,
+      final Collection<_Impl> toCreate,
+      final LongKeyMap<Pair<Integer, Long>> reads,
+      final Collection<_Impl> writes,
+      final Collection<ExpiryExtension> extensions,
+      final LongKeyMap<Set<Oid>> extensionsTriggered,
+      final LongSet delayedExtensions) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        Collection<SerializedObject> serializedCreates =
+            new ArrayList<>(toCreate.size());
+        Collection<SerializedObject> serializedWrites =
+            new ArrayList<>(writes.size());
 
-    for (_Impl o : toCreate) {
-      @SuppressWarnings("deprecation")
-      SerializedObject serialized = new SerializedObject(o);
-      serializedCreates.add(serialized);
-    }
-
-    for (_Impl o : writes) {
-      serializedWrites.add(new SerializedObject(o));
-    }
-
-    PrepareRequest req =
-        new PrepareRequest(tid, serializedCreates, serializedWrites, reads,
-            extensions, extensionsTriggered, delayedExtensions);
-
-    // Swizzle remote pointers.
-    sm.createSurrogates(req);
-
-    LongKeyMap<Long> longerContracts =
-        tm.prepare(Worker.getWorker().getPrincipal(), req);
-
-    long prepareTime = System.currentTimeMillis();
-
-    if (singleStore || readOnly) {
-      if (singleStore && prepareTime > expiryToCheck) {
-        try {
-          tm.abortTransaction(Worker.getWorker().getPrincipal(), tid);
-        } catch (AccessException e) {
-          // This should never happen.
-          throw new InternalError("AccessException on abort but not prepare?");
+        for (_Impl o : toCreate) {
+          @SuppressWarnings("deprecation")
+          SerializedObject serialized = new SerializedObject(o);
+          serializedCreates.add(serialized);
         }
-        throw new TransactionPrepareFailedException(
-            new LongKeyHashMap<SerializedObject>(), longerContracts,
-            "Single store prepare too late");
+
+        for (_Impl o : writes) {
+          @SuppressWarnings("deprecation")
+          SerializedObject serialized = new SerializedObject(o);
+          serializedWrites.add(serialized);
+        }
+
+        PrepareRequest req =
+            new PrepareRequest(tid, serializedCreates, serializedWrites, reads,
+                extensions, extensionsTriggered, delayedExtensions);
+
+        // Swizzle remote pointers.
+        sm.createSurrogates(req);
+
+        try {
+          LongKeyMap<Long> longerContracts =
+              tm.prepare(Worker.getWorker().getPrincipal(), req);
+
+          long prepareTime = System.currentTimeMillis();
+
+          if (singleStore || readOnly) {
+            tm.commitTransaction(getLocalWorkerIdentity(), tid);
+          }
+          Worker.getWorker().inProcessRemoteWorker
+              .notifyStorePrepareSuccess(tid, prepareTime, longerContracts);
+        } catch (TransactionPrepareFailedException e) {
+          Worker.getWorker().inProcessRemoteWorker.notifyStorePrepareFailed(tid,
+              e);
+        } catch (TransactionCommitFailedException e) {
+          throw new InternalError(e);
+        }
       }
-      try {
-        commitTransaction(tid);
-      } catch (TransactionCommitFailedException e) {
-        // Shouldn't happen.
-        throw new InternalError("Single-store commit failed unexpectedly.", e);
-      }
-    }
-    return new Pair<>(longerContracts, prepareTime);
+    });
   }
 
   @Override

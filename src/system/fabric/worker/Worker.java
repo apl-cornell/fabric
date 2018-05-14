@@ -464,6 +464,18 @@ public final class Worker {
    * Shuts down and cleans up the worker.
    */
   public void shutdown() {
+    synchronized (TransactionManager.outstandingCommits) {
+      while (!TransactionManager.outstandingCommits.isEmpty()) {
+        WORKER_LOGGER
+            .info("Waiting for " + TransactionManager.outstandingCommits.size()
+                + " outstanding commits");
+        try {
+          TransactionManager.outstandingCommits.wait();
+        } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
+        }
+      }
+    }
     fetchManager.destroy();
   }
 

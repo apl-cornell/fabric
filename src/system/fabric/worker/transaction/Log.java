@@ -172,17 +172,6 @@ public final class Log {
   protected final OidKeyHashMap<Set<Oid>> extensionTriggers;
 
   /**
-   * A map from RemoteStores to maps from onums to contracts that were longer on
-   * the store, to update after we commit this transaction.
-   */
-  public Map<RemoteStore, LongKeyMap<Long>> longerContracts;
-
-  /**
-   * Commit time across stores.
-   */
-  public long commitTime;
-
-  /**
    * Tracks objects on local store that have been modified. See
    * <code>writes</code>.
    */
@@ -676,7 +665,6 @@ public final class Log {
       localStoreWrites.clear();
       workersCalled.clear();
       securityCache.reset();
-      longerContracts = null;
       acquires.clear();
       pendingReleases.clear();
       locksCreated.clear();
@@ -935,18 +923,6 @@ public final class Log {
   void commitTopLevel() {
     // Grab the stores already contacted to be checked against below.
     Set<Store> alreadyContacted = storesToContact();
-
-    // Update the local copies of contracts now before we've released the lock
-    // and risk writing an in-flight value.
-    for (Map.Entry<RemoteStore, LongKeyMap<Long>> e : longerContracts
-        .entrySet()) {
-      RemoteStore s = e.getKey();
-      for (LongKeyMap.Entry<Long> entry : e.getValue().entrySet()) {
-        long onum = entry.getKey();
-        long expiry = entry.getValue();
-        s.readFromCache(onum).setExpiry(expiry);
-      }
-    }
 
     // Release write locks on created objects and set version numbers.
     // XXX TRM 3/9/18: Do this before reads and writes so that nobody gets a
@@ -1356,5 +1332,15 @@ public final class Log {
         }
       }
     }
+  }
+
+  public OidKeyHashMap<Long> getLongerContracts() {
+    if (prepare != null) return prepare.getLongerContracts();
+    return new OidKeyHashMap<>();
+  }
+
+  public long getCommitTime() {
+    if (prepare != null) return prepare.getCommitTime();
+    return 0;
   }
 }

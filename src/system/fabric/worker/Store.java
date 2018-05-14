@@ -38,16 +38,13 @@ public interface Store extends Serializable {
    * @param extensionsTriggered
    *          map from onums on this store to sets of oids that should be
    *          extended after this commits.
-   *
-   * @return A map from onums to contracts that were longer on the store, to
-   * replace in the local cache.
    */
-  Pair<LongKeyMap<Long>, Long> prepareTransaction(long tid, boolean singleStore,
-      boolean readOnly, long expiryToCheck, Collection<_Impl> toCreate,
+  void prepareTransaction(long tid, boolean singleStore, boolean readOnly,
+      long expiryToCheck, Collection<_Impl> toCreate,
       LongKeyMap<Pair<Integer, Long>> reads, Collection<_Impl> writes,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions)
-      throws UnreachableNodeException, TransactionPrepareFailedException;
+      throws UnreachableNodeException;
 
   /**
    * Creates a new cache entry for the given _Impl.
@@ -103,20 +100,16 @@ public interface Store extends Serializable {
    * @param tid
    *          the ID of the aborting transaction. This is assumed to specify a
    *          top-level transaction.
-   * @throws AccessException
    */
-  void abortTransaction(TransactionID tid) throws AccessException;
+  void abortTransaction(TransactionID tid);
 
   /**
    * Notifies the Store that the transaction should be committed.
    *
    * @param transactionID
    *          the ID of the transaction to commit
-   * @throws UnreachableNodeException
-   * @throws TransactionCommitFailedException
    */
-  void commitTransaction(long transactionID)
-      throws UnreachableNodeException, TransactionCommitFailedException;
+  void commitTransaction(long transactionID);
 
   /**
    * Determines whether the given set of objects are stale.

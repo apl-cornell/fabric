@@ -4,8 +4,6 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
-import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TakeOwnershipFailedException;
@@ -35,20 +33,39 @@ public interface MessageHandler {
   public void handle(RemoteIdentity<RemoteWorker> client,
       ContractExtensionMessage msg) throws ProtocolError;
 
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      PrepareTransactionMessage msg) throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      StorePrepareFailedMessage msg) throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      StorePrepareSuccessMessage msg) throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      WorkerPrepareFailedMessage msg) throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      WorkerPrepareSuccessMessage msg) throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      CommitTransactionMessage msg) throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      StoreCommittedMessage msg) throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      WorkerCommittedMessage msg) throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client,
+      AbortTransactionMessage msg) throws ProtocolError;
+
   /////////////////////////////////////////////////////////////////////
   // Synchronous Messages
   /////////////////////////////////////////////////////////////////////
 
-  public AbortTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, AbortTransactionMessage msg)
-      throws AccessException;
-
   public AllocateMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       AllocateMessage msg) throws ProtocolError, AccessException;
-
-  public CommitTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, CommitTransactionMessage msg)
-      throws TransactionCommitFailedException;
 
   public DissemReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       DissemReadMessage msg) throws ProtocolError, AccessException;
@@ -56,10 +73,6 @@ public interface MessageHandler {
   public GetCertChainMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, GetCertChainMessage msg)
       throws ProtocolError;
-
-  public PrepareTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
-      throws TransactionPrepareFailedException;
 
   public ReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       ReadMessage msg) throws ProtocolError, AccessException;

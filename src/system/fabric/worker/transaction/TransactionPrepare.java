@@ -1,41 +1,33 @@
 package fabric.worker.transaction;
 
-import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
-import fabric.common.Threading;
-import fabric.common.Threading.NamedRunnable;
-import fabric.common.TransactionID;
-import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
-import fabric.net.RemoteNode;
-import fabric.net.UnreachableNodeException;
+import fabric.messages.StoreCommittedMessage;
+import fabric.messages.StorePrepareFailedMessage;
+import fabric.messages.StorePrepareSuccessMessage;
+import fabric.messages.WorkerCommittedMessage;
+import fabric.messages.WorkerPrepareFailedMessage;
+import fabric.messages.WorkerPrepareSuccessMessage;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
-import fabric.worker.TransactionAtomicityViolationException;
-import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
+import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
 
@@ -59,7 +51,10 @@ public class TransactionPrepare {
   private final Log txnLog;
   private final boolean singleStore;
   private final boolean readOnly;
-  private final Map<RemoteStore, LongKeyMap<Long>> longerContracts;
+  // time at which all prepares were finished.
+  private long commitTime;
+  // All longer contracts to forward to the coordinator.
+  private OidKeyHashMap<Long> longerContracts;
 
   public TransactionPrepare(RemoteWorker coordinator, Log txnLog,
       boolean singleStore, boolean readOnly, Collection<Store> stores,
@@ -76,21 +71,187 @@ public class TransactionPrepare {
     for (RemoteWorker worker : workers) {
       this.outstandingWorkers.put(worker, false);
     }
-    longerContracts = Collections
-        .synchronizedMap(new HashMap<RemoteStore, LongKeyMap<Long>>());
+    this.commitTime = 0;
+    this.longerContracts = new OidKeyHashMap<>();
+    if (TransactionManager.pendingPrepares.putIfAbsent(txnLog.tid.topTid,
+        this) != null) {
+      // This shouldn't be possible, somehow we're trying to prepare an already
+      // preparing transaction id.
+      throw new InternalError("Preparing an already preparing tid!");
+    }
+  }
+
+  /**
+   * Mark a store as having finished committing.
+   */
+  public synchronized void markCommitted(String name, StoreCommittedMessage m) {
+    Store s = name.equals("local") ? Worker.getWorker().getLocalStore()
+        : Worker.getWorker().getStore(name);
+    WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} finished committing at {1}",
+        new Object[] { txnLog, s });
+    respondedStores.remove(s);
+    if (respondedStores.isEmpty() && respondedWorkers.isEmpty()) {
+      if (coordinator != null)
+        coordinator.notifyWorkerCommitted(txnLog.tid.topTid);
+      TransactionManager.outstandingCommits.remove(txnLog.tid.topTid, this);
+      synchronized (TransactionManager.outstandingCommits) {
+        TransactionManager.outstandingCommits.notifyAll();
+      }
+      currentStatus = Status.COMMITTED;
+      notifyAll();
+    }
+  }
+
+  /**
+   * Mark a successful prepare for a store.
+   */
+  public synchronized void markSuccess(String name,
+      StorePrepareSuccessMessage m) {
+    // XXX: This is really brittle for local store handling...
+    Store s = name.equals("local") ? Worker.getWorker().getLocalStore()
+        : Worker.getWorker().getStore(name);
+    WORKER_TRANSACTION_LOGGER.log(Level.FINER,
+        "{0} successfully prepared at {1}", new Object[] { txnLog, s });
+    outstandingStores.remove(s);
+    respondedStores.add(s);
+    commitTime = Math.max(commitTime, m.time);
+    for (LongKeyMap.Entry<Long> entry : m.longerContracts.entrySet()) {
+      long onum = entry.getKey();
+      long expiry = entry.getValue();
+      s.readFromCache(onum).setExpiry(expiry);
+      this.longerContracts.put(s, onum, expiry);
+    }
+    cleanUp();
+    if (currentStatus == Status.PREPARING && outstandingWorkers.isEmpty()
+        && outstandingStores.isEmpty()) {
+      if (commitTime > txnLog.expiry()) {
+        abortForTimeout();
+      } else {
+        currentStatus = Status.PREPARED;
+        notifyAll();
+      }
+    }
+  }
+
+  /**
+   * Mark a failed prepare for a store.
+   */
+  public synchronized void markFail(String name, StorePrepareFailedMessage m) {
+    // XXX: This is really brittle for local store handling...
+    Store s = name.equals("local") ? Worker.getWorker().getLocalStore()
+        : Worker.getWorker().getStore(name);
+    WORKER_TRANSACTION_LOGGER.log(Level.FINER,
+        "{0} failed to prepare at {1}: {2}", new Object[] { txnLog, s, m });
+    outstandingStores.remove(s);
+    respondedStores.add(s);
+    this.longerContracts.putAll(m.longerContracts);
+    for (Store store : m.longerContracts.storeSet()) {
+      for (LongKeyMap.Entry<Long> entry : m.longerContracts.get(store)
+          .entrySet()) {
+        long onum = entry.getKey();
+        long expiry = entry.getValue();
+        store.readFromCache(onum).setExpiry(expiry);
+      }
+    }
+    abort(s);
+    if (s instanceof RemoteStore) {
+      // Remove old objects from our cache.
+      RemoteStore store = (RemoteStore) s;
+      LongKeyMap<SerializedObject> versionConflicts = m.conflicts;
+      String conflictsString = "";
+      for (SerializedObject obj : versionConflicts.values()) {
+        store.updateCache(obj);
+        if (!conflictsString.equals("")) {
+          conflictsString += " ";
+        }
+        conflictsString +=
+            obj.getClassName() + "@" + store.name() + "#" + obj.getOnum();
+      }
+      txnLog.stats.addConflicts(conflictsString);
+    }
+    cleanUp();
+  }
+
+  /**
+   * Mark a worker as having finished committing.
+   */
+  public synchronized void markCommitted(String name,
+      WorkerCommittedMessage m) {
+    RemoteWorker w = Worker.getWorker().getWorker(name);
+    WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} finished committing at {1}",
+        new Object[] { txnLog, w });
+    respondedWorkers.remove(w);
+    if (respondedStores.isEmpty() && respondedWorkers.isEmpty()) {
+      if (coordinator != null)
+        coordinator.notifyWorkerCommitted(txnLog.tid.topTid);
+      TransactionManager.outstandingCommits.remove(txnLog.tid.topTid, this);
+      synchronized (TransactionManager.outstandingCommits) {
+        TransactionManager.outstandingCommits.notifyAll();
+      }
+      currentStatus = Status.COMMITTED;
+      notifyAll();
+    }
+  }
+
+  /**
+   * Mark a successful prepare for a worker.
+   */
+  public synchronized void markSuccess(String name,
+      WorkerPrepareSuccessMessage m) {
+    RemoteWorker w = Worker.getWorker().getWorker(name);
+    WORKER_TRANSACTION_LOGGER.log(Level.FINER,
+        "{0} successfully prepared at {1}", new Object[] { txnLog, w });
+    outstandingWorkers.remove(w);
+    respondedWorkers.add(w);
+    commitTime = Math.max(commitTime, m.time);
+    this.longerContracts.putAll(m.longerContracts);
+    for (Store store : m.longerContracts.storeSet()) {
+      for (LongKeyMap.Entry<Long> entry : m.longerContracts.get(store)
+          .entrySet()) {
+        long onum = entry.getKey();
+        long expiry = entry.getValue();
+        store.readFromCache(onum).setExpiry(expiry);
+      }
+    }
+    cleanUp();
+    if (currentStatus == Status.PREPARING && outstandingWorkers.isEmpty()
+        && outstandingStores.isEmpty()) {
+      if (commitTime > txnLog.expiry()) {
+        abortForTimeout();
+      } else {
+        currentStatus = Status.PREPARED;
+        notifyAll();
+      }
+    }
+  }
+
+  /**
+   * Mark a failed prepare for a worker.
+   */
+  public synchronized void markFail(String name, WorkerPrepareFailedMessage m) {
+    RemoteWorker w = Worker.getWorker().getWorker(name);
+    WORKER_TRANSACTION_LOGGER.log(Level.FINER,
+        "{0} failed to prepare at {1}: {2}", new Object[] { txnLog, w, m });
+    outstandingWorkers.remove(w);
+    respondedWorkers.add(w);
+    this.longerContracts.putAll(m.longerContracts);
+    for (Store store : m.longerContracts.storeSet()) {
+      for (LongKeyMap.Entry<Long> entry : m.longerContracts.get(store)
+          .entrySet()) {
+        long onum = entry.getKey();
+        long expiry = entry.getValue();
+        store.readFromCache(onum).setExpiry(expiry);
+      }
+    }
+    abort(w);
+    // TODO: handle conflicts?
+    cleanUp();
   }
 
   public synchronized void prepare() throws TransactionRestartingException {
     WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} running prepare", txnLog);
     // Make sure we weren't aborted already.
     txnLog.checkRetrySignal();
-
-    final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
-        Collections.synchronizedMap(
-            new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
-    // Time to use for contract comparisons at the end of prepare.
-    final long[] time = new long[] { System.currentTimeMillis() };
-    final long expiryToCheck = txnLog.expiry();
 
     // If we literally don't have anyone to prepare, we just move on.
     if (currentStatus == Status.PREPARING && outstandingStores.isEmpty()
@@ -99,196 +260,52 @@ public class TransactionPrepare {
       return;
     }
 
-    List<Future<?>> futures =
-        new ArrayList<>(outstandingStores.size() + outstandingWorkers.size());
-
-    // Go through each worker and send prepare messages in parallel.
-    for (final RemoteWorker worker : outstandingWorkers.keySet()) {
-      Threading.NamedRunnable runnable =
-          new Threading.NamedRunnable("worker prepare to " + worker.name()) {
-            @Override
-            protected void runImpl() {
-              outstandingWorkers.put(worker, true);
-              try {
-                long t = worker.prepareTransaction(txnLog.tid.topTid);
-                synchronized (time) {
-                  time[0] = Math.max(t, time[0]);
-                }
-              } catch (UnreachableNodeException e) {
-                failures.put(worker, new TransactionPrepareFailedException(
-                    "Unreachable worker"));
-              } catch (TransactionPrepareFailedException e) {
-                failures.put(worker,
-                    new TransactionPrepareFailedException(e.getMessage()));
-              } catch (TransactionRestartingException e) {
-                failures.put(worker, new TransactionPrepareFailedException(
-                    "transaction restarting"));
-              }
-              outstandingWorkers.remove(worker);
-              respondedWorkers.add(worker);
-            }
-          };
-      futures.add(Threading.getPool().submit(runnable));
+    // Send prepares to workers.
+    for (RemoteWorker w : outstandingWorkers.keySet()) {
+      w.prepareTransaction(txnLog.tid.topTid);
+      WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending prepare to {1}",
+          new Object[] { txnLog, w });
+      outstandingWorkers.put(w, true);
     }
 
-    // Go through each store and send prepare messages in parallel.
-    for (Iterator<Store> storeIt =
-        outstandingStores.keySet().iterator(); storeIt.hasNext();) {
-      final Store store = storeIt.next();
-      NamedRunnable runnable =
-          new NamedRunnable("worker prepare to " + store.name()) {
-
-            @Override
-            public void runImpl() {
-              try {
-                Collection<_Impl> creates = txnLog.getCreatesForStore(store);
-                LongKeyMap<Pair<Integer, Long>> reads =
-                    txnLog.getReadsForStore(store, false);
-                Collection<_Impl> writes = txnLog.getWritesForStore(store);
-                Collection<ExpiryExtension> extensions =
-                    txnLog.getExtensionsForStore(store);
-                LongKeyMap<Set<Oid>> extensionsTriggered =
-                    txnLog.getTriggeredExtensionsForStore(store);
-                LongSet delayedExtensions =
-                    txnLog.getDelayedExtensionsForStore(store);
-                if (store instanceof RemoteStore) {
-                  Pair<LongKeyMap<Long>, Long> p =
-                      store.prepareTransaction(txnLog.tid.topTid, singleStore,
-                          readOnly, expiryToCheck, creates, reads, writes,
-                          extensions, extensionsTriggered, delayedExtensions);
-                  longerContracts.put((RemoteStore) store, p.first);
-                  synchronized (time) {
-                    time[0] = Math.max(p.second, time[0]);
-                  }
-                } else {
-                  store.prepareTransaction(txnLog.tid.topTid, singleStore,
-                      readOnly, expiryToCheck, creates, reads, writes,
-                      extensions, extensionsTriggered, delayedExtensions);
-                }
-              } catch (TransactionPrepareFailedException e) {
-                failures.put((RemoteNode<?>) store, e);
-              } catch (UnreachableNodeException e) {
-                failures.put((RemoteNode<?>) store,
-                    new TransactionPrepareFailedException("Unreachable store"));
-              }
-            }
-          };
-
-      // Optimization: only start in a new thread if there are more stores to
-      // contact
-      if (storeIt.hasNext()) {
-        futures.add(Threading.getPool().submit(runnable));
-      } else {
-        runnable.run();
-      }
+    // Send prepares to stores.
+    for (Store store : outstandingStores.keySet()) {
+      Collection<_Impl> creates = txnLog.getCreatesForStore(store);
+      LongKeyMap<Pair<Integer, Long>> reads =
+          txnLog.getReadsForStore(store, false);
+      Collection<_Impl> writes = txnLog.getWritesForStore(store);
+      Collection<ExpiryExtension> extensions =
+          txnLog.getExtensionsForStore(store);
+      LongKeyMap<Set<Oid>> extensionsTriggered =
+          txnLog.getTriggeredExtensionsForStore(store);
+      LongSet delayedExtensions = txnLog.getDelayedExtensionsForStore(store);
+      store.prepareTransaction(txnLog.tid.topTid, singleStore, readOnly,
+          txnLog.expiry(), creates, reads, writes, extensions,
+          extensionsTriggered, delayedExtensions);
+      WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending prepare to {1}",
+          new Object[] { txnLog, store });
+      outstandingStores.put(store, true);
     }
 
-    // Wait for replies.
-    for (Future<?> future : futures) {
-      while (true) {
+    try {
+      // Wait for success or abort.
+      while (currentStatus == Status.PREPARING) {
+        txnLog.checkRetrySignal();
         try {
-          future.get();
-          break;
+          txnLog.setWaitsFor(this);
+          wait();
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
-        } catch (ExecutionException e) {
-          e.printStackTrace();
+          // TODO: more?
         }
       }
+    } finally {
+      txnLog.clearWaitsFor();
     }
-
-    // Check for conflicts and unreachable stores/workers.
-    if (!failures.isEmpty()) {
-      String conflictsString = "";
-      String logMessage = "Transaction tid="
-          + Long.toHexString(txnLog.tid.topTid) + ":  prepare failed.";
-
-      for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
-          .entrySet()) {
-        if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
-          logMessage +=
-              "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
-        }
-        if (entry.getKey() instanceof RemoteStore) {
-          // Remove old objects from our cache.
-          RemoteStore store = (RemoteStore) entry.getKey();
-          LongKeyMap<SerializedObject> versionConflicts =
-              entry.getValue().versionConflicts;
-          if (versionConflicts != null) {
-            for (SerializedObject obj : versionConflicts.values()) {
-              if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
-                try {
-                  long onum = obj.getOnum();
-                  long oldVersion = -1;
-                  LongKeyMap<Pair<Integer, Long>> reads =
-                      txnLog.getReadsForStore(store, false);
-                  if (reads.containsKey(onum))
-                    oldVersion = reads.get(onum).first;
-                  logMessage += "\n\t\tBad version for " + obj.getClassName()
-                      + " " + obj.getOnum() + " (should be ver. "
-                      + obj.getVersion() + " was " + oldVersion
-                      + " and currently have "
-                      + store.readObject(obj.getOnum()).getVersion() + ")";
-                } catch (Exception e) {
-                }
-              }
-              store.updateCache(obj);
-              if (!conflictsString.equals("")) {
-                conflictsString += " ";
-              }
-              conflictsString +=
-                  obj.getClassName() + "@" + store.name() + "#" + obj.getOnum();
-            }
-          }
-          // Update extensions which weren't version conflicts.
-          LongKeyMap<Long> failedLongerContracts =
-              entry.getValue().longerContracts;
-          if (failedLongerContracts != null) {
-            for (LongKeyMap.Entry<Long> e : failedLongerContracts.entrySet()) {
-              long onum = e.getKey();
-              long expiry = e.getValue();
-              if (!versionConflicts.containsKey(onum)) {
-                // Only bother if it wasn't also a conflict.
-                store.readFromCache(onum).setExpiry(expiry);
-              }
-            }
-          }
-        }
-      }
-
-      // Update the contract objects locally so that we're using the latest
-      // version next time.
-      for (Map.Entry<RemoteStore, LongKeyMap<Long>> e1 : longerContracts
-          .entrySet()) {
-        RemoteStore s = e1.getKey();
-        for (LongKeyMap.Entry<Long> entry : e1.getValue().entrySet()) {
-          // Update the expiry time.
-          long onum = entry.getKey();
-          long expiry = entry.getValue();
-          s.readFromCache(onum).setExpiry(expiry);
-        }
-        txnLog.stats.addConflicts(conflictsString);
-      }
-
-      WORKER_TRANSACTION_LOGGER.fine(logMessage);
-      HOTOS_LOGGER.fine("Prepare failed.");
-
-      TransactionID tid = txnLog.tid;
-      throw new TransactionRestartingException(tid);
-    } else if (!singleStore && txnLog.expiry() < time[0]) {
-      // Don't check the time locally if it's single store, the time was already
-      // checked on the store.
-
-      HOTOS_LOGGER.fine("Prepare failed (expiry passed).");
-
-      Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
-          "{0} error committing: prepare too late", txnLog);
-
-      TransactionID tid = txnLog.tid;
-      throw new TransactionRestartingException(tid);
+    if (currentStatus == Status.ABORTING) {
+      // Check if we're done due to abort.
+      txnLog.checkRetrySignal();
     }
-    txnLog.longerContracts = longerContracts;
-    txnLog.commitTime = time[0];
   }
 
   public synchronized void commit() {
@@ -296,86 +313,41 @@ public class TransactionPrepare {
       WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} running commit", txnLog);
       if (!readOnly && !singleStore
           && (!respondedStores.isEmpty() || !respondedWorkers.isEmpty())) {
-        final List<RemoteNode<?>> unreachable =
-            Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
-        final List<RemoteNode<?>> failed =
-            Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
-        List<Future<?>> futures =
-            new ArrayList<>(respondedStores.size() + respondedWorkers.size());
+        // Make sure worker waits for this to be handled at stores.
+        TransactionManager.outstandingCommits.put(txnLog.tid.topTid, this);
+        currentStatus = Status.COMMITTING;
 
-        // Send commit messages to the workers in parallel.
-        for (final RemoteWorker worker : respondedWorkers) {
-          NamedRunnable runnable =
-              new NamedRunnable("worker commit to " + worker) {
-                @Override
-                public void runImpl() {
-                  try {
-                    worker.commitTransaction(txnLog.tid.topTid);
-                  } catch (UnreachableNodeException e) {
-                    unreachable.add(worker);
-                  } catch (TransactionCommitFailedException e) {
-                    failed.add(worker);
-                  }
-                }
-              };
-
-          futures.add(Threading.getPool().submit(runnable));
+        // Tell workers to commit.
+        for (RemoteWorker w : respondedWorkers) {
+          w.commitTransaction(txnLog.tid.topTid);
+          WORKER_TRANSACTION_LOGGER.log(Level.FINER,
+              "{0} sending commit to {1}", new Object[] { txnLog, w });
         }
 
-        // Send commit messages to the stores in parallel.
-        for (Iterator<Store> storeIt = respondedStores.iterator(); storeIt
-            .hasNext();) {
-          final Store store = storeIt.next();
-          NamedRunnable runnable =
-              new NamedRunnable("worker commit to " + store.name()) {
-                @Override
-                public void runImpl() {
-                  try {
-                    store.commitTransaction(txnLog.tid.topTid);
-                  } catch (TransactionCommitFailedException e) {
-                    failed.add((RemoteStore) store);
-                  } catch (UnreachableNodeException e) {
-                    unreachable.add((RemoteStore) store);
-                  }
-                }
-              };
+        // Tell stores to commit.
+        for (Store s : respondedStores) {
+          s.commitTransaction(txnLog.tid.topTid);
+          WORKER_TRANSACTION_LOGGER.log(Level.FINER,
+              "{0} sending commit to {1}", new Object[] { txnLog, s });
+        }
 
-          // Optimization: only start in a new thread if there are more stores to
-          // contact
-          if (storeIt.hasNext()) {
-            futures.add(Threading.getPool().submit(runnable));
-          } else {
-            runnable.run();
+        // TODO: figure out how to make it safe to pipeline the next transaction
+        // and make it configurable whether the worker should block waiting for
+        // a response before continuing.
+        // (What's remaining appears to be proper handling of creates, which
+        // aren't visible until the creating transaction is committed).
+        while (currentStatus == Status.COMMITTING) {
+          try {
+            wait();
+          } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
-        }
-
-        // Wait for replies.
-        for (Future<?> future : futures) {
-          while (true) {
-            try {
-              future.get();
-              break;
-            } catch (InterruptedException e) {
-              Logging.logIgnoredInterruptedException(e);
-            } catch (ExecutionException e) {
-              // TODO Auto-generated catch block
-              e.printStackTrace();
-            }
-          }
-        }
-
-        if (!(unreachable.isEmpty() && failed.isEmpty())) {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
-              "{0} error committing: atomicity violation "
-                  + "-- failed: {1} unreachable: {2}",
-              txnLog, failed, unreachable);
-          throw new TransactionAtomicityViolationException(failed, unreachable);
         }
       } else {
         // Mark this as committed.
         currentStatus = Status.COMMITTED;
-        //if (coordinator != null)
-        //  coordinator.notifyWorkerCommitted(txnLog.tid.topTid);
+        if (coordinator != null)
+          coordinator.notifyWorkerCommitted(txnLog.tid.topTid);
       }
     }
     // TODO: is it possible to be here before we've prepared?
@@ -390,6 +362,43 @@ public class TransactionPrepare {
           "{0} aborted during prepare by external actor", txnLog);
       runAbort();
     }
+    cleanUp();
+  }
+
+  /**
+   * Initiate an abort due to contract timeout.
+   */
+  public synchronized void abortForTimeout() {
+    if (currentStatus != Status.ABORTING) {
+      WORKER_TRANSACTION_LOGGER.log(Level.FINE,
+          "{0} aborted during prepare due to expiries expiring", txnLog);
+      runAbort();
+    }
+    cleanUp();
+  }
+
+  /**
+   * Initiate an abort due to the RemoteWorker cause indicating a problem.
+   * @param cause the failed worker that initiated the abort.
+   */
+  private synchronized void abort(RemoteWorker cause) {
+    if (currentStatus != Status.ABORTING) {
+      WORKER_TRANSACTION_LOGGER.log(Level.FINE,
+          "{0} aborted during prepare by {1}", new Object[] { txnLog, cause });
+      runAbort();
+    }
+  }
+
+  /**
+   * Initiate an abort due to the store cause indicating a problem.
+   * @param cause the failed store that initiated the abort.
+   */
+  private synchronized void abort(Store cause) {
+    if (currentStatus != Status.ABORTING) {
+      WORKER_TRANSACTION_LOGGER.log(Level.FINE,
+          "{0} aborted during prepare by {1}", new Object[] { txnLog, cause });
+      runAbort();
+    }
   }
 
   /**
@@ -397,22 +406,54 @@ public class TransactionPrepare {
    */
   private synchronized void runAbort() {
     currentStatus = Status.ABORTING;
-    for (Store store : SysUtil.chain(outstandingStores.keySet(),
-        respondedStores))
-      try {
-        store.abortTransaction(txnLog.tid);
-      } catch (AccessException e) {
-        Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
-            "Access error while aborting transaction: {0}", e);
-      }
 
-    for (RemoteWorker worker : SysUtil.chain(outstandingWorkers.keySet(),
-        respondedWorkers))
-      try {
-        worker.abortTransaction(txnLog.tid);
-      } catch (AccessException e) {
-        Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
-            "Access error while aborting transaction: {0}", e);
-      }
+    // Clear out nodes that we didn't contact and shouldn't contact.
+    for (RemoteWorker w : new HashSet<>(outstandingWorkers.keySet())) {
+      if (!outstandingWorkers.get(w)) outstandingWorkers.remove(w);
+    }
+    for (Store s : new HashSet<>(outstandingStores.keySet())) {
+      if (!outstandingStores.get(s)) outstandingStores.remove(s);
+    }
+
+    // Abort the rest.
+    for (RemoteWorker w : SysUtil.chain(outstandingWorkers.keySet(),
+        respondedWorkers)) {
+      w.abortTransaction(txnLog.tid);
+      WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
+          new Object[] { txnLog, w });
+    }
+    for (Store s : SysUtil.chain(outstandingStores.keySet(), respondedStores)) {
+      s.abortTransaction(txnLog.tid);
+      WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
+          new Object[] { txnLog, s });
+    }
+
+    // Flag that local locks should be released.
+    txnLog.flagRetry();
+    txnLog.prepare = null;
+  }
+
+  /**
+   * Make sure this is dropped from the pendingPrepares table once every node
+   * has replied and, if applicable, the coordinator has initiated abort/commit.
+   */
+  private synchronized void cleanUp() {
+    if (outstandingWorkers.isEmpty() && outstandingStores.isEmpty()) {
+      TransactionManager.pendingPrepares.remove(txnLog.tid.topTid, this);
+    }
+  }
+
+  /**
+   * @return the commitTime
+   */
+  public synchronized long getCommitTime() {
+    return commitTime;
+  }
+
+  /**
+   * @return the longerContracts
+   */
+  public synchronized OidKeyHashMap<Long> getLongerContracts() {
+    return longerContracts;
   }
 }

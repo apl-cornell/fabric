@@ -8,6 +8,7 @@ import fabric.common.SerializedObject;
 import fabric.common.exceptions.FabricException;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
 import fabric.net.RemoteNode;
 
 public class TransactionPrepareFailedException extends FabricException {
@@ -20,20 +21,20 @@ public class TransactionPrepareFailedException extends FabricException {
    * Set of objects whose expiration times were longer than observed by the
    * transaction.
    */
-  public final LongKeyMap<Long> longerContracts;
+  public final OidKeyHashMap<Long> longerContracts;
 
   public final List<String> messages;
 
   public TransactionPrepareFailedException(
       TransactionRestartingException cause) {
-    this.messages = null;
-    this.versionConflicts = null;
-    this.longerContracts = null;
+    this.messages = new ArrayList<>();
+    this.versionConflicts = new LongKeyHashMap<>();
+    this.longerContracts = new OidKeyHashMap<>();
   }
 
   public TransactionPrepareFailedException(
       LongKeyMap<SerializedObject> versionConflicts,
-      LongKeyMap<Long> longerContracts) {
+      OidKeyHashMap<Long> longerContracts) {
     this.versionConflicts = versionConflicts;
     this.longerContracts = longerContracts;
     this.messages = new ArrayList<>();
@@ -44,9 +45,43 @@ public class TransactionPrepareFailedException extends FabricException {
   }
 
   public TransactionPrepareFailedException(
+      LongKeyMap<SerializedObject> versionConflicts, Store s,
+      LongKeyMap<Long> longerContracts) {
+    this.versionConflicts = versionConflicts;
+    this.longerContracts = new OidKeyHashMap<>();
+    for (LongKeyMap.Entry<Long> entry : longerContracts.entrySet()) {
+      this.longerContracts.put(s, entry.getKey(), entry.getValue());
+    }
+    this.messages = new ArrayList<>();
+    for (SerializedObject o : versionConflicts.values()) {
+      this.messages.add("Version conflict on " + o.getClassName() + " "
+          + o.getOnum() + " (should be ver. " + o.getVersion() + ")");
+    }
+  }
+
+  public TransactionPrepareFailedException(
+      LongKeyMap<SerializedObject> versionConflicts,
+      OidKeyHashMap<Long> longerContracts, List<String> messages) {
+    this.versionConflicts = versionConflicts;
+    this.longerContracts = longerContracts;
+    this.messages = messages;
+  }
+
+  public TransactionPrepareFailedException(
+      LongKeyMap<SerializedObject> versionConflicts, Store s,
+      LongKeyMap<Long> longerContracts, List<String> messages) {
+    this.versionConflicts = versionConflicts;
+    this.longerContracts = new OidKeyHashMap<>();
+    for (LongKeyMap.Entry<Long> entry : longerContracts.entrySet()) {
+      this.longerContracts.put(s, entry.getKey(), entry.getValue());
+    }
+    this.messages = messages;
+  }
+
+  public TransactionPrepareFailedException(
       Map<RemoteNode<?>, TransactionPrepareFailedException> failures) {
-    this.versionConflicts = null;
-    this.longerContracts = null;
+    this.versionConflicts = new LongKeyHashMap<>();
+    this.longerContracts = new OidKeyHashMap<>();
 
     messages = new ArrayList<>();
     for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
@@ -63,7 +98,7 @@ public class TransactionPrepareFailedException extends FabricException {
   public TransactionPrepareFailedException(
       List<TransactionPrepareFailedException> causes) {
     this.versionConflicts = new LongKeyHashMap<>();
-    this.longerContracts = new LongKeyHashMap<>();
+    this.longerContracts = new OidKeyHashMap<>();
 
     messages = new ArrayList<>();
     for (TransactionPrepareFailedException exc : causes) {
@@ -79,14 +114,26 @@ public class TransactionPrepareFailedException extends FabricException {
 
   public TransactionPrepareFailedException(
       LongKeyMap<SerializedObject> versionConflicts,
-      LongKeyMap<Long> longerContracts, String message) {
+      OidKeyHashMap<Long> longerContracts, String message) {
     this.versionConflicts = versionConflicts;
     this.longerContracts = longerContracts;
     messages = java.util.Collections.singletonList(message);
   }
 
+  public TransactionPrepareFailedException(
+      LongKeyMap<SerializedObject> versionConflicts, Store s,
+      LongKeyMap<Long> longerContracts, String message) {
+    this.versionConflicts = versionConflicts;
+    this.longerContracts = new OidKeyHashMap<>();
+    for (LongKeyMap.Entry<Long> entry : longerContracts.entrySet()) {
+      this.longerContracts.put(s, entry.getKey(), entry.getValue());
+    }
+    messages = java.util.Collections.singletonList(message);
+  }
+
   public TransactionPrepareFailedException(String message) {
-    this(null, null, message);
+    this(new LongKeyHashMap<SerializedObject>(), new OidKeyHashMap<Long>(),
+        message);
   }
 
   @Override

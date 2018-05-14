@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fabric.common.SerializedObject;
+import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
@@ -20,7 +21,6 @@ import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
-import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
@@ -29,8 +29,7 @@ import fabric.worker.remote.RemoteWorker;
  * A <code>PrepareTransactionMessage</code> represents a transaction request to
  * a store.
  */
-public class PrepareTransactionMessage extends
-    Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
+public class PrepareTransactionMessage extends AsyncMessage {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -117,8 +116,7 @@ public class PrepareTransactionMessage extends
       LongKeyMap<Pair<Integer, Long>> reads, Collection<_Impl> writes,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions) {
-    super(MessageType.PREPARE_TRANSACTION,
-        TransactionPrepareFailedException.class);
+    super(MessageType.PREPARE_TRANSACTION);
 
     this.tid = tid;
     this.singleStore = singleStore;
@@ -135,32 +133,13 @@ public class PrepareTransactionMessage extends
   }
 
   // ////////////////////////////////////////////////////////////////////////////
-  // response contents //
-  // ////////////////////////////////////////////////////////////////////////////
-
-  public static class Response implements Message.Response {
-    /** Time to use for the expiry check for contracts. */
-    public final long time;
-    /** Longer contracts to update cache with. */
-    public final LongKeyMap<Long> longerContracts;
-
-    /**
-     * Creates a Response indicating a successful prepare.
-     */
-    public Response(long time, LongKeyMap<Long> longerContracts) {
-      this.time = time;
-      this.longerContracts = longerContracts;
-    }
-  }
-
-  // ////////////////////////////////////////////////////////////////////////////
   // visitor methods //
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity<RemoteWorker> client,
-      MessageHandler h) throws TransactionPrepareFailedException {
-    return h.handle(client, this);
+  public void dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
+      throws ProtocolError {
+    h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -250,8 +229,7 @@ public class PrepareTransactionMessage extends
 
   /* readMessage */
   protected PrepareTransactionMessage(DataInput in) throws IOException {
-    super(MessageType.PREPARE_TRANSACTION,
-        TransactionPrepareFailedException.class);
+    super(MessageType.PREPARE_TRANSACTION);
     this.creates = null;
     this.writes = null;
 
@@ -332,28 +310,5 @@ public class PrepareTransactionMessage extends
     for (int i = 0; i < size; i++) {
       delayedExtensions.add(in.readLong());
     }
-  }
-
-  @Override
-  protected void writeResponse(DataOutput out, Response r) throws IOException {
-    out.writeLong(r.time);
-    out.writeInt(r.longerContracts.size());
-    for (LongKeyMap.Entry<Long> e : r.longerContracts.entrySet()) {
-      out.writeLong(e.getKey());
-      out.writeLong(e.getValue());
-    }
-  }
-
-  @Override
-  protected Response readResponse(DataInput in) throws IOException {
-    long time = in.readLong();
-    int size = in.readInt();
-    LongKeyMap<Long> longerContracts = new LongKeyHashMap<>(size);
-    for (int i = 0; i < size; i++) {
-      long onum = in.readLong();
-      long expiry = in.readLong();
-      longerContracts.put(onum, expiry);
-    }
-    return new Response(time, longerContracts);
   }
 }

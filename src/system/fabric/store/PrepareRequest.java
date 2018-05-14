@@ -422,7 +422,11 @@ public final class PrepareRequest {
         TransactionPrepareFailedException fail =
             new TransactionPrepareFailedException(failures);
         fail.versionConflicts.putAll(versionConflicts);
-        fail.longerContracts.putAll(longerContracts);
+        for (LongKeyMap.Entry<Long> entry : longerContracts.entrySet()) {
+          fail.longerContracts.put(
+              Worker.getWorker().getStore(Worker.getWorkerName()),
+              entry.getKey(), entry.getValue());
+        }
         database.abortPrepare(tid, worker);
         throw fail;
       }
@@ -433,7 +437,10 @@ public final class PrepareRequest {
 
       database.finishPrepare(tid, worker);
 
-      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}", tid);
+      if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+        STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}",
+            Long.toHexString(tid));
+      }
     } catch (RuntimeException e) {
       e.printStackTrace();
       database.abortPrepare(tid, worker);
