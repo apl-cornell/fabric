@@ -812,16 +812,6 @@ public abstract class ObjectDB {
       tx = submap.get(worker);
     }
 
-    // First, read lock the object
-    try {
-      rwLocks.acquireSoftWriteLock(onum, tx);
-      rwLocks.acquireReadLock(onum, tx);
-    } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts,
-          "Object " + onum + " has been locked by an uncommitted transaction.");
-    }
-
     // Record the updated object. Doing so will also register that the
     // transaction has locked the object.
     tx.addExtension(this, extension);
