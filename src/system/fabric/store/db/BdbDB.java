@@ -516,7 +516,7 @@ public class BdbDB extends ObjectDB {
           cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
               cursor.getNextDup(bdbKey, data, null)) {
         try {
-          pending.addCreate(toSerializedObject(data.getData()));
+          pending.addCreate(this, toSerializedObject(data.getData()));
         } catch (TransactionPrepareFailedException e) {
           throw new InternalError("This should not happen here", e);
         }
@@ -528,7 +528,7 @@ public class BdbDB extends ObjectDB {
           cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
               cursor.getNextDup(bdbKey, data, null)) {
         try {
-          pending.addWrite(toSerializedObject(data.getData()));
+          pending.addWrite(this, toSerializedObject(data.getData()));
         } catch (TransactionPrepareFailedException e) {
           throw new InternalError("This should not happen here", e);
         }
