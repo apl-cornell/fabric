@@ -55,11 +55,7 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   public void abortTransaction(TransactionID tid) {
-    try {
-      tm.abortTransaction(Worker.getWorker().getPrincipal(), tid.topTid);
-    } catch (AccessException e) {
-      throw new InternalError(e);
-    }
+    tm.abortTransaction(Worker.getWorker().getPrincipal(), tid.topTid);
   }
 
   @Override

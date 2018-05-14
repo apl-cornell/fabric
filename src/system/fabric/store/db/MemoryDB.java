@@ -22,6 +22,7 @@ import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
+import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
@@ -84,7 +85,29 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  public void finishPrepare(long tid, Principal worker) {
+  public void finishPrepare(long tid, Principal worker)
+      throws TransactionPrepareFailedException {
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    synchronized (submap) {
+      PendingTransaction txn = submap.get(worker);
+      if (txn != null) {
+        synchronized (txn) {
+          switch (txn.state) {
+          case ABORTING:
+            // Should clean up here.  This means the abort message was handled
+            // after prepare was done but before this call.
+            abortPrepare(tid, worker);
+            throw new TransactionPrepareFailedException(
+                "Aborted by another thread");
+          case PREPARED:
+            throw new InternalError(
+                "Attempting to finish an already finished prepare.");
+          case PREPARING:
+            txn.state = PendingTransaction.State.PREPARED;
+          }
+        }
+      }
+    }
   }
 
   @Override
@@ -98,10 +121,10 @@ public class MemoryDB extends ObjectDB {
 
     // merge in the objects. We do creates before writes to avoid potential
     // dangling references in update objects.
-    for (SerializedObject o : tx.creates) {
+    for (SerializedObject o : tx.getCreates()) {
       objectTable.put(o.getOnum(), o);
     }
-    for (SerializedObject o : tx.writes) {
+    for (SerializedObject o : tx.getWrites()) {
       objectTable.put(o.getOnum(), o);
 
       // Update the local worker cache if this is a remote worker updating the
@@ -114,7 +137,7 @@ public class MemoryDB extends ObjectDB {
 
     LongSet writtenOnums = new LongHashSet();
 
-    for (SerializedObject o : SysUtil.chain(tx.writes, tx.creates)) {
+    for (SerializedObject o : SysUtil.chain(tx.getWrites(), tx.getCreates())) {
       writtenOnums.add(o.getOnum());
     }
 
@@ -195,7 +218,7 @@ public class MemoryDB extends ObjectDB {
 
     // XXX Check if the worker acts for the owner.
 
-    unpin(tx);
+    tx.unpin(this);
     return tx;
   }
 

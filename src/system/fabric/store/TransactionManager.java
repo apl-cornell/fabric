@@ -50,11 +50,12 @@ public class TransactionManager {
   /**
    * Instruct the transaction manager that the given transaction is aborting
    */
-  public void abortTransaction(Principal worker, long transactionID)
-      throws AccessException {
-    database.rollback(transactionID, worker);
-    STORE_TRANSACTION_LOGGER.log(Level.FINE, "Aborted transaction {0}",
-        transactionID);
+  public void abortTransaction(Principal worker, long transactionID) {
+    database.abortPrepare(transactionID, worker);
+    if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Aborted transaction {0}",
+          Long.toHexString(transactionID));
+    }
   }
 
   /**
@@ -64,8 +65,10 @@ public class TransactionManager {
       long transactionID) throws TransactionCommitFailedException {
     try {
       database.commit(transactionID, workerIdentity, sm);
-      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Committed transaction {0}",
-          transactionID);
+      if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+        STORE_TRANSACTION_LOGGER.log(Level.FINE, "Committed transaction {0}",
+            Long.toHexString(transactionID));
+      }
     } catch (final AccessException e) {
       throw new TransactionCommitFailedException("Insufficient Authorization");
     } catch (final RuntimeException e) {

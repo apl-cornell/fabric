@@ -11,6 +11,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Oid;
 import fabric.lang.security.Principal;
+import fabric.store.db.ObjectDB.PendingTransaction;
 
 /**
  * Read/write lock information for a single object.
@@ -151,10 +152,13 @@ final class ObjectLocks {
    *          held by transactions whose TID is different from the one
    *          requesting the lock.
    */
-  synchronized void lockForWrite(long tid, Principal worker)
+  synchronized void lockForWrite(PendingTransaction tx)
       throws UnableToLockException {
+    long tid = tx.tid;
+    Principal worker = tx.owner;
     Oid workerOid = new Oid(worker.$getStore(), worker.$getOnum());
-    while (!lockedByAnotherWorker(worker) && lockedByAnotherTid(tid)) {
+    while (!lockedByAnotherWorker(worker) && lockedByAnotherTid(tid)
+        && tx.state != PendingTransaction.State.ABORTING) {
       waiters++;
       try {
         if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINEST)) {
@@ -164,11 +168,18 @@ final class ObjectLocks {
         }
         // See if we can just wait for the other transaction from the same
         // worker to abort/commit.
+        tx.setWaitsFor(this);
         wait();
+        tx.clearWaitsFor();
       } catch (InterruptedException e) {
         Logging.logIgnoredInterruptedException(e);
       }
       waiters--;
+    }
+
+    if (tx.state == PendingTransaction.State.ABORTING) {
+      // Aborted while waiting.
+      throw new UnableToLockException();
     }
 
     if (writeLock != null && !writeLock.equals(tid)
@@ -206,7 +217,9 @@ final class ObjectLocks {
    *
    * @return true iff a lock was removed.
    */
-  synchronized boolean unlockForWrite(long tid, Principal worker) {
+  synchronized boolean unlockForWrite(PendingTransaction tx) {
+    long tid = tx.tid;
+    Principal worker = tx.owner;
     Oid workerOid = new Oid(worker.$getStore(), worker.$getOnum());
     if (writeLock != null && writeLock.equals(tid) && writer != null
         && writer.equals(workerOid)) {
@@ -230,10 +243,13 @@ final class ObjectLocks {
    *          when a conflicting lock is held. Soft write locks are always
    *          considered conflicting with other write locks (hard or soft).
    */
-  synchronized void lockForSoftWrite(long tid, Principal worker)
+  synchronized void lockForSoftWrite(PendingTransaction tx)
       throws UnableToLockException {
+    long tid = tx.tid;
+    Principal worker = tx.owner;
     Oid workerOid = new Oid(worker.$getStore(), worker.$getOnum());
-    while (!writeLockedByAnotherWorker(worker) && lockedByAnotherTid(tid)) {
+    while (!writeLockedByAnotherWorker(worker) && lockedByAnotherTid(tid)
+        && tx.state != PendingTransaction.State.ABORTING) {
       waiters++;
       try {
         if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINEST)) {
@@ -243,11 +259,18 @@ final class ObjectLocks {
         }
         // See if we can just wait for the other transaction from the same
         // worker to abort/commit.
+        tx.setWaitsFor(this);
         wait();
+        tx.clearWaitsFor();
       } catch (InterruptedException e) {
         Logging.logIgnoredInterruptedException(e);
       }
       waiters--;
+    }
+
+    if (tx.state == PendingTransaction.State.ABORTING) {
+      // Aborted while waiting.
+      throw new UnableToLockException();
     }
 
     if (writeLock != null && !writeLock.equals(tid)) {
@@ -274,7 +297,9 @@ final class ObjectLocks {
    *
    * @return true iff the lock was removed.
    */
-  synchronized boolean unlockForSoftWrite(long tid, Principal worker) {
+  synchronized boolean unlockForSoftWrite(PendingTransaction tx) {
+    long tid = tx.tid;
+    Principal worker = tx.owner;
     Oid workerOid = new Oid(worker.$getStore(), worker.$getOnum());
     if (softWriteLock != null && softWriteLock.equals(tid) && writer != null
         && writer.equals(workerOid)) {
@@ -299,10 +324,12 @@ final class ObjectLocks {
    *          when a conflicting lock is held. Write locks are always
    *          conflicting. Read locks never conflict.
    */
-  synchronized void lockForRead(long tid, Principal worker)
+  synchronized void lockForRead(PendingTransaction tx)
       throws UnableToLockException {
-    while (!writeLockedByAnotherWorker(worker)
-        && writeLockedByAnotherTid(tid)) {
+    long tid = tx.tid;
+    Principal worker = tx.owner;
+    while (!writeLockedByAnotherWorker(worker) && writeLockedByAnotherTid(tid)
+        && tx.state != PendingTransaction.State.ABORTING) {
       waiters++;
       try {
         if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINEST)) {
@@ -312,12 +339,20 @@ final class ObjectLocks {
         }
         // See if we can just wait for the other transaction from the same
         // worker to abort/commit.
+        tx.setWaitsFor(this);
         wait();
+        tx.clearWaitsFor();
       } catch (InterruptedException e) {
         Logging.logIgnoredInterruptedException(e);
       }
       waiters--;
     }
+
+    if (tx.state == PendingTransaction.State.ABORTING) {
+      // Aborted while waiting.
+      throw new UnableToLockException();
+    }
+
     if (writeLock != null && !writeLock.equals(tid)) {
       // Conflicting write lock.
       throw new UnableToLockException();
@@ -345,7 +380,9 @@ final class ObjectLocks {
    *
    * @return true iff the read lock was removed.
    */
-  synchronized boolean unlockForRead(long tid, Principal worker) {
+  synchronized boolean unlockForRead(PendingTransaction tx) {
+    long tid = tx.tid;
+    Principal worker = tx.owner;
     List<Oid> pins = readLocks.get(tid);
     if (pins != null) {
       if (pins.remove(new Oid(worker.$getStore(), worker.$getOnum())))
