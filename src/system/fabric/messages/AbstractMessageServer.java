@@ -78,7 +78,8 @@ public abstract class AbstractMessageServer
 
               while (true) {
                 if (in.readBoolean()) {
-                  Message<?, ?> message = Message.receive(in);
+                  long msgId = in.readLong();
+                  Message<?, ?> message = Message.receive(in, connection, msgId);
                   try {
                     Message.Response response =
                         message.dispatch(client, AbstractMessageServer.this);
@@ -89,7 +90,9 @@ public abstract class AbstractMessageServer
 
                   out.flush();
                 } else {
-                  final AsyncMessage message = AsyncMessage.receive(in);
+                  long msgId = in.readLong();
+                  final AsyncMessage message =
+                      AsyncMessage.receive(in, connection, msgId);
                   // Run in a new thread, we don't need to block to respond.
                   Threading.getPool().submit(new Runnable() {
                     @Override

@@ -44,15 +44,17 @@ public abstract class AsyncMessage {
    */
   public final void send(SubSocket<?> s) throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
+    long msgId = Message.msgCount.incrementAndGet();
 
     // Write this message out.
     out.writeBoolean(false); // This does not require response.
+    out.writeLong(msgId);
     out.writeByte(messageType.ordinal());
     writeMessage(out);
     out.flush();
 
     Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
-        "Sent async message {0} to {1}", messageType, s);
+        "Sent async message {0} {1} to {2}", msgId, messageType, s);
   }
 
   /**
@@ -74,7 +76,8 @@ public abstract class AsyncMessage {
    *           If a malformed message is sent, or in the case of a failure in
    *           the <code>DataInput</code> provided.
    */
-  public static AsyncMessage receive(DataInput in) throws IOException {
+  public static AsyncMessage receive(DataInput in,
+      SubSocket<RemoteWorker> connection, long msgId) throws IOException {
     AsyncMessage m = null;
     try {
       MessageType messageType = MessageType.values()[in.readByte()];
@@ -82,7 +85,8 @@ public abstract class AsyncMessage {
       m = messageType.parse(in);
 
       Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
-          "Received async message {0}", messageType);
+          "Received async message {0} {1} on {2}", msgId, messageType,
+          connection);
 
       return m;
 
