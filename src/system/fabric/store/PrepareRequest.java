@@ -313,7 +313,10 @@ public final class PrepareRequest {
 
       database.finishPrepare(tid, worker);
 
-      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}", tid);
+      if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+        STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}",
+            Long.toHexString(tid));
+      }
     } catch (RuntimeException e) {
       e.printStackTrace();
       database.abortPrepare(tid, worker);
