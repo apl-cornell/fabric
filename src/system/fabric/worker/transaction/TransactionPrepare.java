@@ -13,6 +13,7 @@ import fabric.common.Logging;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
 import fabric.lang.Object._Impl;
 import fabric.messages.StoreCommittedMessage;
 import fabric.messages.StorePrepareFailedMessage;
@@ -126,7 +127,7 @@ public class TransactionPrepare {
     if (s instanceof RemoteStore) {
       // Remove old objects from our cache.
       RemoteStore store = (RemoteStore) s;
-      LongKeyMap<SerializedObject> versionConflicts = m.conflicts;
+      OidKeyHashMap<SerializedObject> versionConflicts = m.conflicts;
       String conflictsString = "";
       if (versionConflicts != null) {
         for (SerializedObject obj : versionConflicts.values()) {

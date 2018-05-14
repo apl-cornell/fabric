@@ -14,8 +14,8 @@ import java.util.logging.Level;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Principal;
 import fabric.store.db.ObjectDB;
 import fabric.worker.TransactionPrepareFailedException;
@@ -66,7 +66,7 @@ public final class PrepareRequest {
      *          request.
      */
     public void prepareOrCheck(ObjectDB database, Principal worker,
-        LongKeyMap<SerializedObject> versionConflicts,
+        OidKeyHashMap<SerializedObject> versionConflicts,
         List<TransactionPrepareFailedException> failures, long tid) {
       if (versionConflicts.isEmpty() && failures.isEmpty()) {
         try {
@@ -80,7 +80,9 @@ public final class PrepareRequest {
         SerializedObject value = database.read(getOnum());
         if (value != null) {
           if (value.getVersion() != getVersion()) {
-            versionConflicts.put(getOnum(), value);
+            versionConflicts.put(
+                Worker.getWorker().getStore(database.getName()), getOnum(),
+                value);
           }
         }
       }
@@ -99,7 +101,7 @@ public final class PrepareRequest {
      *          has a version conflict.
      */
     public abstract void prepare(ObjectDB database, Principal worker,
-        LongKeyMap<SerializedObject> versionConflicts)
+        OidKeyHashMap<SerializedObject> versionConflicts)
         throws TransactionPrepareFailedException;
 
     /**
@@ -146,7 +148,7 @@ public final class PrepareRequest {
 
     @Override
     public void prepare(ObjectDB database, Principal worker,
-        LongKeyMap<SerializedObject> versionConflicts)
+        OidKeyHashMap<SerializedObject> versionConflicts)
         throws TransactionPrepareFailedException {
       database.prepareRead(tid, worker, onum, version, versionConflicts);
     }
@@ -179,7 +181,7 @@ public final class PrepareRequest {
 
     @Override
     public void prepare(ObjectDB database, Principal worker,
-        LongKeyMap<SerializedObject> versionConflicts)
+        OidKeyHashMap<SerializedObject> versionConflicts)
         throws TransactionPrepareFailedException {
       database.prepareUpdate(tid, worker, val, versionConflicts, WRITE);
     }
@@ -212,7 +214,7 @@ public final class PrepareRequest {
 
     @Override
     public void prepare(ObjectDB database, Principal worker,
-        LongKeyMap<SerializedObject> versionConflicts)
+        OidKeyHashMap<SerializedObject> versionConflicts)
         throws TransactionPrepareFailedException {
       database.prepareUpdate(tid, worker, val, versionConflicts, CREATE);
     }
@@ -283,7 +285,7 @@ public final class PrepareRequest {
 
     try {
       // This will store the set of onums of objects that were out of date.
-      LongKeyMap<SerializedObject> versionConflicts = new LongKeyHashMap<>();
+      OidKeyHashMap<SerializedObject> versionConflicts = new OidKeyHashMap<>();
       List<TransactionPrepareFailedException> failures = new ArrayList<>();
 
       // Sort the objects being prepared.

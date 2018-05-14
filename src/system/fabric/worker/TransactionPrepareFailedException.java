@@ -6,39 +6,38 @@ import java.util.Map;
 
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.FabricException;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
 import fabric.net.RemoteNode;
 
 public class TransactionPrepareFailedException extends FabricException {
   /**
    * A set of objects used by the transaction and were out of date.
    */
-  public final LongKeyMap<SerializedObject> versionConflicts;
+  public final OidKeyHashMap<SerializedObject> versionConflicts;
 
   public final List<String> messages;
 
   public TransactionPrepareFailedException(
       TransactionRestartingException cause) {
     this.messages = new ArrayList<>();
-    this.versionConflicts = new LongKeyHashMap<>();
+    this.versionConflicts = new OidKeyHashMap<>();
   }
 
   public TransactionPrepareFailedException(
-      LongKeyMap<SerializedObject> versionConflicts) {
+      OidKeyHashMap<SerializedObject> versionConflicts) {
     this.versionConflicts = versionConflicts;
     this.messages = new ArrayList<>();
   }
 
   public TransactionPrepareFailedException(
-      LongKeyMap<SerializedObject> versionConflicts, List<String> messages) {
+      OidKeyHashMap<SerializedObject> versionConflicts, List<String> messages) {
     this.versionConflicts = versionConflicts;
     this.messages = messages;
   }
 
   public TransactionPrepareFailedException(
       Map<RemoteNode<?>, TransactionPrepareFailedException> failures) {
-    this.versionConflicts = new LongKeyHashMap<>();
+    this.versionConflicts = new OidKeyHashMap<>();
 
     messages = new ArrayList<>();
     for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
@@ -54,7 +53,7 @@ public class TransactionPrepareFailedException extends FabricException {
 
   public TransactionPrepareFailedException(
       List<TransactionPrepareFailedException> causes) {
-    this.versionConflicts = new LongKeyHashMap<>();
+    this.versionConflicts = new OidKeyHashMap<>();
 
     messages = new ArrayList<>();
     for (TransactionPrepareFailedException exc : causes) {
@@ -66,13 +65,13 @@ public class TransactionPrepareFailedException extends FabricException {
   }
 
   public TransactionPrepareFailedException(
-      LongKeyMap<SerializedObject> versionConflicts, String message) {
+      OidKeyHashMap<SerializedObject> versionConflicts, String message) {
     this.versionConflicts = versionConflicts;
     messages = java.util.Collections.singletonList(message);
   }
 
   public TransactionPrepareFailedException(String message) {
-    this(new LongKeyHashMap<SerializedObject>(), message);
+    this(new OidKeyHashMap<SerializedObject>(), message);
   }
 
   @Override

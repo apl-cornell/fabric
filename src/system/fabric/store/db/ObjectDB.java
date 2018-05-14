@@ -21,7 +21,6 @@ import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.NodePrincipal;
@@ -430,7 +429,7 @@ public abstract class ObjectDB {
    *          to this map, binding the object's onum to its current version.
    */
   public final void prepareRead(long tid, Principal worker, long onum,
-      int version, LongKeyMap<SerializedObject> versionConflicts)
+      int version, OidKeyHashMap<SerializedObject> versionConflicts)
       throws TransactionPrepareFailedException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
@@ -474,7 +473,8 @@ public abstract class ObjectDB {
     }
 
     if (curVersion != version) {
-      versionConflicts.put(onum, read(onum));
+      versionConflicts.put(Worker.getWorker().getStore(getName()), onum,
+          read(onum));
     }
   }
 
@@ -494,7 +494,7 @@ public abstract class ObjectDB {
    *          version.
    */
   public final void prepareUpdate(long tid, Principal worker,
-      SerializedObject obj, LongKeyMap<SerializedObject> versionConflicts,
+      SerializedObject obj, OidKeyHashMap<SerializedObject> versionConflicts,
       UpdateMode mode) throws TransactionPrepareFailedException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
@@ -556,7 +556,8 @@ public abstract class ObjectDB {
       int storeVersion = storeCopy.getVersion();
       int workerVersion = obj.getVersion();
       if (storeVersion != workerVersion) {
-        versionConflicts.put(onum, storeCopy);
+        versionConflicts.put(Worker.getWorker().getStore(getName()), onum,
+            storeCopy);
         return;
       }
 
