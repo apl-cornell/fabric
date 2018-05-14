@@ -190,4 +190,19 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     }
     return true;
   }
+
+  @Override
+  public String toString() {
+    String result = "[";
+    boolean first = true;
+    for (Store s : storeSet()) {
+      for (LongKeyMap.Entry<V> entry : get(s).entrySet()) {
+        if (!first)
+          result += ", ";
+        else first = false;
+        result += s.name() + "/" + entry.getKey() + ": " + entry.getValue();
+      }
+    }
+    return result + "]";
+  }
 }
