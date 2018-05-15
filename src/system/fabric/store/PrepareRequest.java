@@ -18,6 +18,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Principal;
 import fabric.store.db.ObjectDB;
+import fabric.worker.RemoteStore;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 
@@ -71,18 +72,23 @@ public final class PrepareRequest {
       if (versionConflicts.isEmpty() && failures.isEmpty()) {
         try {
           prepare(database, worker, versionConflicts);
+          // As soon as things have gone wrong, abort and release the locks.
+          if (!versionConflicts.isEmpty()) database.abortPrepare(tid, worker);
         } catch (TransactionPrepareFailedException e) {
+          // As soon as things have gone wrong, abort and release the locks.
+          database.abortPrepare(tid, worker);
           failures.add(e);
         }
-      } else {
+      }
+      RemoteStore thisStore = Worker.getWorker().getStore(database.getName());
+      if ((!versionConflicts.isEmpty() || !failures.isEmpty())
+          && !versionConflicts.containsKey(thisStore, getOnum())) {
         // We're already doomed, so don't lock things, just check for more
         // conflicts and contracts
         SerializedObject value = database.read(getOnum());
         if (value != null) {
           if (value.getVersion() != getVersion()) {
-            versionConflicts.put(
-                Worker.getWorker().getStore(database.getName()), getOnum(),
-                value);
+            versionConflicts.put(thisStore, getOnum(), value);
           }
         }
       }
@@ -309,7 +315,6 @@ public final class PrepareRequest {
         TransactionPrepareFailedException fail =
             new TransactionPrepareFailedException(failures);
         fail.versionConflicts.putAll(versionConflicts);
-        database.abortPrepare(tid, worker);
         throw fail;
       }
 
