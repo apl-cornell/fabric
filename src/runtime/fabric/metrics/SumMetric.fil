@@ -329,19 +329,15 @@ public class SumMetric extends DerivedMetric {
         double baseFactor = 0.0;
         double newFactor = 1.0 - baseFactor;
 
-        // Two alternatives: either using an adaptive strategy or a static
-        // strategy.  Don't use the adaptive strategy if the hedged timeout is
-        // sooner than 1s.
-        java.util.Map/*<Metric, Contract>*/ adaptiveWitnesses = new java.util.HashMap/*<>*/();
-        java.util.Map/*<Metric, Contract>*/ staticWitnesses = new java.util.HashMap/*<>*/();
-
         double native [] velocities = new double native [numTerms];
         double native [] adaptiveRates = new double native [numTerms];
         double native [] staticRates = new double native [numTerms];
         double native [] noises = new double native [numTerms];
+        boolean hasSlackProducer = false;
         for (int j = 0; j < numTerms; j++) {
           Metric m = term(j);
           velocities[j] = m.velocity(useWeakCache);
+          hasSlackProducer = hasSlackProducer || velocities[j] > rate;
           noises[j] = m.noise(useWeakCache);
 
           //// Adaptive version
@@ -360,58 +356,77 @@ public class SumMetric extends DerivedMetric {
                 Arrays.toString(noises)
               });
         }
-        double native [] adaptiveSlacks = SumStrategy.getSplitEqualVelocity(velocities, noises, adaptiveRates, (totalValue - baseNow));
-        double native [] staticSlacks = SumStrategy.getSplit(velocities, noises, staticRates, (totalValue - baseNow));
 
+        // No matter what, get the static strategy.
+        double native [] staticSlacks = SumStrategy.getSplit(velocities, noises, staticRates, (totalValue - baseNow));
         // For each term, update the associated bounds to be the tightest
         // bound set across the rows
-        long adaptiveTimeout = Long.MAX_VALUE;
+        java.util.Map/*<Metric, Contract>*/ staticWitnesses = new java.util.HashMap/*<>*/();
         long staticTimeout = Long.MAX_VALUE;
         for (int j = 0; j < numTerms; j++) {
           Metric m = term(j);
           double scaledX = m.value(useWeakCache);
 
-          //// Adaptive version
-          // Corrected for the way this metric is shifting relative to
-          // the rest of the sum
-          double r = adaptiveRates[j];
+          //// Static version
+          double r = staticRates[j];
 
           // TODO: Change to account for update frequency in addition to
           // noise, we don't need to be aggressive if a high noise value is
           // updated much less frequently than the other values in the sum.
-          double b = scaledX - adaptiveSlacks[j];
+          double b = scaledX - staticSlacks[j];
 
           double native[] normalized = Bound.createBound(r, b, currentTime);
-          if (!adaptiveWitnesses.containsKey(m) || !((Contract) adaptiveWitnesses.get(m)).implies(m, normalized[0], normalized[1])) {
-            adaptiveWitnesses.put(m, m.getThresholdContract(r, b, currentTime));
+          if (!staticWitnesses.containsKey(m) || !((Contract) staticWitnesses.get(m)).implies(m, normalized[0], normalized[1])) {
+            staticWitnesses.put(m, m.getThresholdContract(r, b, currentTime));
           }
           // Update the timeout estimate.
-          adaptiveTimeout = Math.min(adaptiveTimeout, DirectPolicy.hedgedEstimate(m, normalized[0], normalized[1], currentTime, useWeakCache));
-
-          //// Static version
-          double r2 = staticRates[j];
-
-          // TODO: Change to account for update frequency in addition to
-          // noise, we don't need to be aggressive if a high noise value is
-          // updated much less frequently than the other values in the sum.
-          double b2 = scaledX - staticSlacks[j];
-
-          double native[] normalized2 = Bound.createBound(r2, b2, currentTime);
-          if (!staticWitnesses.containsKey(m) || !((Contract) staticWitnesses.get(m)).implies(m, normalized2[0], normalized2[1])) {
-            staticWitnesses.put(m, m.getThresholdContract(r2, b2, currentTime));
-          }
-          // Update the timeout estimate.
-          staticTimeout = Math.min(staticTimeout, DirectPolicy.hedgedEstimate(m, normalized2[0], normalized2[1], currentTime, useWeakCache));
+          staticTimeout = Math.min(staticTimeout, DirectPolicy.hedgedEstimate(m, normalized[0], normalized[1], currentTime, useWeakCache));
         }
 
         // Size should be the same for either option.
-        Contract native[] finalWitnesses = new Contract native[adaptiveWitnesses.size()];
-        if (adaptiveTimeout > staticTimeout && adaptiveTimeout - System.currentTimeMillis() > MIN_ADAPTIVE_EXPIRY) {
-          int i = 0;
-          for (java.util.Iterator iter = adaptiveWitnesses.values().iterator(); iter.hasNext();) {
-            finalWitnesses[i++] = (Contract) iter.next();
+        Contract native[] finalWitnesses = new Contract native[staticWitnesses.size()];
+
+        if (hasSlackProducer) {
+          // If there's a slack producer, see if the dynamic strategy is better.
+          double native [] adaptiveSlacks = SumStrategy.getSplitEqualVelocity(velocities, noises, adaptiveRates, (totalValue - baseNow));
+
+          java.util.Map/*<Metric, Contract>*/ adaptiveWitnesses = new java.util.HashMap/*<>*/();
+          long adaptiveTimeout = Long.MAX_VALUE;
+          for (int j = 0; j < numTerms; j++) {
+            Metric m = term(j);
+            double scaledX = m.value(useWeakCache);
+
+            //// Adaptive version
+            // Corrected for the way this metric is shifting relative to
+            // the rest of the sum
+            double r = adaptiveRates[j];
+
+            // TODO: Change to account for update frequency in addition to
+            // noise, we don't need to be aggressive if a high noise value is
+            // updated much less frequently than the other values in the sum.
+            double b = scaledX - adaptiveSlacks[j];
+
+            double native[] normalized = Bound.createBound(r, b, currentTime);
+            if (!adaptiveWitnesses.containsKey(m) || !((Contract) adaptiveWitnesses.get(m)).implies(m, normalized[0], normalized[1])) {
+              adaptiveWitnesses.put(m, m.getThresholdContract(r, b, currentTime));
+            }
+            // Update the timeout estimate.
+            adaptiveTimeout = Math.min(adaptiveTimeout, DirectPolicy.hedgedEstimate(m, normalized[0], normalized[1], currentTime, useWeakCache));
+          }
+
+          if (adaptiveTimeout > staticTimeout && adaptiveTimeout - System.currentTimeMillis() > MIN_ADAPTIVE_EXPIRY) {
+            int i = 0;
+            for (java.util.Iterator iter = adaptiveWitnesses.values().iterator(); iter.hasNext();) {
+              finalWitnesses[i++] = (Contract) iter.next();
+            }
+          } else {
+            int i = 0;
+            for (java.util.Iterator iter = staticWitnesses.values().iterator(); iter.hasNext();) {
+              finalWitnesses[i++] = (Contract) iter.next();
+            }
           }
         } else {
+          // Otherwise, just go with the static solution.
           int i = 0;
           for (java.util.Iterator iter = staticWitnesses.values().iterator(); iter.hasNext();) {
             finalWitnesses[i++] = (Contract) iter.next();
