@@ -166,7 +166,7 @@ public class ConfigProperties {
         .parseBoolean(removeProperty(p, "fabric.metrics.usePreset", "false"));
 
     this.metricStatsLogInterval = Integer
-        .parseInt(removeProperty(p, "fabric.metrics.statsLogInterval", "1000"));
+        .parseInt(removeProperty(p, "fabric.metrics.statsLogInterval", "10"));
 
     String[] rawRates =
         removeProperty(p, "fabric.metrics.rates", "").split(",");
