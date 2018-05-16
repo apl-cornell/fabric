@@ -62,7 +62,8 @@ public class RunningMetricStats implements Serializable {
   /**
    * Internal constructor for producing update copies.
    */
-  private RunningMetricStats(RunningMetricStats old, double newValue) {
+  private RunningMetricStats(RunningMetricStats old, double newValue,
+      boolean useEstimation) {
     this.startDelta = old.startDelta;
     this.startInterval = old.startInterval;
     // TODO: Use later of creation and boot time for lastUpdate if this is the
@@ -72,36 +73,44 @@ public class RunningMetricStats implements Serializable {
     double dx = newValue - old.value;
     value = newValue;
 
-    if (old.samples == 0) {
-      // XXX: Don't do much here, we haven't seen any updates beyond the
-      // starting value.
-      intervalEst = startInterval;
-      velocityEst = startDelta / startInterval;
-      noiseEst = 0.0;
-    } else if (old.samples == 1) {
-      // Avoid divide by 0 for the first interval, assume it's been half a ms if
-      // it's a zero diff.
-      double dt = Math.max(0.5, curTime - old.lastUpdate);
-      intervalEst = dt;
-      velocityEst = dx / dt;
-      noiseEst = 0.0;
+    if (useEstimation) {
+      if (old.samples == 0) {
+        // XXX: Don't do much here, we haven't seen any updates beyond the
+        // starting value.
+        intervalEst = startInterval;
+        velocityEst = startDelta / startInterval;
+        noiseEst = 0.0;
+      } else if (old.samples == 1) {
+        // Avoid divide by 0 for the first interval, assume it's been half a ms if
+        // it's a zero diff.
+        double dt = Math.max(0.5, curTime - old.lastUpdate);
+        intervalEst = dt;
+        velocityEst = dx / dt;
+        noiseEst = 0.0;
+      } else {
+        // No need to worry about 0, we're now averaging and guaranteeing first
+        // value is nonzero.
+        double dt = curTime - old.lastUpdate;
+        double alpha = old.getCurAlpha();
+        intervalEst = (1.0 - alpha) * old.intervalEst + alpha * dt;
+        //double newV = dx / Math.max(Math.min(intervalEst, 0.5), dt);
+        double newV = dx / intervalEst;
+        double oldVelocity = old.velocityEst;
+        velocityEst = (1.0 - alpha) * old.velocityEst + alpha * newV;
+        noiseEst = (1.0 - alpha) * old.noiseEst
+            + alpha * (newV - velocityEst) * (newV - oldVelocity);
+        //noiseEst = (1.0 - alpha) * noiseEst +
+        //  alpha * Math.pow(dx - velocityEst * dt, 2) / intervalEst;
+      }
+      lastUpdate = curTime;
+      samples = old.samples + 1;
     } else {
-      // No need to worry about 0, we're now averaging and guaranteeing first
-      // value is nonzero.
-      double dt = curTime - old.lastUpdate;
-      double alpha = old.getCurAlpha();
-      intervalEst = (1.0 - alpha) * old.intervalEst + alpha * dt;
-      //double newV = dx / Math.max(Math.min(intervalEst, 0.5), dt);
-      double newV = dx / intervalEst;
-      double oldVelocity = old.velocityEst;
-      velocityEst = (1.0 - alpha) * old.velocityEst + alpha * newV;
-      noiseEst = (1.0 - alpha) * old.noiseEst
-          + alpha * (newV - velocityEst) * (newV - oldVelocity);
-      //noiseEst = (1.0 - alpha) * noiseEst +
-      //  alpha * Math.pow(dx - velocityEst * dt, 2) / intervalEst;
+      intervalEst = old.intervalEst;
+      velocityEst = old.velocityEst;
+      noiseEst = old.noiseEst;
+      lastUpdate = curTime;
+      samples = old.samples;
     }
-    lastUpdate = curTime;
-    samples = old.samples + 1;
   }
 
   /**
@@ -173,7 +182,8 @@ public class RunningMetricStats implements Serializable {
    *        the newly observed value.
    */
   public RunningMetricStats update(double newVal) {
-    return new RunningMetricStats(this, newVal);
+    return new RunningMetricStats(this, newVal,
+        Worker.getWorker().config.useEstimation);
   }
 
   private double getCurAlpha() {

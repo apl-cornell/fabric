@@ -74,6 +74,8 @@ public class ConfigProperties {
   public final Map<String, Double> noises;
   // Mapping regexes to preset values for statistics
   public final RegexMapping<PresetMetricStatistics> presets;
+  // Whether to use estimation for metrics
+  public final boolean useEstimation;
   // Statistics estimation parameters
   // exponential weight for updates
   public final double alpha;
@@ -226,6 +228,9 @@ public class ConfigProperties {
           Double.parseDouble(values[2]), Integer.parseInt(values[3]));
       this.presets.put(kv[0], val);
     }
+
+    this.useEstimation = Boolean.parseBoolean(
+        removeProperty(p, "fabric.metrics.useEstimation", "true"));
 
     this.alpha =
         Double.parseDouble(removeProperty(p, "fabric.metrics.alpha", "0.001"));
