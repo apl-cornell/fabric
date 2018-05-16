@@ -81,9 +81,8 @@ public class RunningMetricStats implements Serializable, JavaInlineable {
    *
    * Should be called right before the next update to ensure the lastUpdate
    * configuration is roughly accurate.
-   * TODO
    */
-  public native void preload(String key);
+  public native RunningMetricStats preload(String key);
 
   /**
    * Utility for converting a stale velocity estimate to a properly "decayed"

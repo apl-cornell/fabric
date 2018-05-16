@@ -4,19 +4,38 @@ package fabric.worker.metrics;
  * Definition for some predefined settings for metric stats, to preload.
  */
 public class PresetMetricStatistics {
+  private final double intervalEst;
+  private final double velocityEst;
+  private final double noiseEst;
   private final int samples;
-  private final double meanDelta;
-  private final double varDelta;
-  private final double meanFreq;
-  private final double varFreq;
 
-  public PresetMetricStatistics(int samples, double meanDelta, double varDelta,
-      double meanFreq, double varFreq) {
+  public PresetMetricStatistics(double intervalEst, double velocityEst,
+      double noiseEst, int samples) {
+    this.intervalEst = intervalEst;
+    this.velocityEst = velocityEst;
+    this.noiseEst = noiseEst;
     this.samples = samples;
-    this.meanDelta = meanDelta;
-    this.varDelta = varDelta;
-    this.meanFreq = meanFreq;
-    this.varFreq = varFreq;
+  }
+
+  /**
+   * @return the intervalEst
+   */
+  public double getIntervalEst() {
+    return intervalEst;
+  }
+
+  /**
+   * @return the velocityEst
+   */
+  public double getVelocityEst() {
+    return velocityEst;
+  }
+
+  /**
+   * @return the noiseEst
+   */
+  public double getNoiseEst() {
+    return noiseEst;
   }
 
   /**
@@ -24,47 +43,5 @@ public class PresetMetricStatistics {
    */
   public int getSamples() {
     return samples;
-  }
-
-  /**
-   * @return the lastUpdate value that should be used given the current time.
-   */
-  public long getLastUpdate() {
-    return System.currentTimeMillis() - Math.round(1.0 / meanFreq);
-  }
-
-  /**
-   * @return the lastUpdate value that should be used given the current time.
-   */
-  public long getFirstUpdate() {
-    return System.currentTimeMillis() - Math.round(samples / meanFreq);
-  }
-
-  /**
-   * @return the meanDelta
-   */
-  public double getMeanDelta() {
-    return meanDelta;
-  }
-
-  /**
-   * @return the varDelta
-   */
-  public double getVarDelta() {
-    return varDelta;
-  }
-
-  /**
-   * @return the meanFreq
-   */
-  public double getMeanFreq() {
-    return meanFreq;
-  }
-
-  /**
-   * @return the meanFreq
-   */
-  public double getVarFreq() {
-    return meanFreq;
   }
 }

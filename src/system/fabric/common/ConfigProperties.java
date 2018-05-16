@@ -220,21 +220,18 @@ public class ConfigProperties {
       if (kv.length != 2) continue;
       String[] values = kv[1].split(",");
       // TODO: note the bad mapping?
-      if (values.length != 5) continue;
+      if (values.length != 4) continue;
       PresetMetricStatistics val = new PresetMetricStatistics(
-          Integer.parseInt(values[0]),
-          Double.parseDouble(values[1]),
-          Double.parseDouble(values[2]),
-          Double.parseDouble(values[3]),
-          Double.parseDouble(values[4]));
+          Double.parseDouble(values[0]), Double.parseDouble(values[1]),
+          Double.parseDouble(values[2]), Integer.parseInt(values[3]));
       this.presets.put(kv[0], val);
     }
 
-    this.alpha = Double
-        .parseDouble(removeProperty(p, "fabric.metrics.alpha", "0.001"));
+    this.alpha =
+        Double.parseDouble(removeProperty(p, "fabric.metrics.alpha", "0.001"));
 
-    this.window = Long
-        .parseLong(removeProperty(p, "fabric.metrics.window", "1000"));
+    this.window =
+        Long.parseLong(removeProperty(p, "fabric.metrics.window", "1000"));
 
     /************************** Worker Properties *****************************/
     this.workerPort =

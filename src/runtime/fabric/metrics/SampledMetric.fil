@@ -154,11 +154,13 @@ public class SampledMetric extends Metric {
   private static double static_computeValue(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      tmp.stats.preload(tmp.name);
+      RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+      if (preloaded != tmp.stats) tmp.stats = preloaded;
       result = tmp.stats.getValue();
     } else {
       atomic {
-        tmp.stats.preload(tmp.name);
+        RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+        if (preloaded != tmp.stats) tmp.stats = preloaded;
         result = tmp.stats.getValue();
       }
     }
@@ -175,7 +177,8 @@ public class SampledMetric extends Metric {
       if (tmp.usePreset) {
         return 0;
       } else {
-        tmp.stats.preload(tmp.name);
+        RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+        if (preloaded != tmp.stats) tmp.stats = preloaded;
         return tmp.stats.getSamples();
       }
     } else {
@@ -184,7 +187,8 @@ public class SampledMetric extends Metric {
         if (tmp.usePreset) {
           rtn = 0;
         } else {
-          tmp.stats.preload(tmp.name);
+          RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+          if (preloaded != tmp.stats) tmp.stats = preloaded;
           rtn = tmp.stats.getSamples();
         }
       }
@@ -202,7 +206,8 @@ public class SampledMetric extends Metric {
       if (tmp.usePreset) {
         return 0;
       } else {
-        tmp.stats.preload(tmp.name);
+        RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+        if (preloaded != tmp.stats) tmp.stats = preloaded;
         return tmp.stats.getLastUpdate();
       }
     } else {
@@ -211,7 +216,8 @@ public class SampledMetric extends Metric {
         if (tmp.usePreset) {
           rtn = 0;
         } else {
-          tmp.stats.preload(tmp.name);
+          RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+          if (preloaded != tmp.stats) tmp.stats = preloaded;
           rtn = tmp.stats.getLastUpdate();
         }
       }
@@ -229,7 +235,8 @@ public class SampledMetric extends Metric {
       if (tmp.usePreset) {
         return 0;
       } else {
-        tmp.stats.preload(tmp.name);
+        RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+        if (preloaded != tmp.stats) tmp.stats = preloaded;
         return tmp.stats.getIntervalEstimate();
       }
     } else {
@@ -238,7 +245,8 @@ public class SampledMetric extends Metric {
         if (tmp.usePreset) {
           rtn = 0;
         } else {
-          tmp.stats.preload(tmp.name);
+          RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+          if (preloaded != tmp.stats) tmp.stats = preloaded;
           rtn = tmp.stats.getIntervalEstimate();
         }
       }
@@ -256,7 +264,8 @@ public class SampledMetric extends Metric {
       if (tmp.usePreset) {
         return tmp.presetV;
       } else {
-        tmp.stats.preload(tmp.name);
+        RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+        if (preloaded != tmp.stats) tmp.stats = preloaded;
         return tmp.stats.getVelocityEstimate();
       }
     } else {
@@ -265,7 +274,8 @@ public class SampledMetric extends Metric {
         if (tmp.usePreset) {
           rtn = tmp.presetV;
         } else {
-          tmp.stats.preload(tmp.name);
+          RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+          if (preloaded != tmp.stats) tmp.stats = preloaded;
           rtn = tmp.stats.getVelocityEstimate();
         }
       }
@@ -283,7 +293,8 @@ public class SampledMetric extends Metric {
       if (tmp.usePreset) {
         return tmp.presetN;
       } else {
-        tmp.stats.preload(tmp.name);
+        RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+        if (preloaded != tmp.stats) tmp.stats = preloaded;
         return tmp.stats.getNoiseEstimate();
       }
     } else {
@@ -292,7 +303,8 @@ public class SampledMetric extends Metric {
         if (tmp.usePreset) {
           rtn = tmp.presetN;
         } else {
-          tmp.stats.preload(tmp.name);
+          RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
+          if (preloaded != tmp.stats) tmp.stats = preloaded;
           rtn = tmp.stats.getNoiseEstimate();
         }
       }
@@ -324,7 +336,8 @@ public class SampledMetric extends Metric {
    *        the time, in milliseconds, this update happened
    */
   protected void updateEstimates(double newVal, long eventTime) {
-    stats.preload(name);
+    RunningMetricStats preloaded = stats.preload(name);
+    if (preloaded != stats) stats = preloaded;
     stats = stats.update(newVal);
     // Every 1000 samples, print stats in log.
     if (stats.getSamples() % Worker.getWorker().config.metricStatsLogInterval == 0) {

@@ -27,14 +27,9 @@ public class RunningMetricStats implements Serializable {
 
   @Override
   public String toString() {
-    return "[" +
-      " value " + value +
-      " samples " + samples +
-      " lastUpdate " + lastUpdate +
-      " intervalEst " + getIntervalEstimate() +
-      " velocityEst " + getVelocityEstimate() +
-      " noiseEst " + getNoiseEstimate() +
-      " ]";
+    return "[" + " value " + value + " samples " + samples + " lastUpdate "
+        + lastUpdate + " intervalEst " + getIntervalEstimate() + " velocityEst "
+        + getVelocityEstimate() + " noiseEst " + getNoiseEstimate() + " ]";
   }
 
   /**
@@ -196,21 +191,38 @@ public class RunningMetricStats implements Serializable {
    * Should be called right before the next update to ensure the lastUpdate
    * configuration is roughly accurate.
    */
-  public void preload(String key) {
+  public RunningMetricStats preload(String key) {
     // Only bother if this is a fresh slate
     if (samples == 0) {
       PresetMetricStatistics p = Worker.getWorker().config.presets.get(key);
       // If there's a preset, load it in.
       if (p != null) {
-        // TODO
-        //samples = p.getSamples();
-        //meanDelta = p.getMeanDelta();
-        //varDelta = p.getVarDelta();
-        //meanFreq = p.getMeanFreq();
-        //varFreq = p.getVarFreq();
-        //lastUpdate = p.getLastUpdate();
+        return new RunningMetricStats(p, value);
       }
     }
+    return this;
+  }
+
+  /**
+   * Internal constructor for producing preloaded stats.
+   */
+  private RunningMetricStats(PresetMetricStatistics presets, double value) {
+    // Value
+    this.value = value;
+
+    // Interval
+    this.intervalEst = presets.getIntervalEst();
+    this.lastUpdate =
+        (long) (System.currentTimeMillis() - (0.5 * this.intervalEst));
+    this.startInterval = intervalEst;
+
+    // Velocity
+    this.velocityEst = presets.getVelocityEst();
+    this.startDelta = velocityEst * intervalEst;
+
+    // Estimation
+    this.noiseEst = presets.getNoiseEst();
+    this.samples = presets.getSamples();
   }
 
   /**
