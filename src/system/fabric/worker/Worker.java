@@ -421,12 +421,17 @@ public final class Worker {
    *     of the group.
    */
   public boolean updateCache(RemoteStore store, ObjectGroup group) {
-    boolean result = false;
-    for (SerializedObject obj : group.objects().values()) {
-      store.updateCache(obj);
-      result = result || store.readFromCache(obj.getOnum()) != null;
+    for (LongIterator iter = group.objects().keySet().iterator(); iter
+        .hasNext();) {
+      if (store.readFromCache(iter.next()) != null) {
+        // Put all of the values into the cache.
+        for (SerializedObject obj : group.objects().values()) {
+          store.forceCache(obj);
+        }
+        return true;
+      }
     }
-    return result;
+    return false;
   }
 
   /**

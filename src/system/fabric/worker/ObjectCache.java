@@ -443,10 +443,8 @@ public final class ObjectCache {
   Entry put(ObjectGroup group, long onum) {
     Entry result = null;
     for (SerializedObject obj : group.objects().values()) {
-      Entry curEntry = putIfAbsent(obj, true);
-      if (result == null && onum == obj.getOnum()) {
-        result = curEntry;
-      }
+      Entry updated = update(obj, false);
+      if (obj.getOnum() == onum) result = updated;
     }
 
     if (result == null) throw new InternalError("Entry not found.");
@@ -458,8 +456,8 @@ public final class ObjectCache {
    * replaced, and any transactions currently using the object are aborted and
    * retried.
    */
-  void forcePut(SerializedObject obj) {
-    update(obj, false);
+  Entry forcePut(SerializedObject obj) {
+    return update(obj, false);
   }
 
   /**
@@ -469,8 +467,8 @@ public final class ObjectCache {
    * and retried. If the object does not exist in cache, then the cache is not
    * updated.
    */
-  void update(SerializedObject update) {
-    update(update, true);
+  Entry update(SerializedObject update) {
+    return update(update, true);
   }
 
   /**
@@ -480,28 +478,37 @@ public final class ObjectCache {
    * and the given update is placed in the cache. If the cache is updated, then
    * any transactions currently using the object are aborted and retried.
    */
-  void update(SerializedObject update, boolean replaceOnly) {
+  Entry update(SerializedObject update, boolean replaceOnly) {
     long onum = update.getOnum();
-    Entry curEntry = entries.get(onum);
 
-    if (curEntry == null) {
-      if (!replaceOnly) putIfAbsent(update, true);
-      return;
-    }
-
-    synchronized (curEntry) {
-      if (replaceOnly && curEntry.isEvicted()) return;
-
-      // Check if object in current entry is an older version.
-      if (curEntry.getVersion() >= update.getVersion()) return;
-
-      curEntry.evict();
-    }
-
+    Entry curEntry = null;
     Entry newEntry = new Entry(update);
-    entries.replace(onum, curEntry, newEntry);
+    do {
+      curEntry = entries.get(onum);
 
-    TransactionManager.abortReaders(store, update.getOnum());
+      if (curEntry == null) {
+        if (!replaceOnly) {
+          return putIfAbsent(update, true);
+        }
+        return null;
+      }
+
+      synchronized (curEntry) {
+        if (replaceOnly && curEntry.isEvicted()) return null;
+
+        // Check if object in current entry is an older version.
+        if (curEntry.getVersion() >= update.getVersion()) return curEntry;
+
+        curEntry.evict();
+      }
+
+      // abort pre-existing readers.
+      TransactionManager.abortReaders(store, update.getOnum());
+
+      // Keep retrying until we know we succeeded.
+    } while (!entries.replace(onum, curEntry, newEntry));
+
+    return newEntry;
   }
 
   /**

@@ -206,24 +206,21 @@ public class InProcessRemoteWorker extends RemoteWorker {
     for (ObjectGlob glob : updates.keySet()) {
       LongSet onums = updates.get(glob);
       // Skip over elements we've already managed to handle.
-      boolean needsProcessing = false;
       for (LongIterator iter = onums.iterator(); iter.hasNext();) {
         if (response.contains(iter.next())) {
-          needsProcessing = true;
-          break;
-        }
-      }
-      if (needsProcessing) {
-        try {
-          glob.verifySignature(storeKey);
+          // We haven't handled it already.
+          try {
+            glob.verifySignature(storeKey);
 
-          if (worker.updateCaches(store, onums, glob)) {
-            response.removeAll(onums);
+            if (worker.updateCaches(store, onums, glob)) {
+              response.removeAll(onums);
+            }
+          } catch (InvalidKeyException e) {
+            e.printStackTrace();
+          } catch (SignatureException e) {
+            e.printStackTrace();
           }
-        } catch (InvalidKeyException e) {
-          e.printStackTrace();
-        } catch (SignatureException e) {
-          e.printStackTrace();
+          break;
         }
       }
     }
@@ -236,16 +233,18 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   LongSet notifyObjectUpdates(RemoteStore store, LongSet updatedOnums,
       Collection<ObjectGroup> updates) {
+    LongSet result = new LongHashSet(updatedOnums);
     LongKeyMap<ObjectGroup> gMap = new LongKeyHashMap<>();
     for (ObjectGroup group : updates) {
       for (LongIterator iter = group.objects().keySet().iterator(); iter
           .hasNext();) {
         gMap.put(iter.next(), group);
       }
-      worker.updateCache(store, group);
+      if (!worker.updateCache(store, group))
+        result.removeAll(group.objects().keySet());
     }
 
-    return worker.findOnumsInCache(store, updatedOnums);
+    return result;
   }
 
   @Override
