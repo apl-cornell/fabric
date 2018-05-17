@@ -217,26 +217,25 @@ public class InProcessRemoteWorker extends RemoteWorker {
     for (ObjectGlob glob : updates.keySet()) {
       LongSet onums = updates.get(glob);
       // Skip over elements we've already managed to handle.
-      boolean needsProcessing = false;
+      boolean globProcessed = false;
       for (LongIterator iter = onums.iterator(); iter.hasNext();) {
         long onum = iter.next();
-        if (!processed.contains(onum)) {
-          needsProcessing = true;
+        if (!globProcessed && !processed.contains(onum)) {
+          // We haven't handled it already.
+          try {
+            glob.verifySignature(storeKey);
+
+            if (worker.updateCaches(store, onums, glob)) {
+              processed.addAll(onums);
+            }
+          } catch (InvalidKeyException e) {
+            e.printStackTrace();
+          } catch (SignatureException e) {
+            e.printStackTrace();
+          }
+          globProcessed = true;
         }
         gMap.put(onum, glob);
-      }
-      if (needsProcessing) {
-        try {
-          glob.verifySignature(storeKey);
-
-          if (worker.updateCaches(store, onums, glob)) {
-            processed.addAll(onums);
-          }
-        } catch (InvalidKeyException e) {
-          e.printStackTrace();
-        } catch (SignatureException e) {
-          e.printStackTrace();
-        }
       }
     }
 
@@ -276,17 +275,19 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   LongSet notifyObjectUpdates(RemoteStore store, LongSet updatedOnums,
       Collection<ObjectGroup> updates, LongKeyMap<LongSet> associatedOnums) {
+    LongSet result = new LongHashSet(updatedOnums);
     LongKeyMap<ObjectGroup> gMap = new LongKeyHashMap<>();
     for (ObjectGroup group : updates) {
       for (LongIterator iter = group.objects().keySet().iterator(); iter
           .hasNext();) {
         gMap.put(iter.next(), group);
       }
-      worker.updateCache(store, group);
+      if (!worker.updateCache(store, group)) {
+        result.removeAll(group.objects().keySet());
+      }
     }
 
-    LongSet updated = worker.findOnumsInCache(store, updatedOnums);
-    LongSet result = new LongHashSet(updated);
+    LongSet updated = new LongHashSet(result);
     for (LongIterator iter1 = updated.iterator(); iter1.hasNext();) {
       long onum = iter1.next();
       if (associatedOnums.containsKey(onum)) {
