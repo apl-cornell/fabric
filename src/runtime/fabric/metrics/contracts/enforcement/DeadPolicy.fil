@@ -1,6 +1,7 @@
 package fabric.metrics.contracts.enforcement;
 
 import fabric.metrics.contracts.Contract;
+import fabric.worker.metrics.StatsMap;
 
 /**
  * A policy indicating there is no way to enforcing a {@link Contract}.
@@ -24,7 +25,7 @@ public class DeadPolicy implements EnforcementPolicy {
   /**
    * @return the exipration time of this {@link EnforcementPolicy}.
    */
-  public long expiry() {
+  public long expiry(StatsMap weakStats) {
     return 0;
   }
 
@@ -55,7 +56,7 @@ public class DeadPolicy implements EnforcementPolicy {
   /**
    * Activate this policy, activating witnesses and setting the expiry.
    */
-  public void activate() {
+  public void activate(StatsMap weakStats) {
   }
 
   /**

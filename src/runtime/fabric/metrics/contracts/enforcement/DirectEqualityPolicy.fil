@@ -3,6 +3,7 @@ package fabric.metrics.contracts.enforcement;
 import fabric.metrics.Metric;
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.Contract;
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.transaction.TransactionManager;
 
 //import fabric.common.Logging;
@@ -41,30 +42,30 @@ public class DirectEqualityPolicy implements EnforcementPolicy {
   }
 
   /*@Override*/
-  public void activate() {
-    static_activate(this);
+  public void activate(StatsMap weakStats) {
+    static_activate(this, weakStats);
   }
 
-  private static void static_activate(DirectEqualityPolicy tmp) {
+  private static void static_activate(DirectEqualityPolicy tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.activated)
         return;
-      tmp.refresh();
+      tmp.refresh(weakStats);
     } else {
       atomic {
         if (tmp.activated)
           return;
-        tmp.refresh();
+        tmp.refresh(weakStats);
       }
     }
   }
 
   /*@Override*/
-  public void refresh() {
-    static_refresh(this);
+  public void refresh(StatsMap weakStats) {
+    static_refresh(this, weakStats);
   }
 
-  private static void static_refresh(DirectEqualityPolicy tmp) {
+  private static void static_refresh(DirectEqualityPolicy tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
       // First check if we actually can enforce it in the current state.
       if (tmp.value != tmp.metric.value()) {
@@ -87,8 +88,8 @@ public class DirectEqualityPolicy implements EnforcementPolicy {
   }
 
   /*@Override*/
-  public long expiry() {
-    refresh();
+  public long expiry(StatsMap weakStats) {
+    refresh(weakStats);
     return expiry;
   }
 
@@ -101,12 +102,12 @@ public class DirectEqualityPolicy implements EnforcementPolicy {
     // TODO: Should this be atomic?
     if (TransactionManager.getInstance().inTxn()) {
       if (!tmp.activated)
-        tmp.activate();
+        tmp.activate(StatsMap.emptyStats());
       tmp.metric.addObserver(mc);
     } else {
       atomic {
         if (!tmp.activated)
-          tmp.activate();
+          tmp.activate(StatsMap.emptyStats());
         tmp.metric.addObserver(mc);
       }
     }

@@ -27,19 +27,32 @@ public class WarrantyValue implements Serializable {
   public Contract contract;
 
   /**
+   * A set of weak statistics to use if activating the contract for the first
+   * time.
+   */
+  public StatsMap weakStats;
+
+  /**
    * @param value
    *        the return value we're bundling in this {@link WarrantyValue}
    * @param contract
    *        the value's associated {@link Contract}
    */
-  public WarrantyValue(fabric.lang.Object value, Contract contract) {
+  public WarrantyValue(fabric.lang.Object value, Contract contract,
+      StatsMap weakStats) {
     this.value = value;
     this.contract = contract;
+    this.weakStats = weakStats;
   }
 
   public static WarrantyValue newValue(fabric.lang.Object value,
       Contract contract) {
-    return new WarrantyValue(value, contract);
+    return new WarrantyValue(value, contract, StatsMap.emptyStats());
+  }
+
+  public static WarrantyValue newValue(fabric.lang.Object value,
+      Contract contract, StatsMap weakStats) {
+    return new WarrantyValue(value, contract, weakStats);
   }
 
   @Override
@@ -63,6 +76,14 @@ public class WarrantyValue implements Serializable {
     } else {
       out.writeBoolean(false);
     }
+    if (contract != null) {
+      out.writeBoolean(true);
+      out.writeUTF(value.$getStore().name());
+      out.writeLong(value.$getOnum());
+    } else {
+      out.writeBoolean(false);
+    }
+    weakStats.write(out);
   }
 
   private void readObject(ObjectInputStream in)
@@ -75,10 +96,16 @@ public class WarrantyValue implements Serializable {
         value = new fabric.lang.Object._Proxy(s, in.readLong());
       }
     }
+    if (in.readBoolean()) {
+      Store s = Worker.getWorker().getStore(in.readUTF());
+      contract = new fabric.metrics.contracts.Contract._Proxy(s, in.readLong());
+    }
+    weakStats = new StatsMap(in);
   }
 
   private void readObjectNoData() throws ObjectStreamException {
     value = null;
     contract = null;
+    weakStats = StatsMap.emptyStats();
   }
 }

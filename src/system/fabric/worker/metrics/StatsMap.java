@@ -79,7 +79,7 @@ public class StatsMap implements FastSerializable, Serializable {
     this.table = new OidKeyHashMap<>(other.table);
   }
 
-  private StatsMap(DataInput in) throws IOException {
+  protected StatsMap(DataInput in) throws IOException {
     this.table = new OidKeyHashMap<>();
     int size = in.readInt();
     for (int i = 0; i < size; i++) {

@@ -26,5 +26,12 @@ public class WarrantyValue implements JavaInlineable {
    */
   public final Contract contract;
 
+  /**
+   * A {@link StatsMap} which is to be used if activating contract.
+   */
+  public final StatsMap weakStats;
+
   public static native WarrantyValue newValue(fabric.lang.Object value, Contract contract);
+
+  public static native WarrantyValue newValue(fabric.lang.Object value, Contract contract, StatsMap weakStats);
 }

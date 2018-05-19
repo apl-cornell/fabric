@@ -5,6 +5,7 @@ import java.util.Arrays;
 import fabric.metrics.contracts.Contract;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.metrics.ImmutableContractsVector;
+import fabric.worker.metrics.StatsMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -40,11 +41,11 @@ public class WitnessPolicy implements EnforcementPolicy {
   }
 
   /*@Override*/
-  public void activate() {
-    static_activate(this);
+  public void activate(StatsMap weakStats) {
+    static_activate(this, weakStats);
   }
 
-  private static void static_activate(WitnessPolicy tmp) {
+  private static void static_activate(WitnessPolicy tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.activated)
         return;
@@ -56,7 +57,7 @@ public class WitnessPolicy implements EnforcementPolicy {
     }
     if (TransactionManager.getInstance().getCurrentLog() != null) {
       for (int i = 0; i < tmp.witnesses.length(); i++) {
-        tmp.witnesses.get(i).refresh(false);
+        tmp.witnesses.get(i).refresh(false, weakStats);
       }
     } else {
       Future native[] futures = new Future native[tmp.witnesses.length()];
@@ -66,7 +67,7 @@ public class WitnessPolicy implements EnforcementPolicy {
           final Contract w = tmp.witnesses.get(i);
           Callable c = null;
           atomic {
-            c = new Activator().fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(w);
+            c = new Activator().fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(w, weakStats);
           }
           //Logging.METRICS_LOGGER.finer("SUBMITTING CHILD " + w +
           //    " IN PARALLEL IN " + Thread.currentThread());
@@ -93,9 +94,11 @@ public class WitnessPolicy implements EnforcementPolicy {
 
   private static class Activator implements Callable {
     final Contract w;
+    final StatsMap weakStats;
 
-    public Activator fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(Contract w) {
+    public Activator fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(Contract w, StatsMap weakStats) {
       this.w = w;
+      this.weakStats = weakStats;
       fabric$lang$Object$();
       return this;
     }
@@ -105,9 +108,9 @@ public class WitnessPolicy implements EnforcementPolicy {
       //    + Thread.currentThread());
       if (!(w.$getStore().name().equals(Worker.getWorkerName()))) {
         RemoteWorker worker = Worker.getWorker().getWorker(w.$getStore().name());
-        w.refresh_remote@worker(null, false);
+        w.refresh_remote@worker(null, false, weakStats);
       } else {
-        w.refresh(false);
+        w.refresh(false, weakStats);
       }
       return null;
     }
@@ -117,13 +120,13 @@ public class WitnessPolicy implements EnforcementPolicy {
   private static final ExecutorService service = Executors.newFixedThreadPool(POOL_SIZE);
 
   /*@Override*/
-  public long expiry() {
-    return static_expiry(this);
+  public long expiry(StatsMap weakStats) {
+    return static_expiry(this, weakStats);
   }
 
-  private static long static_expiry(WitnessPolicy tmp) {
+  private static long static_expiry(WitnessPolicy tmp, StatsMap weakStats) {
     if (!tmp.activated)
-      tmp.activate();
+      tmp.activate(weakStats);
     long expiry = -1;
     boolean atLeastOnce = false;
     if (TransactionManager.getInstance().inTxn()) {
@@ -149,7 +152,7 @@ public class WitnessPolicy implements EnforcementPolicy {
   /*@Override*/
   public void apply(Contract mc) {
     if (!activated)
-      activate();
+      activate(StatsMap.emptyStats());
     for (int i = 0; i < witnesses.length(); i++) {
       witnesses.get(i).addObserver(mc);
     }

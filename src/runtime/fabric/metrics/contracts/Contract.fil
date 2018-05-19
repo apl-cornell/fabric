@@ -17,6 +17,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableSet;
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.transaction.TransactionManager;
 
 import java.util.logging.Level;
@@ -90,8 +91,8 @@ public abstract class Contract extends AbstractSubject implements Observer {
     }
   }
 
-  public void refresh_remote(fabric.lang.security.Principal p, boolean asyncExtension) {
-    this.refresh(asyncExtension);
+  public void refresh_remote(fabric.lang.security.Principal p, boolean asyncExtension, StatsMap weakStats) {
+    this.refresh(asyncExtension, weakStats);
   }
 
   /**
@@ -236,7 +237,21 @@ public abstract class Contract extends AbstractSubject implements Observer {
    * @return true iff the contract's expiration was retracted as a result of
    *         this operation.
    */
-  public abstract boolean refresh(boolean asyncExtension);
+  public boolean refresh(boolean asyncExtension) {
+    return refresh(asyncExtension, StatsMap.emptyStats());
+  }
+
+  /**
+   * Update the state used to enforce this contract's expiration time (and
+   * possibly update the expiration time) in response to a change in the value
+   * of the current evidence ({@link Subject}s) used to enforce this
+   * {@link Contract}. Revokes, extends, and updates the enforcement evidence
+   * as needed.
+   *
+   * @return true iff the contract's expiration was retracted as a result of
+   *         this operation.
+   */
+  public abstract boolean refresh(boolean asyncExtension, StatsMap weakStats);
 
   /*@Override*/
   public boolean handleUpdates() {
@@ -410,11 +425,11 @@ public abstract class Contract extends AbstractSubject implements Observer {
     }
 
     /*@Override*/
-    public boolean refresh(boolean asyncExtension) {
+    public boolean refresh(boolean asyncExtension, StatsMap weakStats) {
       long currentTime = System.currentTimeMillis();
       if (currentPolicy != null) {
-        currentPolicy.activate();
-        long curExpiry = currentPolicy.expiry();
+        currentPolicy.activate(weakStats);
+        long curExpiry = currentPolicy.expiry(weakStats);
         boolean result = update(curExpiry, asyncExtension);
         if (curExpiry < currentTime) {
           currentPolicy.unapply(this);

@@ -44,22 +44,22 @@ public class DirectPolicy implements EnforcementPolicy {
   }
 
   /*@Override*/
-  public void activate() {
-    static_activate(this);
+  public void activate(StatsMap weakStats) {
+    static_activate(this, weakStats);
   }
 
-  private static void static_activate(DirectPolicy tmp) {
+  private static void static_activate(DirectPolicy tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.activated)
         return;
       // TODO: get and pass along stats map
-      tmp.refresh(StatsMap.emptyStats());
+      tmp.refresh(weakStats);
     } else {
       atomic {
         if (tmp.activated)
           return;
         // TODO: get and pass along stats map
-        tmp.refresh(StatsMap.emptyStats());
+        tmp.refresh(weakStats);
       }
     }
   }
@@ -129,8 +129,8 @@ public class DirectPolicy implements EnforcementPolicy {
     // Always use *correct* value for value
     double x = metric.value();
     // Use weak v and n, x is the only part that needs to be exact.
-    double v = metric.velocity(weakStats);
-    double n = metric.noise(weakStats);
+    double v = weakStats.containsKey(metric) ? weakStats.getVelocity(metric) : metric.velocity(weakStats);
+    double n = weakStats.containsKey(metric) ? weakStats.getNoise(metric) : metric.noise(weakStats);
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
@@ -225,15 +225,15 @@ public class DirectPolicy implements EnforcementPolicy {
   public static long hedgedEstimate(Metric metric, double rate, double base, long time, StatsMap weakStats) {
     double r = rate;
     double b = Bound.value(rate, base, time);
-    double x = metric.value(weakStats);
+    double x = weakStats.containsKey(metric) ? weakStats.getValue(metric) : metric.value(weakStats);
     // Use weak v and n, x is the only part that needs to be exact.
-    double v = metric.velocity(weakStats);
-    double n = metric.noise(weakStats);
+    double v = weakStats.containsKey(metric) ? weakStats.getVelocity(metric) : metric.velocity(weakStats);
+    double n = weakStats.containsKey(metric) ? weakStats.getNoise(metric) : metric.noise(weakStats);
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
     // expiration.
-    long hedgedResult = Bound.trueExpiry(rate, base, metric.value(weakStats), time);
+    long hedgedResult = Bound.trueExpiry(rate, base, x, time);
 
     // Account for the desired number of standard deviations and scale based
     // on how long trueExpiry is from here.
@@ -300,9 +300,9 @@ public class DirectPolicy implements EnforcementPolicy {
   }
 
   /*@Override*/
-  public long expiry() {
+  public long expiry(StatsMap weakStats) {
     // TODO get and pass along stats map
-    refresh(StatsMap.emptyStats());
+    refresh(weakStats);
     return expiry;
   }
 
@@ -315,12 +315,12 @@ public class DirectPolicy implements EnforcementPolicy {
     // TODO: Should this be atomic?
     if (TransactionManager.getInstance().inTxn()) {
       if (!tmp.activated)
-        tmp.activate();
+        tmp.activate(StatsMap.emptyStats());
       tmp.metric.addObserver(mc);
     } else {
       atomic {
         if (!tmp.activated)
-          tmp.activate();
+          tmp.activate(StatsMap.emptyStats());
         tmp.metric.addObserver(mc);
       }
     }

@@ -15,6 +15,7 @@ import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableContractsVector;
 import fabric.worker.metrics.ImmutableSet;
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.transaction.TransactionManager;
 
 import java.util.logging.Level;
@@ -94,10 +95,10 @@ public class ConjunctionContract extends Contract {
    * as needed.
    */
   /*@Override*/
-  public boolean refresh(boolean asyncExtension) {
+  public boolean refresh(boolean asyncExtension, StatsMap weakStats) {
     long currentTime = System.currentTimeMillis();
     if (observing) {
-      long curExpiry = currentPolicy.expiry();
+      long curExpiry = currentPolicy.expiry(weakStats);
       if (curExpiry < currentTime) {
         currentPolicy.unapply(this);
         currentPolicy = null;

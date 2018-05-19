@@ -72,12 +72,12 @@ public class MetricEqualityContract extends Contract {
    * as needed.
    */
   /*@Override*/
-  public boolean refresh(boolean asyncExtension) {
+  public boolean refresh(boolean asyncExtension, StatsMap weakStats) {
     long currentTime = System.currentTimeMillis();
     // Refresh the current policy and update to the new expiration time
     // if it's long enough.
     if (currentPolicy != null) {
-      long curExpiry = currentPolicy.expiry();
+      long curExpiry = currentPolicy.expiry(weakStats);
       if (curExpiry >= currentTime) {
         //Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " +
         //    currentPolicy);
@@ -101,11 +101,11 @@ public class MetricEqualityContract extends Contract {
 
     // Find a new policy now that we have the lock.
     EnforcementPolicy oldPolicy = currentPolicy;
-    EnforcementPolicy newPolicy = metric.equalityPolicy(this.value, $getStore());
+    EnforcementPolicy newPolicy = metric.equalityPolicy(this.value, weakStats, $getStore());
 
-    newPolicy.activate();
+    newPolicy.activate(weakStats);
     // Don't apply if the new policy is already expired.
-    long newExpiry = newPolicy.expiry();
+    long newExpiry = newPolicy.expiry(weakStats);
 
     // Wait to unapply so that metric is still tracked if this was
     // directly enforced previously

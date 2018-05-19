@@ -9,6 +9,7 @@ import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableSet;
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.WarrantyValue;
 import fabric.worker.transaction.TransactionManager;
 
@@ -125,9 +126,9 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
         if (!TransactionManager.getInstance().inTxn() &&
             !(contractStoreName.equals(Worker.getWorkerName()))) {
           RemoteWorker w = Worker.getWorker().getWorker(contractStoreName);
-          computed.contract.refresh_remote@w(null, false);
+          computed.contract.refresh_remote@w(null, false, computed.weakStats);
         } else {
-          computed.contract.refresh(false);
+          computed.contract.refresh(false, computed.weakStats);
         }
 
         tmp.setNewValue(computed.value, computed.contract);
