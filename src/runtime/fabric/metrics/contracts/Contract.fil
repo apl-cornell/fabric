@@ -24,7 +24,7 @@ import fabric.common.Logging;
 
 /**
  * A {@link Contract} represents an assertion that is enforced until an
- * expiration time, once {@link #activate()}d. If the current time is earlier
+ * expiration time, once {@link #refresh()}ed. If the current time is earlier
  * than the expiration time and the {@link Contract} {@link #isActivated()},
  * then the {@link Contract} is <i>valid</i>: the enforcement protocol
  * implemented by the API will ensure the assertion holds.
@@ -56,15 +56,8 @@ public abstract class Contract extends AbstractSubject implements Observer {
     return this;
   }
 
-  // The proportional amount of time an extension has to improve over the
-  // current expiry for us to bother advertising it.
-  // Note: larger value => less aggressive extensions => lower overhead
-  // Note: smaller value => more aggressive extensions => less chance of a
-  // warranty going stale unecessarily.
-  public static final double MIN_EXTENSION_FACTOR = 1.05;
   // The drift tolerance factor we'll subtract from times we advertise to
   // others.
-  //public static final long DRIFT_FACTOR = 100;
   public static final long DRIFT_FACTOR = 0;
 
   public static final long EXTENSION_WINDOW = 1000;
@@ -80,11 +73,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
   protected void extendTo(long newExpiry, boolean isAsyncExtension) {
     TransactionManager tm = TransactionManager.getInstance();
     long currentTime = System.currentTimeMillis();
-    // Only bother advertising if it's better than our current expiry
-    // by the buffer amount or if we're close to the current expiration.
-    //if (newExpiry > currentTime
-    //        + (MIN_EXTENSION_FACTOR * (getExpiry() - currentTime))
-    //            || getExpiry() - currentTime <= EXTENSION_WINDOW) {
+    // Only bother advertising if we're close to the current expiration.
     if (getExpiry() - currentTime <= EXTENSION_WINDOW || isAsyncExtension) {
       for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
         Observer parent = (Observer) iter.next();
@@ -101,75 +90,8 @@ public abstract class Contract extends AbstractSubject implements Observer {
     }
   }
 
-  /**
-   * Has the {@link Contract} been activated (the System has started enforcing
-   * and maintaining the expiration time)?
-   */
-  //private boolean activated = false;
-
-  /**
-   * @return true iff this contract has been activated (the System is
-   *         enforcing it).
-   */
-  //protected boolean isActivated() {
-  //  return activated;
-  //}
-
-  /**
-   * Activate and start enforcing this {@link Contract} in the System.
-   */
-  public void activate() {
-    //Contract.static_activate(this);
-    refresh(false);
-  }
-
-  public void activate_remote(fabric.lang.security.Principal p) {
-    // Changed to avoid using deprecated activation procedure.
-    this.refresh(false);
-  }
-
   public void refresh_remote(fabric.lang.security.Principal p, boolean asyncExtension) {
     this.refresh(asyncExtension);
-  }
-
-  public static void static_activate(Contract tmp) {
-    if (TransactionManager.getInstance().inTxn()) {
-      //if (!tmp.activated) {
-        if (tmp.currentPolicy != null) {
-          tmp.currentPolicy.activate();
-        }
-        //tmp.activated = true;
-        if (tmp.currentPolicy != null && tmp.currentPolicy.expiry() > System.currentTimeMillis()) {
-          tmp.$expiry = tmp.currentPolicy.expiry();
-          tmp.currentPolicy.apply(tmp);
-        } else {
-          tmp.currentPolicy = null;
-          tmp.$associated = null;
-        }
-        Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATED {0} IN {1}", new java.lang.Object native[] { tmp, TransactionManager.getInstance().getCurrentLog() });
-      //}
-    } else {
-      //boolean unactivated = false;
-      //atomic {
-      //  unactivated = !tmp.activated;
-      //}
-      //if (unactivated) {
-        if (tmp.currentPolicy != null) {
-          tmp.currentPolicy.activate();
-        }
-        atomic {
-          //tmp.activated = true;
-          if (tmp.currentPolicy != null && tmp.currentPolicy.expiry() > System.currentTimeMillis()) {
-            tmp.$expiry = tmp.currentPolicy.expiry();
-            tmp.currentPolicy.apply(tmp);
-          } else {
-            tmp.currentPolicy = null;
-            tmp.$associated = null;
-          }
-          Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATED {0} IN {1}", new java.lang.Object native[] { tmp, TransactionManager.getInstance().getCurrentLog() });
-        }
-      //}
-    }
   }
 
   /**
@@ -248,7 +170,6 @@ public abstract class Contract extends AbstractSubject implements Observer {
   protected void retract(long newExpiry) {
     // Mark this as modified, which needs to be resolved in this
     // transaction.
-    // TODO: Maybe indicate which contract's being retracted?
     Logging.METRICS_LOGGER.log(Level.FINE, "RETRACTION OF {0} TO {2} IN {1}", new java.lang.Object native[] { this, TransactionManager.getInstance().getCurrentLog(), Long.valueOf(newExpiry) });
     $expiry = newExpiry;
   }
@@ -304,16 +225,6 @@ public abstract class Contract extends AbstractSubject implements Observer {
     TransactionManager.getInstance().resolveObservations();
     return $expiry - DRIFT_FACTOR;
   }
-
-  /**
-   * @return The expiration time for this {@link Contract} (shifted to account
-   *         for a constant "max" clock drift between the node that last set
-   *         the expiration time and other nodes checking it.)
-   * NOTE: Purely intended for proxy contracts.
-   */
-  //protected long getRawExpiry() {
-  //  return $expiry;
-  //}
 
   /**
    * Update the state used to enforce this contract's expiration time (and
@@ -500,12 +411,6 @@ public abstract class Contract extends AbstractSubject implements Observer {
 
     /*@Override*/
     public boolean refresh(boolean asyncExtension) {
-      // If we haven't activated yet, this is a bad operation.  Stop.
-      //if (!isActivated()) {
-      //  //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
-      //  return false;
-      //}
-
       long currentTime = System.currentTimeMillis();
       if (currentPolicy != null) {
         currentPolicy.activate();

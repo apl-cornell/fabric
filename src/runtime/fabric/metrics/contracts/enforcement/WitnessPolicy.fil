@@ -56,7 +56,6 @@ public class WitnessPolicy implements EnforcementPolicy {
     }
     if (TransactionManager.getInstance().getCurrentLog() != null) {
       for (int i = 0; i < tmp.witnesses.length(); i++) {
-        //tmp.witnesses.get(i).activate();
         tmp.witnesses.get(i).refresh(false);
       }
     } else {
@@ -106,10 +105,8 @@ public class WitnessPolicy implements EnforcementPolicy {
       //    + Thread.currentThread());
       if (!(w.$getStore().name().equals(Worker.getWorkerName()))) {
         RemoteWorker worker = Worker.getWorker().getWorker(w.$getStore().name());
-        //w.activate_remote@worker(null);
         w.refresh_remote@worker(null, false);
       } else {
-        //w.activate();
         w.refresh(false);
       }
       return null;

@@ -87,42 +87,6 @@ public class ConjunctionContract extends Contract {
     return this;
   }
 
-  /*@Override*/
-  public void activate() {
-    //ConjunctionContract.static_activate(this);
-    refresh(false);
-  }
-
-  private static void static_activate(ConjunctionContract tmp) {
-    //if (TransactionManager.getInstance().inTxn()) {
-    //  if (tmp.isActivated())
-    //    return;
-    //} else {
-    //  atomic {
-    //    if (tmp.isActivated())
-    //      return;
-    //  }
-    //}
-
-    // activate the policy here to avoid accidentally making it atomic below.
-    tmp.currentPolicy.activate();
-
-    // Set the expiry and free it up
-    if (TransactionManager.getInstance().inTxn()) {
-      Contract.static_activate(tmp);
-      if (tmp.$expiry >= System.currentTimeMillis()) {
-        tmp.observing = true;
-      }
-    } else {
-      atomic {
-        Contract.static_activate(tmp);
-        if (tmp.$expiry >= System.currentTimeMillis()) {
-          tmp.observing = true;
-        }
-      }
-    }
-  }
-
   /**
    * Update this contract's expiration time to stay valid in response to a
    * change in the value of the {@link Subject}s used for enforcing this
@@ -131,12 +95,6 @@ public class ConjunctionContract extends Contract {
    */
   /*@Override*/
   public boolean refresh(boolean asyncExtension) {
-    // If we haven't activated yet, this is a bad operation.  Stop.
-    //if (!isActivated()) {
-    //  //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
-    //  return false;
-    //}
-
     long currentTime = System.currentTimeMillis();
     if (observing) {
       long curExpiry = currentPolicy.expiry();

@@ -119,15 +119,15 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
           return computed;
         }
 
-        // Otherwise, updatedVal doesn't return the contract activated, so
-        // activate it now.
+        // Otherwise, updatedVal doesn't return the contract refreshed, so
+        // refresh it now.
         String contractStoreName = computed.contract.$getStore().name();
         if (!TransactionManager.getInstance().inTxn() &&
             !(contractStoreName.equals(Worker.getWorkerName()))) {
           RemoteWorker w = Worker.getWorker().getWorker(contractStoreName);
-          computed.contract.activate_remote@w(null);
+          computed.contract.refresh_remote@w(null, false);
         } else {
-          computed.contract.activate();
+          computed.contract.refresh(false);
         }
 
         tmp.setNewValue(computed.value, computed.contract);

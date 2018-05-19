@@ -79,59 +79,6 @@ public class MetricContract extends Contract {
       (time + ((m.value() - Bound.value(rate, base, time)) / adjustedRate));
   }
 
-  /*@Override*/
-  public void activate() {
-    //MetricContract.static_activate(this);
-    refresh(false);
-  }
-
-  private static void static_activate(MetricContract tmp) {
-    //if (TransactionManager.getInstance().inTxn()) {
-    //  if (tmp.isActivated())
-    //    return;
-    //} else {
-    //  atomic {
-    //    if (tmp.isActivated())
-    //      return;
-    //  }
-    //}
-
-    // Refresh the stats being used
-    // Commented out for now.  If it's run here it's going to repeat work in
-    // subcalls.
-    //metric.refreshWeakEstimates();
-
-    // Determine children
-    //Logging.METRICS_LOGGER.finer("CREATING A POLICY FOR MC " + tmp);
-    if (TransactionManager.getInstance().inTxn()) {
-      // Don't use a weak value if we're in a transaction already, this would
-      // mean we're running a contract creation in a single transaction and at
-      // that point, we're going to contend on the strongly consistent values
-      // regardless.
-      tmp.currentPolicy = tmp.metric.thresholdPolicy(tmp.rate, tmp.base, false, tmp.$getStore());
-      tmp.$associated = ImmutableSet.emptySet().add(tmp.currentPolicy);
-    } else {
-      atomic {
-        tmp.currentPolicy = tmp.metric.thresholdPolicy(tmp.rate, tmp.base, true, tmp.$getStore());
-        tmp.$associated = ImmutableSet.emptySet().add(tmp.currentPolicy);
-      }
-    }
-
-    // activate the policy here to avoid accidentally making it atomic below.
-    tmp.currentPolicy.activate();
-
-    // Set the expiry and free it up
-    if (TransactionManager.getInstance().inTxn()) {
-      Contract.static_activate(tmp);
-      tmp.getMetric().addContract(tmp);
-    } else {
-      atomic {
-        Contract.static_activate(tmp);
-        tmp.getMetric().addContract(tmp);
-      }
-    }
-  }
-
   /**
    * Update this contract's expiration time to stay valid in response to a
    * change in the value of the {@link Subject}s used for enforcing this
@@ -140,12 +87,6 @@ public class MetricContract extends Contract {
    */
   /*@Override*/
   public boolean refresh(boolean asyncExtension) {
-    // If we haven't activated yet, this is a bad operation.  Stop.
-    //if (!isActivated()) {
-    //  //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
-    //  return false;
-    //}
-
     long currentTime = System.currentTimeMillis();
     // Refresh the current policy and update to the new expiration time
     // if it's long enough.
