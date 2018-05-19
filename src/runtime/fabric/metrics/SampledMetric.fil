@@ -5,6 +5,7 @@ import fabric.util.List;
 
 import fabric.metrics.util.Observer;
 import fabric.worker.metrics.RunningMetricStats;
+import fabric.worker.metrics.StatsMap;
 
 import fabric.common.ConfigProperties;
 import fabric.common.exceptions.InternalError;
@@ -147,11 +148,11 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  protected double computeValue(boolean useWeakCache) {
-    return static_computeValue(this, useWeakCache);
+  protected double computeValue(StatsMap weakStats) {
+    return static_computeValue(this, weakStats);
   }
 
-  private static double static_computeValue(SampledMetric tmp, boolean useWeakCache) {
+  private static double static_computeValue(SampledMetric tmp, StatsMap weakStats) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
       RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
@@ -168,11 +169,11 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  protected long computeSamples(boolean useWeakCache) {
-    return static_computeSamples(this, useWeakCache);
+  protected long computeSamples(StatsMap weakStats) {
+    return static_computeSamples(this, weakStats);
   }
 
-  private static long static_computeSamples(SampledMetric tmp, boolean useWeakCache) {
+  private static long static_computeSamples(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.usePreset) {
         return 0;
@@ -197,11 +198,11 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  protected long computeLastUpdate(boolean useWeakCache) {
-    return static_computeLastUpdate(this, useWeakCache);
+  protected long computeLastUpdate(StatsMap weakStats) {
+    return static_computeLastUpdate(this, weakStats);
   }
 
-  private static long static_computeLastUpdate(SampledMetric tmp, boolean useWeakCache) {
+  private static long static_computeLastUpdate(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.usePreset) {
         return 0;
@@ -226,11 +227,11 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  protected double computeUpdateInterval(boolean useWeakCache) {
-    return static_computeUpdateInterval(this, useWeakCache);
+  protected double computeUpdateInterval(StatsMap weakStats) {
+    return static_computeUpdateInterval(this, weakStats);
   }
 
-  private static double static_computeUpdateInterval(SampledMetric tmp, boolean useWeakCache) {
+  private static double static_computeUpdateInterval(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.usePreset) {
         return 0;
@@ -255,11 +256,11 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  protected double computeVelocity(boolean useWeakCache) {
-    return static_computeVelocity(this, useWeakCache);
+  protected double computeVelocity(StatsMap weakStats) {
+    return static_computeVelocity(this, weakStats);
   }
 
-  private static double static_computeVelocity(SampledMetric tmp, boolean useWeakCache) {
+  private static double static_computeVelocity(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.usePreset) {
         return tmp.presetV;
@@ -284,11 +285,11 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  protected double computeNoise(boolean useWeakCache) {
-    return static_computeNoise(this, useWeakCache);
+  protected double computeNoise(StatsMap weakStats) {
+    return static_computeNoise(this, weakStats);
   }
 
-  private static double static_computeNoise(SampledMetric tmp, boolean useWeakCache) {
+  private static double static_computeNoise(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.usePreset) {
         return tmp.presetN;
@@ -350,150 +351,102 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  public double value(boolean useWeakCache) {
-    return static_value(this, useWeakCache);
+  public double value(StatsMap weakStats) {
+    return static_value(this, weakStats);
   }
 
-  private static double static_value(SampledMetric tmp, boolean useWeakCache) {
+  private static double static_value(SampledMetric tmp, StatsMap weakStats) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) {
-        result = tmp.cachedValue;
-      } else {
-        result = tmp.computeValue(false);
-      }
+      result = tmp.computeValue(weakStats);
     } else {
       atomic {
-        if (useWeakCache) {
-          result = tmp.cachedValue;
-        } else {
-          result = tmp.computeValue(false);
-        }
+        result = tmp.computeValue(weakStats);
       }
     }
     return result;
   }
 
   /*@Override*/
-  public long samples(boolean useWeakCache) {
-    return static_samples(this, useWeakCache);
+  public long samples(StatsMap weakStats) {
+    return static_samples(this, weakStats);
   }
 
-  private static long static_samples(SampledMetric tmp, boolean useWeakCache) {
+  private static long static_samples(SampledMetric tmp, StatsMap weakStats) {
     long result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) {
-        result = tmp.cachedSamples;
-      } else {
-        result = tmp.computeSamples(false);
-      }
+      result = tmp.computeSamples(weakStats);
     } else {
       atomic {
-        if (useWeakCache) {
-          result = tmp.cachedSamples;
-        } else {
-          result = tmp.computeSamples(false);
-        }
+        result = tmp.computeSamples(weakStats);
       }
     }
     return result;
   }
 
   /*@Override*/
-  public long lastUpdate(boolean useWeakCache) {
-    return static_lastUpdate(this, useWeakCache);
+  public long lastUpdate(StatsMap weakStats) {
+    return static_lastUpdate(this, weakStats);
   }
 
-  private static long static_lastUpdate(SampledMetric tmp, boolean useWeakCache) {
+  private static long static_lastUpdate(SampledMetric tmp, StatsMap weakStats) {
     long result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) {
-        result = tmp.cachedLastUpdate;
-      } else {
-        result = tmp.computeLastUpdate(false);
-      }
+      result = tmp.computeLastUpdate(weakStats);
     } else {
       atomic {
-        if (useWeakCache) {
-          result = tmp.cachedLastUpdate;
-        } else {
-          result = tmp.computeLastUpdate(false);
-        }
+        result = tmp.computeLastUpdate(weakStats);
       }
     }
     return result;
   }
 
   /*@Override*/
-  public double updateInterval(boolean useWeakCache) {
-    return static_updateInterval(this, useWeakCache);
+  public double updateInterval(StatsMap weakStats) {
+    return static_updateInterval(this, weakStats);
   }
 
-  private static double static_updateInterval(SampledMetric tmp, boolean useWeakCache) {
+  private static double static_updateInterval(SampledMetric tmp, StatsMap weakStats) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) {
-        result = tmp.cachedUpdateInterval;
-      } else {
-        result = tmp.computeUpdateInterval(false);
-      }
+      result = tmp.computeUpdateInterval(weakStats);
     } else {
       atomic {
-        if (useWeakCache) {
-          result = tmp.cachedUpdateInterval;
-        } else {
-          result = tmp.computeUpdateInterval(false);
-        }
+        result = tmp.computeUpdateInterval(weakStats);
       }
     }
     return result;
   }
 
   /*@Override*/
-  public double velocity(boolean useWeakCache) {
-    return static_velocity(this, useWeakCache);
+  public double velocity(StatsMap weakStats) {
+    return static_velocity(this, weakStats);
   }
 
-  private static double static_velocity(SampledMetric tmp, boolean useWeakCache) {
+  private static double static_velocity(SampledMetric tmp, StatsMap weakStats) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) {
-        result = tmp.cachedVelocity;
-      } else {
-        result = tmp.computeVelocity(false);
-      }
+      result = tmp.computeVelocity(weakStats);
     } else {
       atomic {
-        if (useWeakCache) {
-          result = tmp.cachedVelocity;
-        } else {
-          result = tmp.computeVelocity(false);
-        }
+        result = tmp.computeVelocity(weakStats);
       }
     }
     return result;
   }
 
   /*@Override*/
-  public double noise(boolean useWeakCache) {
-    return static_noise(this, useWeakCache);
+  public double noise(StatsMap weakStats) {
+    return static_noise(this, weakStats);
   }
 
-  private static double static_noise(SampledMetric tmp, boolean useWeakCache) {
+  private static double static_noise(SampledMetric tmp, StatsMap weakStats) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) {
-        result = tmp.cachedNoise;
-      } else {
-        result = tmp.computeNoise(false);
-      }
+      result = tmp.computeNoise(weakStats);
     } else {
       atomic {
-        if (useWeakCache) {
-          result = tmp.cachedNoise;
-        } else {
-          result = tmp.computeNoise(false);
-        }
+        result = tmp.computeNoise(weakStats);
       }
     }
     return result;

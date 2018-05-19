@@ -19,6 +19,7 @@ import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.StatsMap;
 
 //import java.util.logging.Level;
 //import fabric.common.Logging;
@@ -171,12 +172,12 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  protected double computeValue(boolean useWeakCache) {
+  protected double computeValue(StatsMap weakStats) {
     //Logging.METRICS_LOGGER.log(Level.FINER, "RECOMPUTING LINEAR METRIC AT {0}",
     //    getStore().name());
     double[] values = new double[terms.length()];
     for (int i = 0; i < terms.length(); i++) {
-      values[i] = term(i).value(useWeakCache);
+      values[i] = term(i).value(weakStats);
     }
     double[] results = matrix.multiply(values);
     double result = Double.MAX_VALUE;
@@ -201,10 +202,10 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  protected double computeVelocity(boolean useWeakCache) {
+  protected double computeVelocity(StatsMap weakStats) {
     double[] values = new double[terms.length()];
     for (int i = 0; i < terms.length(); i++) {
-      values[i] = term(i).velocity(useWeakCache);
+      values[i] = term(i).velocity(weakStats);
     }
     double[] results = matrix.multiply(values);
     double result = Double.MAX_VALUE;
@@ -229,10 +230,10 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  protected double computeNoise(boolean useWeakCache) {
+  protected double computeNoise(StatsMap weakStats) {
     double[] noises = new double[terms.length()];
     for (int i = 0; i < terms.length(); i++) {
-      noises[i] = term(i).noise(useWeakCache);
+      noises[i] = term(i).noise(weakStats);
     }
     double[] resultNoises = varMatrix.multiply(noises);
     double noise = 0;
@@ -479,7 +480,7 @@ public class LinearMetric extends DerivedMetric {
    * strong operations for model parameters.
    */
   /*@Override*/
-  public EnforcementPolicy thresholdPolicy(double rate, double base, boolean useWeakCache, final Store str) {
+  public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store str) {
     if (isSingleStore())
       return new DirectPolicy@str().fabric$metrics$contracts$enforcement$DirectPolicy$(this, rate, base);
     Map/*<Metric, Contract>*/ witnesses = new LinkedHashMap/*<>*/();

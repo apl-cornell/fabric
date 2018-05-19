@@ -20,6 +20,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TransactionManager;
+import fabric.worker.metrics.StatsMap;
 import fabric.lang.security.LabelUtil;
 
 //import java.util.logging.Level;
@@ -37,7 +38,7 @@ public abstract class Metric extends AbstractSubject
 
   /** @return the current value of the {@link Metric}. */
   public double value() {
-    return value(false);
+    return value(StatsMap.emptyStats());
   }
 
   /** Local cache of times results. */
@@ -453,77 +454,77 @@ public abstract class Metric extends AbstractSubject
   //private final List/*<Contract>*/ contracts;
 
   /**
-   * @param useWeakCache
-   *            Flag to indicate if a weakly consistent value should be
-   *            returned.  If false, a strongly consistent value is returned.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return the current value of the {@link Metric}.
    */
-  public abstract double value(boolean useWeakCache);
+  public abstract double value(StatsMap weakStats);
 
   /** @return the number of samples of the {@link Metric}. */
   public long samples() {
-    return samples(false);
+    return samples(StatsMap.emptyStats());
   }
 
   /**
-   * @param useWeakCache
-   *            Flag to indicate if a weakly consistent value should be
-   *            returned.  If false, a strongly consistent value is returned.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return the number of samples of the {@link Metric}.
    */
-  public abstract long samples(boolean useWeakCache);
+  public abstract long samples(StatsMap weakStats);
 
   /** @return the time of the last update of the {@link Metric}. */
   public long lastUpdate() {
-    return lastUpdate(false);
+    return lastUpdate(StatsMap.emptyStats());
   }
 
   /**
-   * @param useWeakCache
-   *            Flag to indicate if a weakly consistent value should be
-   *            returned.  If false, a strongly consistent value is returned.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return the time of the last update of the {@link Metric}.
    */
-  public abstract long lastUpdate(boolean useWeakCache);
+  public abstract long lastUpdate(StatsMap weakStats);
 
   /** @return the current updateInterval estimate for updates of {@link Metric}. */
   public double updateInterval() {
-    return updateInterval(false);
+    return updateInterval(StatsMap.emptyStats());
   }
 
   /**
-   * @param useWeakCache
-   *            Flag to indicate if a weakly consistent value should be
-   *            returned.  If false, a strongly consistent value is returned.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return the updateInterval estimated for updates of the {@link Metric}.
    */
-  public abstract double updateInterval(boolean useWeakCache);
+  public abstract double updateInterval(StatsMap weakStats);
 
   /** @return the estimated velocity of the {@link Metric}. */
   public double velocity() {
-    return velocity(false);
+    return velocity(StatsMap.emptyStats());
   }
 
   /**
-   * @param useWeakCache
-   *            Flag to indicate if a weakly consistent value should be
-   *            returned.  If false, a strongly consistent value is returned.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return the estimated velocity of the {@link Metric}.
    */
-  public abstract double velocity(boolean useWeakCache);
+  public abstract double velocity(StatsMap weakStats);
 
   /** @return the estimated noise of the {@link Metric}. */
   public double noise() {
-    return noise(false);
+    return noise(StatsMap.emptyStats());
   }
 
   /**
-   * @param useWeakCache
-   *            Flag to indicate if a weakly consistent value should be
-   *            returned.  If false, a strongly consistent value is returned.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return the estimated velocity of the {@link Metric}.
    */
-  public abstract double noise(boolean useWeakCache);
+  public abstract double noise(StatsMap weakStats);
 
   /**
    * Used to construct and enforce {@link Contract}s bounding this
@@ -536,13 +537,13 @@ public abstract class Metric extends AbstractSubject
    *
    * @param value
    *            the value we're asserting equality with.
-   * @param useWeakCache
-   *            flag indicating if weakly consistent cached values should be
-   *            used
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-  public EnforcementPolicy equalityPolicy(double value, boolean useWeakCache, final Store s) {
+  public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
     return new DirectEqualityPolicy@s().fabric$metrics$contracts$enforcement$DirectEqualityPolicy$(this, value);
   }
 
@@ -563,7 +564,7 @@ public abstract class Metric extends AbstractSubject
   public EnforcementPolicy equalityPolicy(double value, final Store s) {
     // This is only called if we're computing a new policy for a *pre-existing*
     // contract so this is when a coordination occurs in the protocol.
-    return equalityPolicy(value, false, s);
+    return equalityPolicy(value, StatsMap.emptyStats(), s);
   }
 
   /**
@@ -577,13 +578,13 @@ public abstract class Metric extends AbstractSubject
    *
    * @param bound
    *            a {@link Bound} that the returned policy enforces.
-   * @param useWeakCache
-   *            flag indicating if weakly consistent cached values should be
-   *            used
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-  public EnforcementPolicy thresholdPolicy(double rate, double base, boolean useWeakCache, final Store s) {
+  public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
     return new DirectPolicy@s().fabric$metrics$contracts$enforcement$DirectPolicy$(this, rate, base);
   }
 
@@ -604,164 +605,111 @@ public abstract class Metric extends AbstractSubject
   public EnforcementPolicy thresholdPolicy(double rate, double base, final Store s) {
     // This is only called if we're computing a new policy for a *pre-existing*
     // contract so this is when a coordination occurs in the protocol.
-    return thresholdPolicy(rate, base, false, s);
+    return thresholdPolicy(rate, base, StatsMap.emptyStats(), s);
   }
-
-  /*
-   * Cached update stats.
-   */
-  protected double cachedValue;
-  protected double cachedVelocity;
-  protected double cachedNoise;
-  protected long cachedSamples;
-  protected long cachedLastUpdate;
-  protected double cachedUpdateInterval;
 
   /**
    * Update the current "weak" estimates to be used by {@link #policy(Bound)}
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    */
-  public void refreshWeakEstimates() {
-    //Logging.METRICS_LOGGER.finest("REFRESHING" + this);
-    refreshLocally();
+  public StatsMap refreshWeakEstimates(StatsMap weakStats) {
+    return refreshLocally(weakStats);
   }
 
-  public void refreshWeakEstimates_remote(fabric.lang.security.Principal caller) {
-    refreshWeakEstimates();
+  public StatsMap refreshWeakEstimates_remote(fabric.lang.security.Principal caller, StatsMap weakStats) {
+    return refreshWeakEstimates(weakStats);
   }
 
   /**
    * Utility to allow for running updates as close to the metric as possible.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    *
    * Ugh, public because we don't allow remote calls for non public methods.
    */
-  public void refreshLocally() {
-    static_refreshLocally(this);
+  public StatsMap refreshLocally(StatsMap weakStats) {
+    return static_refreshLocally(this, weakStats);
   }
 
-  private static void static_refreshLocally(Metric tmp) {
+  private static StatsMap static_refreshLocally(Metric tmp, StatsMap weakStats) {
     //Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + tmp);
     if (TransactionManager.getInstance().inTxn()) {
-      tmp.cachedValue = tmp.computeValue(true);
-      tmp.cachedVelocity = tmp.computeVelocity(true);
-      tmp.cachedNoise = tmp.computeNoise(true);
-      tmp.cachedSamples = tmp.computeSamples(true);
-      tmp.cachedLastUpdate = System.currentTimeMillis();
-      tmp.cachedUpdateInterval = tmp.computeUpdateInterval(true);
+      return weakStats.put(tmp,
+          tmp.computeValue(weakStats),
+          tmp.computeSamples(weakStats),
+          tmp.computeLastUpdate(weakStats),
+          tmp.computeUpdateInterval(weakStats),
+          tmp.computeVelocity(weakStats),
+          tmp.computeNoise(weakStats));
     } else {
+      StatsMap result = null;
       atomic {
-        tmp.cachedValue = tmp.computeValue(true);
-        tmp.cachedVelocity = tmp.computeVelocity(true);
-        tmp.cachedNoise = tmp.computeNoise(true);
-        tmp.cachedSamples = tmp.computeSamples(true);
-        tmp.cachedLastUpdate = System.currentTimeMillis();
-        tmp.cachedUpdateInterval = tmp.computeUpdateInterval(true);
+        result = weakStats.put(tmp,
+            tmp.computeValue(weakStats),
+            tmp.computeSamples(weakStats),
+            tmp.computeLastUpdate(weakStats),
+            tmp.computeUpdateInterval(weakStats),
+            tmp.computeVelocity(weakStats),
+            tmp.computeNoise(weakStats));
       }
+      return result;
     }
   }
 
-  public void refreshLocally_remote(fabric.lang.security.Principal caller) {
-    refreshLocally();
-  }
-
-
-  /**
-   * @return an estimated (not necessarily consistent) estimate of the
-   *         {@link #value()} as captured in the last call to
-   *         {@link #refreshWeakEstimates()}.
-   */
-  protected double weakValue() {
-    return cachedValue;
+  public StatsMap refreshLocally_remote(fabric.lang.security.Principal caller, StatsMap weakStats) {
+    return refreshLocally(weakStats);
   }
 
   /**
-   * @return an estimated (not necessarily consistent) estimate of the
-   *         {@link #samples()} as captured in the last call to
-   *         {@link #refreshWeakEstimates()}.
-   */
-  protected long weakSamples() {
-    return cachedSamples;
-  }
-
-  /**
-   * @return an estimated (not necessarily consistent) estimate of the
-   *         {@link #lastUpdate()} as captured in the last call to
-   *         {@link #refreshWeakEstimates()}.
-   */
-  protected long weakLastUpdate() {
-    return cachedLastUpdate;
-  }
-
-  /**
-   * @return an estimated (not necessarily consistent) estimate of the
-   *         {@link #updateInterval()} as captured in the last call to
-   *         {@link #refreshWeakEstimates()}.
-   */
-  protected double weakUpdateInterval() {
-    return cachedUpdateInterval;
-  }
-
-  /**
-   * @return an estimated (not necessarily consistent) estimate of the
-   *         {@link #velocity()} as captured in the last call to
-   *         {@link #refreshWeakEstimates()}.
-   */
-  protected double weakVelocity() {
-    return RunningMetricStats.updatedVelocity(cachedVelocity, cachedUpdateInterval,
-        cachedSamples, cachedLastUpdate, System.currentTimeMillis());
-  }
-
-  /**
-   * @return an estimated (not necessarily consistent) estimate of the
-   *         {@link #noise()} as captured in the last call to
-   *         {@link #refreshWeakEstimates()}.
-   */
-  protected double weakNoise() {
-    return RunningMetricStats.updatedNoise(cachedVelocity, cachedNoise,
-        cachedUpdateInterval, cachedSamples, cachedLastUpdate,
-        System.currentTimeMillis());
-  }
-
-  /**
-   * @param useWeakCache
-   *            Flag to indicate if weak values should be used.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
-  protected abstract double computeValue(boolean useWeakCache);
+  protected abstract double computeValue(StatsMap weakStats);
 
   /**
-   * @param useWeakCache
-   *            Flag to indicate if weak values should be used.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
-  protected abstract long computeSamples(boolean useWeakCache);
+  protected abstract long computeSamples(StatsMap weakStats);
 
   /**
-   * @param useWeakCache
-   *            Flag to indicate if weak values should be used.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
-  protected abstract long computeLastUpdate(boolean useWeakCache);
+  protected abstract long computeLastUpdate(StatsMap weakStats);
 
   /**
-   * @param useWeakCache
-   *            Flag to indicate if weak values should be used.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
-  protected abstract double computeUpdateInterval(boolean useWeakCache);
+  protected abstract double computeUpdateInterval(StatsMap weakStats);
 
   /**
-   * @param useWeakCache
-   *            Flag to indicate if weak values should be used.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return a freshly computed weak velocity for this {@link DerivedMetric}.
    */
-  protected abstract double computeVelocity(boolean useWeakCache);
+  protected abstract double computeVelocity(StatsMap weakStats);
 
   /**
-   * @param useWeakCache
-   *            Flag to indicate if weak values should be used.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
    * @return a freshly computed noise for this {@link DerivedMetric}.
    */
-  protected abstract double computeNoise(boolean useWeakCache);
+  protected abstract double computeNoise(StatsMap weakStats);
 
   /**
    * @return true iff all the sampling and transformations on this metric are

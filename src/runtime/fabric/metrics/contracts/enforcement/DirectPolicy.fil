@@ -3,6 +3,7 @@ package fabric.metrics.contracts.enforcement;
 import fabric.metrics.Metric;
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.Contract;
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.transaction.TransactionManager;
 
 //import fabric.common.Logging;
@@ -51,22 +52,24 @@ public class DirectPolicy implements EnforcementPolicy {
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.activated)
         return;
-      tmp.refresh(false);
+      // TODO: get and pass along stats map
+      tmp.refresh(StatsMap.emptyStats());
     } else {
       atomic {
         if (tmp.activated)
           return;
-        tmp.refresh(true);
+        // TODO: get and pass along stats map
+        tmp.refresh(StatsMap.emptyStats());
       }
     }
   }
 
   /*@Override*/
-  public void refresh(boolean useWeakValues) {
-    static_refresh(this, useWeakValues);
+  public void refresh(StatsMap weakStats) {
+    static_refresh(this, weakStats);
   }
 
-  private static void static_refresh(DirectPolicy tmp, boolean useWeakValues) {
+  private static void static_refresh(DirectPolicy tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
       // First check if we actually can enforce it in the current state.
       long currentTime = System.currentTimeMillis();
@@ -74,7 +77,7 @@ public class DirectPolicy implements EnforcementPolicy {
       if (trueTime < currentTime && currentTime <= tmp.expiry) {
         tmp.expiry = 0;
       } else {
-        long hedgedTime = tmp.hedged(currentTime, useWeakValues);
+        long hedgedTime = tmp.hedged(currentTime, weakStats);
         if (tmp.expiry <= trueTime) {
           // Don't hedge below current expiry if we're not stuttering
           // (shifting down the expiry due to true expiry being lower than
@@ -92,7 +95,7 @@ public class DirectPolicy implements EnforcementPolicy {
         if (trueTime < currentTime && currentTime <= tmp.expiry) {
           tmp.expiry = 0;
         } else {
-          long hedgedTime = tmp.hedged(currentTime, useWeakValues);
+          long hedgedTime = tmp.hedged(currentTime, weakStats);
           if (tmp.expiry <= trueTime) {
             // Don't hedge below current expiry if we're not stuttering
             // (shifting down the expiry due to true expiry being lower than
@@ -120,14 +123,14 @@ public class DirectPolicy implements EnforcementPolicy {
    * @return an appropriately conservative (unlikely to be retracted again)
    *         time to advertise to other nodes in the system for this contract.
    */
-  private long hedged(long time, boolean useWeakParameters) {
+  private long hedged(long time, StatsMap weakStats) {
     double r = rate;
     double b = Bound.value(rate, base, time);
     // Always use *correct* value for value
     double x = metric.value();
     // Use weak v and n, x is the only part that needs to be exact.
-    double v = metric.velocity(useWeakParameters);
-    double n = metric.noise(useWeakParameters);
+    double v = metric.velocity(weakStats);
+    double n = metric.noise(weakStats);
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
@@ -219,18 +222,18 @@ public class DirectPolicy implements EnforcementPolicy {
    * @return an appropriately conservative (unlikely to be retracted again)
    *         time to advertise to other nodes in the system for this contract.
    */
-  public static long hedgedEstimate(Metric metric, double rate, double base, long time, boolean useWeakValues) {
+  public static long hedgedEstimate(Metric metric, double rate, double base, long time, StatsMap weakStats) {
     double r = rate;
     double b = Bound.value(rate, base, time);
-    double x = metric.value(useWeakValues);
+    double x = metric.value(weakStats);
     // Use weak v and n, x is the only part that needs to be exact.
-    double v = metric.velocity(useWeakValues);
-    double n = metric.noise(useWeakValues);
+    double v = metric.velocity(weakStats);
+    double n = metric.noise(weakStats);
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
     // expiration.
-    long hedgedResult = Bound.trueExpiry(rate, base, metric.value(useWeakValues), time);
+    long hedgedResult = Bound.trueExpiry(rate, base, metric.value(weakStats), time);
 
     // Account for the desired number of standard deviations and scale based
     // on how long trueExpiry is from here.
@@ -298,7 +301,8 @@ public class DirectPolicy implements EnforcementPolicy {
 
   /*@Override*/
   public long expiry() {
-    refresh(!TransactionManager.getInstance().inTxn());
+    // TODO get and pass along stats map
+    refresh(StatsMap.emptyStats());
     return expiry;
   }
 

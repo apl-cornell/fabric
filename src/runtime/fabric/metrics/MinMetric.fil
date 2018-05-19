@@ -17,6 +17,7 @@ import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.transaction.TransactionManager;
 
 /**
@@ -80,28 +81,43 @@ public class MinMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    protected double computeValue(boolean useWeakCache) {
+    protected double computeValue(StatsMap weakStats) {
         double result = Double.MAX_VALUE;
         for (int i = 0; i < terms.length(); i++) {
-            result = Math.min(result, term(i).value(useWeakCache));
+          Metric term = term(i);
+          if (weakStats.containsKey(term)) {
+            result = Math.min(result, weakStats.getValue(term));
+          } else {
+            result = Math.min(result, term.value(weakStats));
+          }
         }
         return result;
     }
 
     /*@Override*/
-    protected double computeVelocity(boolean useWeakCache) {
+    protected double computeVelocity(StatsMap weakStats) {
         double result = Double.MAX_VALUE;
         for (int i = 0; i < terms.length(); i++) {
-            result = Math.min(result, term(i).velocity(useWeakCache));
+          Metric term = term(i);
+          if (weakStats.containsKey(term)) {
+            result = Math.min(result, weakStats.getVelocity(term));
+          } else {
+            result = Math.min(result, term.velocity(weakStats));
+          }
         }
         return result;
     }
 
     /*@Override*/
-    protected double computeNoise(boolean useWeakCache) {
+    protected double computeNoise(StatsMap weakStats) {
         double noise = 0;
         for (int i = 0; i < terms.length(); i++) {
-            noise = Math.max(noise, term(i).noise(useWeakCache));
+          Metric term = term(i);
+          if (weakStats.containsKey(term)) {
+            noise = Math.max(noise, weakStats.getNoise(term));
+          } else {
+            noise = Math.max(noise, term.noise(weakStats));
+          }
         }
         return noise;
     }
@@ -275,7 +291,7 @@ public class MinMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public EnforcementPolicy thresholdPolicy(double rate, double base, boolean useWeakCache, final Store s) {
+    public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
         // Don't do this if we want to avoid conflicts between local concurrent
         // operations on different metrics in a derived metric...
         //if (isSingleStore())

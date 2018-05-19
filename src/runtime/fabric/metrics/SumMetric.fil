@@ -18,6 +18,7 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 import fabric.worker.metrics.SumStrategy;
+import fabric.worker.metrics.StatsMap;
 
 import java.util.logging.Level;
 import fabric.common.Logging;
@@ -76,28 +77,43 @@ public class SumMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    protected double computeValue(boolean useWeakCache) {
+    protected double computeValue(StatsMap weakStats) {
         double result = 0;
         for (int i = 0; i < terms.length(); i++) {
-            result += term(i).value(useWeakCache);
+          Metric term = term(i);
+          if (weakStats.containsKey(term)) {
+            result += weakStats.getValue(term);
+          } else {
+            result += term.value(weakStats);
+          }
         }
         return result;
     }
 
     /*@Override*/
-    protected double computeVelocity(boolean useWeakCache) {
+    protected double computeVelocity(StatsMap weakStats) {
         double result = 0;
         for (int i = 0; i < terms.length(); i++) {
-            result += term(i).velocity(useWeakCache);
+          Metric term = term(i);
+          if (weakStats.containsKey(term)) {
+            result += weakStats.getVelocity(term);
+          } else {
+            result += term.velocity(weakStats);
+          }
         }
         return result;
     }
 
     /*@Override*/
-    protected double computeNoise(boolean useWeakCache) {
+    protected double computeNoise(StatsMap weakStats) {
         double result = 0;
         for (int i = 0; i < terms.length(); i++) {
-            result += term(i).noise(useWeakCache);
+          Metric term = term(i);
+          if (weakStats.containsKey(term)) {
+            result += weakStats.getNoise(term);
+          } else {
+            result += term.noise(weakStats);
+          }
         }
         return result;
     }
@@ -271,7 +287,7 @@ public class SumMetric extends DerivedMetric {
     public static final long MIN_ADAPTIVE_EXPIRY = 1000;
 
     /*@Override*/
-    public EnforcementPolicy thresholdPolicy(double rate, double base, boolean useWeakCache, final Store s) {
+    public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
       // Don't do this if we want to avoid conflicts between local concurrent
       // operations on different metrics in a derived metric...
       //if (isSingleStore())
@@ -282,10 +298,10 @@ public class SumMetric extends DerivedMetric {
 
       // Defend all rows against the bound individually, using the strictest
       // bounds across the rows for each term in this sum.
-      double totalSamples = samples(useWeakCache);
-      double totalValue = value(useWeakCache);
-      double totalVelocity = velocity(useWeakCache);
-      double totalNoise = noise(useWeakCache);
+      double totalSamples = samples(weakStats);
+      double totalValue = value(weakStats);
+      double totalVelocity = velocity(weakStats);
+      double totalNoise = noise(weakStats);
       int numTerms = terms.length();
       ConfigProperties config = Worker.getWorker().config;
 
@@ -297,7 +313,7 @@ public class SumMetric extends DerivedMetric {
         // bound set across the rows
         for (int j = 0; j < numTerms; j++) {
           Metric m = term(j);
-          double scaledX = m.value(useWeakCache);
+          double scaledX = m.value(weakStats);
 
           //// Adaptive version
           // Corrected for the way this metric is shifting relative to
@@ -336,9 +352,9 @@ public class SumMetric extends DerivedMetric {
         boolean hasSlackProducer = false;
         for (int j = 0; j < numTerms; j++) {
           Metric m = term(j);
-          velocities[j] = m.velocity(useWeakCache);
+          velocities[j] = m.velocity(weakStats);
           hasSlackProducer = hasSlackProducer || velocities[j] > rate;
-          noises[j] = m.noise(useWeakCache);
+          noises[j] = m.noise(weakStats);
 
           //// Adaptive version
           // Corrected for the way this metric is shifting relative to
@@ -365,7 +381,7 @@ public class SumMetric extends DerivedMetric {
         long staticTimeout = Long.MAX_VALUE;
         for (int j = 0; j < numTerms; j++) {
           Metric m = term(j);
-          double scaledX = m.value(useWeakCache);
+          double scaledX = m.value(weakStats);
 
           //// Static version
           double r = staticRates[j];
@@ -380,7 +396,7 @@ public class SumMetric extends DerivedMetric {
             staticWitnesses.put(m, m.getThresholdContract(r, b, currentTime));
           }
           // Update the timeout estimate.
-          staticTimeout = Math.min(staticTimeout, DirectPolicy.hedgedEstimate(m, normalized[0], normalized[1], currentTime, useWeakCache));
+          staticTimeout = Math.min(staticTimeout, DirectPolicy.hedgedEstimate(m, normalized[0], normalized[1], currentTime, weakStats));
         }
 
         // Size should be the same for either option.
@@ -394,7 +410,7 @@ public class SumMetric extends DerivedMetric {
           long adaptiveTimeout = Long.MAX_VALUE;
           for (int j = 0; j < numTerms; j++) {
             Metric m = term(j);
-            double scaledX = m.value(useWeakCache);
+            double scaledX = m.value(weakStats);
 
             //// Adaptive version
             // Corrected for the way this metric is shifting relative to
@@ -411,7 +427,7 @@ public class SumMetric extends DerivedMetric {
               adaptiveWitnesses.put(m, m.getThresholdContract(r, b, currentTime));
             }
             // Update the timeout estimate.
-            adaptiveTimeout = Math.min(adaptiveTimeout, DirectPolicy.hedgedEstimate(m, normalized[0], normalized[1], currentTime, useWeakCache));
+            adaptiveTimeout = Math.min(adaptiveTimeout, DirectPolicy.hedgedEstimate(m, normalized[0], normalized[1], currentTime, weakStats));
           }
 
           if (adaptiveTimeout > staticTimeout && adaptiveTimeout - System.currentTimeMillis() > MIN_ADAPTIVE_EXPIRY) {
