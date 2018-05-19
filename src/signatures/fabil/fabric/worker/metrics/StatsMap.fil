@@ -1,0 +1,78 @@
+package fabric.worker.metrics;
+
+import java.io.Serializable;
+import fabric.lang.JavaInlineable;
+
+import fabric.metrics.Metric;
+
+public class StatsMap implements Serializable, JavaInlineable {
+
+  /**
+   * Factory constructor for a blank map because signatures for FabIL don't
+   * appear to support constructors.
+   */
+  public static native StatsMap emptyStats();
+
+  /**
+   * @param m a {@link Metric}
+   * @return true iff there are stats in this map for m.
+   */
+  public native boolean containsKey(Metric m);
+
+  /**
+   * @param m a {@link Metric}
+   * @return the cached value of m, or a default value of 0.
+   */
+  public native double getValue(Metric m);
+
+  /**
+   * @param m a {@link Metric}
+   * @return the cached sample count of m, or a default value of 0.
+   */
+  public native long getSamples(Metric m);
+
+  /**
+   * @param m a {@link Metric}
+   * @return the cached last update time of m, or a default value of now.
+   */
+  public native long getLastUpdate(Metric m);
+
+  /**
+   * @param m a {@link Metric}
+   * @return the cached update interval of m, or a default value of max long.
+   */
+  public native double getUpdateInterval(Metric m);
+
+  /**
+   * @param m a {@link Metric}
+   * @return the cached velocity of m, or a default value of 0.
+   */
+  public native double getVelocity(Metric m);
+
+  /**
+   * @param m a {@link Metric}
+   * @return the cached noise of m, or a default value of 0.
+   */
+  public native double getNoise(Metric m);
+
+  /**
+   * Put an entry for the given metric with the given stats.
+   * @param m the new key
+   * @param value the value of m
+   * @param samples the sample count of m
+   * @param lastUpdate the last update time of m
+   * @param updateInterval the update interval of m
+   * @param velocity the velocity of m
+   * @param noise the noise of m
+   * @return the updated map.
+   */
+  public native StatsMap put(Metric m, double value, long samples,
+      long lastUpdate, double updateInterval, double velocity, double noise);
+
+  /**
+   * Merge entries in another map missing from this map.
+   * @param other the other map to be merged in.
+   * @return the updated map.
+   */
+  public native StatsMap merge(StatsMap other);
+}
