@@ -14,13 +14,13 @@ import fabric.metrics.contracts.enforcement.DirectPolicy;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
-import fabric.metrics.util.RunningMetricStats;
 
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.RunningMetricStats;
 import fabric.lang.security.LabelUtil;
 
 import java.util.logging.Level;

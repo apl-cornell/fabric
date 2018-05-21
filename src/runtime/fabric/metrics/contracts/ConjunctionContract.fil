@@ -88,30 +88,9 @@ public class ConjunctionContract extends Contract {
     return this;
   }
 
-  /**
-   * Update this contract's expiration time to stay valid in response to a
-   * change in the value of the {@link Subject}s used for enforcing this
-   * {@link Contract}. Revokes, extends, and updates the enforcement strategy
-   * as needed.
-   */
   /*@Override*/
-  public boolean refresh(boolean asyncExtension, StatsMap weakStats) {
-    long currentTime = System.currentTimeMillis();
-    if (observing) {
-      long curExpiry = currentPolicy.expiry(weakStats);
-      if (curExpiry < currentTime) {
-        currentPolicy.unapply(this);
-        currentPolicy = null;
-        $associated = null;
-        observing = false;
-      } else {
-        currentPolicy.apply(this);
-      }
-      return update(curExpiry, asyncExtension);
-    }
-
-    // If we're not observing, the contract is dead.
-    return false;
+  protected EnforcementPolicy getNewPolicy(StatsMap weakStats) {
+    return new WitnessPolicy().fabric$metrics$contracts$enforcement$WitnessPolicy$(conjuncts.array());
   }
 
   /*@Override*/

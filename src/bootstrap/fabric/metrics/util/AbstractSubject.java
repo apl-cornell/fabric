@@ -120,54 +120,54 @@ public interface AbstractSubject
             }
             else {
                 {
-                    fabric.worker.transaction.TransactionManager $tm573 =
+                    fabric.worker.transaction.TransactionManager $tm632 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
-                    boolean $backoffEnabled576 =
+                    boolean $backoffEnabled635 =
                       fabric.worker.Worker.getWorker().config.txRetryBackoff;
-                    int $backoff574 = 1;
-                    boolean $doBackoff575 = true;
-                    boolean $retry570 = true;
-                    $label568: for (boolean $commit569 = false; !$commit569; ) {
-                        if ($backoffEnabled576) {
-                            if ($doBackoff575) {
-                                if ($backoff574 > 32) {
+                    int $backoff633 = 1;
+                    boolean $doBackoff634 = true;
+                    boolean $retry629 = true;
+                    $label627: for (boolean $commit628 = false; !$commit628; ) {
+                        if ($backoffEnabled635) {
+                            if ($doBackoff634) {
+                                if ($backoff633 > 32) {
                                     while (true) {
                                         try {
-                                            java.lang.Thread.sleep($backoff574);
+                                            java.lang.Thread.sleep($backoff633);
                                             break;
                                         }
                                         catch (java.lang.
-                                                 InterruptedException $e571) {
+                                                 InterruptedException $e630) {
                                             
                                         }
                                     }
                                 }
-                                if ($backoff574 < 5000) $backoff574 *= 2;
+                                if ($backoff633 < 5000) $backoff633 *= 2;
                             }
-                            $doBackoff575 = $backoff574 <= 32 || !$doBackoff575;
+                            $doBackoff634 = $backoff633 <= 32 || !$doBackoff634;
                         }
-                        $commit569 = true;
+                        $commit628 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
                             if (!tmp.get$$observers().contains(o))
                                 tmp.set$$observers(tmp.get$$observers().add(o));
                         }
-                        catch (final fabric.worker.RetryException $e571) {
-                            $commit569 = false;
-                            continue $label568;
+                        catch (final fabric.worker.RetryException $e630) {
+                            $commit628 = false;
+                            continue $label627;
                         }
                         catch (final fabric.worker.
-                                 TransactionRestartingException $e571) {
-                            $commit569 = false;
-                            fabric.common.TransactionID $currentTid572 =
-                              $tm573.getCurrentTid();
-                            if ($e571.tid.isDescendantOf($currentTid572))
-                                continue $label568;
-                            if ($currentTid572.parent != null) {
-                                $retry570 = false;
-                                throw $e571;
+                                 TransactionRestartingException $e630) {
+                            $commit628 = false;
+                            fabric.common.TransactionID $currentTid631 =
+                              $tm632.getCurrentTid();
+                            if ($e630.tid.isDescendantOf($currentTid631))
+                                continue $label627;
+                            if ($currentTid631.parent != null) {
+                                $retry629 = false;
+                                throw $e630;
                             }
                             throw new InternalError(
                                     "Something is broken with " +
@@ -175,17 +175,17 @@ public interface AbstractSubject
                                         "different transaction than the one being managed.");
                         }
                         catch (final fabric.worker.metrics.
-                                 LockConflictException $e571) {
-                            $commit569 = false;
-                            if ($tm573.checkForStaleObjects()) continue;
-                            fabric.common.TransactionID $currentTid572 =
-                              $tm573.getCurrentTid();
-                            if ($e571.tid.isDescendantOf($currentTid572)) {
-                                $retry570 = true;
+                                 LockConflictException $e630) {
+                            $commit628 = false;
+                            if ($tm632.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid631 =
+                              $tm632.getCurrentTid();
+                            if ($e630.tid.isDescendantOf($currentTid631)) {
+                                $retry629 = true;
                             }
-                            else if ($currentTid572.parent != null) {
-                                $retry570 = false;
-                                throw $e571;
+                            else if ($currentTid631.parent != null) {
+                                $retry629 = false;
+                                throw $e630;
                             }
                             else {
                                 throw new InternalError(
@@ -194,33 +194,33 @@ public interface AbstractSubject
                                             "transaction than the one being managed.");
                             }
                         }
-                        catch (final Throwable $e571) {
-                            $commit569 = false;
-                            if ($tm573.checkForStaleObjects())
-                                continue $label568;
-                            $retry570 = false;
-                            throw new fabric.worker.AbortException($e571);
+                        catch (final Throwable $e630) {
+                            $commit628 = false;
+                            if ($tm632.checkForStaleObjects())
+                                continue $label627;
+                            $retry629 = false;
+                            throw new fabric.worker.AbortException($e630);
                         }
                         finally {
-                            if ($commit569) {
+                            if ($commit628) {
                                 try {
                                     fabric.worker.transaction.TransactionManager.
                                       getInstance().commitTransaction();
                                 }
                                 catch (final fabric.worker.
-                                         AbortException $e571) {
-                                    $commit569 = false;
+                                         AbortException $e630) {
+                                    $commit628 = false;
                                 }
                                 catch (final fabric.worker.
-                                         TransactionRestartingException $e571) {
-                                    $commit569 = false;
-                                    fabric.common.TransactionID $currentTid572 =
-                                      $tm573.getCurrentTid();
-                                    if ($currentTid572 != null) {
-                                        if ($e571.tid.equals($currentTid572) ||
-                                              !$e571.tid.isDescendantOf(
-                                                           $currentTid572)) {
-                                            throw $e571;
+                                         TransactionRestartingException $e630) {
+                                    $commit628 = false;
+                                    fabric.common.TransactionID $currentTid631 =
+                                      $tm632.getCurrentTid();
+                                    if ($currentTid631 != null) {
+                                        if ($e630.tid.equals($currentTid631) ||
+                                              !$e630.tid.isDescendantOf(
+                                                           $currentTid631)) {
+                                            throw $e630;
                                         }
                                     }
                                 }
@@ -229,9 +229,9 @@ public interface AbstractSubject
                                 fabric.worker.transaction.TransactionManager.
                                   getInstance().abortTransaction();
                             }
-                            if (!$commit569 && $retry570) {
+                            if (!$commit628 && $retry629) {
                                 {  }
-                                continue $label568;
+                                continue $label627;
                             }
                         }
                     }
@@ -255,34 +255,34 @@ public interface AbstractSubject
             }
             else {
                 {
-                    fabric.worker.transaction.TransactionManager $tm582 =
+                    fabric.worker.transaction.TransactionManager $tm641 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
-                    boolean $backoffEnabled585 =
+                    boolean $backoffEnabled644 =
                       fabric.worker.Worker.getWorker().config.txRetryBackoff;
-                    int $backoff583 = 1;
-                    boolean $doBackoff584 = true;
-                    boolean $retry579 = true;
-                    $label577: for (boolean $commit578 = false; !$commit578; ) {
-                        if ($backoffEnabled585) {
-                            if ($doBackoff584) {
-                                if ($backoff583 > 32) {
+                    int $backoff642 = 1;
+                    boolean $doBackoff643 = true;
+                    boolean $retry638 = true;
+                    $label636: for (boolean $commit637 = false; !$commit637; ) {
+                        if ($backoffEnabled644) {
+                            if ($doBackoff643) {
+                                if ($backoff642 > 32) {
                                     while (true) {
                                         try {
-                                            java.lang.Thread.sleep($backoff583);
+                                            java.lang.Thread.sleep($backoff642);
                                             break;
                                         }
                                         catch (java.lang.
-                                                 InterruptedException $e580) {
+                                                 InterruptedException $e639) {
                                             
                                         }
                                     }
                                 }
-                                if ($backoff583 < 5000) $backoff583 *= 2;
+                                if ($backoff642 < 5000) $backoff642 *= 2;
                             }
-                            $doBackoff584 = $backoff583 <= 32 || !$doBackoff584;
+                            $doBackoff643 = $backoff642 <= 32 || !$doBackoff643;
                         }
-                        $commit578 = true;
+                        $commit637 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
@@ -290,20 +290,20 @@ public interface AbstractSubject
                                 tmp.set$$observers(
                                       tmp.get$$observers().remove(o));
                         }
-                        catch (final fabric.worker.RetryException $e580) {
-                            $commit578 = false;
-                            continue $label577;
+                        catch (final fabric.worker.RetryException $e639) {
+                            $commit637 = false;
+                            continue $label636;
                         }
                         catch (final fabric.worker.
-                                 TransactionRestartingException $e580) {
-                            $commit578 = false;
-                            fabric.common.TransactionID $currentTid581 =
-                              $tm582.getCurrentTid();
-                            if ($e580.tid.isDescendantOf($currentTid581))
-                                continue $label577;
-                            if ($currentTid581.parent != null) {
-                                $retry579 = false;
-                                throw $e580;
+                                 TransactionRestartingException $e639) {
+                            $commit637 = false;
+                            fabric.common.TransactionID $currentTid640 =
+                              $tm641.getCurrentTid();
+                            if ($e639.tid.isDescendantOf($currentTid640))
+                                continue $label636;
+                            if ($currentTid640.parent != null) {
+                                $retry638 = false;
+                                throw $e639;
                             }
                             throw new InternalError(
                                     "Something is broken with " +
@@ -311,17 +311,17 @@ public interface AbstractSubject
                                         "different transaction than the one being managed.");
                         }
                         catch (final fabric.worker.metrics.
-                                 LockConflictException $e580) {
-                            $commit578 = false;
-                            if ($tm582.checkForStaleObjects()) continue;
-                            fabric.common.TransactionID $currentTid581 =
-                              $tm582.getCurrentTid();
-                            if ($e580.tid.isDescendantOf($currentTid581)) {
-                                $retry579 = true;
+                                 LockConflictException $e639) {
+                            $commit637 = false;
+                            if ($tm641.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid640 =
+                              $tm641.getCurrentTid();
+                            if ($e639.tid.isDescendantOf($currentTid640)) {
+                                $retry638 = true;
                             }
-                            else if ($currentTid581.parent != null) {
-                                $retry579 = false;
-                                throw $e580;
+                            else if ($currentTid640.parent != null) {
+                                $retry638 = false;
+                                throw $e639;
                             }
                             else {
                                 throw new InternalError(
@@ -330,33 +330,33 @@ public interface AbstractSubject
                                             "transaction than the one being managed.");
                             }
                         }
-                        catch (final Throwable $e580) {
-                            $commit578 = false;
-                            if ($tm582.checkForStaleObjects())
-                                continue $label577;
-                            $retry579 = false;
-                            throw new fabric.worker.AbortException($e580);
+                        catch (final Throwable $e639) {
+                            $commit637 = false;
+                            if ($tm641.checkForStaleObjects())
+                                continue $label636;
+                            $retry638 = false;
+                            throw new fabric.worker.AbortException($e639);
                         }
                         finally {
-                            if ($commit578) {
+                            if ($commit637) {
                                 try {
                                     fabric.worker.transaction.TransactionManager.
                                       getInstance().commitTransaction();
                                 }
                                 catch (final fabric.worker.
-                                         AbortException $e580) {
-                                    $commit578 = false;
+                                         AbortException $e639) {
+                                    $commit637 = false;
                                 }
                                 catch (final fabric.worker.
-                                         TransactionRestartingException $e580) {
-                                    $commit578 = false;
-                                    fabric.common.TransactionID $currentTid581 =
-                                      $tm582.getCurrentTid();
-                                    if ($currentTid581 != null) {
-                                        if ($e580.tid.equals($currentTid581) ||
-                                              !$e580.tid.isDescendantOf(
-                                                           $currentTid581)) {
-                                            throw $e580;
+                                         TransactionRestartingException $e639) {
+                                    $commit637 = false;
+                                    fabric.common.TransactionID $currentTid640 =
+                                      $tm641.getCurrentTid();
+                                    if ($currentTid640 != null) {
+                                        if ($e639.tid.equals($currentTid640) ||
+                                              !$e639.tid.isDescendantOf(
+                                                           $currentTid640)) {
+                                            throw $e639;
                                         }
                                     }
                                 }
@@ -365,9 +365,9 @@ public interface AbstractSubject
                                 fabric.worker.transaction.TransactionManager.
                                   getInstance().abortTransaction();
                             }
-                            if (!$commit578 && $retry579) {
+                            if (!$commit637 && $retry638) {
                                 {  }
-                                continue $label577;
+                                continue $label636;
                             }
                         }
                     }

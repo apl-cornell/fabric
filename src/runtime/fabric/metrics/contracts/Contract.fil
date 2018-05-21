@@ -210,6 +210,8 @@ public abstract class Contract extends AbstractSubject implements Observer {
   }
 
   /**
+   * Use this instead of valid() if you're checking something that doesn't need
+   * to stay true by the end of the transaction.
    * @return true iff the contract is stale (no longer enforced) according to
    *         the local time.
    */
@@ -251,14 +253,155 @@ public abstract class Contract extends AbstractSubject implements Observer {
    * @return true iff the contract's expiration was retracted as a result of
    *         this operation.
    */
-  public abstract boolean refresh(boolean asyncExtension, StatsMap weakStats);
+  public boolean refresh(boolean asyncExtension, StatsMap weakStats) {
+    // Either update using the current policy or, if the expiry is stale and
+    // we're not doing an async extension, update to a new policy.
+    switch (static_updateWithCurPolicy(this, asyncExtension, weakStats)) {
+      case 0: // NO_POLICY
+      case 1: // POLICY_BAD
+        // TODO: can the policy be originally in the future and retract into the
+        // past on an async extension?
+        return !asyncExtension &&
+          updateToNewPolicy(this, asyncExtension, weakStats);
+      case 2: // POLICY_GOOD_EXTENDED
+        return false;
+      case 3: // POLICY_GOOD_RETRACTED
+      default:
+        return true;
+    }
+  }
+
+  /* Ugh, fabric doesn't support enums. */
+  protected static final byte NO_POLICY = 0;
+  protected static final byte POLICY_BAD = 1;
+  protected static final byte POLICY_GOOD_EXTENDED = 2;
+  protected static final byte POLICY_GOOD_RETRACTED = 3;
+
+  /**
+   * Try to update the expiration time using the current policy.
+   *
+   * @return true iff this contract's expiry was retracted.
+   */
+  protected static byte static_updateWithCurPolicy(Contract tmp,
+      boolean asyncExtension, StatsMap weakStats) {
+    byte result = NO_POLICY;
+    if (TransactionManager.getInstance().inTxn()) {
+      result = tmp.updateWithCurPolicy(asyncExtension, weakStats);
+    } else {
+      atomic {
+        result = tmp.updateWithCurPolicy(asyncExtension, weakStats);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Inner implementation of static_updateWithCurPolicy, to be run within a
+   * transaction.
+   *
+   * Try to update the expiration time using the current policy.
+   *
+   * @return true iff this contract's expiry was retracted.
+   */
+  protected byte updateWithCurPolicy(boolean asyncExtension, StatsMap weakStats) {
+    if (this.currentPolicy != null) {
+      long updatedExpiry = this.currentPolicy.expiry(weakStats);
+      if (updatedExpiry >= System.currentTimeMillis()) {
+        if (this.update(updatedExpiry, asyncExtension)) {
+          this.currentPolicy.apply(this);
+          return POLICY_GOOD_RETRACTED;
+        } else {
+          this.currentPolicy.apply(this);
+          return POLICY_GOOD_EXTENDED;
+        }
+      } else {
+        return POLICY_BAD;
+      }
+    }
+    return NO_POLICY;
+  }
+
+  /**
+   * Update the treaty to use a new policy (or none if the treaty is no longer
+   * valid).
+   *
+   * @return true iff the updated expiry is a retraction from the preexisting
+   * expiry.
+   */
+  protected static boolean updateToNewPolicy(Contract tmp,
+      boolean asyncExtension, StatsMap weakStats) {
+    // If we're moving to a new policy we need to be holding the reconfig locks.
+    TransactionManager tm = TransactionManager.getInstance();
+    //tmp.acquireReconfigLocks();
+
+    // Otherwise we're finding a new policy, so we're coordinating.
+    //Logging.METRICS_LOGGER.log(Level.FINER, "COORDINATING FOR {0} IN {1}",
+    //    new java.lang.Object native[] { this, tm.getCurrentTid() });
+    tm.markCoordination();
+
+    if (tm.inTxn()) {
+      EnforcementPolicy newPolicy = tmp.getNewPolicy(weakStats);
+
+      newPolicy.activate(weakStats);
+
+      return tmp.switchToNewPolicy(newPolicy, asyncExtension, weakStats);
+    } else {
+      EnforcementPolicy newPolicy = null;
+      atomic {
+        newPolicy = tmp.getNewPolicy(weakStats);
+      }
+
+      newPolicy.activate(weakStats);
+
+      boolean result = false;
+      atomic {
+        result = tmp.switchToNewPolicy(newPolicy, asyncExtension, weakStats);
+      }
+      return result;
+    }
+  }
+
+  /**
+   * @return a new policy to enforce this treaty.
+   */
+  protected abstract EnforcementPolicy getNewPolicy(StatsMap weakStats);
+
+  /**
+   * Attempt switching to a new policy (only switching if the policy enables the
+   * treaty to be valid).
+   *
+   * @return true iff the updated expiry is a retraction of the preexisting
+   * expiry.
+   */
+  protected boolean switchToNewPolicy(EnforcementPolicy newPolicy, boolean asyncExtension, StatsMap weakStats) {
+    EnforcementPolicy oldPolicy = this.currentPolicy;
+    // Don't apply if the new policy is already expired.
+    long newExpiry = newPolicy.expiry(weakStats);
+
+    if (oldPolicy != null)
+      oldPolicy.unapply(this);
+
+    boolean result = this.update(newExpiry, asyncExtension);
+    if (newExpiry >= System.currentTimeMillis()) {
+      this.currentPolicy = newPolicy;
+      this.$associated = ImmutableSet.emptySet().add(this.currentPolicy);
+      this.currentPolicy.apply(this);
+    } else {
+      // Unapply so that the treaties that aren't going to be used are now
+      // cleaned up.
+      newPolicy.unapply(this);
+      this.currentPolicy = null;
+      this.$associated = null;
+    }
+    return result;
+  }
 
   /*@Override*/
   public boolean handleUpdates() {
     //Logging.METRICS_LOGGER.log(Level.FINER, "CHECKING CONTRACT CHANGE");
     // Funny implication of this is that if something goes stale before it's
     // checked, it stays stale. Probably the right behavior?
-    if (valid()) {
+    if (!stale()) {
       // Check first that we aren't going to conflict with a reconfiguration.
       //this.lock.checkForRead();
       return refresh(false);
@@ -425,24 +568,9 @@ public abstract class Contract extends AbstractSubject implements Observer {
     }
 
     /*@Override*/
-    public boolean refresh(boolean asyncExtension, StatsMap weakStats) {
-      long currentTime = System.currentTimeMillis();
-      if (currentPolicy != null) {
-        currentPolicy.activate(weakStats);
-        long curExpiry = currentPolicy.expiry(weakStats);
-        boolean result = update(curExpiry, asyncExtension);
-        if (curExpiry < currentTime) {
-          currentPolicy.unapply(this);
-          currentPolicy = null;
-          $associated = null;
-        } else {
-          currentPolicy.apply(this);
-        }
-        return result;
-      }
-
-      // If we're not observing, the contract is dead.
-      return false;
+    protected EnforcementPolicy getNewPolicy(StatsMap weakStats) {
+      // TODO: is this right?
+      return new WitnessPolicy().fabric$metrics$contracts$enforcement$WitnessPolicy$(new Contract native[] { this.target });
     }
 
     /*@Override*/

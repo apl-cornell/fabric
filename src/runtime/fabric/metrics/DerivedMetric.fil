@@ -14,12 +14,12 @@ import fabric.metrics.contracts.enforcement.DirectEqualityPolicy;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.util.Observer;
-import fabric.metrics.util.RunningMetricStats;
 
 import fabric.common.ConfigProperties;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.RunningMetricStats;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.transaction.TransactionManager;
 import java.util.concurrent.Callable;

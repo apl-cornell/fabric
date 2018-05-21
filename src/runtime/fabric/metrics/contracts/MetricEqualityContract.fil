@@ -65,62 +65,9 @@ public class MetricEqualityContract extends Contract {
     return metric;
   }
 
-  /**
-   * Update this contract's expiration time to stay valid in response to a
-   * change in the value of the {@link Subject}s used for enforcing this
-   * {@link Contract}. Revokes, extends, and updates the enforcement strategy
-   * as needed.
-   */
   /*@Override*/
-  public boolean refresh(boolean asyncExtension, StatsMap weakStats) {
-    long currentTime = System.currentTimeMillis();
-    // Refresh the current policy and update to the new expiration time
-    // if it's long enough.
-    if (currentPolicy != null) {
-      long curExpiry = currentPolicy.expiry(weakStats);
-      if (curExpiry >= currentTime) {
-        //Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " +
-        //    currentPolicy);
-        currentPolicy.apply(this);
-        return update(curExpiry, asyncExtension);
-      }
-    }
-    // Async extensions should only update to a new expiry using the existing
-    // policy.
-    if (asyncExtension)
-      return false;
-
-    // If we're moving to a new policy we need to be holding the reconfig locks.
-    TransactionManager tm = TransactionManager.getInstance();
-    //acquireReconfigLocks();
-
-    // Otherwise we're finding a new policy, so we're coordinating.
-    //Logging.METRICS_LOGGER.log(Level.FINER, "COORDINATING FOR {0} IN {1}",
-    //    new java.lang.Object native[] { this, tm.getCurrentTid() });
-    tm.markCoordination();
-
-    // Find a new policy now that we have the lock.
-    EnforcementPolicy oldPolicy = currentPolicy;
-    EnforcementPolicy newPolicy = metric.equalityPolicy(this.value, weakStats, $getStore());
-
-    newPolicy.activate(weakStats);
-    // Don't apply if the new policy is already expired.
-    long newExpiry = newPolicy.expiry(weakStats);
-
-    // Wait to unapply so that metric is still tracked if this was
-    // directly enforced previously
-    if (oldPolicy != null)
-      oldPolicy.unapply(this);
-    boolean result = update(newExpiry, asyncExtension);
-    if (newExpiry >= currentTime) {
-      currentPolicy = newPolicy;
-      $associated = ImmutableSet.emptySet().add(currentPolicy);
-      currentPolicy.apply(this);
-    } else {
-      currentPolicy = null;
-      $associated = null;
-    }
-    return result;
+  protected EnforcementPolicy getNewPolicy(StatsMap weakStats) {
+    return this.metric.equalityPolicy(this.value, weakStats, this.$getStore());
   }
 
   /*@Override*/
