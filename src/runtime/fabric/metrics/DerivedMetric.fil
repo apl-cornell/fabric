@@ -451,9 +451,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
       Logging.METRICS_LOGGER.finest("REFRESHING" + this);
       StatsMap updated = weakStats;
       if (TransactionManager.getInstance().getCurrentLog() == null) {
-        Future native[] futures = new Future native[terms.length()];
+        Future native[] futures = new Future native[terms.length() - 1];
         // First, refresh the subterm stats.
-        for (int i = 0; i < terms.length(); i++) {
+        for (int i = 1; i < terms.length(); i++) {
             final Metric t = term(i);
             Logging.METRICS_LOGGER.finest("(PARALLEL) CHILD " + t + " OF " +
                 this);
@@ -461,9 +461,17 @@ public abstract class DerivedMetric extends Metric implements Observer {
             atomic {
               c = new Refresher().fabric$metrics$DerivedMetric$Refresher$(t, weakStats);
             }
-            futures[i] = service.submit(c);
+            futures[i - 1] = service.submit(c);
         }
-        for (int i = 0; i < terms.length(); i++) {
+        // Run the first term in this thread.
+        Metric t = term(0);
+        if (!(t.$getStore().name().equals(Worker.getWorkerName()))) {
+          RemoteWorker w = Worker.getWorker().getWorker(t.$getStore().name());
+          updated = updated.merge(t.refreshWeakEstimates_remote@w(null, updated));
+        } else {
+          updated = updated.merge(t.refreshWeakEstimates(updated));
+        }
+        for (int i = 0; i < futures.length; i++) {
           try {
             updated = updated.merge((StatsMap) futures[i].get());
           } catch (ExecutionException e) {
