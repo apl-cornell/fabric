@@ -80,12 +80,7 @@ public class SumMetric extends DerivedMetric {
     protected double computeValue(StatsMap weakStats) {
         double result = 0;
         for (int i = 0; i < terms.length(); i++) {
-          Metric term = term(i);
-          if (weakStats.containsKey(term)) {
-            result += weakStats.getValue(term);
-          } else {
-            result += term.value(weakStats);
-          }
+          result += term(i).value(weakStats);
         }
         return result;
     }
@@ -94,12 +89,7 @@ public class SumMetric extends DerivedMetric {
     protected double computeVelocity(StatsMap weakStats) {
         double result = 0;
         for (int i = 0; i < terms.length(); i++) {
-          Metric term = term(i);
-          if (weakStats.containsKey(term)) {
-            result += weakStats.getVelocity(term);
-          } else {
-            result += term.velocity(weakStats);
-          }
+          result += term(i).velocity(weakStats);
         }
         return result;
     }
@@ -108,12 +98,7 @@ public class SumMetric extends DerivedMetric {
     protected double computeNoise(StatsMap weakStats) {
         double result = 0;
         for (int i = 0; i < terms.length(); i++) {
-          Metric term = term(i);
-          if (weakStats.containsKey(term)) {
-            result += weakStats.getNoise(term);
-          } else {
-            result += term.noise(weakStats);
-          }
+          result += term(i).noise(weakStats);
         }
         return result;
     }

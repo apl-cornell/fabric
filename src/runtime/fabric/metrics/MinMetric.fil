@@ -84,12 +84,7 @@ public class MinMetric extends DerivedMetric {
     protected double computeValue(StatsMap weakStats) {
         double result = Double.MAX_VALUE;
         for (int i = 0; i < terms.length(); i++) {
-          Metric term = term(i);
-          if (weakStats.containsKey(term)) {
-            result = Math.min(result, weakStats.getValue(term));
-          } else {
-            result = Math.min(result, term.value(weakStats));
-          }
+          result = Math.min(result, term(i).value(weakStats));
         }
         return result;
     }
@@ -98,12 +93,7 @@ public class MinMetric extends DerivedMetric {
     protected double computeVelocity(StatsMap weakStats) {
         double result = Double.MAX_VALUE;
         for (int i = 0; i < terms.length(); i++) {
-          Metric term = term(i);
-          if (weakStats.containsKey(term)) {
-            result = Math.min(result, weakStats.getVelocity(term));
-          } else {
-            result = Math.min(result, term.velocity(weakStats));
-          }
+          result = Math.min(result, term(i).velocity(weakStats));
         }
         return result;
     }
@@ -112,12 +102,7 @@ public class MinMetric extends DerivedMetric {
     protected double computeNoise(StatsMap weakStats) {
         double noise = 0;
         for (int i = 0; i < terms.length(); i++) {
-          Metric term = term(i);
-          if (weakStats.containsKey(term)) {
-            noise = Math.max(noise, weakStats.getNoise(term));
-          } else {
-            noise = Math.max(noise, term.noise(weakStats));
-          }
+          noise = Math.max(noise, term(i).noise(weakStats));
         }
         return noise;
     }

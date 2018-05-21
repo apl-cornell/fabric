@@ -88,7 +88,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
     boolean loop = tmp.dropOldValue();
     while (loop) {
       i++;
-      //Logging.METRICS_LOGGER.log(Level.INFO, "RUNNING ATTEMPT " + i + " OF " + tmp + " IN " + Thread.currentThread());
+      Logging.METRICS_LOGGER.log(Level.INFO, "RUNNING ATTEMPT " + i + " OF " + tmp + " IN " + Thread.currentThread());
       if (!PROACTIVE) {
         for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
           // If any proxy has a good value, steal it
@@ -109,7 +109,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
       }
 
       if (tmp.curContract == null) {
-        //Logging.METRICS_LOGGER.log(Level.INFO, "GENERATING RESULT FROM IN " + Thread.currentThread());
+        Logging.METRICS_LOGGER.log(Level.INFO, "GENERATING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         // Nobody had the result memoized, do it the old fashioned way.
         WarrantyValue computed = tmp.updatedVal(System.currentTimeMillis());
 
@@ -122,6 +122,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
         // Otherwise, updatedVal doesn't return the contract refreshed, so
         // refresh it now.
+        Logging.METRICS_LOGGER.log(Level.INFO, "ACTIVATING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         String contractStoreName = computed.contract.$getStore().name();
         if (!TransactionManager.getInstance().inTxn() &&
             !(contractStoreName.equals(Worker.getWorkerName()))) {
@@ -131,6 +132,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
           computed.contract.refresh(false, computed.weakStats);
         }
 
+        Logging.METRICS_LOGGER.log(Level.INFO, "SETTING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         tmp.setNewValue(computed.value, computed.contract);
         if (PROACTIVE) {
           for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {

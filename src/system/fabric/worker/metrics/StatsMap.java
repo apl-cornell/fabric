@@ -9,6 +9,7 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 
 import fabric.common.FastSerializable;
+import fabric.common.Logging;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.metrics.Metric;
@@ -22,6 +23,11 @@ import fabric.worker.Worker;
  * metrics when creating treaties.
  */
 public class StatsMap implements FastSerializable, Serializable {
+
+  @Override
+  public String toString() {
+    return this.table.toString();
+  }
 
   private static class Entry implements FastSerializable, Serializable {
     public final double value;
@@ -67,9 +73,16 @@ public class StatsMap implements FastSerializable, Serializable {
       out.writeDouble(this.velocity);
       out.writeDouble(this.noise);
     }
+
+    @Override
+    public String toString() {
+      return "StatsEntry(" + this.value + "," + this.samples + ","
+          + this.lastUpdate + "," + this.updateInterval + "," + this.velocity
+          + "," + this.noise + ")";
+    }
   }
 
-  private final OidKeyHashMap<Entry> table;
+  private OidKeyHashMap<Entry> table;
 
   private StatsMap() {
     this.table = new OidKeyHashMap<>();
@@ -94,12 +107,13 @@ public class StatsMap implements FastSerializable, Serializable {
 
   @Override
   public void write(DataOutput out) throws IOException {
-    out.writeInt(this.table.size());
+    out.writeInt(this.table.storeSet().size());
     for (Store s : this.table.storeSet()) {
       out.writeUTF(s.name());
       out.writeInt(this.table.get(s).size());
       for (LongKeyMap.Entry<Entry> e : this.table.get(s).entrySet()) {
         out.writeLong(e.getKey());
+        e.getValue().write(out);
       }
     }
   }
@@ -112,6 +126,7 @@ public class StatsMap implements FastSerializable, Serializable {
 
   private void readObject(ObjectInputStream in)
       throws IOException, ClassNotFoundException {
+    this.table = new OidKeyHashMap<>();
     int size = in.readInt();
     for (int i = 0; i < size; i++) {
       Store s = Worker.getWorker().getStore(in.readUTF());
@@ -124,6 +139,7 @@ public class StatsMap implements FastSerializable, Serializable {
   }
 
   private void readObjectNoData() throws ObjectStreamException {
+    this.table = new OidKeyHashMap<>();
   }
 
   private static final StatsMap EMPTY = new StatsMap();
@@ -214,6 +230,7 @@ public class StatsMap implements FastSerializable, Serializable {
     StatsMap updated = new StatsMap(this);
     updated.table.put(m,
         new Entry(value, samples, lastUpdate, updateInterval, velocity, noise));
+    Logging.METRICS_LOGGER.finest("Updated weak stats to " + updated);
     return updated;
   }
 
@@ -225,6 +242,7 @@ public class StatsMap implements FastSerializable, Serializable {
   public StatsMap merge(StatsMap other) {
     StatsMap updated = new StatsMap(this);
     updated.table.putAll(other.table);
+    Logging.METRICS_LOGGER.finest("Updated weak stats to " + updated);
     return updated;
   }
 }

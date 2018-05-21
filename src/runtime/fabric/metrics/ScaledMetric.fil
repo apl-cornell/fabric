@@ -62,32 +62,17 @@ public class ScaledMetric extends DerivedMetric {
 
     /*@Override*/
     protected double computeValue(StatsMap weakStats) {
-      Metric term = term(0);
-      if (weakStats.containsKey(term)) {
-        return scalar * weakStats.getValue(term);
-      } else {
-        return scalar * term.value(weakStats);
-      }
+      return scalar * term(0).value(weakStats);
     }
 
     /*@Override*/
     protected double computeVelocity(StatsMap weakStats) {
-      Metric term = term(0);
-      if (weakStats.containsKey(term)) {
-        return scalar * weakStats.getVelocity(term);
-      } else {
-        return scalar * term.velocity(weakStats);
-      }
+      return scalar * term(0).velocity(weakStats);
     }
 
     /*@Override*/
     protected double computeNoise(StatsMap weakStats) {
-      Metric term = term(0);
-      if (weakStats.containsKey(term)) {
-        return scalar * scalar * weakStats.getNoise(term);
-      } else {
-        return scalar * scalar * term.noise(weakStats);
-      }
+      return scalar * scalar * term(0).noise(weakStats);
     }
 
     /*@Override*/

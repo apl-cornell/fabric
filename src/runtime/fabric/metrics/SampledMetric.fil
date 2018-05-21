@@ -356,6 +356,7 @@ public class SampledMetric extends Metric {
   }
 
   private static double static_value(SampledMetric tmp, StatsMap weakStats) {
+    if (weakStats.containsKey(tmp)) return weakStats.getValue(tmp);
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
       result = tmp.computeValue(weakStats);
@@ -373,6 +374,7 @@ public class SampledMetric extends Metric {
   }
 
   private static long static_samples(SampledMetric tmp, StatsMap weakStats) {
+    if (weakStats.containsKey(tmp)) return weakStats.getSamples(tmp);
     long result = 0;
     if (TransactionManager.getInstance().inTxn()) {
       result = tmp.computeSamples(weakStats);
@@ -390,6 +392,7 @@ public class SampledMetric extends Metric {
   }
 
   private static long static_lastUpdate(SampledMetric tmp, StatsMap weakStats) {
+    if (weakStats.containsKey(tmp)) return weakStats.getLastUpdate(tmp);
     long result = 0;
     if (TransactionManager.getInstance().inTxn()) {
       result = tmp.computeLastUpdate(weakStats);
@@ -407,6 +410,7 @@ public class SampledMetric extends Metric {
   }
 
   private static double static_updateInterval(SampledMetric tmp, StatsMap weakStats) {
+    if (weakStats.containsKey(tmp)) return weakStats.getUpdateInterval(tmp);
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
       result = tmp.computeUpdateInterval(weakStats);
@@ -424,6 +428,7 @@ public class SampledMetric extends Metric {
   }
 
   private static double static_velocity(SampledMetric tmp, StatsMap weakStats) {
+    if (weakStats.containsKey(tmp)) return weakStats.getVelocity(tmp);
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
       result = tmp.computeVelocity(weakStats);
@@ -441,6 +446,7 @@ public class SampledMetric extends Metric {
   }
 
   private static double static_noise(SampledMetric tmp, StatsMap weakStats) {
+    if (weakStats.containsKey(tmp)) return weakStats.getNoise(tmp);
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
       result = tmp.computeNoise(weakStats);

@@ -28,8 +28,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-//import java.util.logging.Level;
-//import fabric.common.Logging;
+import java.util.logging.Level;
+import fabric.common.Logging;
+import java.io.StringWriter;
+import java.io.PrintWriter;
 
 /**
  * General base class for {@link Metric}s built by computing over other
@@ -196,6 +198,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   private static double static_value(DerivedMetric tmp, StatsMap weakStats) {
+    if (weakStats.containsKey(tmp)) return weakStats.getValue(tmp);
     if (tmp.isObserved()) {
       if (TransactionManager.getInstance().inTxn()) {
         fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
@@ -219,6 +222,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   private static long static_samples(DerivedMetric tmp, StatsMap weakStats) {
+    if (weakStats.containsKey(tmp)) return weakStats.getSamples(tmp);
     if (tmp.isObserved()) {
       if (TransactionManager.getInstance().inTxn()) {
         fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
@@ -239,12 +243,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   protected long computeSamples(StatsMap weakStats) {
     long samples = 0;
     for (int i = 0; i < terms.length(); i++) {
-      Metric term = term(i);
-      if (weakStats.containsKey(term)) {
-        samples = samples + weakStats.getSamples(term);
-      } else {
-        samples = samples + term.computeSamples(weakStats);
-      }
+      samples = samples + term(i).samples(weakStats);
     }
     return samples;
   }
@@ -255,6 +254,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   private static long static_lastUpdate(DerivedMetric tmp, StatsMap weakStats) {
+    if (weakStats.containsKey(tmp)) return weakStats.getLastUpdate(tmp);
     if (tmp.isObserved()) {
       if (TransactionManager.getInstance().inTxn()) {
         fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
@@ -275,12 +275,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   protected long computeLastUpdate(StatsMap weakStats) {
     long lastUpdate = 0;
     for (int i = 0; i < terms.length(); i++) {
-      Metric term = term(i);
-      if (weakStats.containsKey(term)) {
-        lastUpdate = Math.max(lastUpdate, weakStats.getLastUpdate(term));
-      } else {
-        lastUpdate = Math.max(lastUpdate, term.computeLastUpdate(weakStats));
-      }
+      lastUpdate = Math.max(lastUpdate, term(i).lastUpdate(weakStats));
     }
     return lastUpdate;
   }
@@ -291,6 +286,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   private static double static_updateInterval(DerivedMetric tmp, StatsMap weakStats) {
+    if (weakStats.containsKey(tmp)) return weakStats.getUpdateInterval(tmp);
     if (tmp.isObserved()) {
       if (TransactionManager.getInstance().inTxn()) {
         fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
@@ -312,12 +308,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
     double updateInterval = Double.MAX_VALUE;
     // For now, assume update interval is min of update intervals of terms.
     for (int i = 0; i < terms.length(); i++) {
-      Metric term = term(i);
-      if (weakStats.containsKey(term)) {
-        updateInterval = Math.min(updateInterval, weakStats.getUpdateInterval(term));
-      } else {
-        updateInterval = Math.min(updateInterval, term.computeUpdateInterval(weakStats));
-      }
+      updateInterval = Math.min(updateInterval, term(i).updateInterval(weakStats));
     }
     return updateInterval;
   }
@@ -331,6 +322,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   private static double static_velocity(DerivedMetric tmp, StatsMap weakStats) {
     if (tmp.usePreset) return tmp.presetV;
+    if (weakStats.containsKey(tmp)) return weakStats.getVelocity(tmp);
     if (tmp.isObserved()) {
       // Separated here because we're not expecting regular updates unless
       // observing, the weak values don't try to account for time since the last
@@ -354,6 +346,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   private static double static_noise(DerivedMetric tmp, StatsMap weakStats) {
     if (tmp.usePreset) return tmp.presetN;
+    if (weakStats.containsKey(tmp)) return weakStats.getNoise(tmp);
     if (tmp.isObserved()) {
       // Separated here because we're not expecting regular updates unless
       // observing, the weak values don't try to account for time since the last
@@ -455,15 +448,15 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public StatsMap refreshWeakEstimates(final StatsMap weakStats) {
-      //Logging.METRICS_LOGGER.finest("REFRESHING" + this);
+      Logging.METRICS_LOGGER.finest("REFRESHING" + this);
       StatsMap updated = weakStats;
       if (TransactionManager.getInstance().getCurrentLog() == null) {
         Future native[] futures = new Future native[terms.length()];
         // First, refresh the subterm stats.
         for (int i = 0; i < terms.length(); i++) {
             final Metric t = term(i);
-            //Logging.METRICS_LOGGER.finest("(PARALLEL) CHILD " + t + " OF " +
-            //    this);
+            Logging.METRICS_LOGGER.finest("(PARALLEL) CHILD " + t + " OF " +
+                this);
             Callable c = null;
             atomic {
               c = new Refresher().fabric$metrics$DerivedMetric$Refresher$(t, weakStats);
@@ -474,15 +467,23 @@ public abstract class DerivedMetric extends Metric implements Observer {
           try {
             updated = updated.merge((StatsMap) futures[i].get());
           } catch (ExecutionException e) {
-            // TODO: Log this if it happens.
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String sStackTrace = sw.toString();
+            Logging.METRICS_LOGGER.warning("Failure of parallel child: " + e + " Stack\n" + sStackTrace);
           } catch (InterruptedException e) {
-            // TODO: Log this if it happens.
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String sStackTrace = sw.toString();
+            Logging.METRICS_LOGGER.warning("Failure of parallel child: " + e + " Stack\n" + sStackTrace);
           }
         }
       } else {
         for (int i = 0; i < terms.length(); i++) {
-          //Logging.METRICS_LOGGER.finest("(SERIAL) CHILD " + terms[i] + " OF "
-          //    + this);
+          Logging.METRICS_LOGGER.finest("(SERIAL) CHILD " + term(i) + " OF "
+              + this);
           updated = updated.merge(term(i).refreshWeakEstimates(weakStats));
         }
       }

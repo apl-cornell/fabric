@@ -23,8 +23,8 @@ import fabric.worker.transaction.TransactionManager;
 import fabric.worker.metrics.StatsMap;
 import fabric.lang.security.LabelUtil;
 
-//import java.util.logging.Level;
-//import fabric.common.Logging;
+import java.util.logging.Level;
+import fabric.common.Logging;
 
 /**
  * Abstract class with base implementation of some {@link Metric} methods.
@@ -635,7 +635,7 @@ public abstract class Metric extends AbstractSubject
   }
 
   private static StatsMap static_refreshLocally(Metric tmp, StatsMap weakStats) {
-    //Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + tmp);
+    Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog() + " " + Thread.currentThread());
     if (TransactionManager.getInstance().inTxn()) {
       return weakStats.put(tmp,
           tmp.computeValue(weakStats),
