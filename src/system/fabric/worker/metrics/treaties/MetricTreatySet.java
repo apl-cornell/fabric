@@ -7,7 +7,9 @@ import java.util.Iterator;
 
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.metrics.Metric;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 /**
  * Utility class to easily express a set of treaties associated with a Metric.
@@ -16,16 +18,19 @@ public class MetricTreatySet extends TreatySet {
 
   private OidRef<Metric> owner;
   private LongKeyMap<MetricTreaty> items;
+  private long nextId;
 
   public MetricTreatySet(Metric owner) {
     super(TreatySet.Kind.METRIC);
     this.owner = new OidRef<>(owner);
     this.items = new LongKeyHashMap<>();
+    this.nextId = 0;
   }
 
   public MetricTreatySet(DataInput in) throws IOException {
     super(TreatySet.Kind.METRIC);
     this.owner = new OidRef<>(in);
+    this.nextId = in.readLong();
     int size = in.readInt();
     this.items = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++) {
@@ -33,6 +38,13 @@ public class MetricTreatySet extends TreatySet {
       MetricTreaty m = new MetricTreaty(this.owner, in);
       this.items.put(m.getId(), m);
     }
+  }
+
+  private MetricTreatySet(MetricTreatySet original) {
+    super(TreatySet.Kind.METRIC);
+    this.owner = original.owner;
+    this.items = new LongKeyHashMap<>(original.items);
+    this.nextId = original.nextId;
   }
 
   /** @return the number of treaties. */
@@ -66,6 +78,7 @@ public class MetricTreatySet extends TreatySet {
   @Override
   public void writeData(DataOutput out) throws IOException {
     owner.write(out);
+    out.writeLong(this.nextId);
     out.writeInt(this.items.size());
     // Don't bother writing out the keys, it's already included in the values.
     for (MetricTreaty treaty : this.items.values()) {
@@ -79,12 +92,26 @@ public class MetricTreatySet extends TreatySet {
   }
 
   @Override
-  public void add(MetricTreaty treaty) {
-    items.put(treaty.getId(), treaty);
+  public TreatySet add(MetricTreaty treaty) {
+    // TODO check if there's an actual update?
+    MetricTreatySet updated = new MetricTreatySet(this);
+    updated.items.put(treaty.getId(), treaty);
+    return updated;
   }
 
   @Override
   public MetricTreaty get(long id) {
     return items.get(id);
+  }
+
+  @Override
+  public Pair<TreatySet, MetricTreaty> create(TreatyStatement stmt) {
+    // TODO: could be worth exploring checking if we already have that statement
+    // represented?
+    MetricTreatySet updated = new MetricTreatySet(this);
+    MetricTreaty newTreaty =
+        new MetricTreaty(updated.owner.get(), updated.nextId++, stmt);
+    updated.items.put(newTreaty.getId(), newTreaty);
+    return new Pair<TreatySet, MetricTreaty>(updated, newTreaty);
   }
 }

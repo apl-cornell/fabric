@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import fabric.common.exceptions.NotImplementedException;
+import fabric.common.util.Pair;
 import fabric.metrics.Metric;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 /**
  * Dummy stand-in value for treaty set for non-metric objects.
@@ -70,7 +72,7 @@ public class DummyTreatySet extends TreatySet {
   }
 
   @Override
-  public void add(MetricTreaty treaty) {
+  public TreatySet add(MetricTreaty treaty) {
     throw new NotImplementedException(
         "Dummy Treaty Sets should not be added to!");
   }
@@ -78,5 +80,11 @@ public class DummyTreatySet extends TreatySet {
   @Override
   public MetricTreaty get(long id) {
     return null;
+  }
+
+  @Override
+  public Pair<TreatySet, MetricTreaty> create(TreatyStatement stmt) {
+    throw new NotImplementedException(
+        "Dummy Treaty Sets should not be added to!");
   }
 }

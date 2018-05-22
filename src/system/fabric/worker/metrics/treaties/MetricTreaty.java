@@ -3,7 +3,6 @@ package fabric.worker.metrics.treaties;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Arrays;
 
 import fabric.metrics.Metric;
 import fabric.worker.metrics.ImmutableObserverSet;
@@ -46,22 +45,16 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
   /** The policy being used to enforce this treaty. */
   private final EnforcementPolicy policy;
 
-  /** The set of witnesses, if using WITNESS policy, otherwise null. */
-  protected final TreatyRef[] policyData;
-
   /** The expiration time. */
   public final long expiry;
 
-  private MetricTreaty(Metric metric, long id, TreatyStatement statement,
-      ImmutableObserverSet observers, EnforcementPolicy policy,
-      TreatyRef[] policyData) {
+  public MetricTreaty(Metric metric, long id, TreatyStatement statement) {
     this.metric = new OidRef<>(metric);
     this.id = id;
     this.activated = false;
     this.statement = statement;
-    this.observers = observers;
-    this.policy = policy;
-    this.policyData = policyData;
+    this.observers = ImmutableObserverSet.emptySet();
+    this.policy = new NoPolicy();
     this.expiry = policy.calculateExpiry(this);
   }
 
@@ -78,13 +71,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.statement = TreatyStatement.read(in);
     this.observers = new ImmutableObserverSet(in);
     this.policy = EnforcementPolicy.read(in);
-
-    int size = in.readInt();
-    this.policyData = new TreatyRef[size];
-    for (int i = 0; i < size; i++) {
-      this.policyData[i] = new TreatyRef(in);
-    }
-
     this.expiry = in.readLong();
   }
 
@@ -110,8 +96,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.statement = original.statement;
     this.observers = original.observers;
     this.policy = original.policy;
-    this.policyData =
-        Arrays.copyOf(original.policyData, original.policyData.length);
     this.expiry = this.policy.updatedExpiry(original);
   }
 
@@ -125,8 +109,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.statement = original.statement;
     this.observers = original.observers;
     this.policy = original.policy;
-    this.policyData =
-        Arrays.copyOf(original.policyData, original.policyData.length);
     this.expiry = this.policy.updatedExpiry(original);
   }
 

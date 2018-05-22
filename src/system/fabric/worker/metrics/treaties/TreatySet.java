@@ -5,6 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.FastSerializable;
+import fabric.common.util.Pair;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 /**
  * Base class for a set of treaties (time limited logical statements) on a
@@ -86,8 +88,17 @@ public abstract class TreatySet
   /**
    * Add a treaty, overwriting any pre-existing treaties with an equivalent
    * assertion.
+   *
+   * @return updated set ("this" if there's no change).
    */
-  public abstract void add(MetricTreaty treaty);
+  public abstract TreatySet add(MetricTreaty treaty);
+
+  /**
+   * Create a new treaty with the given statement.
+   *
+   * @return updated set ("this" if there's no change) paired with the treaty.
+   */
+  public abstract Pair<TreatySet, MetricTreaty> create(TreatyStatement stmt);
 
   /**
    * @return the treaty for the given id, if it has been "garbage collected",
