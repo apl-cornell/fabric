@@ -363,9 +363,12 @@ public class MetricTreaty implements FastSerializable, Serializable {
 
   /**
    * Deserialization constructor.
+   *
+   * Metric is provided on the side to avoid unnecessary repeated references in
+   * serialized TreatySet.
    */
-  public MetricTreaty(DataInput in) throws IOException {
-    this.metric = new OidRef<>(in);
+  public MetricTreaty(OidRef<Metric> m, DataInput in) throws IOException {
+    this.metric = m;
     this.id = in.readLong();
     this.statement = TreatyStatement.read(in);
     this.observers = new ImmutableObserverSet(in);
@@ -382,7 +385,8 @@ public class MetricTreaty implements FastSerializable, Serializable {
 
   @Override
   public void write(DataOutput out) throws IOException {
-    this.metric.write(out);
+    // Don't serialize the metric, it'll be provided on deserialization.
+    //this.metric.write(out);
     out.writeLong(id);
     this.statement.write(out);
     this.observers.write(out);
