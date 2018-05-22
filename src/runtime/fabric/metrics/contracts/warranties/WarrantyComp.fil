@@ -37,6 +37,20 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   protected ImmutableSet/*<WarrantyComp>*/ proxies;
 
   /**
+   * Flag determining if a new result should be immediately acquired when the
+   * current one is invalidated.
+   */
+  protected final boolean recomputeOnInvalidation;
+
+  /**
+   * Flag to change behavior of proxy groups between being proactively updated
+   * and lazily updated.  With proactive, all computations get updated when a
+   * new treaty becomes available, otherwise each computation individually
+   * updates when first called after a treaty becomes possible/available.
+   */
+  protected final boolean proactive;
+
+  /**
    * Create a new updated result paired with a contract that would enforce it
    * after this call.
    *
@@ -76,32 +90,26 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
     return static_apply(this, time, autoRetry);
   }
 
-  // Flag to change behavior of proxy groups between being proactively updated
-  // and lazily updated.  With proactive, all computations get updated when a
-  // new treaty becomes available, otherwise each computation individually
-  // updates when first called after a treaty becomes possible/available.
-  private static final boolean PROACTIVE = true;
-
   private static WarrantyValue static_apply(WarrantyComp tmp, long time, boolean autoRetry) {
     TransactionManager.getInstance().resolveObservations();
     int i = 0;
-    boolean loop = tmp.dropOldValue();
+    boolean loop = static_dropOldValue(tmp);
     while (loop) {
       i++;
       Logging.METRICS_LOGGER.log(Level.INFO, "RUNNING ATTEMPT " + i + " OF " + tmp + " IN " + Thread.currentThread());
-      if (!PROACTIVE) {
+      if (!tmp.proactive) {
         for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
           // If any proxy has a good value, steal it
           WarrantyComp proxy = (WarrantyComp) iter.next();
-          if (!proxy.dropOldValue()) {
+          if (!static_dropOldValue(proxy)) {
             Object newVal = proxy.curVal;
             Contract newContract = proxy.curContract;
             //Logging.METRICS_LOGGER.log(Level.INFO, "USING RESULT FROM " + proxy + " IN " + Thread.currentThread());
             // Try the value.  If we're handling updates, it's possible the proxy
             // value is not good, despite appearances, so don't consider it done
             // unless the result "sticks"
-            tmp.setNewValue(newVal, newContract);
-            if (!tmp.dropOldValue()) {
+            static_setNewValue(tmp, newVal, newContract);
+            if (!static_dropOldValue(tmp)) {
               break;
             }
           }
@@ -133,71 +141,63 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
         }
 
         Logging.METRICS_LOGGER.log(Level.INFO, "SETTING RESULT FOR " + tmp + " IN " + Thread.currentThread());
-        tmp.setNewValue(computed.value, computed.contract);
-        if (PROACTIVE) {
+        static_setNewValue(tmp, computed.value, computed.contract);
+        if (tmp.proactive) {
           for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
             // Update proxies to new value
             WarrantyComp proxy = (WarrantyComp) iter.next();
-            proxy.setNewValue(computed.value, computed.contract);
+            static_setNewValue(proxy, computed.value, computed.contract);
           }
         }
       }
 
       // Only bother to retry if we're supposed to and we don't have a valid
       // contract.
-      loop = autoRetry && tmp.dropOldValue();
+      loop = autoRetry && static_dropOldValue(tmp);
       if (!loop)
         TransactionManager.getInstance().stats.addMsg("Memoized: true");
     }
     return WarrantyValue.newValue(tmp.curVal, tmp.curContract);
   }
 
-  private boolean dropOldValue() {
-    return static_dropOldValue(this);
-  }
-
   private static boolean static_dropOldValue(WarrantyComp tmp) {
     boolean rtn = false;
     if (TransactionManager.getInstance().inTxn()) {
-      rtn = inner_dropOldValue(tmp);
+      rtn = tmp.dropOldValue();
     } else {
       atomic {
-        rtn = inner_dropOldValue(tmp);
+        rtn = tmp.dropOldValue();
       }
     }
     return rtn;
   }
 
-  private static boolean inner_dropOldValue(WarrantyComp tmp) {
-    Contract curContract = tmp.curContract;
+  private boolean dropOldValue() {
+    Contract curContract = this.curContract;
     if (curContract != null && !curContract.valid()) {
-      curContract.removeObserver(tmp);
-      tmp.curContract = null;
-      tmp.$associated = null;
+      curContract.removeObserver(this);
+      this.curContract = null;
+      this.$associated = null;
     }
-    return tmp.curContract == null;
-  }
-
-  private void setNewValue(Object newVal, Contract newContract) {
-    static_setNewValue(this, newVal, newContract);
+    return this.curContract == null;
   }
 
   private static void static_setNewValue(WarrantyComp tmp, Object newVal, Contract newContract) {
     if (TransactionManager.getInstance().inTxn()) {
-      inner_setNewValue(tmp, newVal, newContract);
+      tmp.setNewValue(newVal, newContract);
     } else {
       atomic {
-        inner_setNewValue(tmp, newVal, newContract);
+        tmp.setNewValue(newVal, newContract);
       }
     }
   }
 
-  private static void inner_setNewValue(WarrantyComp tmp, Object newVal, Contract newContract) {
-    if (inner_dropOldValue(tmp) && newContract != null && newContract.valid()) {
-      tmp.curVal = newVal;
-      tmp.curContract = newContract.getProxyContract(tmp.$getStore());
-      tmp.curContract.addObserver(tmp);
-      tmp.$associated = ImmutableSet.emptySet().add(tmp.curContract);
+  private void setNewValue(Object newVal, Contract newContract) {
+    if (this.dropOldValue() && newContract != null && newContract.valid()) {
+      this.curVal = newVal;
+      this.curContract = newContract.getProxyContract(this.$getStore());
+      this.curContract.addObserver(this);
+      this.$associated = ImmutableSet.emptySet().add(this.curContract);
     }
   }
 
@@ -212,7 +212,8 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   public boolean handleUpdates() {
     if (this.dropOldValue()) {
       // try to get a new value
-      apply(System.currentTimeMillis(), false);
+      if (recomputeOnInvalidation)
+        apply(System.currentTimeMillis(), false);
       return true;
     }
     return false;
@@ -294,11 +295,20 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
     return rtn;
   }
 
-  protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$() {
-    // Default to assuming up to 4 proxies
+  protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$(boolean recomputeOnInvalidation, boolean proactive) {
     this.proxies = ImmutableSet.emptySet();
+    this.recomputeOnInvalidation = recomputeOnInvalidation;
+    this.proactive = proactive;
     fabric$metrics$util$AbstractSubject$();
     return this;
+  }
+
+  protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$(boolean recomputeOnInvalidation) {
+    return fabric$metrics$contracts$warranties$WarrantyComp$(recomputeOnInvalidation, true);
+  }
+
+  protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$() {
+    return fabric$metrics$contracts$warranties$WarrantyComp$(true, true);
   }
 
   /**
@@ -315,7 +325,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
       } else {
         this.baseComputation = baseComputation;
       }
-      fabric$metrics$contracts$warranties$WarrantyComp$();
+      fabric$metrics$contracts$warranties$WarrantyComp$(baseComputation.recomputeOnInvalidation, baseComputation.proactive);
       return this;
     }
 
