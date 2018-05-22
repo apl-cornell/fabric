@@ -8,7 +8,6 @@ import java.util.Iterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.metrics.Metric;
-import fabric.worker.metrics.treaties.TreatySet.Kind;
 
 /**
  * Utility class to easily express a set of treaties associated with a Metric.
@@ -77,5 +76,15 @@ public class MetricTreatySet extends TreatySet {
   @Override
   public String toString() {
     return items.toString();
+  }
+
+  @Override
+  public void add(MetricTreaty treaty) {
+    items.put(treaty.getId(), treaty);
+  }
+
+  @Override
+  public MetricTreaty get(long id) {
+    return items.get(id);
   }
 }

@@ -45,7 +45,7 @@ public abstract class TreatySet
   }
 
   @Override
-  public void write(DataOutput out) throws IOException {
+  public final void write(DataOutput out) throws IOException {
     out.writeByte(kind.ordinal());
     writeData(out);
   }
@@ -82,4 +82,16 @@ public abstract class TreatySet
     // TODO
     return false;
   }
+
+  /**
+   * Add a treaty, overwriting any pre-existing treaties with an equivalent
+   * assertion.
+   */
+  public abstract void add(MetricTreaty treaty);
+
+  /**
+   * @return the treaty for the given id, if it has been "garbage collected",
+   * returns null.
+   */
+  public abstract MetricTreaty get(long id);
 }

@@ -15,7 +15,7 @@ public interface Treaty<This extends Treaty<This>> extends FastSerializable {
    * Do any work needed to update the state of this treaty, returning the new
    * state.  If the state has not changed, it will return "this".
    */
-  public This update();
+  public This update(boolean asyncExtension);
 
   /**
    * Check if the treaty is currently true.
@@ -36,4 +36,9 @@ public interface Treaty<This extends Treaty<This>> extends FastSerializable {
    * @return the observers of this treaty (other treaties or memoized functions)
    */
   public ImmutableObserverSet getObservers();
+
+  /**
+   * Has this treaty been activated since creation?
+   */
+  public boolean isActive();
 }

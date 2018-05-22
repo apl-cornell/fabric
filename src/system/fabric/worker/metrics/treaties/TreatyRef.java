@@ -47,8 +47,11 @@ public final class TreatyRef implements FastSerializable, Serializable {
     this(new OidRef<>(obj), treatyId);
   }
 
+  public TreatyRef(MetricTreaty treaty) {
+    this(treaty.metric.objStoreName, treaty.metric.objOnum, treaty.id);
+  }
+
   public MetricTreaty get() {
-    // TODO
-    return null;
+    return objRef.get().get$$treaties().get(treatyId);
   }
 }
