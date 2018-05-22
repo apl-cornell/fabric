@@ -31,6 +31,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -106,7 +107,7 @@ public class InProcessStore extends RemoteStore {
   public void prepareTransaction(final long tid, final boolean singleStore,
       final boolean readOnly, final long expiryToCheck,
       final Collection<_Impl> toCreate,
-      final LongKeyMap<Pair<Integer, Long>> reads,
+      final LongKeyMap<Pair<Integer, TreatySet>> reads,
       final Collection<_Impl> writes,
       final Collection<ExpiryExtension> extensions,
       final LongKeyMap<Set<Oid>> extensionsTriggered,
@@ -139,7 +140,7 @@ public class InProcessStore extends RemoteStore {
         sm.createSurrogates(req);
 
         try {
-          OidKeyHashMap<Long> longerContracts =
+          OidKeyHashMap<TreatySet> longerContracts =
               tm.prepare(Worker.getWorker().getPrincipal(), req);
 
           long prepareTime = System.currentTimeMillis();
@@ -192,7 +193,7 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   protected List<SerializedObject> getStaleObjects(
-      LongKeyMap<Pair<Integer, Long>> reads) {
+      LongKeyMap<Pair<Integer, TreatySet>> reads) {
     try {
       return tm.checkForStaleObjects(getPrincipal(), reads);
     } catch (AccessException e) {

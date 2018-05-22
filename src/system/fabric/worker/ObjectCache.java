@@ -24,6 +24,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.transaction.TransactionManager;
 
 /**
@@ -245,22 +246,22 @@ public final class ObjectCache {
     }
 
     /**
-     * Obtains the object's expiry. (Returns null if this entry has been
+     * Obtains the object's treaties. (Returns null if this entry has been
      * evicted.)
      */
-    public synchronized Long getExpiry() {
-      if (next != null) return next.getExpiry();
-      if (impl != null) return impl.$expiry;
-      if (serialized != null) return serialized.getExpiry();
+    public synchronized TreatySet getTreaties() {
+      if (next != null) return next.getTreaties();
+      if (impl != null) return impl.$treaties;
+      if (serialized != null) return serialized.getTreaties();
       return null;
     }
 
     /**
      * Updates the object's expiry in place.
      */
-    public synchronized void setExpiry(long newExpiry) {
+    public synchronized void setTreaties(TreatySet newTreaties) {
       if (next != null) {
-        next.setExpiry(newExpiry);
+        next.setTreaties(newTreaties);
         return;
       }
       if (impl != null) {
@@ -268,13 +269,13 @@ public final class ObjectCache {
         _Impl curImpl = impl;
         // Run through history and update as well.
         while (curImpl != null && curImpl.$version == ver) {
-          curImpl.$expiry = newExpiry;
+          curImpl.$treaties = newTreaties;
           curImpl = curImpl.$history;
         }
         return;
       }
       if (serialized != null) {
-        serialized.setExpiry(newExpiry);
+        serialized.setTreaties(newTreaties);
         return;
       }
     }
@@ -549,13 +550,13 @@ public final class ObjectCache {
 
         // Check if object in current entry is an older version.
         if (curEntry.getVersion() > update.getVersion()
-            || (curEntry.getVersion() == update.getVersion()
-                && curEntry.getExpiry() >= update.getExpiry()))
+            || (curEntry.getVersion() == update.getVersion() && TreatySet
+                .checkExtension(update.getTreaties(), curEntry.getTreaties())))
           return curEntry;
 
-        if (curEntry.getVersion() == update.getVersion()
-            && curEntry.getExpiry() < update.getExpiry()) {
-          curEntry.setExpiry(update.getExpiry());
+        if (curEntry.getVersion() == update.getVersion() && TreatySet
+            .checkExtension(curEntry.getTreaties(), update.getTreaties())) {
+          curEntry.setTreaties(update.getTreaties());
           return curEntry;
         }
 

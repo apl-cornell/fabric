@@ -3,106 +3,83 @@ package fabric.worker.metrics;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectStreamException;
-import java.io.Serializable;
-import java.util.Iterator;
 
 import fabric.common.FastSerializable;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
-import fabric.metrics.Metric;
 
 /**
- * Utility class to easily express a set of treaties associated with a Metric.
- *
- * TODO:
- * - support updates and lazy cleaning of dead treaties on update.
- * - implement Serializable behavior.
+ * Base class for a set of treaties (time limited logical statements) on a
+ * Fabric object.
  */
-@SuppressWarnings("serial")
-public class TreatySet
-    implements FastSerializable, Serializable, Iterable<MetricTreaty> {
+public abstract class TreatySet
+    implements FastSerializable, Iterable<MetricTreaty> {
 
-  private OidRef<Metric> owner;
-  private LongKeyMap<MetricTreaty> items;
-
-  public TreatySet(Metric owner) {
-    this.owner = new OidRef<>(owner);
-    this.items = new LongKeyHashMap<>();
+  protected enum Kind {
+    METRIC, DUMMY
   }
 
-  public TreatySet(DataInput in) throws IOException {
-    this.owner = new OidRef<>(in);
-    int size = in.readInt();
-    this.items = new LongKeyHashMap<>(size);
-    for (int i = 0; i < size; i++) {
-      // Keys aren't serialized separately, it's already in the treaty.
-      MetricTreaty m = new MetricTreaty(this.owner, in);
-      this.items.put(m.getId(), m);
-    }
+  private final Kind kind;
+
+  protected TreatySet(Kind kind) {
+    this.kind = kind;
   }
 
   /** @return the number of treaties. */
-  public int size() {
-    return items.size();
-  }
-
-  @Override
-  public Iterator<MetricTreaty> iterator() {
-    return items.values().iterator();
-  }
+  public abstract int size();
 
   /** @return a value to use for an empty vector */
-  public static TreatySet emptySet(Metric owner) {
-    return new TreatySet(owner);
+  public static TreatySet emptySet(fabric.lang.Object owner) {
+    // TODO
+    return null;
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    return (obj instanceof TreatySet)
-        && this.items.equals(((TreatySet) obj).items);
-  }
-
-  @Override
-  public int hashCode() {
-    return this.items.hashCode();
+  /** Deserializer */
+  public static TreatySet read(DataInput in) throws IOException {
+    switch (Kind.values()[in.readByte()]) {
+    case METRIC:
+      return new MetricTreatySet(in);
+    case DUMMY:
+      return DummyTreatySet.singleton;
+    default:
+      throw new InternalError("This should never happen");
+    }
   }
 
   @Override
   public void write(DataOutput out) throws IOException {
-    owner.write(out);
-    out.writeInt(this.items.size());
-    // Don't bother writing out the keys, it's already included in the values.
-    for (MetricTreaty treaty : this.items.values()) {
-      treaty.write(out);
-    }
+    out.writeByte(kind.ordinal());
+    writeData(out);
   }
 
-  @Override
-  public String toString() {
-    return items.toString();
+  protected abstract void writeData(DataOutput out) throws IOException;
+
+  /**
+   * Check if the second TreatySet is an effective extension of all treaties in
+   * the first TreatySet.
+   *
+   * @param from
+   *    the starting {@link TreatySet}
+   * @param to
+   *    the ending {@link TreatySet}
+   * @return true if from and to are equal or to only differs with from by
+   * extending the still live treaties.
+   */
+  public static boolean checkExtension(TreatySet from, TreatySet to) {
+    return from.equals(to) || checkExtensionStrict(from, to);
   }
 
-  /** Serialization Handling. */
-  private void writeObject(ObjectOutputStream out) throws IOException {
-    this.write(out);
-  }
-
-  private void readObject(ObjectInputStream in)
-      throws IOException, ClassNotFoundException {
-    this.owner = new OidRef<>(in);
-    int size = in.readInt();
-    this.items = new LongKeyHashMap<>(size);
-    for (int i = 0; i < size; i++) {
-      // Keys aren't serialized separately, it's already in the treaty.
-      MetricTreaty m = new MetricTreaty(this.owner, in);
-      this.items.put(m.getId(), m);
-    }
-  }
-
-  private void readObjectNoData() throws ObjectStreamException {
-    // Do nothing.
+  /**
+   * Check if the second TreatySet is a strict extension of all treaties in
+   * the first TreatySet.
+   *
+   * @param from
+   *    the starting {@link TreatySet}
+   * @param to
+   *    the ending {@link TreatySet}
+   * @return true if from and to are not equal and to only differs with from by
+   * extending the still live treaties.
+   */
+  public static boolean checkExtensionStrict(TreatySet from, TreatySet to) {
+    // TODO
+    return false;
   }
 }

@@ -13,6 +13,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -26,12 +27,12 @@ public final class StalenessCheckMessage
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
 
-  public final LongKeyMap<Pair<Integer, Long>> versionsAndExpiries;
+  public final LongKeyMap<Pair<Integer, TreatySet>> versionsAndTreaties;
 
   public StalenessCheckMessage(
-      LongKeyMap<Pair<Integer, Long>> versionsAndExpiries) {
+      LongKeyMap<Pair<Integer, TreatySet>> versionsAndTreaties) {
     super(MessageType.STALENESS_CHECK, AccessException.class);
-    this.versionsAndExpiries = versionsAndExpiries;
+    this.versionsAndTreaties = versionsAndTreaties;
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -62,12 +63,12 @@ public final class StalenessCheckMessage
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
-    out.writeInt(versionsAndExpiries.size());
-    for (LongKeyMap.Entry<Pair<Integer, Long>> entry : versionsAndExpiries
+    out.writeInt(versionsAndTreaties.size());
+    for (LongKeyMap.Entry<Pair<Integer, TreatySet>> entry : versionsAndTreaties
         .entrySet()) {
       out.writeLong(entry.getKey());
       out.writeInt(entry.getValue().first);
-      out.writeLong(entry.getValue().second);
+      entry.getValue().second.write(out);
     }
   }
 
@@ -77,12 +78,13 @@ public final class StalenessCheckMessage
   }
 
   /* helper method for deserialization constructor */
-  private static LongKeyHashMap<Pair<Integer, Long>> readMap(DataInput in)
+  private static LongKeyHashMap<Pair<Integer, TreatySet>> readMap(DataInput in)
       throws IOException {
     int size = in.readInt();
-    LongKeyHashMap<Pair<Integer, Long>> versions = new LongKeyHashMap<>(size);
+    LongKeyHashMap<Pair<Integer, TreatySet>> versions =
+        new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++)
-      versions.put(in.readLong(), new Pair<>(in.readInt(), in.readLong()));
+      versions.put(in.readLong(), new Pair<>(in.readInt(), TreatySet.read(in)));
 
     return versions;
   }

@@ -10,6 +10,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -23,14 +24,14 @@ public class WorkerPrepareSuccessMessage extends AsyncMessage {
 
   public final long tid;
   public final long time;
-  // Map from oid to new, longer, expiration time
-  public final OidKeyHashMap<Long> longerContracts;
+  // Map from oid to new, longer treaties.
+  public final OidKeyHashMap<TreatySet> longerContracts;
 
   /**
    * Used to prepare transactions at remote workers.
    */
   public WorkerPrepareSuccessMessage(long tid, long time,
-      OidKeyHashMap<Long> longerContracts) {
+      OidKeyHashMap<TreatySet> longerContracts) {
     super(MessageType.WORKER_PREPARE_SUCCESS);
     this.tid = tid;
     this.time = time;
@@ -64,9 +65,10 @@ public class WorkerPrepareSuccessMessage extends AsyncMessage {
     for (Store s : longerContracts.storeSet()) {
       out.writeUTF(s.name());
       out.writeInt(longerContracts.get(s).size());
-      for (LongKeyMap.Entry<Long> entry : longerContracts.get(s).entrySet()) {
+      for (LongKeyMap.Entry<TreatySet> entry : longerContracts.get(s)
+          .entrySet()) {
         out.writeLong(entry.getKey());
-        out.writeLong(entry.getValue());
+        entry.getValue().write(out);
       }
     }
   }
@@ -83,7 +85,7 @@ public class WorkerPrepareSuccessMessage extends AsyncMessage {
       int size2 = in.readInt();
       for (int j = 0; j < size2; j++) {
         long onum = in.readLong();
-        this.longerContracts.put(s, onum, in.readLong());
+        this.longerContracts.put(s, onum, TreatySet.read(in));
       }
     }
   }

@@ -66,6 +66,7 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 class Store extends MessageToStoreHandler {
@@ -246,9 +247,10 @@ class Store extends MessageToStoreHandler {
         nameOf(client.principal), Long.toHexString(msg.tid));
 
     try {
-      OidKeyHashMap<Long> longerContracts = prepareTransaction(client.principal,
-          msg.tid, msg.serializedCreates, msg.serializedWrites, msg.reads,
-          msg.extensions, msg.extensionsTriggered, msg.delayedExtensions);
+      OidKeyHashMap<TreatySet> longerContracts =
+          prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
+              msg.serializedWrites, msg.reads, msg.extensions,
+              msg.extensionsTriggered, msg.delayedExtensions);
 
       long prepareTime = System.currentTimeMillis();
 
@@ -372,7 +374,7 @@ class Store extends MessageToStoreHandler {
         "Handling Staleness Check Message from {0}", nameOf(client.principal));
 
     return new StalenessCheckMessage.Response(
-        tm.checkForStaleObjects(client.principal, message.versionsAndExpiries));
+        tm.checkForStaleObjects(client.principal, message.versionsAndTreaties));
   }
 
   /**
@@ -409,10 +411,10 @@ class Store extends MessageToStoreHandler {
         tm.waitForUpdates(message.onumsAndVersions));
   }
 
-  private OidKeyHashMap<Long> prepareTransaction(Principal p, long tid,
+  private OidKeyHashMap<TreatySet> prepareTransaction(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites,
-      LongKeyMap<Pair<Integer, Long>> reads,
+      LongKeyMap<Pair<Integer, TreatySet>> reads,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions)
       throws TransactionPrepareFailedException {

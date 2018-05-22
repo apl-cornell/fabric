@@ -14,6 +14,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -29,8 +30,8 @@ public class StorePrepareFailedMessage extends AsyncMessage {
 
   public final OidKeyHashMap<SerializedObject> conflicts;
 
-  // Map from oid to new, longer, expiration time
-  public final OidKeyHashMap<Long> longerContracts;
+  // Map from oid to new, longer treaties
+  public final OidKeyHashMap<TreatySet> longerContracts;
 
   public final List<String> messages;
 
@@ -81,9 +82,10 @@ public class StorePrepareFailedMessage extends AsyncMessage {
     for (Store s : longerContracts.storeSet()) {
       out.writeUTF(s.name());
       out.writeInt(longerContracts.get(s).size());
-      for (LongKeyMap.Entry<Long> entry : longerContracts.get(s).entrySet()) {
+      for (LongKeyMap.Entry<TreatySet> entry : longerContracts.get(s)
+          .entrySet()) {
         out.writeLong(entry.getKey());
-        out.writeLong(entry.getValue());
+        entry.getValue().write(out);
       }
     }
 
@@ -116,7 +118,7 @@ public class StorePrepareFailedMessage extends AsyncMessage {
       int size2 = in.readInt();
       for (int j = 0; j < size2; j++) {
         long onum = in.readLong();
-        this.longerContracts.put(s, onum, in.readLong());
+        this.longerContracts.put(s, onum, TreatySet.read(in));
       }
     }
 

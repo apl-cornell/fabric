@@ -23,6 +23,7 @@ import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -56,7 +57,7 @@ public class PrepareTransactionMessage extends AsyncMessage {
    */
   public final long expiryToCheck;
 
-  public final LongKeyMap<Pair<Integer, Long>> reads;
+  public final LongKeyMap<Pair<Integer, TreatySet>> reads;
 
   /**
    * The objects created during the transaction, unserialized. This will only be
@@ -113,7 +114,7 @@ public class PrepareTransactionMessage extends AsyncMessage {
    */
   public PrepareTransactionMessage(long tid, boolean singleStore,
       boolean readOnly, long expiryToCheck, Collection<_Impl> toCreate,
-      LongKeyMap<Pair<Integer, Long>> reads, Collection<_Impl> writes,
+      LongKeyMap<Pair<Integer, TreatySet>> reads, Collection<_Impl> writes,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions) {
     super(MessageType.PREPARE_TRANSACTION);
@@ -165,10 +166,11 @@ public class PrepareTransactionMessage extends AsyncMessage {
       out.writeInt(0);
     } else {
       out.writeInt(reads.size());
-      for (LongKeyMap.Entry<Pair<Integer, Long>> entry : reads.entrySet()) {
+      for (LongKeyMap.Entry<Pair<Integer, TreatySet>> entry : reads
+          .entrySet()) {
         out.writeLong(entry.getKey());
         out.writeInt(entry.getValue().first);
-        out.writeLong(entry.getValue().second);
+        entry.getValue().second.write(out);
       }
     }
 
@@ -252,7 +254,7 @@ public class PrepareTransactionMessage extends AsyncMessage {
     } else {
       reads = new LongKeyHashMap<>(size);
       for (int i = 0; i < size; i++)
-        reads.put(in.readLong(), new Pair<>(in.readInt(), in.readLong()));
+        reads.put(in.readLong(), new Pair<>(in.readInt(), TreatySet.read(in)));
     }
 
     // Read creates.

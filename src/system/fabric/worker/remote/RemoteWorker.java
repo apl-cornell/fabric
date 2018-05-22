@@ -46,6 +46,7 @@ import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.worker.transaction.TransactionManager;
@@ -86,7 +87,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   }
 
   public void notifyStorePrepareSuccess(long tid, long time,
-      OidKeyHashMap<Long> longerContracts) {
+      OidKeyHashMap<TreatySet> longerContracts) {
     sendAsync(new StorePrepareSuccessMessage(tid, time, longerContracts));
   }
 
@@ -100,7 +101,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   }
 
   public void notifyWorkerPrepareSuccess(long tid, long time,
-      OidKeyHashMap<Long> longerContracts) {
+      OidKeyHashMap<TreatySet> longerContracts) {
     sendAsync(new WorkerPrepareSuccessMessage(tid, time, longerContracts));
   }
 

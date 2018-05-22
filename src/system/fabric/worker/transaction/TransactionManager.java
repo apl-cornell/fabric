@@ -63,6 +63,7 @@ import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.LockConflictException;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -1221,7 +1222,8 @@ public final class TransactionManager {
       if (obj.$writer == current
           && obj.writerMapVersion == current.writerMap.version
           && obj.$isOwned) {
-        if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
+        if (clobberedExtension != null)
+          obj.$treaties = clobberedExtension.treaties;
         return needTransaction;
       }
 
@@ -1234,7 +1236,7 @@ public final class TransactionManager {
         Timing.TXLOG.end();
       }
     }
-    if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
+    if (clobberedExtension != null) obj.$treaties = clobberedExtension.treaties;
 
     return needTransaction;
 
@@ -1245,14 +1247,26 @@ public final class TransactionManager {
    *
    * @return whether a new (top-level) transaction was created.
    */
+  @Deprecated
   public boolean registerExpiryWrite(_Impl obj, long oldExpiry,
       long newExpiry) {
+    // TODO: this is now deprecated.
+    return false;
+  }
+
+  /**
+   * This should be called <i>before</i> the object's TreatySet is modified.
+   *
+   * @return whether a new (top-level) transaction was created.
+   */
+  public boolean registerTreatySetWrite(_Impl obj, TreatySet oldTreaties,
+      TreatySet newTreaties) {
     boolean needTransaction = (current == null);
     if (needTransaction) startTransaction();
 
     ExpiryExtension clobberedExtension = null;
     synchronized (obj) {
-      boolean extending = newExpiry > oldExpiry;
+      boolean extending = TreatySet.checkExtension(oldTreaties, newTreaties);
       if (!extending) {
         synchronized (current.extendedContracts) {
           clobberedExtension = current.extendedContracts.remove(obj);
@@ -1266,7 +1280,8 @@ public final class TransactionManager {
       if (obj.$writer == current
           && obj.writerMapVersion == current.writerMap.version
           && obj.$isOwned) {
-        if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
+        if (clobberedExtension != null)
+          obj.$treaties = clobberedExtension.treaties;
         return needTransaction;
       }
 
@@ -1274,7 +1289,8 @@ public final class TransactionManager {
       synchronized (current.writes) {
         alreadyWritten = current.writes.contains(obj);
       }
-      // If this wasn't written and sets a longer expiry, it's an extension.
+      // If this wasn't written and the treaties are extended, it's an
+      // extension.
       if (!alreadyWritten && extending) {
         synchronized (current.extendedContracts) {
           current.extendedContracts.put(obj, new ExpiryExtension(obj));
@@ -1292,7 +1308,7 @@ public final class TransactionManager {
         Timing.TXLOG.end();
       }
     }
-    if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
+    if (clobberedExtension != null) obj.$treaties = clobberedExtension.treaties;
 
     return needTransaction;
 
@@ -1591,7 +1607,7 @@ public final class TransactionManager {
           new NamedRunnable("worker freshness check to " + store.name()) {
             @Override
             public void runImpl() {
-              LongKeyMap<Pair<Integer, Long>> reads =
+              LongKeyMap<Pair<Integer, TreatySet>> reads =
                   current.getReadsForStore(store, true);
               if (store.checkForStaleObjects(reads))
                 nodesWithStaleObjects.add((RemoteNode<?>) store);

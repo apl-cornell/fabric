@@ -29,6 +29,7 @@ import fabric.worker.Store;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -53,8 +54,8 @@ public class TransactionPrepare {
   private final boolean readOnly;
   // time at which all prepares were finished.
   private long commitTime;
-  // All longer contracts to forward to the coordinator.
-  private OidKeyHashMap<Long> longerContracts;
+  // All longer treaties to forward to the coordinator.
+  private OidKeyHashMap<TreatySet> longerContracts;
 
   public TransactionPrepare(RemoteWorker coordinator, Log txnLog,
       boolean singleStore, boolean readOnly, Collection<Store> stores,
@@ -116,12 +117,12 @@ public class TransactionPrepare {
     respondedStores.add(s);
     commitTime = Math.max(commitTime, m.time);
     for (Store store : m.longerContracts.storeSet()) {
-      for (LongKeyMap.Entry<Long> entry : m.longerContracts.get(store)
+      for (LongKeyMap.Entry<TreatySet> entry : m.longerContracts.get(store)
           .entrySet()) {
         long onum = entry.getKey();
-        long expiry = entry.getValue();
-        store.readFromCache(onum).setExpiry(expiry);
-        this.longerContracts.put(store, onum, expiry);
+        TreatySet treaties = entry.getValue();
+        store.readFromCache(onum).setTreaties(treaties);
+        this.longerContracts.put(store, onum, treaties);
       }
     }
     cleanUp();
@@ -149,11 +150,11 @@ public class TransactionPrepare {
     respondedStores.add(s);
     this.longerContracts.putAll(m.longerContracts);
     for (Store store : m.longerContracts.storeSet()) {
-      for (LongKeyMap.Entry<Long> entry : m.longerContracts.get(store)
+      for (LongKeyMap.Entry<TreatySet> entry : m.longerContracts.get(store)
           .entrySet()) {
         long onum = entry.getKey();
-        long expiry = entry.getValue();
-        store.readFromCache(onum).setExpiry(expiry);
+        TreatySet treaties = entry.getValue();
+        store.readFromCache(onum).setTreaties(treaties);
       }
     }
     abort(s);
@@ -209,11 +210,11 @@ public class TransactionPrepare {
     commitTime = Math.max(commitTime, m.time);
     this.longerContracts.putAll(m.longerContracts);
     for (Store store : m.longerContracts.storeSet()) {
-      for (LongKeyMap.Entry<Long> entry : m.longerContracts.get(store)
+      for (LongKeyMap.Entry<TreatySet> entry : m.longerContracts.get(store)
           .entrySet()) {
         long onum = entry.getKey();
-        long expiry = entry.getValue();
-        store.readFromCache(onum).setExpiry(expiry);
+        TreatySet treaties = entry.getValue();
+        store.readFromCache(onum).setTreaties(treaties);
       }
     }
     cleanUp();
@@ -239,11 +240,11 @@ public class TransactionPrepare {
     respondedWorkers.add(w);
     this.longerContracts.putAll(m.longerContracts);
     for (Store store : m.longerContracts.storeSet()) {
-      for (LongKeyMap.Entry<Long> entry : m.longerContracts.get(store)
+      for (LongKeyMap.Entry<TreatySet> entry : m.longerContracts.get(store)
           .entrySet()) {
         long onum = entry.getKey();
-        long expiry = entry.getValue();
-        store.readFromCache(onum).setExpiry(expiry);
+        TreatySet treaties = entry.getValue();
+        store.readFromCache(onum).setTreaties(treaties);
       }
     }
     abort(w);
@@ -274,7 +275,7 @@ public class TransactionPrepare {
     // Send prepares to stores.
     for (Store store : outstandingStores.keySet()) {
       Collection<_Impl> creates = txnLog.getCreatesForStore(store);
-      LongKeyMap<Pair<Integer, Long>> reads =
+      LongKeyMap<Pair<Integer, TreatySet>> reads =
           txnLog.getReadsForStore(store, false);
       Collection<_Impl> writes = txnLog.getWritesForStore(store);
       Collection<ExpiryExtension> extensions =
@@ -456,7 +457,7 @@ public class TransactionPrepare {
   /**
    * @return the longerContracts
    */
-  public synchronized OidKeyHashMap<Long> getLongerContracts() {
+  public synchronized OidKeyHashMap<TreatySet> getLongerContracts() {
     return longerContracts;
   }
 }

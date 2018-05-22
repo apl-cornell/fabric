@@ -43,6 +43,7 @@ import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.ImmutableSet;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 public class TransactionManager {
@@ -128,7 +129,7 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public OidKeyHashMap<Long> prepare(Principal worker, PrepareRequest req)
+  public OidKeyHashMap<TreatySet> prepare(Principal worker, PrepareRequest req)
       throws TransactionPrepareFailedException {
     return req.runPrepare(this, database, worker);
   }
@@ -368,27 +369,28 @@ public class TransactionManager {
    * for any stale objects found.
    */
   List<SerializedObject> checkForStaleObjects(Principal worker,
-      LongKeyMap<Pair<Integer, Long>> versionsAndExpiries)
+      LongKeyMap<Pair<Integer, TreatySet>> versionsAndTreaties)
       throws AccessException {
     // First, check read and write permissions.
     Store store = Worker.getWorker().getStore(database.getName());
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
-      checkPerms(worker, versionsAndExpiries.keySet(),
+      checkPerms(worker, versionsAndTreaties.keySet(),
           Collections.<SerializedObject> emptyList(),
           Collections.<ExpiryExtension> emptyList());
     }
 
     List<SerializedObject> result = new ArrayList<>();
-    for (LongKeyMap.Entry<Pair<Integer, Long>> entry : versionsAndExpiries
+    for (LongKeyMap.Entry<Pair<Integer, TreatySet>> entry : versionsAndTreaties
         .entrySet()) {
       long onum = entry.getKey();
       int version = entry.getValue().first;
-      long expiry = entry.getValue().second;
+      TreatySet treaties = entry.getValue().second;
 
       int curVersion = database.getVersion(onum);
-      long curExpiry = database.getExpiry(onum);
-      if (curVersion != version || curExpiry > expiry) {
+      TreatySet curTreaties = database.getTreaties(onum);
+      if (curVersion != version
+          || (TreatySet.checkExtensionStrict(treaties, curTreaties))) {
         result.add(database.read(onum));
       }
     }

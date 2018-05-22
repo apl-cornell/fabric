@@ -11,6 +11,7 @@ import fabric.lang.security.Label;
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.ImmutableSet;
+import fabric.worker.metrics.TreatySet;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
 
@@ -94,6 +95,16 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   @Override
   public long set$$expiry(long val) {
     throw new InternalError("WrappedJavaInlineables don't have expiries.");
+  }
+
+  @Override
+  public TreatySet get$$treaties() {
+    throw new InternalError("WrappedJavaInlineables don't have treaties.");
+  }
+
+  @Override
+  public TreatySet set$$treaties(TreatySet val) {
+    throw new InternalError("WrappedJavaInlineables don't have treaties.");
   }
 
   @Override

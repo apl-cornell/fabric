@@ -34,6 +34,7 @@ import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.ImmutableSet;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.ReadMap;
@@ -58,6 +59,11 @@ public interface Object {
   Label get$$updateLabel();
 
   Label set$$updateLabel(Label label);
+
+  /** The set of treaties on this object. */
+  TreatySet get$$treaties();
+
+  TreatySet set$$treaties(TreatySet treaties);
 
   /** The expiry of a contract. */
   long get$$expiry();
@@ -294,6 +300,16 @@ public interface Object {
     @Override
     public final Label set$$updateLabel(Label label) {
       return fetch().set$$updateLabel(label);
+    }
+
+    @Override
+    public final TreatySet get$$treaties() {
+      return fetch().get$$treaties();
+    }
+
+    @Override
+    public final TreatySet set$$treaties(TreatySet treaties) {
+      return fetch().set$$treaties(treaties);
     }
 
     @Override
@@ -550,6 +566,11 @@ public interface Object {
     public final StackTraceElement[] $stackTrace;
 
     /**
+     * The treaties field, to be used by metrics.
+     */
+    public TreatySet $treaties;
+
+    /**
      * The expiry field, to be used by Contracts.
      */
     public long $expiry;
@@ -584,6 +605,7 @@ public interface Object {
       this.writerMapVersion = -1;
       this.$expiry = expiry;
       this.$observers = observers;
+      this.$treaties = TreatySet.emptySet(this);
 
       if (TRACE_OBJECTS)
         this.$stackTrace = Thread.currentThread().getStackTrace();
@@ -724,6 +746,7 @@ public interface Object {
       $expiry = other.$expiry;
       $observers = other.$observers;
       $associated = other.$associated;
+      $treaties = other.$treaties;
     }
 
     /**
@@ -757,21 +780,38 @@ public interface Object {
     public final long get$$expiry() {
       TransactionManager tm = TransactionManager.getInstance();
       tm.registerRead(this);
-      ExpiryExtension ex = tm.getPendingExtension(this);
-      if (ex != null) return ex.expiry;
       return $expiry;
     }
 
     @Override
     public final long set$$expiry(long expiry) {
       TransactionManager tm = TransactionManager.getInstance();
+      boolean transactionCreated = tm.registerWrite(this);
+      this.$expiry = expiry;
+      if (transactionCreated) tm.commitTransaction();
+      return this.$expiry;
+    }
+
+    @Override
+    public final TreatySet get$$treaties() {
+      TransactionManager tm = TransactionManager.getInstance();
+      tm.registerRead(this);
+      ExpiryExtension ex = tm.getPendingExtension(this);
+      if (ex != null) return ex.treaties;
+      return $treaties;
+    }
+
+    @Override
+    public final TreatySet set$$treaties(TreatySet treaties) {
+      TransactionManager tm = TransactionManager.getInstance();
       boolean transactionCreated =
-          tm.registerExpiryWrite(this, this.$expiry, expiry);
-      long rtn = expiry;
-      if (expiry > this.$expiry && tm.getPendingExtension(this) != null) {
-        tm.getPendingExtension(this).expiry = expiry;
+          tm.registerTreatySetWrite(this, this.$treaties, treaties);
+      TreatySet rtn = treaties;
+      if (TreatySet.checkExtension(this.$treaties, treaties)
+          && tm.getPendingExtension(this) != null) {
+        tm.getPendingExtension(this).treaties = treaties;
       } else {
-        this.$expiry = expiry;
+        this.$treaties = treaties;
       }
       if (transactionCreated) tm.commitTransaction();
       return rtn;

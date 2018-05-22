@@ -15,34 +15,34 @@ public class ExpiryExtension implements FastSerializable {
   public final long onum;
   /** Version of the extended object. */
   public final int version;
-  /** (New) Expiry of the extended object. */
-  public long expiry;
+  /** (New) Treaties of the extended object. */
+  public TreatySet treaties;
 
   /** Create extension using values. */
-  public ExpiryExtension(long onum, int version, long expiry) {
+  public ExpiryExtension(long onum, int version, TreatySet treaties) {
     this.onum = onum;
     this.version = version;
-    this.expiry = expiry;
+    this.treaties = treaties;
   }
 
   /** Create extension using impl that was extended. */
   public ExpiryExtension(_Impl extendedObj) {
     this.onum = extendedObj.$getOnum();
     this.version = extendedObj.$version;
-    this.expiry = extendedObj.$expiry;
+    this.treaties = extendedObj.$treaties;
   }
 
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeLong(onum);
     out.writeInt(version);
-    out.writeLong(expiry);
+    treaties.write(out);
   }
 
   /** Create extension from serialized input. */
   public ExpiryExtension(DataInput in) throws IOException {
     onum = in.readLong();
     version = in.readInt();
-    expiry = in.readLong();
+    treaties = TreatySet.read(in);
   }
 }

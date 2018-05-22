@@ -44,6 +44,7 @@ import fabric.worker.Store;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -415,15 +416,15 @@ public final class Log {
    * @param includeModified
    *          whether to include reads on modified objects.
    */
-  LongKeyMap<Pair<Integer, Long>> getReadsForStore(Store store,
+  LongKeyMap<Pair<Integer, TreatySet>> getReadsForStore(Store store,
       boolean includeModified) {
-    LongKeyMap<Pair<Integer, Long>> result = new LongKeyHashMap<>();
+    LongKeyMap<Pair<Integer, TreatySet>> result = new LongKeyHashMap<>();
     LongKeyMap<ReadMap.Entry> submap = reads.get(store);
     if (submap == null) return result;
 
     for (LongKeyMap.Entry<ReadMap.Entry> entry : submap.entrySet()) {
       result.put(entry.getKey(), new Pair<>(entry.getValue().getVersionNumber(),
-          entry.getValue().getExpiry()));
+          entry.getValue().getTreaties()));
     }
 
     if (parent != null) {
@@ -431,7 +432,7 @@ public final class Log {
         FabricSoftRef entryRef = entry.getRef();
         if (store.equals(entryRef.store)) {
           result.put(entryRef.onum,
-              new Pair<>(entry.getVersionNumber(), entry.getExpiry()));
+              new Pair<>(entry.getVersionNumber(), entry.getTreaties()));
         }
       }
     }
@@ -948,7 +949,7 @@ public final class Log {
       obj.$writeLockHolder = null;
       obj.$writeLockStackTrace = null;
       obj.$version = 1;
-      obj.$readMapEntry.incrementVersionAndUpdateExpiry(obj.$expiry);
+      obj.$readMapEntry.incrementVersionAndUpdateTreaties(obj.$treaties);
       obj.$isOwned = false;
     }
 
@@ -986,9 +987,9 @@ public final class Log {
         if (!((obj instanceof Contract)
             && (extendedContracts.containsKey(obj)))) {
           obj.$version++;
-          obj.$readMapEntry.incrementVersionAndUpdateExpiry(obj.$expiry);
+          obj.$readMapEntry.incrementVersionAndUpdateTreaties(obj.$treaties);
         } else {
-          obj.$readMapEntry.extendExpiry(obj.$expiry);
+          obj.$readMapEntry.extendTreaties(obj.$treaties);
         }
         obj.$isOwned = false;
 
@@ -1334,7 +1335,7 @@ public final class Log {
     }
   }
 
-  public OidKeyHashMap<Long> getLongerContracts() {
+  public OidKeyHashMap<TreatySet> getLongerContracts() {
     if (prepare != null) return prepare.getLongerContracts();
     return new OidKeyHashMap<>();
   }

@@ -13,6 +13,7 @@ import fabric.lang.Object._Impl;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.ObjectCache;
 import fabric.worker.Store;
+import fabric.worker.metrics.TreatySet;
 
 /**
  * A map from OIDs to Entry objects. An object's Entry records its version
@@ -48,9 +49,9 @@ public final class ReadMap {
     private int versionNumber;
 
     /**
-     * The expiry on the object represented by this entry.
+     * The treaties on the object represented by this entry.
      */
-    private long expiry;
+    private TreatySet treaties;
 
     /**
      * Number of _Impls that have a reference to this entry. This is usually 1,
@@ -64,7 +65,7 @@ public final class ReadMap {
       this.obj = obj.$ref;
       this.readLocks = new HashSet<>();
       this.versionNumber = obj.$version;
-      this.expiry = obj.$expiry;
+      this.treaties = obj.$treaties;
       this.pinCount = 1;
     }
 
@@ -86,17 +87,19 @@ public final class ReadMap {
       return versionNumber;
     }
 
-    synchronized long getExpiry() {
-      return expiry;
+    synchronized TreatySet getTreaties() {
+      return treaties;
     }
 
-    public synchronized void incrementVersionAndUpdateExpiry(long newExpiry) {
+    public synchronized void incrementVersionAndUpdateTreaties(
+        TreatySet newTreaties) {
       versionNumber++;
-      expiry = newExpiry;
+      treaties = newTreaties;
     }
 
-    public synchronized void extendExpiry(long newExpiry) {
-      expiry = Math.max(expiry, newExpiry);
+    public synchronized void extendTreaties(TreatySet newTreaties) {
+      if (TreatySet.checkExtension(treaties, newTreaties))
+        treaties = newTreaties;
     }
 
     /**

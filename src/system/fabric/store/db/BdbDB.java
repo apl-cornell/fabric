@@ -292,7 +292,7 @@ public class BdbDB extends ObjectDB {
 
                 // Grab and update the object's expiry.
                 SerializedObject o = read(onum);
-                o.setExpiry(e.expiry);
+                o.setTreaties(e.treaties);
 
                 DatabaseEntry objData =
                     new DatabaseEntry(serializer.toBytes(o));

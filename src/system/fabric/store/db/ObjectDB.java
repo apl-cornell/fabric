@@ -41,6 +41,7 @@ import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -654,9 +655,9 @@ public abstract class ObjectDB {
    *          to this map, binding the object's onum to its current version.
    */
   public final void prepareRead(long tid, Principal worker, long onum,
-      int version, long expiry,
+      int version, TreatySet treaties,
       OidKeyHashMap<SerializedObject> versionConflicts,
-      OidKeyHashMap<Long> longerContracts)
+      OidKeyHashMap<TreatySet> longerContracts)
       throws TransactionPrepareFailedException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
@@ -679,10 +680,10 @@ public abstract class ObjectDB {
 
     // Check version numbers.
     int curVersion;
-    long curExpiry;
+    TreatySet curTreaties;
     try {
       curVersion = getVersion(onum);
-      curExpiry = getExpiry(onum);
+      curTreaties = getTreaties(onum);
     } catch (AccessException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
           longerContracts, e.getMessage());
@@ -691,9 +692,9 @@ public abstract class ObjectDB {
     if (curVersion != version) {
       versionConflicts.put(Worker.getWorker().getStore(getName()), onum,
           read(onum));
-    } else if (curExpiry > expiry) {
+    } else if (TreatySet.checkExtension(treaties, curTreaties)) {
       longerContracts.put(Worker.getWorker().getStore(getName()), onum,
-          curExpiry);
+          curTreaties);
     }
   }
 
@@ -714,7 +715,7 @@ public abstract class ObjectDB {
    */
   public final void prepareUpdate(long tid, Principal worker,
       SerializedObject obj, OidKeyHashMap<SerializedObject> versionConflicts,
-      OidKeyHashMap<Long> longerContracts, UpdateMode mode)
+      OidKeyHashMap<TreatySet> longerContracts, UpdateMode mode)
       throws TransactionPrepareFailedException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
@@ -794,7 +795,7 @@ public abstract class ObjectDB {
   public final void prepareExtension(long tid, Principal worker,
       ExpiryExtension extension,
       OidKeyHashMap<SerializedObject> versionConflicts,
-      OidKeyHashMap<Long> longerContracts)
+      OidKeyHashMap<TreatySet> longerContracts)
       throws TransactionPrepareFailedException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
@@ -827,11 +828,11 @@ public abstract class ObjectDB {
     }
 
     // Check if this is a "real" extension, otherwise we skip it.
-    long curExpiry = storeCopy.getExpiry();
-    if (curExpiry >= extension.expiry) {
-      if (curExpiry > extension.expiry) {
+    TreatySet curTreaties = storeCopy.getTreaties();
+    if (TreatySet.checkExtension(extension.treaties, curTreaties)) {
+      if (!curTreaties.equals(extension.treaties)) {
         longerContracts.put(Worker.getWorker().getStore(getName()), onum,
-            curExpiry);
+            curTreaties);
       }
       // Only a read, demote from an extension.
       tx.downgradeExtension(this, extension);
@@ -997,6 +998,19 @@ public abstract class ObjectDB {
     if (obj == null) throw new AccessException(name, onum);
 
     return obj.getExpiry();
+  }
+
+  /**
+   * Returns the treaties on the object stored at a particular onum.
+   *
+   * @throws AccessException
+   *           if no object exists at the given onum.
+   */
+  public TreatySet getTreaties(long onum) throws AccessException {
+    SerializedObject obj = read(onum);
+    if (obj == null) throw new AccessException(name, onum);
+
+    return obj.getTreaties();
   }
 
   /**

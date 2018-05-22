@@ -140,7 +140,7 @@ public class MemoryDB extends ObjectDB {
 
     // Update extended objects.
     for (ExpiryExtension extension : tx.getExtensions()) {
-      objectTable.get(extension.onum).setExpiry(extension.expiry);
+      objectTable.get(extension.onum).setTreaties(extension.treaties);
       writtenOnums.add(extension.onum);
     }
 

@@ -36,6 +36,7 @@ import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
+import fabric.worker.metrics.TreatySet;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionPrepare;
 
@@ -73,7 +74,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public void notifyStorePrepareSuccess(long tid, long time,
-      OidKeyHashMap<Long> longerContracts) {
+      OidKeyHashMap<TreatySet> longerContracts) {
     // Don't bother with another thread, a thread would have been created for
     // the prepare processing already.
     TransactionManager.pendingPrepares.get(tid).markSuccess(
@@ -102,7 +103,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public void notifyWorkerPrepareSuccess(long tid, long time,
-      OidKeyHashMap<Long> longerContracts) {
+      OidKeyHashMap<TreatySet> longerContracts) {
     // Don't bother with another thread, a thread would have been created for
     // the prepare processing already.
     TransactionManager.pendingPrepares.get(tid).markSuccess(

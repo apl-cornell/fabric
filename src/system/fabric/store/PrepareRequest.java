@@ -26,6 +26,7 @@ import fabric.worker.RemoteStore;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.TreatySet;
 
 /**
  * A convenience class for grouping together the created, modified, and read
@@ -77,7 +78,7 @@ public final class PrepareRequest {
      */
     public void prepareOrCheck(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<Long> longerContracts,
+        OidKeyHashMap<TreatySet> longerContracts,
         List<TransactionPrepareFailedException> failures, long tid) {
       if (versionConflicts.isEmpty() && failures.isEmpty()) {
         try {
@@ -100,8 +101,9 @@ public final class PrepareRequest {
         if (value != null) {
           if (value.getVersion() != getVersion()) {
             versionConflicts.put(thisStore, getOnum(), value);
-          } else if (value.getExpiry() > getExpiry()) {
-            longerContracts.put(thisStore, getOnum(), value.getExpiry());
+          } else if (TreatySet.checkExtension(getTreaties(),
+              value.getTreaties())) {
+            longerContracts.put(thisStore, getOnum(), value.getTreaties());
           }
         }
       }
@@ -125,7 +127,7 @@ public final class PrepareRequest {
      */
     public abstract void prepare(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<Long> longerContracts)
+        OidKeyHashMap<TreatySet> longerContracts)
         throws TransactionPrepareFailedException;
 
     /**
@@ -141,7 +143,7 @@ public final class PrepareRequest {
     /**
      * @return the expiry of the item being prepared.
      */
-    public abstract long getExpiry();
+    public abstract TreatySet getTreaties();
 
     /**
      * @return the {@link PrepareType} this prepare object is.
@@ -159,8 +161,7 @@ public final class PrepareRequest {
 
     @Override
     public String toString() {
-      return type().toString() + " OF " + getOnum() + "v" + getVersion()
-          + "(until " + getExpiry() + ")";
+      return type().toString() + " OF " + getOnum() + "v" + getVersion();
     }
   }
 
@@ -170,21 +171,21 @@ public final class PrepareRequest {
   public class ReadPrepare extends ItemPrepare {
     private final long onum;
     private final int version;
-    private final long expiry;
+    private final TreatySet treaties;
 
-    public ReadPrepare(long onum, int version, long expiry) {
+    public ReadPrepare(long onum, int version, TreatySet treaties) {
       this.onum = onum;
       this.version = version;
-      this.expiry = expiry;
+      this.treaties = treaties;
     }
 
     @Override
     public void prepare(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<Long> longerContracts)
+        OidKeyHashMap<TreatySet> longerContracts)
         throws TransactionPrepareFailedException {
-      database.prepareRead(tid, worker, onum, version, expiry, versionConflicts,
-          longerContracts);
+      database.prepareRead(tid, worker, onum, version, treaties,
+          versionConflicts, longerContracts);
     }
 
     @Override
@@ -193,8 +194,8 @@ public final class PrepareRequest {
     }
 
     @Override
-    public long getExpiry() {
-      return expiry;
+    public TreatySet getTreaties() {
+      return treaties;
     }
 
     @Override
@@ -221,7 +222,7 @@ public final class PrepareRequest {
     @Override
     public void prepare(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<Long> longerContracts)
+        OidKeyHashMap<TreatySet> longerContracts)
         throws TransactionPrepareFailedException {
       database.prepareExtension(tid, worker, extension, versionConflicts,
           longerContracts);
@@ -233,8 +234,8 @@ public final class PrepareRequest {
     }
 
     @Override
-    public long getExpiry() {
-      return extension.expiry;
+    public TreatySet getTreaties() {
+      return extension.treaties;
     }
 
     @Override
@@ -261,7 +262,7 @@ public final class PrepareRequest {
     @Override
     public void prepare(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<Long> longerContracts)
+        OidKeyHashMap<TreatySet> longerContracts)
         throws TransactionPrepareFailedException {
       database.prepareUpdate(tid, worker, val, versionConflicts,
           longerContracts, WRITE);
@@ -273,8 +274,8 @@ public final class PrepareRequest {
     }
 
     @Override
-    public long getExpiry() {
-      return val.getExpiry();
+    public TreatySet getTreaties() {
+      return val.getTreaties();
     }
 
     @Override
@@ -301,7 +302,7 @@ public final class PrepareRequest {
     @Override
     public void prepare(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<Long> longerContracts)
+        OidKeyHashMap<TreatySet> longerContracts)
         throws TransactionPrepareFailedException {
       database.prepareUpdate(tid, worker, val, versionConflicts,
           longerContracts, CREATE);
@@ -313,8 +314,8 @@ public final class PrepareRequest {
     }
 
     @Override
-    public long getExpiry() {
-      return val.getExpiry();
+    public TreatySet getTreaties() {
+      return val.getTreaties();
     }
 
     @Override
@@ -338,8 +339,8 @@ public final class PrepareRequest {
    */
   public final Collection<SerializedObject> writes;
 
-  /** The object numbers, version numbers, and expiries of the read objects */
-  public final LongKeyMap<Pair<Integer, Long>> reads;
+  /** The object numbers, version numbers, and treaties of the read objects */
+  public final LongKeyMap<Pair<Integer, TreatySet>> reads;
 
   /**
    * The collection of extensions
@@ -361,7 +362,7 @@ public final class PrepareRequest {
   /** Create a PrepareRequest with the provided fields */
   public PrepareRequest(long tid, Collection<SerializedObject> creates,
       Collection<SerializedObject> writes,
-      LongKeyMap<Pair<Integer, Long>> reads,
+      LongKeyMap<Pair<Integer, TreatySet>> reads,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions) {
     this.tid = tid;
@@ -377,10 +378,10 @@ public final class PrepareRequest {
    * Run the prepare.
    * @return a set of longer contracts to notify the worker about.
    */
-  public OidKeyHashMap<Long> runPrepare(TransactionManager tm,
+  public OidKeyHashMap<TreatySet> runPrepare(TransactionManager tm,
       ObjectDB database, Principal worker)
       throws TransactionPrepareFailedException {
-    OidKeyHashMap<Long> longerContracts = new OidKeyHashMap<>();
+    OidKeyHashMap<TreatySet> longerContracts = new OidKeyHashMap<>();
 
     // First, check read and write permissions. We do this before we attempt to
     // do the actual prepare because we want to run the permissions check in a
@@ -408,7 +409,7 @@ public final class PrepareRequest {
 
       // Sort the objects being prepared.
       SortedSet<ItemPrepare> prepares = new TreeSet<>();
-      for (LongKeyMap.Entry<Pair<Integer, Long>> read : reads.entrySet()) {
+      for (LongKeyMap.Entry<Pair<Integer, TreatySet>> read : reads.entrySet()) {
         prepares.add(new ReadPrepare(read.getKey(), read.getValue().first,
             read.getValue().second));
       }

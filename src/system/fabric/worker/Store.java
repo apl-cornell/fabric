@@ -16,6 +16,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.TreatySet;
 
 public interface Store extends Serializable {
   /**
@@ -41,7 +42,7 @@ public interface Store extends Serializable {
    */
   void prepareTransaction(long tid, boolean singleStore, boolean readOnly,
       long expiryToCheck, Collection<_Impl> toCreate,
-      LongKeyMap<Pair<Integer, Long>> reads, Collection<_Impl> writes,
+      LongKeyMap<Pair<Integer, TreatySet>> reads, Collection<_Impl> writes,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions)
       throws UnreachableNodeException;
@@ -116,7 +117,7 @@ public interface Store extends Serializable {
    *
    * @return true iff stale objects were found.
    */
-  boolean checkForStaleObjects(LongKeyMap<Pair<Integer, Long>> reads);
+  boolean checkForStaleObjects(LongKeyMap<Pair<Integer, TreatySet>> reads);
 
   /**
    * Obtains a new, unused object number from the Store.
