@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import fabric.common.FastSerializable;
 import fabric.lang.Object._Impl;
+import fabric.worker.metrics.treaties.TreatySet;
 
 /**
  * Utility class for describing each extension (avoids boxed values).

@@ -34,7 +34,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.ImmutableSet;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 
 /**
  * <code>_Impl</code> objects are stored on stores in serialized form as

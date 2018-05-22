@@ -63,7 +63,7 @@ import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.LockConflictException;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 

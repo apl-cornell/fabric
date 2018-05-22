@@ -1,20 +1,19 @@
-package fabric.worker.metrics;
+package fabric.worker.metrics.treaties;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Arrays;
 
 import fabric.common.FastSerializable;
 import fabric.metrics.Metric;
+import fabric.worker.metrics.ImmutableObserverSet;
 
 /**
  * An inlineable representation of a treaty defined as a statement about a
  * metric.
  */
-@SuppressWarnings("serial")
-public class MetricTreaty implements FastSerializable, Serializable {
+public class MetricTreaty implements Treaty<MetricTreaty> {
 
   /** The metric this treaty is over. */
   private final OidRef<Metric> metric;
@@ -29,8 +28,7 @@ public class MetricTreaty implements FastSerializable, Serializable {
    * Kinds of statements treaties can express on a metric, to be associated with
    * the different subclasses of {@link MetricTreaty}.
    */
-  public static abstract class TreatyStatement
-      implements FastSerializable, Serializable {
+  public static abstract class TreatyStatement implements FastSerializable {
 
     /**
      * Utility enum for differentiating kinds of TreatyStatement in serialized
@@ -275,6 +273,12 @@ public class MetricTreaty implements FastSerializable, Serializable {
   private final ImmutableObserverSet observers;
 
   /**
+   * Maximum time in milliseconds before the currently advertised expiry that an
+   * extension should be applied within.
+   */
+  private static long UPDATE_THRESHOLD = 1000;
+
+  /**
    * Method of enforcement.
    */
   public static enum EnforcementPolicy {
@@ -299,8 +303,9 @@ public class MetricTreaty implements FastSerializable, Serializable {
 
       @Override
       protected long updatedExpiry(MetricTreaty oldTreaty) {
-        // Update if either we're advertising too optimistic of an expiry right now
-        // or we're close enough to the advertised expiry to start ramping up.
+        // Update if either we're advertising too optimistic of an expiry right
+        // now or we're close enough to the advertised expiry to start ramping
+        // up.
         return (oldTreaty.expiry > oldTreaty.statement
             .trueExpiry(oldTreaty.getMetric())
             || oldTreaty.expiry - System.currentTimeMillis() < UPDATE_THRESHOLD)
@@ -412,31 +417,20 @@ public class MetricTreaty implements FastSerializable, Serializable {
     this.expiry = this.policy.updatedExpiry(original);
   }
 
-  /**
-   * Do any work needed to update the state of this treaty, returning the new
-   * state.  If the state has not changed, it will return "this".
-   */
+  @Override
   public MetricTreaty update() {
-    // TODO: don't create a copy if there's no change?
-    return new MetricTreaty(this);
+    if (this.policy.updatedExpiry(this) != this.expiry) {
+      return new MetricTreaty(this);
+    }
+    return this;
   }
 
-  /**
-   * Check if the treaty is currently true.
-   */
+  @Override
   public boolean valid() {
     return (expiry > System.currentTimeMillis());
   }
 
-  /**
-   * Maximum time in milliseconds before the currently advertised expiry that an
-   * extension should be applied within.
-   */
-  private static long UPDATE_THRESHOLD = 1000;
-
-  /**
-   * @return the expiry.
-   */
+  @Override
   public long getExpiry() {
     return expiry;
   }
@@ -448,16 +442,12 @@ public class MetricTreaty implements FastSerializable, Serializable {
     return metric.get();
   }
 
-  /**
-   * @return the id
-   */
+  @Override
   public long getId() {
     return id;
   }
 
-  /**
-   * @return the observers
-   */
+  @Override
   public ImmutableObserverSet getObservers() {
     return observers;
   }

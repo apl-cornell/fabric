@@ -16,7 +16,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 
 public interface Store extends Serializable {
   /**

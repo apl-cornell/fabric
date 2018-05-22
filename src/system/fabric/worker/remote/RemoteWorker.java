@@ -46,7 +46,7 @@ import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.worker.transaction.TransactionManager;

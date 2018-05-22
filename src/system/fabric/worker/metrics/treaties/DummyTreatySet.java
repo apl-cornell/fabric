@@ -1,10 +1,11 @@
-package fabric.worker.metrics;
+package fabric.worker.metrics.treaties;
 
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Iterator;
 
 import fabric.metrics.Metric;
+import fabric.worker.metrics.treaties.TreatySet.Kind;
 
 /**
  * Dummy stand-in value for treaty set for non-metric objects.

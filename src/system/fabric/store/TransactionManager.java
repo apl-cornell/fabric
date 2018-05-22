@@ -43,7 +43,7 @@ import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.ImmutableSet;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 public class TransactionManager {

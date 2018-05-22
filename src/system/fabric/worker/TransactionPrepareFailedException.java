@@ -9,7 +9,7 @@ import fabric.common.exceptions.FabricException;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.net.RemoteNode;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 
 public class TransactionPrepareFailedException extends FabricException {
   /**

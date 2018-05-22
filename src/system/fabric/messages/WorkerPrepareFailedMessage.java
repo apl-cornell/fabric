@@ -14,7 +14,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**

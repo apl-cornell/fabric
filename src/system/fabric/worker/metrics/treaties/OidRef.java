@@ -1,4 +1,4 @@
-package fabric.worker.metrics;
+package fabric.worker.metrics.treaties;
 
 import java.io.DataInput;
 import java.io.DataOutput;

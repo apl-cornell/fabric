@@ -53,7 +53,7 @@ import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
 import fabric.worker.ObjectCache.FetchLock;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 

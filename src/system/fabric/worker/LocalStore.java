@@ -43,7 +43,7 @@ import fabric.util.HashMap;
 import fabric.util.Map;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionPrepare;
 

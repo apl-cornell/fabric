@@ -1,4 +1,4 @@
-package fabric.worker.metrics;
+package fabric.worker.metrics.treaties;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -8,6 +8,7 @@ import java.util.Iterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.metrics.Metric;
+import fabric.worker.metrics.treaties.TreatySet.Kind;
 
 /**
  * Utility class to easily express a set of treaties associated with a Metric.

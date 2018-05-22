@@ -26,7 +26,7 @@ import fabric.worker.RemoteStore;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 
 /**
  * A convenience class for grouping together the created, modified, and read

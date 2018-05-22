@@ -13,7 +13,7 @@ import fabric.lang.Object._Impl;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.ObjectCache;
 import fabric.worker.Store;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 
 /**
  * A map from OIDs to Entry objects. An object's Entry records its version

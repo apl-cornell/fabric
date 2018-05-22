@@ -24,7 +24,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.metrics.ImmutableObserverSet;
-import fabric.worker.metrics.TreatySet;
+import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.TransactionManager;
 
 /**
