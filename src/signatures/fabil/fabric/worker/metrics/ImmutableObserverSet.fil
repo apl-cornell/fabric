@@ -6,12 +6,7 @@ import java.util.Iterator;
 /**
  * Utility class to easily express an immutable vector of items.
  */
-public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Observer>*/ {
-
-  /** Provided since you can't mark constructors as native for the fabil
-   * signatures
-   */
-  public static native ImmutableObserverSet createSet(Observer native[] items);
+public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Triple<Observer, Boolean, LongSet>>*/ {
 
   /** @return the length. */
   public native int size();
@@ -19,11 +14,20 @@ public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Observer
   /** @return a new set with the given item added. */
   public native ImmutableObserverSet add(Observer obs);
 
+  /** @return a new set with the given item's treaty added. */
+  public native ImmutableObserverSet add(Observer obs, long id);
+
   /** @return a new set with the given item removed. */
   public native ImmutableObserverSet remove(Observer obs);
 
+  /** @return a new set with the given item's treaty removed. */
+  public native ImmutableObserverSet remove(Observer obs, long id);
+
   /** @return true iff the given observer is in the set */
   public native boolean contains(Observer obs);
+
+  /** @return true iff the given observer's treaty is in the set */
+  public native boolean contains(Observer obs, long id);
 
   /** @return true iff the set is empty */
   public native boolean isEmpty();
@@ -32,5 +36,5 @@ public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Observer
   public static native ImmutableObserverSet emptySet();
 
   /*@Override*/
-  public native Iterator/*<Observer>*/ iterator();
+  public native Iterator/*<Triple<Observer, Boolean, LongSet>>*/ iterator();
 }
