@@ -4,8 +4,11 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.common.util.Pair;
 import fabric.metrics.Metric;
+import fabric.metrics.util.Observer;
 import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.NoPolicy;
 import fabric.worker.metrics.treaties.statements.ThresholdStatement;
@@ -88,47 +91,86 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
   }
 
   /**
-   * Constructor for the update step, not changing the policy.
+   * Constructor for updating the observers, not affecting the expiry or policy.
    */
-  private MetricTreaty(MetricTreaty original) {
+  private MetricTreaty(MetricTreaty original, ImmutableObserverSet observers) {
+    this.metric = original.metric;
+    this.id = original.id;
+    this.activated = original.activated;
+    this.statement = original.statement;
+    this.observers = observers;
+    this.policy = original.policy;
+    this.expiry = original.expiry;
+  }
+
+  /**
+   * Constructor for updating the observers, affecting the policy and/or expiry.
+   */
+  private MetricTreaty(MetricTreaty original, ImmutableObserverSet observers,
+      EnforcementPolicy policy, long expiry) {
+    this.metric = original.metric;
+    this.id = original.id;
+    this.activated = original.activated;
+    this.statement = original.statement;
+    this.observers = observers;
+    this.policy = policy;
+    this.expiry = expiry;
+    // TODO update observing to move to the new policy
+  }
+
+  /**
+   * Constructor for the update step, changing expiry but not changing the
+   * policy.
+   */
+  private MetricTreaty(MetricTreaty original, long newExpiry) {
     this.metric = original.metric;
     this.id = original.id;
     this.activated = original.activated;
     this.statement = original.statement;
     this.observers = original.observers;
     this.policy = original.policy;
-    this.expiry = this.policy.updatedExpiry(original);
+    this.expiry = newExpiry;
   }
 
   /**
-   * Constructor for the update step, not changing the policy.
+   * Constructor for the update step, changing both the policy and expiry.
    */
-  private MetricTreaty(MetricTreaty original, EnforcementPolicy policy) {
+  private MetricTreaty(MetricTreaty original, EnforcementPolicy policy,
+      long newExpiry) {
     this.metric = original.metric;
     this.id = original.id;
     this.activated = original.activated || !(policy instanceof NoPolicy);
     this.statement = original.statement;
     this.observers = original.observers;
-    this.policy = original.policy;
-    this.expiry = this.policy.updatedExpiry(original);
+    this.policy = policy;
+    this.expiry = newExpiry;
+    // TODO update observing to move to the new policy
   }
 
   @Override
-  public MetricTreaty update(boolean asyncExtension) {
+  public Pair<MetricTreaty, ImmutableObserverSet> update(boolean asyncExtension,
+      StatsMap weakStats) {
+    long oldExpiry = this.expiry;
     long updatedCurExpiry = this.policy.updatedExpiry(this);
-    if (updatedCurExpiry != this.expiry) {
+    if (updatedCurExpiry != oldExpiry) {
       if (asyncExtension || updatedCurExpiry > System.currentTimeMillis()) {
         // Keep using the same policy if the policy still gives a good expiry or
         // we're only doing an async extension.
-        return new MetricTreaty(this);
+        MetricTreaty updatedTreaty = new MetricTreaty(this, updatedCurExpiry);
+        return new Pair<>(updatedTreaty,
+            oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
+                : ImmutableObserverSet.emptySet());
       } else {
         // Otherwise, try a different policy.
         // TODO
-        return this;
+        MetricTreaty updatedTreaty = this;
+        return new Pair<>(updatedTreaty,
+            oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
+                : ImmutableObserverSet.emptySet());
       }
     }
     // If nothing changed, don't update.
-    return this;
+    return new Pair<>(this, ImmutableObserverSet.emptySet());
   }
 
   @Override
@@ -181,5 +223,37 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
           && this.statement.implies(new ThresholdStatement(rate, base));
     }
     return false;
+  }
+
+  @Override
+  public MetricTreaty addObserver(Observer obs) {
+    if (observers.contains(obs)) return this;
+    return new MetricTreaty(this, observers.remove(obs));
+  }
+
+  @Override
+  public MetricTreaty addObserver(Observer obs, long id) {
+    if (observers.contains(obs, id)) return this;
+    return new MetricTreaty(this, observers.remove(obs, id));
+  }
+
+  @Override
+  public MetricTreaty removeObserver(Observer obs) {
+    if (!observers.contains(obs)) return this;
+    ImmutableObserverSet updatedObservers = observers.remove(obs);
+    // Stop enforcing if we're no longer being watched by anyone.
+    if (updatedObservers.isEmpty())
+      return new MetricTreaty(this, updatedObservers, new NoPolicy(), 0);
+    return new MetricTreaty(this, updatedObservers);
+  }
+
+  @Override
+  public MetricTreaty removeObserver(Observer obs, long id) {
+    if (!observers.contains(obs, id)) return this;
+    ImmutableObserverSet updatedObservers = observers.remove(obs, id);
+    // Stop enforcing if we're no longer being watched by anyone.
+    if (updatedObservers.isEmpty())
+      return new MetricTreaty(this, updatedObservers, new NoPolicy(), 0);
+    return new MetricTreaty(this, updatedObservers);
   }
 }
