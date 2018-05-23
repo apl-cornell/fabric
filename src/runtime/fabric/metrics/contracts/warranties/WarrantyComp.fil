@@ -12,11 +12,14 @@ import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.WarrantyValue;
+import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.transaction.TransactionManager;
 
 import java.util.logging.Level;
 import fabric.common.Logging;
 import fabric.common.util.LongSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.Pair;
 
 /**
  * A computation that uses {@link Contract}s to cache and reuse results.
@@ -212,16 +215,27 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
   /*@Override*/
   public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties) {
+    ImmutableObserverSet affected = ImmutableObserverSet.emptySet();
     if (includesObserver) {
       if (this.dropOldValue()) {
         // try to get a new value
         if (recomputeOnInvalidation)
           apply(System.currentTimeMillis(), false);
-        return getObservers();
+        affected = affected.addAll(getObservers());
       }
     }
-    // TODO: handle treaties.
-    return ImmutableObserverSet.emptySet();
+    for (LongIterator iter = treaties.iterator(); iter.hasNext();) {
+      long treatyId = iter.next();
+      MetricTreaty origTreaty = $treaties.get(treatyId);
+      Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
+        origTreaty.update(false, StatsMap.emptyStats());
+      affected = affected.addAll((ImmutableObserverSet) treatyUpdate.second);
+
+      MetricTreaty newTreaty = (MetricTreaty) treatyUpdate.first;
+      if (!newTreaty.equals(origTreaty))
+        $treaties = $treaties.add(newTreaty);
+    }
+    return affected;
   }
 
   /**

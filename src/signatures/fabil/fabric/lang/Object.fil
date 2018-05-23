@@ -2,6 +2,7 @@ package fabric.lang;
 
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.ImmutableSet;
+import fabric.worker.metrics.treaties.TreatySet;
 
 public class Object extends java.lang.Object {
   /**
@@ -23,6 +24,11 @@ public class Object extends java.lang.Object {
    * The associated for contracts and metrics
    */
   protected ImmutableSet $associated;
+
+  /**
+   * The associated for contracts and metrics
+   */
+  protected TreatySet $treaties;
 
   /**
    * The object's access policy, specifying the program contexts in which it is

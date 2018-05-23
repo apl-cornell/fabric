@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import fabric.common.FastSerializable;
 import fabric.common.util.Pair;
+import fabric.metrics.Metric;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 /**
@@ -30,8 +31,8 @@ public abstract class TreatySet
 
   /** @return a value to use for an empty vector */
   public static TreatySet emptySet(fabric.lang.Object owner) {
-    // TODO
-    return null;
+    if (owner instanceof Metric) return new MetricTreatySet((Metric) owner);
+    return DummyTreatySet.singleton;
   }
 
   /** Deserializer */

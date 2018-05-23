@@ -17,12 +17,15 @@ import fabric.metrics.util.Observer;
 
 import fabric.common.ConfigProperties;
 import fabric.common.util.LongSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.Pair;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.RunningMetricStats;
 import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.transaction.TransactionManager;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -178,6 +181,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties) {
     //Logging.METRICS_LOGGER.log(Level.FINER,
     //    "CHECKING FOR UPDATE ON DERIVED METRIC");
+    ImmutableObserverSet affected = ImmutableObserverSet.emptySet();
     if (includesObserver) {
       double newValue = computeValue(StatsMap.emptyStats());
       if (newValue != cachedValue) {
@@ -188,11 +192,21 @@ public abstract class DerivedMetric extends Metric implements Observer {
         cachedSamples = computeSamples(StatsMap.emptyStats());
         cachedLastUpdate = System.currentTimeMillis();
         cachedUpdateInterval = computeUpdateInterval(StatsMap.emptyStats());
-        return getObservers();
+        affected = affected.addAll(getObservers());
       }
     }
-    // TODO: handle treaties.
-    return ImmutableObserverSet.emptySet();
+    for (LongIterator iter = treaties.iterator(); iter.hasNext();) {
+      long treatyId = iter.next();
+      MetricTreaty origTreaty = $treaties.get(treatyId);
+      Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
+        origTreaty.update(false, StatsMap.emptyStats());
+      affected = affected.addAll((ImmutableObserverSet) treatyUpdate.second);
+
+      MetricTreaty newTreaty = (MetricTreaty) treatyUpdate.first;
+      if (!newTreaty.equals(origTreaty))
+        $treaties = $treaties.add(newTreaty);
+    }
+    return affected;
   }
 
   // XXX: note that the below assumes that if we're not using weakly cached
