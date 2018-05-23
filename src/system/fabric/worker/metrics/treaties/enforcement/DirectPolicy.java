@@ -40,4 +40,19 @@ public class DirectPolicy extends EnforcementPolicy {
   @Override
   protected void writeData(DataOutput out) throws IOException {
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof DirectPolicy;
+  }
+
+  @Override
+  public int hashCode() {
+    return EnforcementPolicy.Kind.DIRECT.ordinal();
+  }
+
+  @Override
+  public String toString() {
+    return "enforced by watching metric";
+  }
 }

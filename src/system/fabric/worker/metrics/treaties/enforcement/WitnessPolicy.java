@@ -60,4 +60,21 @@ public class WitnessPolicy extends EnforcementPolicy {
       witness.write(out);
     }
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof WitnessPolicy)) return false;
+    WitnessPolicy other = (WitnessPolicy) obj;
+    return Arrays.equals(witnesses, other.witnesses);
+  }
+
+  @Override
+  public int hashCode() {
+    return EnforcementPolicy.Kind.WITNESS.ordinal();
+  }
+
+  @Override
+  public String toString() {
+    return "enforced by " + Arrays.toString(witnesses);
+  }
 }

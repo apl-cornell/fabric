@@ -248,4 +248,21 @@ public class ThresholdStatement extends TreatyStatement {
     }
     return false;
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof ThresholdStatement)) return false;
+    ThresholdStatement other = (ThresholdStatement) obj;
+    return rate == other.rate && base == other.base;
+  }
+
+  @Override
+  public int hashCode() {
+    return Double.hashCode(rate) ^ Double.hashCode(base);
+  }
+
+  @Override
+  public String toString() {
+    return ">= " + rate + " * t + " + base;
+  }
 }

@@ -54,4 +54,21 @@ public final class TreatyRef implements FastSerializable, Serializable {
   public MetricTreaty get() {
     return objRef.get().get$$treaties().get(treatyId);
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof TreatyRef)) return false;
+    TreatyRef other = (TreatyRef) obj;
+    return objRef.equals(other.objRef) && treatyId == other.treatyId;
+  }
+
+  @Override
+  public int hashCode() {
+    return objRef.hashCode() ^ Long.hashCode(treatyId);
+  }
+
+  @Override
+  public String toString() {
+    return objRef.toString() + ":" + treatyId;
+  }
 }

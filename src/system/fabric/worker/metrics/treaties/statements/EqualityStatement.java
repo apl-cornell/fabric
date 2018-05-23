@@ -47,4 +47,21 @@ public class EqualityStatement extends TreatyStatement {
     }
     return false;
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof EqualityStatement)) return false;
+    EqualityStatement other = (EqualityStatement) obj;
+    return value == other.value;
+  }
+
+  @Override
+  public int hashCode() {
+    return Double.hashCode(value);
+  }
+
+  @Override
+  public String toString() {
+    return "== " + value;
+  }
 }

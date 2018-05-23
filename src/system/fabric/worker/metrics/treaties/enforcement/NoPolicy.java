@@ -32,4 +32,19 @@ public class NoPolicy extends EnforcementPolicy {
   @Override
   protected void writeData(DataOutput out) throws IOException {
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof NoPolicy;
+  }
+
+  @Override
+  public int hashCode() {
+    return EnforcementPolicy.Kind.NONE.ordinal();
+  }
+
+  @Override
+  public String toString() {
+    return "unenforced";
+  }
 }

@@ -256,4 +256,28 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       return new MetricTreaty(this, updatedObservers, new NoPolicy(), 0);
     return new MetricTreaty(this, updatedObservers);
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof MetricTreaty)) return false;
+    MetricTreaty other = (MetricTreaty) obj;
+    return metric.equals(other.metric) && id == other.id
+        && activated == other.activated && statement.equals(other.statement)
+        && observers.equals(other.observers) && policy.equals(other.policy)
+        && expiry == other.expiry;
+  }
+
+  @Override
+  public int hashCode() {
+    return metric.hashCode() ^ Long.hashCode(id) ^ Boolean.hashCode(activated)
+        ^ statement.hashCode() ^ observers.hashCode() ^ policy.hashCode()
+        ^ Long.hashCode(expiry);
+  }
+
+  @Override
+  public String toString() {
+    return Long.toString(id) + "(" + activated + "): " + getMetric().toString()
+        + " " + statement + " until " + expiry + " " + policy
+        + " and observed by " + observers;
+  }
 }

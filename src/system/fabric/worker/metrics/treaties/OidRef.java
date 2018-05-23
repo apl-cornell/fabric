@@ -51,4 +51,21 @@ public final class OidRef<T extends fabric.lang.Object>
         Worker.getWorker().getStore(objStoreName), objOnum).$getProxy();
     return cached;
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof OidRef)) return false;
+    OidRef<?> other = (OidRef<?>) obj;
+    return objStoreName.equals(other.objStoreName) && objOnum == other.objOnum;
+  }
+
+  @Override
+  public int hashCode() {
+    return objStoreName.hashCode() ^ Long.hashCode(objOnum);
+  }
+
+  @Override
+  public String toString() {
+    return objStoreName + "/" + objOnum;
+  }
 }
