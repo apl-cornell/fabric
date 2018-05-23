@@ -8,6 +8,7 @@ import fabric.metrics.SampledMetric;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.WarrantyValue;
@@ -209,14 +210,14 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   }
 
   /*@Override*/
-  public boolean handleUpdates() {
+  public ImmutableObserverSet handleUpdates() {
     if (this.dropOldValue()) {
       // try to get a new value
       if (recomputeOnInvalidation)
         apply(System.currentTimeMillis(), false);
-      return true;
+      return getObservers();
     }
-    return false;
+    return ImmutableObserverSet.emptySet();
   }
 
   /**

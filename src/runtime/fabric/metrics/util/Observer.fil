@@ -6,6 +6,7 @@ import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.Contract;
 import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableObserverSet;
 
 /**
  * Abstraction for tracking trees of observers/subjects. Unifies tracking
@@ -22,10 +23,10 @@ public interface Observer {
    * Handles observation of subjects. This is called whenever any associated
    * {@link Subject}s are changed prior to the transaction completing.
    *
-   * @return true iff there was a modification that needs to be processed by
-   *         any parents (if any) of this {@link Observer}.
+   * @return the set of observers that should handle updates based on the
+   * results of this update processing.
    */
-  public boolean handleUpdates();
+  public ImmutableObserverSet handleUpdates();
 
   /**
    * Used by {@link AbstractSubject#processSamples} to determine if all

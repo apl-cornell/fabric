@@ -19,6 +19,7 @@ import fabric.common.ConfigProperties;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.RunningMetricStats;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.transaction.TransactionManager;
@@ -173,7 +174,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   /*@Override*/
-  public boolean handleUpdates() {
+  public ImmutableObserverSet handleUpdates() {
     //Logging.METRICS_LOGGER.log(Level.FINER,
     //    "CHECKING FOR UPDATE ON DERIVED METRIC");
     double newValue = computeValue(StatsMap.emptyStats());
@@ -185,9 +186,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
       cachedSamples = computeSamples(StatsMap.emptyStats());
       cachedLastUpdate = System.currentTimeMillis();
       cachedUpdateInterval = computeUpdateInterval(StatsMap.emptyStats());
-      return true;
+      return getObservers();
     }
-    return false;
+    return ImmutableObserverSet.emptySet();
   }
 
   // XXX: note that the below assumes that if we're not using weakly cached

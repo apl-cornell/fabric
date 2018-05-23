@@ -128,14 +128,9 @@ public abstract class AbstractSubject implements Subject {
         if (!needToWait) {
           //Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVER {0}",
           //    unhandled);
-          boolean modified = unhandled.handleUpdates();
-          if (unhandled instanceof Subject && modified) {
-            //Logging.METRICS_LOGGER.log(Level.FINER,
-            //    "QUEUING PARENTS OF OBSERVER " + unhandled);
-            ImmutableObserverSet parents = ((Subject) unhandled).getObservers();
-            for (Iterator iter = parents.iterator(); iter.hasNext();) {
-              queue.add(iter.next());
-            }
+          ImmutableObserverSet parentsToCheck = unhandled.handleUpdates();
+          for (Iterator iter = parentsToCheck.iterator(); iter.hasNext();) {
+            queue.add(iter.next());
           }
         } else {
           // mark as delayed for later processing
