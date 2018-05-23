@@ -39,4 +39,12 @@ public class EqualityStatement extends TreatyStatement {
       return Long.MAX_VALUE;
     }
   }
+
+  @Override
+  public boolean implies(TreatyStatement stmt) {
+    if (stmt instanceof EqualityStatement) {
+      return value == ((EqualityStatement) stmt).value;
+    }
+    return false;
+  }
 }

@@ -61,6 +61,11 @@ public abstract class TreatyStatement implements FastSerializable {
   public abstract void writeStatementData(DataOutput out) throws IOException;
 
   /**
+   * Check if this statement implies another statement.
+   */
+  public abstract boolean implies(TreatyStatement stmt);
+
+  /**
    * Utility to read a TreatyStatement off a DataInput (for example, when
    * reading off of a network message).
    */

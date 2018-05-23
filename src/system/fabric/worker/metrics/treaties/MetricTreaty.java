@@ -8,6 +8,7 @@ import fabric.metrics.Metric;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.NoPolicy;
+import fabric.worker.metrics.treaties.statements.ThresholdStatement;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 /**
@@ -167,5 +168,18 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
   @Override
   public boolean isActive() {
     return activated;
+  }
+
+  @Override
+  public boolean implies(MetricTreaty other) {
+    return this.statement.implies(other.statement);
+  }
+
+  public boolean implies(Metric m, double rate, double base) {
+    if (this.statement instanceof ThresholdStatement) {
+      return getMetric().equals(m)
+          && this.statement.implies(new ThresholdStatement(rate, base));
+    }
+    return false;
   }
 }

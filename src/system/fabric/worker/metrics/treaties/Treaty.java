@@ -41,4 +41,9 @@ public interface Treaty<This extends Treaty<This>> extends FastSerializable {
    * Has this treaty been activated since creation?
    */
   public boolean isActive();
+
+  /**
+   * Does this imply the other treaty?
+   */
+  public boolean implies(This other);
 }

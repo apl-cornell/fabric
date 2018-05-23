@@ -21,6 +21,7 @@ import fabric.worker.Store;
 /**
  * Utility class to easily express an immutable vector of items.
  */
+@SuppressWarnings("serial")
 public class ImmutableObserverSet implements FastSerializable, Serializable,
     Iterable<fabric.lang.Object._Proxy> {
 
