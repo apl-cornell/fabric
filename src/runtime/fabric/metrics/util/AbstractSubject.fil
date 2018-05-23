@@ -15,6 +15,7 @@ import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.Store;
+import fabric.common.util.LongSet;
 import fabric.common.util.Triple;
 
 //import java.util.logging.Level;
@@ -129,7 +130,7 @@ public abstract class AbstractSubject implements Subject {
         if (!needToWait) {
           //Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVER {0}",
           //    unhandled);
-          ImmutableObserverSet parentsToCheck = ((Observer) unhandled.first).handleUpdates();
+          ImmutableObserverSet parentsToCheck = ((Observer) unhandled.first).handleUpdates(((Boolean) unhandled.second).booleanValue(), ((LongSet) unhandled.third));
           for (Iterator iter = parentsToCheck.iterator(); iter.hasNext();) {
             queue.add(iter.next());
           }

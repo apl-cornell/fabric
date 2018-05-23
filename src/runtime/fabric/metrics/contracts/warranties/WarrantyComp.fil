@@ -16,6 +16,7 @@ import fabric.worker.transaction.TransactionManager;
 
 import java.util.logging.Level;
 import fabric.common.Logging;
+import fabric.common.util.LongSet;
 
 /**
  * A computation that uses {@link Contract}s to cache and reuse results.
@@ -210,13 +211,16 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   }
 
   /*@Override*/
-  public ImmutableObserverSet handleUpdates() {
-    if (this.dropOldValue()) {
-      // try to get a new value
-      if (recomputeOnInvalidation)
-        apply(System.currentTimeMillis(), false);
-      return getObservers();
+  public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties) {
+    if (includesObserver) {
+      if (this.dropOldValue()) {
+        // try to get a new value
+        if (recomputeOnInvalidation)
+          apply(System.currentTimeMillis(), false);
+        return getObservers();
+      }
     }
+    // TODO: handle treaties.
     return ImmutableObserverSet.emptySet();
   }
 

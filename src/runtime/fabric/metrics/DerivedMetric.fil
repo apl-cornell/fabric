@@ -16,6 +16,7 @@ import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.util.Observer;
 
 import fabric.common.ConfigProperties;
+import fabric.common.util.LongSet;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableMetricsVector;
@@ -174,20 +175,23 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   /*@Override*/
-  public ImmutableObserverSet handleUpdates() {
+  public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties) {
     //Logging.METRICS_LOGGER.log(Level.FINER,
     //    "CHECKING FOR UPDATE ON DERIVED METRIC");
-    double newValue = computeValue(StatsMap.emptyStats());
-    if (newValue != cachedValue) {
-      //Logging.METRICS_LOGGER.log(Level.FINER, "UPDATE ON DERIVED METRIC");
-      cachedValue = newValue;
-      cachedVelocity = computeVelocity(StatsMap.emptyStats());
-      cachedNoise = computeNoise(StatsMap.emptyStats());
-      cachedSamples = computeSamples(StatsMap.emptyStats());
-      cachedLastUpdate = System.currentTimeMillis();
-      cachedUpdateInterval = computeUpdateInterval(StatsMap.emptyStats());
-      return getObservers();
+    if (includesObserver) {
+      double newValue = computeValue(StatsMap.emptyStats());
+      if (newValue != cachedValue) {
+        //Logging.METRICS_LOGGER.log(Level.FINER, "UPDATE ON DERIVED METRIC");
+        cachedValue = newValue;
+        cachedVelocity = computeVelocity(StatsMap.emptyStats());
+        cachedNoise = computeNoise(StatsMap.emptyStats());
+        cachedSamples = computeSamples(StatsMap.emptyStats());
+        cachedLastUpdate = System.currentTimeMillis();
+        cachedUpdateInterval = computeUpdateInterval(StatsMap.emptyStats());
+        return getObservers();
+      }
     }
+    // TODO: handle treaties.
     return ImmutableObserverSet.emptySet();
   }
 
