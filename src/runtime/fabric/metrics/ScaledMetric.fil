@@ -108,7 +108,7 @@ public class ScaledMetric extends DerivedMetric {
             val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * tmp.scalar, tmp.term(0));
           }
         }
-        return Metric.findDerivedMetric(s, val);
+        return val;
     }
 
     /**
@@ -153,7 +153,7 @@ public class ScaledMetric extends DerivedMetric {
                     that.scalar + tmp.scalar, tmp.term(0));
               }
             }
-            return Metric.findDerivedMetric(s, val);
+            return val;
         }
         return Metric.static_plus(tmp, other);
     }

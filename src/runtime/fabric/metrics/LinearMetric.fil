@@ -286,8 +286,7 @@ public class LinearMetric extends DerivedMetric {
     for (int i = 0; i < terms.length(); i++)
       termsCopy[i] = term(i);
     final Store s = getStore();
-    return Metric.findDerivedMetric(s,
-        new LinearMetric@s().fabric$metrics$LinearMetric$(matrix.multiply(scalar), termsCopy));
+    return new LinearMetric@s().fabric$metrics$LinearMetric$(matrix.multiply(scalar), termsCopy);
   }
 
   /**
@@ -347,8 +346,7 @@ public class LinearMetric extends DerivedMetric {
         }
       }
 
-      return Metric.findDerivedMetric(s,
-          new LinearMetric@s().fabric$metrics$LinearMetric$(combined, newTerms));
+      return new LinearMetric@s().fabric$metrics$LinearMetric$(combined, newTerms);
     } else if (Arrays.asList(terms.array()).indexOf(other) >= 0) {
       int idx = Arrays.asList(terms.array()).indexOf(other);
       Matrix newCs = matrix.copy();
@@ -358,11 +356,9 @@ public class LinearMetric extends DerivedMetric {
       Metric native[] termsCopy = new Metric native[terms.length()];
       for (int i = 0; i < terms.length(); i++)
         termsCopy[i] = term(i);
-      return Metric.findDerivedMetric(s,
-          new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, termsCopy));
+      return new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, termsCopy);
     } else if (isSingleStore() && !other.$getStore().equals(s)) {
-      return Metric.findDerivedMetric(s,
-          new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.constant(1, 2, 1), new Metric native[] { this, other }));
+      return new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.constant(1, 2, 1), new Metric native[] { this, other });
     }
 
     Metric native[] newTerms = new Metric native[terms.length() + 1];
@@ -377,8 +373,7 @@ public class LinearMetric extends DerivedMetric {
     }
     Matrix newCs = matrix.copy();
     newCs.insertColumn(idx, newCol);
-    return Metric.findDerivedMetric(s,
-        new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, newTerms));
+    return new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, newTerms);
   }
 
   /**
@@ -433,8 +428,7 @@ public class LinearMetric extends DerivedMetric {
         }
       }
 
-      return Metric.findDerivedMetric(s,
-          new LinearMetric@s().fabric$metrics$LinearMetric$(combined, newTerms));
+      return new LinearMetric@s().fabric$metrics$LinearMetric$(combined, newTerms);
     } else if (Arrays.asList(terms.array()).indexOf(other) >= 0) {
       int idx = Arrays.asList(terms.array()).indexOf(other);
       Matrix newCs = matrix.copy();
@@ -444,11 +438,9 @@ public class LinearMetric extends DerivedMetric {
       Metric native[] termsCopy = new Metric native[terms.length()];
       for (int i = 0; i < terms.length(); i++)
         termsCopy[i] = term(i);
-      return Metric.findDerivedMetric(s,
-          new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, termsCopy));
+      return new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, termsCopy);
     } else if (isSingleStore() && !other.$getStore().equals(s)) {
-      return Metric.findDerivedMetric(s,
-          new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.identity(2), new Metric native[] { this, other }));
+      return new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.identity(2), new Metric native[] { this, other });
     }
 
     Metric native[] newTerms = new Metric native[terms.length() + 1];
@@ -462,8 +454,7 @@ public class LinearMetric extends DerivedMetric {
     double[] newRow = new double[terms.length() + 1];
     newRow[idx] = 1;
     newCs.addRow(newRow);
-    return Metric.findDerivedMetric(s,
-        new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, newTerms));
+    return new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, newTerms);
   }
 
   /*@Override*/
@@ -471,8 +462,7 @@ public class LinearMetric extends DerivedMetric {
     Metric native[] termsCopy = new Metric native[terms.length()];
     for (int i = 0; i < terms.length(); i++)
       termsCopy[i] = term(i);
-    return Metric.findDerivedMetric(s,
-        new LinearMetric@s().fabric$metrics$LinearMetric$(matrix, termsCopy));
+    return new LinearMetric@s().fabric$metrics$LinearMetric$(matrix, termsCopy);
   }
 
   /**
@@ -544,8 +534,7 @@ public class LinearMetric extends DerivedMetric {
 
   /*@Override*/
   public boolean equals(Object other) {
-    if (other instanceof LinearMetric) {
-      LinearMetric that = (LinearMetric) other;
+    if (other instanceof LinearMetric) { LinearMetric that = (LinearMetric) other;
       return this.matrix.equals(that.matrix)
           && Arrays.deepEquals(this.terms.array(), that.terms.array())
           && this.$getStore().equals(that.$getStore());

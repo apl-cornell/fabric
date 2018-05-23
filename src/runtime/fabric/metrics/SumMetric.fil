@@ -155,7 +155,7 @@ public class SumMetric extends DerivedMetric {
             val = new SumMetric@s().fabric$metrics$SumMetric$(newTerms);
           }
         }
-        return Metric.findDerivedMetric(s, val);
+        return val;
     }
 
     /**
@@ -266,7 +266,7 @@ public class SumMetric extends DerivedMetric {
             val = new SumMetric@s().fabric$metrics$SumMetric$(newTerms);
           }
         }
-        return Metric.findDerivedMetric(s, val);
+        return val;
     }
 
     public static final long MIN_ADAPTIVE_EXPIRY = 1000;
