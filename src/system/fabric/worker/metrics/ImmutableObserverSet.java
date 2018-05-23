@@ -185,6 +185,21 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     return updated;
   }
 
+  /**
+   * Add all items in the given ImmutableObserverSet.
+   * @return the updated observer set.
+   */
+  public ImmutableObserverSet addAll(ImmutableObserverSet other) {
+    ImmutableObserverSet result = this;
+    for (Triple<Observer._Proxy, Boolean, LongSet> item : other) {
+      if (item.second) result = result.add(item.first);
+      for (LongIterator iter = item.third.iterator(); iter.hasNext();) {
+        result = result.add(item.first, iter.next());
+      }
+    }
+    return result;
+  }
+
   /** @return a new set with the given observer removed. */
   public ImmutableObserverSet remove(Observer obs) {
     if (!contains(obs)) return this;
@@ -233,6 +248,21 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     if (submap.isEmpty()) updated.map.remove(obs.$getStore().name());
 
     return updated;
+  }
+
+  /**
+   * Remove all items in the given ImmutableObserverSet.
+   * @return the updated observer set.
+   */
+  public ImmutableObserverSet removeAll(ImmutableObserverSet other) {
+    ImmutableObserverSet result = this;
+    for (Triple<Observer._Proxy, Boolean, LongSet> item : other) {
+      if (item.second) result = result.remove(item.first);
+      for (LongIterator iter = item.third.iterator(); iter.hasNext();) {
+        result = result.remove(item.first, iter.next());
+      }
+    }
+    return result;
   }
 
   /** @return true iff the given observer is in the set */

@@ -17,17 +17,32 @@ public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Triple<O
   /** @return a new set with the given item's treaty added. */
   public native ImmutableObserverSet add(Observer obs, long id);
 
+  /**
+   * Add all items in the given ImmutableObserverSet.
+   * @return the updated observer set.
+   */
+  public native ImmutableObserverSet addAll(ImmutableObserverSet other);
+
   /** @return a new set with the given item removed. */
   public native ImmutableObserverSet remove(Observer obs);
 
   /** @return a new set with the given item's treaty removed. */
   public native ImmutableObserverSet remove(Observer obs, long id);
 
+  /**
+   * Remove all items in the given ImmutableObserverSet.
+   * @return the updated observer set.
+   */
+  public native ImmutableObserverSet removeAll(ImmutableObserverSet other);
+
   /** @return true iff the given observer is in the set */
   public native boolean contains(Observer obs);
 
   /** @return true iff the given observer's treaty is in the set */
   public native boolean contains(Observer obs, long id);
+
+  /** @return true iff the given set is fully contained in this set */
+  public native boolean containsAll(ImmutableObserverSet other);
 
   /** @return true iff the set is empty */
   public native boolean isEmpty();
