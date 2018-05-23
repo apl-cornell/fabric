@@ -67,7 +67,9 @@ public class MetricEqualityContract extends Contract {
 
   /*@Override*/
   protected EnforcementPolicy getNewPolicy(StatsMap weakStats) {
-    return this.metric.equalityPolicy(this.value, weakStats, this.$getStore());
+    // Being deprecated.
+    return null;
+    //return this.metric.equalityPolicy(this.value, weakStats, this.$getStore());
   }
 
   /*@Override*/

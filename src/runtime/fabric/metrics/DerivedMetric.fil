@@ -8,11 +8,6 @@ import fabric.util.HashSet;
 import fabric.util.Iterator;
 
 import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.Contract;
-import fabric.metrics.contracts.enforcement.DeadPolicy;
-import fabric.metrics.contracts.enforcement.DirectEqualityPolicy;
-import fabric.metrics.contracts.enforcement.EnforcementPolicy;
-import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.util.Observer;
 
 import fabric.common.ConfigProperties;
@@ -26,6 +21,9 @@ import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.RunningMetricStats;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
+import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
+import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
+import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
 import fabric.worker.transaction.TransactionManager;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -46,8 +44,8 @@ import java.io.PrintWriter;
  * <li>construct the {@link #value()}, {@link #velocity()}, and {@link #noise()}
  * from its terms</li>
  * <li>provide a {@link EnforcementPolicy} to enforce a
- * {@link DerivedContract} on it given the {@link Bound}, typically using
- * a {@link WitnessPolicy} using {@link Contract}s on the terms it is
+ * {@link MetricTreaty} on it given the {@link Bound}, typically using
+ * a {@link WitnessPolicy} using {@link MetricTreaty}s on the terms it is
  * derived from.</li>
  * </ul>
  */
@@ -526,19 +524,16 @@ public abstract class DerivedMetric extends Metric implements Observer {
   /*@Override*/
   public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
     // TODO: There's a better policy to override this with in MinMetric.
-    if (value() == value) {
-      if (isSingleStore()) {
-          return new DirectEqualityPolicy@s().fabric$metrics$contracts$enforcement$DirectEqualityPolicy$(this, value);
-      }
-      Contract native[] witnesses = new Contract native[terms.length()];
+    if (isSingleStore()) {
+      return new DirectPolicy();
+    } else {
+      MetricTreaty native[] witnesses = new MetricTreaty native[terms.length()];
       // Defend all rows against the bound individually, using the strictest
       // bounds across the rows for each term in this sum.
       for (int i = 0; i < terms.length(); i++) {
-        witnesses[i] = term(i).getEqualityContract(term(i).value());
+        witnesses[i] = term(i).getEqualityTreaty(term(i).value());
       }
-      return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(witnesses);
-    } else {
-      return new DeadPolicy@s().fabric$metrics$contracts$enforcement$DeadPolicy$();
+      return new WitnessPolicy(witnesses);
     }
   }
 }

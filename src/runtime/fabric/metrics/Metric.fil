@@ -5,13 +5,6 @@ import fabric.util.HashMap;
 import fabric.util.List;
 import fabric.util.Set;
 
-import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.Contract;
-import fabric.metrics.contracts.MetricContract;
-import fabric.metrics.contracts.MetricEqualityContract;
-import fabric.metrics.contracts.enforcement.DirectEqualityPolicy;
-import fabric.metrics.contracts.enforcement.DirectPolicy;
-import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 
@@ -21,10 +14,17 @@ import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.RunningMetricStats;
+import fabric.worker.metrics.treaties.MetricTreaty;
+import fabric.worker.metrics.treaties.TreatySet;
+import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
+import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
+import fabric.worker.metrics.treaties.statements.EqualityStatement;
+import fabric.worker.metrics.treaties.statements.ThresholdStatement;
 import fabric.lang.security.LabelUtil;
 
 import java.util.logging.Level;
 import fabric.common.Logging;
+import fabric.common.util.Pair;
 
 /**
  * Abstract class with base implementation of some {@link Metric} methods.
@@ -143,32 +143,30 @@ public abstract class Metric extends AbstractSubject
 
   /**
    * @param rate
-   *            the rate parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the rate parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param base
-   *            the base parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the base parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param time
-   *            the startTime parameter of the {@link Bound} on the resulting
-   *            {@link Contract}
-   * @return a {@link Contract} which enforces that the {@link Metric}
-   *         satisfies a {@link Bound} with the given parameters at the given
-   *         time. If such a {@link Contract} already exists, it is
-   *         returned, otherwise a new one is created and returned
-   *         (unactivated).
-   *
+   *            the startTime parameter of the bound on the resulting
+   *            {@link MetricTreaty}
+   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *         satisfies a bound with the given parameters at the given time. If
+   *         such a {@link MetricTreaty} already exists, it is returned,
+   *         otherwise a new one is created and returned (unactivated).
    */
-  public Contract getEqualityContract(double value) {
-    return static_getEqualityContract(this, value);
+  public MetricTreaty getEqualityTreaty(double value) {
+    return static_getEqualityTreaty(this, value);
   }
 
-  private static Contract static_getEqualityContract(Metric tmp, double value) {
-    Contract mc = null;
+  private static MetricTreaty static_getEqualityTreaty(Metric tmp, double value) {
+    MetricTreaty mc = null;
     if (TransactionManager.getInstance().inTxn()) {
-      mc = tmp.createEqualityContract(value);
+      mc = tmp.createEqualityTreaty(value);
     } else {
       atomic {
-        mc = tmp.createEqualityContract(value);
+        mc = tmp.createEqualityTreaty(value);
       }
     }
     return mc;
@@ -176,32 +174,32 @@ public abstract class Metric extends AbstractSubject
 
   /**
    * @param rate
-   *            the rate parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the rate parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param base
-   *            the base parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the base parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param time
-   *            the startTime parameter of the {@link Bound} on the resulting
-   *            {@link Contract}
-   * @return a {@link Contract} which enforces that the {@link Metric}
-   *         satisfies a {@link Bound} with the given parameters at the given
-   *         time. If such a {@link Contract} already exists, it is
+   *            the startTime parameter of the bound on the resulting
+   *            {@link MetricTreaty}
+   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *         satisfies a bound with the given parameters at the given
+   *         time. If such a {@link MetricTreaty} already exists, it is
    *         returned, otherwise a new one is created and returned
    *         (unactivated).
    *
    */
-  public Contract getThresholdContract(double rate, double base, long time) {
-    return static_getThresholdContract(this, rate, base, time);
+  public MetricTreaty getThresholdTreaty(double rate, double base, long time) {
+    return static_getThresholdTreaty(this, rate, base, time);
   }
 
-  private static Contract static_getThresholdContract(Metric tmp, double rate, double base, long time) {
-    Contract mc = null;
+  private static MetricTreaty static_getThresholdTreaty(Metric tmp, double rate, double base, long time) {
+    MetricTreaty mc = null;
     if (TransactionManager.getInstance().inTxn()) {
-      mc = tmp.createThresholdContract(rate, base, time);
+      mc = tmp.createThresholdTreaty(rate, base, time);
     } else {
       atomic {
-        mc = tmp.createThresholdContract(rate, base, time);
+        mc = tmp.createThresholdTreaty(rate, base, time);
       }
     }
     return mc;
@@ -209,19 +207,19 @@ public abstract class Metric extends AbstractSubject
 
   /**
    * @param rate
-   *            the rate parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the rate parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param base
-   *            the base parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
-   * @return a {@link Contract} which enforces that the {@link Metric}
-   *         satisfies a {@link Bound} with the given parameters at the
-   *         current time. If such a {@link Contract} already exists, it
+   *            the base parameter for the bound on the resulting
+   *            {@link MetricTreaty}
+   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *         satisfies a bound with the given parameters at the
+   *         current time. If such a {@link MetricTreaty} already exists, it
    *         is returned, otherwise a new one is created and returned
    *         (unactivated).
    */
-  protected Contract getThresholdContract(double rate, double base) {
-    return getThresholdContract(rate, base, 0);
+  protected MetricTreaty getThresholdTreaty(double rate, double base) {
+    return getThresholdTreaty(rate, base, 0);
   }
 
   /**
@@ -355,8 +353,6 @@ public abstract class Metric extends AbstractSubject
     return this;
   }
 
-  //private final List/*<Contract>*/ contracts;
-
   /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -431,7 +427,7 @@ public abstract class Metric extends AbstractSubject
   public abstract double noise(StatsMap weakStats);
 
   /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -448,11 +444,11 @@ public abstract class Metric extends AbstractSubject
    *         being above bound.
    */
   public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
-    return new DirectEqualityPolicy@s().fabric$metrics$contracts$enforcement$DirectEqualityPolicy$(this, value);
+    return new DirectPolicy();
   }
 
   /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -472,7 +468,7 @@ public abstract class Metric extends AbstractSubject
   }
 
   /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -481,7 +477,7 @@ public abstract class Metric extends AbstractSubject
    * prior to the call.
    *
    * @param bound
-   *            a {@link Bound} that the returned policy enforces.
+   *            a bound that the returned policy enforces.
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
    *            for metric stats.
@@ -489,11 +485,11 @@ public abstract class Metric extends AbstractSubject
    *         being above bound.
    */
   public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
-    return new DirectPolicy@s().fabric$metrics$contracts$enforcement$DirectPolicy$(this, rate, base);
+    return new DirectPolicy();
   }
 
   /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -502,7 +498,7 @@ public abstract class Metric extends AbstractSubject
    * prior to the call.
    *
    * @param bound
-   *            a {@link Bound} that the returned policy enforces.
+   *            a bound that the returned policy enforces.
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
@@ -623,25 +619,30 @@ public abstract class Metric extends AbstractSubject
 
   /**
    * @param bound
-   *        the {@link Bound} that the contract will enforce on this
+   *        the bound that the contract will enforce on this
    *        {@link Metric}
-   * @return a {@link Contract} asserting this metric satisfies the
-   *       given {@link Bound}.
+   * @return a {@link MetricTreaty} asserting this metric satisfies the
+   *       given bound.
    */
-  protected Contract createThresholdContract(double rate, double base, long time) {
-    double native[] normalized = Bound.createBound(rate, base, time);
-    return new MetricContract().fabric$metrics$contracts$MetricContract$(this, normalized[0], normalized[1]);
+  protected MetricTreaty createThresholdTreaty(double rate, double base, long time) {
+    Pair/*<TreatySet, MetricTreaty>*/ updated = $treaties.create(new ThresholdStatement(rate, base, time));
+    if (!((TreatySet) updated.first).equals($treaties))
+      $treaties = (TreatySet) updated.first;
+    return (MetricTreaty) updated.second;
   }
 
   /**
    * @param bound
-   *        the {@link Bound} that the contract will enforce on this
+   *        the bound that the contract will enforce on this
    *        {@link Metric}
-   * @return a {@link Contract} asserting this metric satisfies the
-   *       given {@link Bound}.
+   * @return a {@link MetricTreaty} asserting this metric satisfies the
+   *       given bound.
    */
-  protected Contract createEqualityContract(double value) {
-    return new MetricEqualityContract().fabric$metrics$contracts$MetricEqualityContract$(this, value);
+  protected MetricTreaty createEqualityTreaty(double value) {
+    Pair/*<TreatySet, MetricTreaty>*/ updated = $treaties.create(new EqualityStatement(value));
+    if (!((TreatySet) updated.first).equals($treaties))
+      $treaties = (TreatySet) updated.first;
+    return (MetricTreaty) updated.second;
   }
 
   /*@Override*/

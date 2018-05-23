@@ -9,13 +9,6 @@ import fabric.util.ArrayList;
 import fabric.util.HashMap;
 import fabric.util.List;
 import fabric.util.Set;
-import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.Contract;
-import fabric.metrics.contracts.MetricContract;
-import fabric.metrics.contracts.MetricEqualityContract;
-import fabric.metrics.contracts.enforcement.DirectEqualityPolicy;
-import fabric.metrics.contracts.enforcement.DirectPolicy;
-import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.worker.Store;
@@ -24,9 +17,16 @@ import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.RunningMetricStats;
+import fabric.worker.metrics.treaties.MetricTreaty;
+import fabric.worker.metrics.treaties.TreatySet;
+import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
+import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
+import fabric.worker.metrics.treaties.statements.EqualityStatement;
+import fabric.worker.metrics.treaties.statements.ThresholdStatement;
 import fabric.lang.security.LabelUtil;
 import java.util.logging.Level;
 import fabric.common.Logging;
+import fabric.common.util.Pair;
 
 /**
  * Abstract class with base implementation of some {@link Metric} methods.
@@ -72,57 +72,56 @@ public interface Metric
     
     /**
    * @param rate
-   *            the rate parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the rate parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param base
-   *            the base parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the base parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param time
-   *            the startTime parameter of the {@link Bound} on the resulting
-   *            {@link Contract}
-   * @return a {@link Contract} which enforces that the {@link Metric}
-   *         satisfies a {@link Bound} with the given parameters at the given
-   *         time. If such a {@link Contract} already exists, it is
+   *            the startTime parameter of the bound on the resulting
+   *            {@link MetricTreaty}
+   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *         satisfies a bound with the given parameters at the given time. If
+   *         such a {@link MetricTreaty} already exists, it is returned,
+   *         otherwise a new one is created and returned (unactivated).
+   */
+    public fabric.worker.metrics.treaties.MetricTreaty getEqualityTreaty(double value);
+    
+    /**
+   * @param rate
+   *            the rate parameter for the bound on the resulting
+   *            {@link MetricTreaty}
+   * @param base
+   *            the base parameter for the bound on the resulting
+   *            {@link MetricTreaty}
+   * @param time
+   *            the startTime parameter of the bound on the resulting
+   *            {@link MetricTreaty}
+   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *         satisfies a bound with the given parameters at the given
+   *         time. If such a {@link MetricTreaty} already exists, it is
    *         returned, otherwise a new one is created and returned
    *         (unactivated).
    *
    */
-    public fabric.metrics.contracts.Contract getEqualityContract(double value);
+    public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
+      double rate, double base, long time);
     
     /**
    * @param rate
-   *            the rate parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the rate parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param base
-   *            the base parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
-   * @param time
-   *            the startTime parameter of the {@link Bound} on the resulting
-   *            {@link Contract}
-   * @return a {@link Contract} which enforces that the {@link Metric}
-   *         satisfies a {@link Bound} with the given parameters at the given
-   *         time. If such a {@link Contract} already exists, it is
-   *         returned, otherwise a new one is created and returned
-   *         (unactivated).
-   *
-   */
-    public fabric.metrics.contracts.Contract getThresholdContract(double rate,
-                                                                  double base, long time);
-    
-    /**
-   * @param rate
-   *            the rate parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
-   * @param base
-   *            the base parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
-   * @return a {@link Contract} which enforces that the {@link Metric}
-   *         satisfies a {@link Bound} with the given parameters at the
-   *         current time. If such a {@link Contract} already exists, it
+   *            the base parameter for the bound on the resulting
+   *            {@link MetricTreaty}
+   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *         satisfies a bound with the given parameters at the
+   *         current time. If such a {@link MetricTreaty} already exists, it
    *         is returned, otherwise a new one is created and returned
    *         (unactivated).
    */
-    public fabric.metrics.contracts.Contract getThresholdContract(double rate, double base);
+    public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
+      double rate, double base);
     
     /**
    * Cache of DerivedMetrics using this Metric as a term (helps to break up
@@ -209,7 +208,7 @@ public interface Metric
     public abstract double noise(fabric.worker.metrics.StatsMap weakStats);
     
     /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -225,12 +224,12 @@ public interface Metric
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-    public fabric.metrics.contracts.enforcement.EnforcementPolicy
+    public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
       equalityPolicy(
       double value, fabric.worker.metrics.StatsMap weakStats, final fabric.worker.Store s);
     
     /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -243,11 +242,11 @@ public interface Metric
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-    public fabric.metrics.contracts.enforcement.EnforcementPolicy
+    public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
       equalityPolicy(double value, final fabric.worker.Store s);
     
     /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -256,20 +255,20 @@ public interface Metric
    * prior to the call.
    *
    * @param bound
-   *            a {@link Bound} that the returned policy enforces.
+   *            a bound that the returned policy enforces.
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
    *            for metric stats.
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-    public fabric.metrics.contracts.enforcement.EnforcementPolicy
+    public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
       thresholdPolicy(
       double rate,
       double base, fabric.worker.metrics.StatsMap weakStats, final fabric.worker.Store s);
     
     /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -278,11 +277,11 @@ public interface Metric
    * prior to the call.
    *
    * @param bound
-   *            a {@link Bound} that the returned policy enforces.
+   *            a bound that the returned policy enforces.
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-    public fabric.metrics.contracts.enforcement.EnforcementPolicy
+    public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
       thresholdPolicy(double rate, double base, final fabric.worker.Store s);
     
     /**
@@ -367,22 +366,22 @@ public interface Metric
     
     /**
    * @param bound
-   *        the {@link Bound} that the contract will enforce on this
+   *        the bound that the contract will enforce on this
    *        {@link Metric}
-   * @return a {@link Contract} asserting this metric satisfies the
-   *       given {@link Bound}.
+   * @return a {@link MetricTreaty} asserting this metric satisfies the
+   *       given bound.
    */
-    public fabric.metrics.contracts.Contract createThresholdContract(
+    public fabric.worker.metrics.treaties.MetricTreaty createThresholdTreaty(
       double rate, double base, long time);
     
     /**
    * @param bound
-   *        the {@link Bound} that the contract will enforce on this
+   *        the bound that the contract will enforce on this
    *        {@link Metric}
-   * @return a {@link Contract} asserting this metric satisfies the
-   *       given {@link Bound}.
+   * @return a {@link MetricTreaty} asserting this metric satisfies the
+   *       given bound.
    */
-    public fabric.metrics.contracts.Contract createEqualityContract(
+    public fabric.worker.metrics.treaties.MetricTreaty createEqualityTreaty(
       double value);
     
     public int compareTo(java.lang.Object that);
@@ -415,22 +414,22 @@ public interface Metric
             return ((fabric.metrics.Metric) fetch()).max(arg1);
         }
         
-        public fabric.metrics.contracts.Contract getEqualityContract(
+        public fabric.worker.metrics.treaties.MetricTreaty getEqualityTreaty(
           double arg1) {
-            return ((fabric.metrics.Metric) fetch()).getEqualityContract(arg1);
+            return ((fabric.metrics.Metric) fetch()).getEqualityTreaty(arg1);
         }
         
-        public fabric.metrics.contracts.Contract getThresholdContract(
+        public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
           double arg1, double arg2, long arg3) {
-            return ((fabric.metrics.Metric) fetch()).getThresholdContract(arg1,
-                                                                          arg2,
-                                                                          arg3);
+            return ((fabric.metrics.Metric) fetch()).getThresholdTreaty(arg1,
+                                                                        arg2,
+                                                                        arg3);
         }
         
-        public fabric.metrics.contracts.Contract getThresholdContract(
+        public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
           double arg1, double arg2) {
-            return ((fabric.metrics.Metric) fetch()).getThresholdContract(arg1,
-                                                                          arg2);
+            return ((fabric.metrics.Metric) fetch()).getThresholdTreaty(arg1,
+                                                                        arg2);
         }
         
         public static fabric.metrics.Metric scaleAtStore(
@@ -521,19 +520,19 @@ public interface Metric
             return ((fabric.metrics.Metric) fetch()).noise(arg1);
         }
         
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
+        public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           equalityPolicy(double arg1, fabric.worker.metrics.StatsMap arg2,
                          fabric.worker.Store arg3) {
             return ((fabric.metrics.Metric) fetch()).equalityPolicy(arg1, arg2,
                                                                     arg3);
         }
         
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
+        public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           equalityPolicy(double arg1, fabric.worker.Store arg2) {
             return ((fabric.metrics.Metric) fetch()).equalityPolicy(arg1, arg2);
         }
         
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
+        public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           thresholdPolicy(double arg1, double arg2,
                           fabric.worker.metrics.StatsMap arg3,
                           fabric.worker.Store arg4) {
@@ -542,7 +541,7 @@ public interface Metric
                                                                      arg4);
         }
         
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
+        public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           thresholdPolicy(double arg1, double arg2, fabric.worker.Store arg3) {
             return ((fabric.metrics.Metric) fetch()).thresholdPolicy(arg1, arg2,
                                                                      arg3);
@@ -654,16 +653,15 @@ public interface Metric
             return ((fabric.metrics.Metric) fetch()).isSingleStore();
         }
         
-        public fabric.metrics.contracts.Contract createThresholdContract(
-          double arg1, double arg2, long arg3) {
-            return ((fabric.metrics.Metric) fetch()).createThresholdContract(
+        public fabric.worker.metrics.treaties.MetricTreaty
+          createThresholdTreaty(double arg1, double arg2, long arg3) {
+            return ((fabric.metrics.Metric) fetch()).createThresholdTreaty(
                                                        arg1, arg2, arg3);
         }
         
-        public fabric.metrics.contracts.Contract createEqualityContract(
+        public fabric.worker.metrics.treaties.MetricTreaty createEqualityTreaty(
           double arg1) {
-            return ((fabric.metrics.Metric) fetch()).createEqualityContract(
-                                                       arg1);
+            return ((fabric.metrics.Metric) fetch()).createEqualityTreaty(arg1);
         }
         
         public int compareTo(java.lang.Object arg1) {
@@ -1313,38 +1311,36 @@ public interface Metric
         
         /**
    * @param rate
-   *            the rate parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the rate parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param base
-   *            the base parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the base parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param time
-   *            the startTime parameter of the {@link Bound} on the resulting
-   *            {@link Contract}
-   * @return a {@link Contract} which enforces that the {@link Metric}
-   *         satisfies a {@link Bound} with the given parameters at the given
-   *         time. If such a {@link Contract} already exists, it is
-   *         returned, otherwise a new one is created and returned
-   *         (unactivated).
-   *
+   *            the startTime parameter of the bound on the resulting
+   *            {@link MetricTreaty}
+   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *         satisfies a bound with the given parameters at the given time. If
+   *         such a {@link MetricTreaty} already exists, it is returned,
+   *         otherwise a new one is created and returned (unactivated).
    */
-        public fabric.metrics.contracts.Contract getEqualityContract(
+        public fabric.worker.metrics.treaties.MetricTreaty getEqualityTreaty(
           double value) {
-            return fabric.metrics.Metric._Impl.static_getEqualityContract(
+            return fabric.metrics.Metric._Impl.static_getEqualityTreaty(
                                                  (fabric.metrics.Metric)
                                                    this.$getProxy(), value);
         }
         
-        private static fabric.metrics.contracts.Contract
-          static_getEqualityContract(fabric.metrics.Metric tmp, double value) {
-            fabric.metrics.contracts.Contract mc = null;
+        private static fabric.worker.metrics.treaties.MetricTreaty
+          static_getEqualityTreaty(fabric.metrics.Metric tmp, double value) {
+            fabric.worker.metrics.treaties.MetricTreaty mc = null;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                mc = tmp.createEqualityContract(value);
+                mc = tmp.createEqualityTreaty(value);
             }
             else {
                 {
-                    fabric.metrics.contracts.Contract mc$var128 = mc;
+                    fabric.worker.metrics.treaties.MetricTreaty mc$var128 = mc;
                     fabric.worker.transaction.TransactionManager $tm134 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
@@ -1375,7 +1371,7 @@ public interface Metric
                         $commit130 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
-                        try { mc = tmp.createEqualityContract(value); }
+                        try { mc = tmp.createEqualityTreaty(value); }
                         catch (final fabric.worker.RetryException $e132) {
                             $commit130 = false;
                             continue $label129;
@@ -1464,40 +1460,40 @@ public interface Metric
         
         /**
    * @param rate
-   *            the rate parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the rate parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param base
-   *            the base parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the base parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param time
-   *            the startTime parameter of the {@link Bound} on the resulting
-   *            {@link Contract}
-   * @return a {@link Contract} which enforces that the {@link Metric}
-   *         satisfies a {@link Bound} with the given parameters at the given
-   *         time. If such a {@link Contract} already exists, it is
+   *            the startTime parameter of the bound on the resulting
+   *            {@link MetricTreaty}
+   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *         satisfies a bound with the given parameters at the given
+   *         time. If such a {@link MetricTreaty} already exists, it is
    *         returned, otherwise a new one is created and returned
    *         (unactivated).
    *
    */
-        public fabric.metrics.contracts.Contract getThresholdContract(
+        public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
           double rate, double base, long time) {
-            return fabric.metrics.Metric._Impl.static_getThresholdContract(
+            return fabric.metrics.Metric._Impl.static_getThresholdTreaty(
                                                  (fabric.metrics.Metric)
                                                    this.$getProxy(), rate, base,
                                                  time);
         }
         
-        private static fabric.metrics.contracts.Contract
-          static_getThresholdContract(fabric.metrics.Metric tmp, double rate,
-                                      double base, long time) {
-            fabric.metrics.contracts.Contract mc = null;
+        private static fabric.worker.metrics.treaties.MetricTreaty
+          static_getThresholdTreaty(fabric.metrics.Metric tmp, double rate,
+                                    double base, long time) {
+            fabric.worker.metrics.treaties.MetricTreaty mc = null;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                mc = tmp.createThresholdContract(rate, base, time);
+                mc = tmp.createThresholdTreaty(rate, base, time);
             }
             else {
                 {
-                    fabric.metrics.contracts.Contract mc$var138 = mc;
+                    fabric.worker.metrics.treaties.MetricTreaty mc$var138 = mc;
                     fabric.worker.transaction.TransactionManager $tm144 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
@@ -1529,7 +1525,7 @@ public interface Metric
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            mc = tmp.createThresholdContract(rate, base, time);
+                            mc = tmp.createThresholdTreaty(rate, base, time);
                         }
                         catch (final fabric.worker.RetryException $e142) {
                             $commit140 = false;
@@ -1619,20 +1615,20 @@ public interface Metric
         
         /**
    * @param rate
-   *            the rate parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
+   *            the rate parameter for the bound on the resulting
+   *            {@link MetricTreaty}
    * @param base
-   *            the base parameter for the {@link Bound} on the resuling
-   *            {@link Contract}
-   * @return a {@link Contract} which enforces that the {@link Metric}
-   *         satisfies a {@link Bound} with the given parameters at the
-   *         current time. If such a {@link Contract} already exists, it
+   *            the base parameter for the bound on the resulting
+   *            {@link MetricTreaty}
+   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *         satisfies a bound with the given parameters at the
+   *         current time. If such a {@link MetricTreaty} already exists, it
    *         is returned, otherwise a new one is created and returned
    *         (unactivated).
    */
-        public fabric.metrics.contracts.Contract getThresholdContract(
+        public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
           double rate, double base) {
-            return getThresholdContract(rate, base, 0);
+            return getThresholdTreaty(rate, base, 0);
         }
         
         /**
@@ -2215,7 +2211,7 @@ public interface Metric
         public abstract double noise(fabric.worker.metrics.StatsMap weakStats);
         
         /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -2231,19 +2227,15 @@ public interface Metric
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
+        public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           equalityPolicy(double value, fabric.worker.metrics.StatsMap weakStats,
                          final fabric.worker.Store s) {
-            return ((fabric.metrics.contracts.enforcement.DirectEqualityPolicy)
-                      new fabric.metrics.contracts.enforcement.
-                        DirectEqualityPolicy._Impl(s).
-                      $getProxy()).
-              fabric$metrics$contracts$enforcement$DirectEqualityPolicy$(
-                (fabric.metrics.Metric) this.$getProxy(), value);
+            return new fabric.worker.metrics.treaties.enforcement.DirectPolicy(
+                     );
         }
         
         /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -2256,7 +2248,7 @@ public interface Metric
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
+        public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           equalityPolicy(double value, final fabric.worker.Store s) {
             return equalityPolicy(value,
                                   fabric.worker.metrics.StatsMap.emptyStats(),
@@ -2264,7 +2256,7 @@ public interface Metric
         }
         
         /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -2273,27 +2265,23 @@ public interface Metric
    * prior to the call.
    *
    * @param bound
-   *            a {@link Bound} that the returned policy enforces.
+   *            a bound that the returned policy enforces.
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
    *            for metric stats.
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
+        public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           thresholdPolicy(double rate, double base,
                           fabric.worker.metrics.StatsMap weakStats,
                           final fabric.worker.Store s) {
-            return ((fabric.metrics.contracts.enforcement.DirectPolicy)
-                      new fabric.metrics.contracts.enforcement.DirectPolicy.
-                        _Impl(s).
-                      $getProxy()).
-              fabric$metrics$contracts$enforcement$DirectPolicy$(
-                (fabric.metrics.Metric) this.$getProxy(), rate, base);
+            return new fabric.worker.metrics.treaties.enforcement.DirectPolicy(
+                     );
         }
         
         /**
-   * Used to construct and enforce {@link Contract}s bounding this
+   * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -2302,11 +2290,11 @@ public interface Metric
    * prior to the call.
    *
    * @param bound
-   *            a {@link Bound} that the returned policy enforces.
+   *            a bound that the returned policy enforces.
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
+        public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           thresholdPolicy(double rate, double base,
                           final fabric.worker.Store s) {
             return thresholdPolicy(rate, base,
@@ -2560,39 +2548,44 @@ public interface Metric
         
         /**
    * @param bound
-   *        the {@link Bound} that the contract will enforce on this
+   *        the bound that the contract will enforce on this
    *        {@link Metric}
-   * @return a {@link Contract} asserting this metric satisfies the
-   *       given {@link Bound}.
+   * @return a {@link MetricTreaty} asserting this metric satisfies the
+   *       given bound.
    */
-        public fabric.metrics.contracts.Contract createThresholdContract(
-          double rate, double base, long time) {
-            double[] normalized =
-              fabric.metrics.contracts.Bound._Impl.createBound(rate, base,
-                                                               time);
-            return ((fabric.metrics.contracts.MetricContract)
-                      new fabric.metrics.contracts.MetricContract._Impl(
-                        this.$getStore()).$getProxy()).
-              fabric$metrics$contracts$MetricContract$((fabric.metrics.Metric)
-                                                         this.$getProxy(),
-                                                       normalized[0],
-                                                       normalized[1]);
+        public fabric.worker.metrics.treaties.MetricTreaty
+          createThresholdTreaty(double rate, double base, long time) {
+            fabric.common.util.Pair updated =
+              this.get$$treaties().
+              create(
+                new fabric.worker.metrics.treaties.statements.ThresholdStatement(
+                  rate, base, time));
+            if (!((fabric.worker.metrics.treaties.TreatySet) updated.first).
+                  equals(this.get$$treaties()))
+                this.set$$treaties((fabric.worker.metrics.treaties.TreatySet)
+                                     updated.first);
+            return (fabric.worker.metrics.treaties.MetricTreaty) updated.second;
         }
         
         /**
    * @param bound
-   *        the {@link Bound} that the contract will enforce on this
+   *        the bound that the contract will enforce on this
    *        {@link Metric}
-   * @return a {@link Contract} asserting this metric satisfies the
-   *       given {@link Bound}.
+   * @return a {@link MetricTreaty} asserting this metric satisfies the
+   *       given bound.
    */
-        public fabric.metrics.contracts.Contract createEqualityContract(
+        public fabric.worker.metrics.treaties.MetricTreaty createEqualityTreaty(
           double value) {
-            return ((fabric.metrics.contracts.MetricEqualityContract)
-                      new fabric.metrics.contracts.MetricEqualityContract._Impl(
-                        this.$getStore()).$getProxy()).
-              fabric$metrics$contracts$MetricEqualityContract$(
-                (fabric.metrics.Metric) this.$getProxy(), value);
+            fabric.common.util.Pair updated =
+              this.get$$treaties().
+              create(
+                new fabric.worker.metrics.treaties.statements.EqualityStatement(
+                  value));
+            if (!((fabric.worker.metrics.treaties.TreatySet) updated.first).
+                  equals(this.get$$treaties()))
+                this.set$$treaties((fabric.worker.metrics.treaties.TreatySet)
+                                     updated.first);
+            return (fabric.worker.metrics.treaties.MetricTreaty) updated.second;
         }
         
         public int compareTo(java.lang.Object that) {
@@ -2719,11 +2712,11 @@ public interface Metric
         
     }
     
-    public static final byte[] $classHash = new byte[] { 122, 47, -101, 116, 61,
-    -22, -110, 126, -64, 113, 121, 19, -42, 15, -51, 88, 91, -26, 105, -110,
-    -43, 41, 87, 64, 56, 49, -31, -2, 62, 22, 121, 76 };
+    public static final byte[] $classHash = new byte[] { -62, -38, -85, 11, -74,
+    102, 99, 5, -76, -91, -35, 39, -62, -25, -32, 116, 121, 18, -37, -122, -45,
+    -35, 15, -72, 69, -45, 62, -100, 90, -26, 33, -70 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1527095890000L;
+    public static final long jlc$SourceLastModified$fabil = 1527113233000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "H4sIAAAAAAAAAK1bC5QU1Zn+u2YYZmBghrcMrwFGEh52B0V8jBCY4TXYAyPNS4gMNd3VMwXVVU3VbehBIWqioOZoliBiomziwcQH4h7PGnUTDPEkBIPZrJqXObuK56xrDOsa48lqzq5x///W7cfUdF269vScU/frqXvvf//v/+/976OqTrwPQxwbZiTVHt0Is/605oRXqD0d0S7VdrREu6E6znq82x0fXt1x5A/fS0xVQIlCfVw1LVOPq0a36TAYGd2h7lYjpsYiG9Z1tG6FujhVXKU6fQyUrW1ZG5rTltHfa1hMNDJI/v1zI4cf2Nb4TBU0bIEG3YwxlenxdstkWpZtgfqUlurRbGdpIqEltsAoU9MSMc3WVUPfiwUtcwuMdvReU2UZW3PWaY5l7KaCo51MWrN5m7mbpL6FatuZOLNsVL/RVT/DdCMS1R3WGoWapK4ZCWcX7IfqKAxJGmovFhwfzbGIcImRFXQfiw/TUU07qca1XJXqnbqZYDDNWyPPuOV6LIBVh6Y01mflm6o2VbwBo12VDNXsjcSYrZu9WHSIlcFWGDT5CsVCtWk1vlPt1boZXOIt1+VmYak6bhaqwmCctxiXhD5r8visyFvvr7nu3pvNVaYCIdQ5ocUN0r8WK031VFqnJTVbM+OaW7F+TvSIOv7UQQUAC4/zFHbLPHfLh0vmTT191i0zqUSZtT07tDjrjh/vGfnq5PbZ11SRGrVpy9GpKwxgzr3aJXJas2ns7ePzEikznMs8ve7Mjbc+oV1QYFgH1MQtI5PCXjUqbqXSuqHZKzVTs1WmJTqgTjMT7Ty/A4bi76huau7dtcmko7EOqDb4rRqL/48mSqIIMtFQ/K2bSSv3O62yPv47mwaARrwgBKA8AHDjG/i7GaB6CINlkT4rpUV6jIy2B7t3BC9NteN9ERy3th6POHY8YmdMpmMhcQt7EYIT6eQYxvbTFZKTJX0b94RCaMppcSuh9agO+kX0kbYuA4fBKstIaHZ33Lj3VAeMOfUg7yd11Lcd7J/cEiH07WRvVCiuezjTtvzDk93n3D5GdYWhsMu6yoWFcmFXOdSnnoZNGANRGAPRiVA23H6s40neO2ocPozyIupRxLVpQ2VJy05lIRTifMby+rxboFN3YrDAeFA/O3bT6u0HZ1Rhf0zvqSYXYdEW7+goxJQO/KVil++ONxz4w38/fWSfVRgnDFoGDd/BNWn4zfAax7biWgLDW0H8nGb12e5T+1oUCh11GNWYiv0OQ8RUbxsDhmFrLqSRNYZEYTjZQDUoKxeHhrE+29pTuMOdPpKS0a7/yVgeBXk0XBRLP/y7f37vCj5P5AJnQ1GEjWmstWiwkrAGPixHFWy/3tY0LPdvR7u+cf/7B7Zyw2OJmaUabKG0HQepiqPTsu84u+uNt948/iul4CwGNelMj6HHs5zLqM/wL4TX3+iiEUc3CDHutovR3pwf7mlqeVZBNxz4BgYfVN1p2WCmrISe1NUeQ6Oe8r8Nl85/9j/vbXTdbeAd13g2zLu4gML9iW1w67ltH0/lYkJxmngK9isUc6PZmILkpbat9pMe2dtem/Lgz9SHsedjLHL0vRoPL8DtAdyBl3NbXMbT+Z68BZTMcK01Wdzn/8zk6SxKZvP7Cv2cw6BW7cEurMaZMDGIvwYRw6pdrPoL5Y5JUzq2SHyI/x7HxPijaS8sXIqG4ZkTGdTRkDUsXHVks0h8it/0xKfW47cfPpZY++h8dxIZPTDkLzczqad+8+kr4aPnXy4RXuqYlb7M0HZrRpGOV2KT0wetkzr57F0YkecvTLmmfec7vW6z0zwqeks/3nni5ZWz4ocUqMqHh0FLhoGVWouVxXFqa7jiMYk23RnG/decd0IdOWECXp8HGNIr8MYiJ4jBXNK5Ie7cgkcVElYrhGwWuM7r0dJdqlOSt5aSlQyG7FZxYnIGryG6bD2FwWK3WENoBw/f/Vn43sOu59yF1sxBa53iOu5iizc2gpK51H+my1rhNVa8+/S+Hzy274AiFF2CkSRhZXJdctlAM8/F63KAmr0CN/uYmZLVg41KVTYJvMHfqKGCa2Jc6pcklt1GySa0LM3oTm6QTfbMnstwHY3rYncSpTJNHnp8OK/AayHq9oHAfyqzFykMhqaxAYyljGZhWtZ7+lSjEPmCwCf96SuFsNNYsMEOiQ34yrQHJ3y36W5uCrq3vZQTZ+PVgb+/ILAxmBOpSoPAurKc2MilOhICGUpwUVudNjIlFeerxna8OrHVbwtMlesePsgp6fV4pUFIMgR2l+8Vl9Q+CakvU7KHwXDhFT9u3CnT8UoA1N8ncE8wp1CV3QLTAZxyp0T/g5TcxqAqpZsFDTxD5jq8+rDRjwW+EsQnyVI+aRSSzgk8FdQnX5dwOkTJ3QyGCZ/4UMu75B6k+WWBvcFcQlWSArcHcMmDEvW/Rclhcoma9dX7Cry+AzD2PYE/CqY3VXlR4PNl6e0GqEckeh+n5GEGY3o1tnxXRjV01k/nHrScyoXs6Z6QHc/lh3MlqWDJuL0Gr0cBxjkCF1akE5KkKwV+rvxO6FrjpMQa/0DJYwy5uJ2whFGoxHdLOfd6vF4CmNgncFYw51KVSwVO8+dUxbWt4nR4wnP4lD3XtdR6DNaGZfbyNp+TkP0hJc/gshdZru/D3Xgf7n1lNLlHaeCcAWga7+LEH1fEoyTptMBn/NlXc1HVBY/mk+d52z+R0D1DyYsMJhV8WxbrepJAE9xbAFOOClTLZI3bv7q0bTHcM2kJD+/hQtZ2gZvK6smxQk/+pYTtq5ScDeBcPo/jygE+BJj2psBHgzjXdx4nSccFPnDRrp2LOmNE1Nlj2Ts1OxzD7XV+Mzbw/CRvFjdMvyExy1uUvE7rMdzIaUsZl1og5jHHSnQgemlmo4sz3qiEObik3wk8V5bPf48bhknFu7/VuFHl+213T7Jt1A71X/o/OOLu+7wnp0UF/3TirQuvjZhykh/ZVNPRGYkf5j1yHnyiPOCgmFOvzxOjSAyteK0DGPaUwO8xuP7/f943YFMgjg8rKa7IeUUzZonN3woyS2HLvCVy4qGm9sUX3BPF/JEXyZle4kRxo1p0Gnf5E6m/KDNqfqrA0C3QyB8CqCbbSLvOmMa2oNGddnEzCiMG5A88knfPn1vze/bJ3t1nUbPew7bi3Xs1G7Bv5+drF7Ih4L3xI1nPxj1dUjdV14xzcWNlaGYv6ys1FVVhV6Kff8x6O3Z+nBeduuC8pdGhC2UtyhVwj2V0K5x/5JIrkR3kQT6IXSK81aIpl+vlHxpC1ZK8Gkowlg+Jk4Y5xRoLmrs+cZXiLb8rkTacbr6NS101kSgnBM0CmHVY4E0VCUEk6UsC15YXglwnkvpjJNTGUTICqeHyvRxqSwHmXOLi7LcrQo0knRf4elBqUyTUaFEWmkDU1KyE2miq8HlUYBPAZTMFjghM7WoPtVFCUr2L8z71p1as9OckebMpmY5zIS4RNjhaFwVUVmoMD+2xLENTzVJMccka2ox6rRZ4VUWYkqSFAiUL/GI2CyR5tOsIhdF1yNSlyQ8OY36EbsRmdwncVhFCJOkmgWvKI7RYkreEkquLCbVJCW3BZo8KvKMihEjSVwVmyiO0SpJH0TnUVkxoo5TQVmz2RwJPVIQQSXpS4EPlEVonyVtPSbSY0JpShPjmYi42qwKElwm81IcQJecG7SF4lRaBk8rTfKskj2aY0EYG491FVItYRLW4q6cW35h3OapgAkS+L/BIRdxCku4XeKc/ueL5H2fmqQP3DrmDC3qtw+lU06W3EZy9JrHMTkq6c48KSrkz98QjhNHjCyMFgsSdgw8CqErkM4F/Lc+dtiSPFiWhFAZxR02lxbOD5/38dzPA/KUCp1fEfySpWeCoi/qPdE1ytW+RUNpPyW45Je6JJhS5Hxt+RODfBfMEVfm6wLvL88QdkrwDlNyKIcFQHbYhnVCZ5usM3FOFDqJP3hb4YkWcQZJOCTwZwBn3SViRTUN3XZQV9wd1hHsArtgscGkwf1CVJQKvLc8fRyV536TkGwxGZrjWHbTnxZFdalxzn+AWN4ShaMFJgZWZSEnSVwVKJtJBPpEc6oboUDf0UFnM8uMElwdXDnNxwV99mPn4hap8IvDP5fnlSUneU5R8l0Htbs2w4jrr9/UIjRIc2wvbBE7z0TuYR0jSVIENATzyrITTc5Q8fRFO+dnjUWz5qMC7fTj5+IKq3CXwK+X54kVJ3mlKXsApz7R0p+SUl587nga46ucCn6iII0jS4wK/GcARZyWEfk7JSzJC3Au4rA29BHDtLwTeEswLVOVmgZJB7TnMD/Hj8d9zPV+VcHidkldweGvi2USXZejx/tziZ6Hv4xrNxIVOXEtpJgsvL/x2q1Nt7zMcbosVSORXAIueEOj3cNfHFlTFEJj0t4X3iNs1w79KzPAmJb8dZAa6++tSPHpRiQsASx8SuDgYD6qySOBV/jyKHlHESjn2HQmjdyk5z6CB5U7sL0Iphvp8CrDsDoGtwShRlWsFLii7mxb7578kbP5EyXsB2KAqCv5YcbvAGwKx4VW6BK4OEC4+lnCgmTD0ZwZjbS1JJDZp6s7lDtNTOK06XEQpIn2oxQiAlZe4uOKFYESoyvMCJQ/DPOeouT0PP490tHjGxiFB7xWZcT2tui+TlXp04lpBAX8rKPz4838YTCplhW5bS1l80VfaGAtQx4kAq/5R4F3BjEFVDgq8vXyvKiMkfGhWV2oxcgg+UXqtz+gvRYEuWIvtTwHoWCzQb0dXcnrze+ZJklZ9JvDDsgJjY4HeBAm9iZSMYjBOPOm8OEvuqB5sZSFAZ7OL0Z8FcxRVOSPwdDl0lCJvNUvozKBkEtIZyEPS78ZR3euwlSUAa3SBbUGcxl+W8a5JxgpJSwVGAnTHORKC8yhpYfRlSCqdYdpGv+OFPK9V2CcPCNxeEV4kqVtgZwBekmNXhY5dlTAOM8Er5r9d58y+iO1jAO96TOD+ijAjSfsE7gzATHL+qtD5q3I1c7/PQGZR6d6Xk1uOKuC+94ZfCvz7ipAjSccEfi0AOclZrEJzp9KG402Q23DRTWTee9sB1n0k8OWKECRJZwV+PwBBydmsQmezShQXJrnxJtmT5Ycczunr612MvVMRaiTp3wW+FoCa5J1bhZ5WKBsLoWSNdNs2G1s3kdcLAh8Jwstv28YlfUfgIX9exWonJXn0hZKyncEI3YnpZq+h5R69heZ6OPHD9BtoigHY8IFAv60oJYMP03mVxwV+21/5kkti/g6SYkm47KJkB4MJcVvDMVX++0fXoEpfAdh0RuCDwVhRlaMC7yunq7lvGClZCZe9lNB3iS6Xst+Tuwz1wAXdZlvgGgmVEssMqtIpcGVZo6aWq3ubhAodlCi3MHqjgz770NbzL+Q+yTKocZ960Kcuk0p8bSa+doy3/0Q7/s7188b5fGl2yaDvT0W9k8caaicc2/Bb932c3JeMdVGoTWYMo/hdjaLfNWlcCOncVHXumxtpzuIgzrQDt/6Mv7dDv4i2cqdb7h6k5Zaj/77GzdfEk9xWYqbnBMH9vkd8ZBPL5N91aOLNN2Vs+s72xEcTPqmpXX+ef/uElm3eG/kWW/THQ/tP7+of85uGX2ze+h/6oV/P3rTk6vlv/23x+P7o/wGYuM3Z/zsAAA==";
+      "H4sIAAAAAAAAAK1bC5QU1Zn+u2aYBwzMAwbC8BpgQuTVvRp11cEHjDMwMsCEeaCDYazpvj1TUF3VVt1mGgNGkwgkGowRCW6UPUnISwjkeIKaGF8c45rgiRrj+tgYye4iGtY81kSTs9l1///W7cdUd9V05/ScU/erqXvvf//v/+/976Oqj74LE2wLFkTVIU0P8h1xZgc71KHOrm7VslmkTVdtuxefDoYnlXceePvbkbkKKF1QE1YN09DCqj5o2BymdG1Vt6shg/FQ38bO1s1QHaaKa1R7hIOyeVXSgua4qe8Y1k0uG8mRf8/S0P6vbKl7sAxqB6BWM3q4yrVwm2lwluQDUBNjsSFm2SsjERYZgHqDsUgPszRV127CgqYxAA22NmyoPGExeyOzTX07FWywE3FmiTZTD0l9E9W2EmFuWqh+naN+gmt6qEuzeWsXVEQ1pkfsG+FmKO+CCVFdHcaC07tSLEJCYqiDnmPxiRqqaUXVMEtVKd+mGREO89w10oxb1mIBrFoZY3zETDdVbqj4ABoclXTVGA71cEszhrHoBDOBrXBo8hSKharianibOswGOXzEXa7bycJS1cIsVIVDo7uYkIQ+a3L5LMtb765fse9TxhpDgQDqHGFhnfSvwkpzXZU2siizmBFmTsWaJV0H1OmP7VUAsHCjq7BT5uGdf7xq2dwnn3XKzMpTZsPQVhbmg+HDQ1NenN22+NIyUqMqbtoadYUxzIVXu2VOazKOvX16WiJlBlOZT2585rpbHmDnFJjYCRVhU0/EsFfVh81YXNOZtZoZzFI5i3RCNTMibSK/EyrxvkszmPN0QzRqM94J5bp4VGGK/9FEURRBJqrEe82Imqn7uMpHxH0yDgB1eEEAQDkIcN1TeN8MUN7C4erQiBljoSE9wUaxe4fwYqoVHgnhuLW0cMi2wiErYXANC8lH2IsQ7NA6gUFsP14iOUnSt240EEBTzgubETak2ugX2UdWdes4DNaYeoRZg2F932OdMPWxe0U/qaa+bWP/FJYIoG9nu6NCdt39iVXtfzw2eMrpY1RXGgq7rKNcUCoXdJRDfWpo2AQxEAUxEB0NJINthzqPiN5RYYthlBZRgyIui+sqj5pWLAmBgOAzTdQX3QKdug2DBcaDmsU9n7zmhr0LyrA/xkfLyUVYtMU9OjIxpRPvVOzyg+HaPW+/f/zALjMzTji05Azf3Jo0/Ba4jWOZYRbB8JYRv6RZPTH42K4WhUJHNUY1rmK/wxAx193GmGHYmgppZI0JXTCJbKDqlJWKQxP5iGWOZp4Ip0+hpMHxPxnLpaCIhpf3xO9/9efvfFzME6nAWZsVYXsYb80arCSsVgzL+oztey3GsNwbB7vvvufdPZuF4bHEwnwNtlDahoNUxdFpWrc9e+Nrb/768C+VjLM4VMQTQ7oWTgou9R/iXwCv/6OLRhw9IMS42yZHe3N6uMep5UUZ3XDg6xh8UHW7pc+ImREtqqlDOqOe8rfaj55/4r/21Tnu1vGJYzwLlo0vIPN85iq45dSWD+YKMYEwTTwZ+2WKOdFsakbySstSd5AeyVt/Mefef1Hvx56PscjWbmIivICwBwgHXiBssVyk57vyLqRkgWOt2fK5+GehSBdRslg8V+h2CYcqdQi7sBrm0sQg/2plDFsocRrlTo1TOi1LfEDcN3I5/mjaC0qXomFE5kwO1TRkdRNXHckkEp/jNT2JqfXwZ/Yfimz45vnOJNIwNuS3G4nY9/71f58LHjz90zzhpZqb8eU62870LB0vwibn56yT1onZOzMiT5+bc2nbtjPDTrPzXCq6S3933dGfrl4U/rICZenwkLNkGFupNVtZHKcWwxWPQbTpyUThv+a0E6rJCTPwOg9gwm6JySwnyMGc17kB4dyMRxUSViWFjEq80e3R/F1qnU/eBkpWc5iwXcWJyc5dQ3RbWgyDxXa5hmB793/hw+C+/Y7nnIXWwpy1TnYdZ7ElGptMyVLqP/P9WhE1Os4e3/Xod3btUaSiV2EkiZiJVJe8eqyZl+J1AUDFvRJHPcxMyTW5RqUq2yXGvY0ayLimR0i93seyWyjZhJalGd1ODbLZrtnzalxH47rYmUSpTJOLnhjOHXhdDFA5xcGK1wrsRQqHyjg2gLGU0yxMy3pXn6qTIl+V+DNv+kom7NRlbLDVxwZiZTqEE77T9KAwBT27IZ8TF+PVifcbJIaKcyJVCUo8ryAn1gmptg+BBCW4qC2P64m8iotVYxte67DVJyTeUah7xCCnZNjllVop6XaJNxfuFYfULh9Sn6ZklMMk6RUvbsIp8/GKANQck3igOKdQlXsk3lmEU3b76L+Xkls5lMU0I6OBa8iswGsEYPJ0B2vOFeOTaD6f1ElJv5X4q2J98iUfTl+m5AscJkqfeFBLuwQ7Rv0hibuLcwlVuU3ip4twyb0+6n+Vkv3kEjXpqfdFeP0zwLTfSTxZnN5U5SmJjxaktxOgvu6j92FK7udQP8x4+40JVdf4DlwAq3xHKmAvlQF71LS2MSsdtzkV0lhq++PUoSqX5+uM3Xh9A6AxKfHSknRGknSJxCWFd0bHKsd8rPJ9Sr6DW3nZGXOMQ/nfyudijFXwJMBMJnF+cS6mKs0Sm7wZlQldywQZkYicT1Cy1LFTL4Zs3TSGRZsP+1D9MSUP4uYDOfaO4J58BHfA3iSFN3Hww9MATVMdnPnjkniTJD0q8Xve3MuFqPKMN9PJI6Ltp33IPkPJ4xxmZvxaAOcaqt+O1xsAc+6SeG2BnHEDWB23TI67JhZxsZ4kZW2SuL6gPtyT6cPP+3B9kZJnC3asmMdx5QC/B5j3ssT7inGs5zxOkr4qcd+4nToVd6aOjTs9uL1Ob8bGnp+kjeKE6dd8jPImJS/Regw3cmwlF1IzxFzmWI3uw1G9sNLBBS+UwhxC0vMST3qbI8vjr+OGYVb27u8a3KiK/bazJ9lSv1V9YcfvDzj7PvfJaVbBPxx989wvJs85Jo5syunojMRPdB85554ojzkoFtRr0sRoVoNWJ8hP7JfYzWHt33/eN2ZTII8PSykuy3lZM2aezV8HmSWzZR4IHb2vqe2Kc86JYvrIi+TMz3Oi2K9mncZd8EDsz8qCip8oUDkAdeIlgGrwftp19jA+gEa32+TDLpg8Jn/skbxz/tya3rPPdu8+s5p1H7Zl797L+Zh9uzhfO5cMgOiN7/n1bNzTRTVDdcy4FDdWOjOG+Ui+SagMuxLd/jbp7tjpcZ516oIzFqNDF8q6PFXAOZbRzGD6lUuqRDLHg2IQO0REq1mTrdDLOzQEyn3yKijBSD4hTBqmFKvLaO74xFFKtHzWR9okevgbXOqqkUghIagFYNHtEntLEoJIUo/EjsJCkONEUn+qD7VGSiYjNVy+F0LtSoAltQ4ufrUk1EjSKxIL28pnUZvjQ20eJTOImpr0odZAFc5DBfoAljdJLC+a2iUuavVSUpmDy/7kTS1b6Y/55C2mZD7OhbhA6LNZNwVUnm8MVw6Zps5UIx/Tj6I+GPOXr5QYLAlTkrRc4tzCmF7ok3cxJUF0HTJ1aG6kYj1ehHA9tnxEYl9JCJGkXonthRG6wifvKkouySa0ypfQtdjsnRJ3loQQSfqURL0wQmt88ig6B1ZlE+r3JXQdNvuQxG+UhBBJ+rrEuwsjtNEnj+J0oCub0Pp8hMTWYik2OwgQbJU424MQJadydhCiyiyJDYVpvtkn75OU9HOY7iyiWuQiqsVZPbV4xrwLUIWtAKGdEq8viVtI0maJXd7ksud/nJnn5j+zoM867HVqPP82QrBnPpbZRslg6lVBPnem3ngEYqjuLyU+4+PO3CMAUeUnEp8ozJ2WTx4tSgIxDOK2GovLdwePePlvFOD8Sgf/4WxJ/EeS3pL4yrj+I12jQu2dPpToLDiw3Z+S8ARNvzchpRGJm4rzBFXpl9hdmCdu88nbQ8ktGBJ01eZ98YjKmaczcE8V+Bz65NsSP1cSZ5Ckz0rkRTjjTh9Wd1Hy+XFZCX80o9Q9AB+fK7GyOH9QlQqJUJg/Dvrk/RMld3OYkhBad9KeF0d2vnEtfELh+S6AC7nEtSXxCUm6RmJrET7xOdQN0KFu4L6CmKXHyX5s/wWJT3gw8/ALVXlc4iOF+eWITx6d/QW+xaFqO9PNsOYcV+X1CI2SQwAXVzl40ZmSeIQk/afEl4vwyAkfTg9TcnwcTunZ42vIaYvEbg9OHr6gKhskdhbmi8d98p6k5Ic45RmmZued8tJzxxGAf/ySxLiH0sU5giSZEm8owhHP+hCiLWHgpB8h4YUBFIhd+rKvSOzwIOThBarSLvFKb81dx/gBcTT+utDzRR8OL1HyHA5vJt9JdJu6Fk6/sFkxzgsbZuByJ8xizODB9sy9I4RkuN/gCIt0IB2MD5cvcnDFO8VZhKq8LfHfvS3iPuZ2jPErH2P8mpJXcoxBT1/Ox2MYlTgLsHKag1c9VBwPqnJC4nFvHlkvKXryufeMDyNaeAVOc6jlqVP7cSjRSc5fAdoelDhSHCWqMixRLbizZvvndz5s/kDJO0WwuQxVmwDQflzizUWxEVV2SRz1ZpMTND7w4fBXSv6bwzSLRYnEJqZua7e5FsPJ1RYi8hHBVaeCNx3tDra/VRwRqnJG4pvjjpjU4E/tfMSppM3CCQuHBH1dZIS1uOp8UpbvBYpjBQW8raCIQ9D/4TArnxUGLRYzxdIvvzEuRB0bAVb/RmJxw05UOSHRZ9i5vapM9uFTS0kVRg7Jp4s+7tN35KNAF+C0qswEWLNN4nIPCnknOa+3nkLSMok+R12ud9iS3gwfejMpqefQKN91js9SOGoIW8HpvGudg2v/5MHSw1FU5T2J7xZCR8nyVrMPnQWUzEI6Y3n49LtGqrsCW8Fr3QGJZjFOe44S98pkmpRkSLzem2VOd1ziQ3AZJS2cfh8Siyc46/c6ZEjzuhpg/Q8kfrEkvEjSHRJvKoKXz+GrQoevShCHmeTV471pF8yuBPp4Gza8LPFISZiRpAckHiyCmc8prEKnsMol3PmVBjLr8t0BC3I0F/QCdP9N4nMlIUeSTkn8YRHkfE5kFTqRVVbheJPk+sbdSqa9dz3AxmYHP/F+SQiSpD9L/I8iCPqc0Cp0Qqt04cIkNd58dmbpIRfB1dalEhtKQo0k1Tu48cMiqPl8eavQl7dKfyaUrPfdvC3G1reiFm9JfL4YXl6bNyHp5xILO8ZUoj55tKZVbuAwWbN7NGNYZ6kXcIGlLk7iSL2HlkQAfQ0O9p7y4ERJ7pG6qPIziU95K593SSy+QlJMHy701bqylYYWbclYoV8gtaJCtwJsWuRg/wfFcaIq70v0mZndXw8qSR8mNEcoNi6MHSYFfiO3HLX4PMC1AxIv9iGSZ4lBVS6SGCqESKBKKHurD5HPUrKT0zcd9MMP1ivWCX9Jcqhw3nvQj11m5fm9mfy9Y7jtaXb4zNpljR6/NftIzi9QZb1jh2qrZhzqe8X5Iif1W8bqLqiKJnQ9+2uNrPuKOC6CNGGqaufbjbhgsRdn2bGf13Px5Q7dEW1lt1PudqTllKP/7hDmE18bNqW2EQtdX+k7v/CRP7PpSaS/dmgSzTclLPql7dH3Zvyloqr3tPj1E1q2+eTrRyY9FA1P+ME33/jYybOn+Y6Gf9v90hu1j7S/dMV9A2/N/9H/AzWGmJABPAAA";
 }

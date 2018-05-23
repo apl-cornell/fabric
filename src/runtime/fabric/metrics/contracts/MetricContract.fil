@@ -85,8 +85,10 @@ public class MetricContract extends Contract {
    */
   /*@Override*/
   protected EnforcementPolicy getNewPolicy(StatsMap weakStats) {
-    return this.metric.thresholdPolicy(this.rate, this.base, weakStats,
-        this.$getStore());
+    // Being deprecated.
+    return null;
+    //return this.metric.thresholdPolicy(this.rate, this.base, weakStats,
+    //    this.$getStore());
   }
 
   /*@Override*/

@@ -6,16 +6,16 @@ import fabric.util.LinkedHashMap;
 import fabric.util.Map;
 
 import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.Contract;
-import fabric.metrics.contracts.enforcement.DirectPolicy;
-import fabric.metrics.contracts.enforcement.EnforcementPolicy;
-import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.MetricTreaty;
+import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
+import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
+import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
 
 /**
  * A {@link DerivedMetric} for the scaled value of a given metric.
@@ -163,15 +163,15 @@ public class ScaledMetric extends DerivedMetric {
         // Don't do this if we want to avoid conflicts between local concurrent
         // operations on different metrics in a derived metric...
         //if (isSingleStore())
-        //    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+        //    return new DirectPolicy();
 
         // However, we don't want the infinite loop referred to below, so we
         // don't use a witness if the metric this transforms is a sampled
         // metric.
         if (term(0) instanceof SampledMetric)
-            return new DirectPolicy@s().fabric$metrics$contracts$enforcement$DirectPolicy$(this, rate, base);
+            return new DirectPolicy();
 
-        Contract witness = null;
+        MetricTreaty witness = null;
 
         long currentTime = System.currentTimeMillis();
         double baseNow = Bound.value(rate, base, currentTime);
@@ -193,8 +193,8 @@ public class ScaledMetric extends DerivedMetric {
             baseNow = -baseNow;
             rate = -rate;
         }
-        witness = m.getThresholdContract(rate, baseNow, currentTime);
-        return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(new Contract native[] { witness });
+        witness = m.getThresholdTreaty(rate, baseNow, currentTime);
+        return new WitnessPolicy(new MetricTreaty native[] { witness });
     }
 
     /*@Override*/
