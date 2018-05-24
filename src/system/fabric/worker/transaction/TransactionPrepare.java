@@ -55,7 +55,7 @@ public class TransactionPrepare {
   // time at which all prepares were finished.
   private long commitTime;
   // All longer treaties to forward to the coordinator.
-  private OidKeyHashMap<TreatySet> longerContracts;
+  private OidKeyHashMap<TreatySet> longerTreaties;
 
   public TransactionPrepare(RemoteWorker coordinator, Log txnLog,
       boolean singleStore, boolean readOnly, Collection<Store> stores,
@@ -73,7 +73,7 @@ public class TransactionPrepare {
       this.outstandingWorkers.put(worker, false);
     }
     this.commitTime = 0;
-    this.longerContracts = new OidKeyHashMap<>();
+    this.longerTreaties = new OidKeyHashMap<>();
     if (TransactionManager.pendingPrepares.putIfAbsent(txnLog.tid.topTid,
         this) != null) {
       // This shouldn't be possible, somehow we're trying to prepare an already
@@ -116,13 +116,13 @@ public class TransactionPrepare {
     outstandingStores.remove(s);
     respondedStores.add(s);
     commitTime = Math.max(commitTime, m.time);
-    for (Store store : m.longerContracts.storeSet()) {
-      for (LongKeyMap.Entry<TreatySet> entry : m.longerContracts.get(store)
+    for (Store store : m.longerTreaties.storeSet()) {
+      for (LongKeyMap.Entry<TreatySet> entry : m.longerTreaties.get(store)
           .entrySet()) {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
         store.readFromCache(onum).setTreaties(treaties);
-        this.longerContracts.put(store, onum, treaties);
+        this.longerTreaties.put(store, onum, treaties);
       }
     }
     cleanUp();
@@ -148,9 +148,9 @@ public class TransactionPrepare {
         "{0} failed to prepare at {1}: {2}", new Object[] { txnLog, s, m });
     outstandingStores.remove(s);
     respondedStores.add(s);
-    this.longerContracts.putAll(m.longerContracts);
-    for (Store store : m.longerContracts.storeSet()) {
-      for (LongKeyMap.Entry<TreatySet> entry : m.longerContracts.get(store)
+    this.longerTreaties.putAll(m.longerTreaties);
+    for (Store store : m.longerTreaties.storeSet()) {
+      for (LongKeyMap.Entry<TreatySet> entry : m.longerTreaties.get(store)
           .entrySet()) {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
@@ -208,9 +208,9 @@ public class TransactionPrepare {
     outstandingWorkers.remove(w);
     respondedWorkers.add(w);
     commitTime = Math.max(commitTime, m.time);
-    this.longerContracts.putAll(m.longerContracts);
-    for (Store store : m.longerContracts.storeSet()) {
-      for (LongKeyMap.Entry<TreatySet> entry : m.longerContracts.get(store)
+    this.longerTreaties.putAll(m.longerTreaties);
+    for (Store store : m.longerTreaties.storeSet()) {
+      for (LongKeyMap.Entry<TreatySet> entry : m.longerTreaties.get(store)
           .entrySet()) {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
@@ -238,9 +238,9 @@ public class TransactionPrepare {
         "{0} failed to prepare at {1}: {2}", new Object[] { txnLog, w, m });
     outstandingWorkers.remove(w);
     respondedWorkers.add(w);
-    this.longerContracts.putAll(m.longerContracts);
-    for (Store store : m.longerContracts.storeSet()) {
-      for (LongKeyMap.Entry<TreatySet> entry : m.longerContracts.get(store)
+    this.longerTreaties.putAll(m.longerTreaties);
+    for (Store store : m.longerTreaties.storeSet()) {
+      for (LongKeyMap.Entry<TreatySet> entry : m.longerTreaties.get(store)
           .entrySet()) {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
@@ -370,7 +370,7 @@ public class TransactionPrepare {
   }
 
   /**
-   * Initiate an abort due to contract timeout.
+   * Initiate an abort due to treaty timeout.
    */
   public synchronized void abortForTimeout() {
     if (currentStatus != Status.ABORTING) {
@@ -455,9 +455,9 @@ public class TransactionPrepare {
   }
 
   /**
-   * @return the longerContracts
+   * @return the longerTreaties
    */
-  public synchronized OidKeyHashMap<TreatySet> getLongerContracts() {
-    return longerContracts;
+  public synchronized OidKeyHashMap<TreatySet> getLongerTreaties() {
+    return longerTreaties;
   }
 }

@@ -246,7 +246,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       }
       client.node.notifyWorkerPrepareSuccess(msg.tid,
           tm.getCurrentLog().getCommitTime(),
-          tm.getCurrentLog().getLongerContracts());
+          tm.getCurrentLog().getLongerTreaties());
     } catch (TransactionPrepareFailedException e) {
       client.node.notifyWorkerPrepareFailed(msg.tid, e);
     }

@@ -33,7 +33,6 @@ import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
-import fabric.metrics.contracts.Contract;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
@@ -43,6 +42,7 @@ import fabric.worker.Store;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
@@ -469,7 +469,7 @@ public final class Log {
 
     if (store.isLocalStore()) {
       for (_Impl obj : localStoreWrites) {
-        if (!(obj instanceof Contract) || !extendedTreaties.containsKey(obj)) {
+        if (!extendedTreaties.containsKey(obj)) {
           result.put(obj.$getOnum(), obj);
         }
       }
@@ -480,8 +480,7 @@ public final class Log {
     } else {
       for (_Impl obj : writes.values()) {
         if (obj.$getStore() == store && obj.$isOwned
-            && !((obj instanceof Contract)
-                && extendedTreaties.containsKey(obj))) {
+            && !extendedTreaties.containsKey(obj)) {
           result.put(obj.$getOnum(), obj);
         }
       }
@@ -686,7 +685,7 @@ public final class Log {
 
   /**
    * Resolve unobserved subjects, either before attempting to commit at the top
-   * level or before using a {@link Contract}.
+   * level or before using a {@link MetricTreaty}.
    */
   public void resolveObservations() {
     // Skip if there's nothing to handle or if this was called in the middle of
@@ -979,9 +978,8 @@ public final class Log {
         obj.$writer = null;
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
-        // Don't increment the version if it's an extended metric contract
-        if (!((obj instanceof Contract)
-            && (extendedTreaties.containsKey(obj)))) {
+        // Don't increment the version if it's only extending treaties
+        if (!extendedTreaties.containsKey(obj)) {
           obj.$version++;
           obj.$readMapEntry.incrementVersionAndUpdateTreaties(obj.$treaties);
         } else {
@@ -1331,8 +1329,8 @@ public final class Log {
     }
   }
 
-  public OidKeyHashMap<TreatySet> getLongerContracts() {
-    if (prepare != null) return prepare.getLongerContracts();
+  public OidKeyHashMap<TreatySet> getLongerTreaties() {
+    if (prepare != null) return prepare.getLongerTreaties();
     return new OidKeyHashMap<>();
   }
 

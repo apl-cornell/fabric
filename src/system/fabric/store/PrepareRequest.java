@@ -68,7 +68,7 @@ public final class PrepareRequest {
      *          a map from onums to updated copies of objects for which there
      *          have been version conflicts so far, to be added to if this item
      *          has a version conflict.
-     * @param longerContracts
+     * @param longerTreaties
      *          a map from onums to updated expiries of objects for which the
      *          expiration on the database is longer for the same version number
      *          than the value seen by the worker.
@@ -78,11 +78,11 @@ public final class PrepareRequest {
      */
     public void prepareOrCheck(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<TreatySet> longerContracts,
+        OidKeyHashMap<TreatySet> longerTreaties,
         List<TransactionPrepareFailedException> failures, long tid) {
       if (versionConflicts.isEmpty() && failures.isEmpty()) {
         try {
-          prepare(database, worker, versionConflicts, longerContracts);
+          prepare(database, worker, versionConflicts, longerTreaties);
           // As soon as things have gone wrong, abort and release the locks.
           if (!versionConflicts.isEmpty()) database.abortPrepare(tid, worker);
         } catch (TransactionPrepareFailedException e) {
@@ -93,17 +93,17 @@ public final class PrepareRequest {
       }
       RemoteStore thisStore = Worker.getWorker().getStore(database.getName());
       if ((!versionConflicts.isEmpty() || !failures.isEmpty())
-          && !longerContracts.containsKey(thisStore, getOnum())
+          && !longerTreaties.containsKey(thisStore, getOnum())
           && !versionConflicts.containsKey(thisStore, getOnum())) {
         // We're already doomed, so don't lock things, just check for more
-        // conflicts and contracts
+        // conflicts and treaties.
         SerializedObject value = database.read(getOnum());
         if (value != null) {
           if (value.getVersion() != getVersion()) {
             versionConflicts.put(thisStore, getOnum(), value);
           } else if (TreatySet.checkExtension(getTreaties(),
               value.getTreaties())) {
-            longerContracts.put(thisStore, getOnum(), value.getTreaties());
+            longerTreaties.put(thisStore, getOnum(), value.getTreaties());
           }
         }
       }
@@ -120,14 +120,14 @@ public final class PrepareRequest {
      *          a map from onums to updated copies of objects for which there
      *          have been version conflicts so far, to be added to if this item
      *          has a version conflict.
-     * @param longerContracts
+     * @param longerTreaties
      *          a map from onums to updated expiries of objects for which the
      *          expiration on the database is longer for the same version number
      *          than the value seen by the worker.
      */
     public abstract void prepare(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<TreatySet> longerContracts)
+        OidKeyHashMap<TreatySet> longerTreaties)
         throws TransactionPrepareFailedException;
 
     /**
@@ -182,10 +182,10 @@ public final class PrepareRequest {
     @Override
     public void prepare(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<TreatySet> longerContracts)
+        OidKeyHashMap<TreatySet> longerTreaties)
         throws TransactionPrepareFailedException {
       database.prepareRead(tid, worker, onum, version, treaties,
-          versionConflicts, longerContracts);
+          versionConflicts, longerTreaties);
     }
 
     @Override
@@ -222,10 +222,10 @@ public final class PrepareRequest {
     @Override
     public void prepare(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<TreatySet> longerContracts)
+        OidKeyHashMap<TreatySet> longerTreaties)
         throws TransactionPrepareFailedException {
       database.prepareExtension(tid, worker, extension, versionConflicts,
-          longerContracts);
+          longerTreaties);
     }
 
     @Override
@@ -262,10 +262,10 @@ public final class PrepareRequest {
     @Override
     public void prepare(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<TreatySet> longerContracts)
+        OidKeyHashMap<TreatySet> longerTreaties)
         throws TransactionPrepareFailedException {
-      database.prepareUpdate(tid, worker, val, versionConflicts,
-          longerContracts, WRITE);
+      database.prepareUpdate(tid, worker, val, versionConflicts, longerTreaties,
+          WRITE);
     }
 
     @Override
@@ -302,10 +302,10 @@ public final class PrepareRequest {
     @Override
     public void prepare(ObjectDB database, Principal worker,
         OidKeyHashMap<SerializedObject> versionConflicts,
-        OidKeyHashMap<TreatySet> longerContracts)
+        OidKeyHashMap<TreatySet> longerTreaties)
         throws TransactionPrepareFailedException {
-      database.prepareUpdate(tid, worker, val, versionConflicts,
-          longerContracts, CREATE);
+      database.prepareUpdate(tid, worker, val, versionConflicts, longerTreaties,
+          CREATE);
     }
 
     @Override
@@ -376,12 +376,12 @@ public final class PrepareRequest {
 
   /**
    * Run the prepare.
-   * @return a set of longer contracts to notify the worker about.
+   * @return a set of longer treaties to notify the worker about.
    */
   public OidKeyHashMap<TreatySet> runPrepare(TransactionManager tm,
       ObjectDB database, Principal worker)
       throws TransactionPrepareFailedException {
-    OidKeyHashMap<TreatySet> longerContracts = new OidKeyHashMap<>();
+    OidKeyHashMap<TreatySet> longerTreaties = new OidKeyHashMap<>();
 
     // First, check read and write permissions. We do this before we attempt to
     // do the actual prepare because we want to run the permissions check in a
@@ -425,7 +425,7 @@ public final class PrepareRequest {
 
       // Run it.
       for (ItemPrepare p : prepares) {
-        p.prepareOrCheck(database, worker, versionConflicts, longerContracts,
+        p.prepareOrCheck(database, worker, versionConflicts, longerTreaties,
             failures, tid);
       }
 
@@ -433,7 +433,7 @@ public final class PrepareRequest {
         TransactionPrepareFailedException fail =
             new TransactionPrepareFailedException(failures);
         fail.versionConflicts.putAll(versionConflicts);
-        fail.longerContracts.putAll(longerContracts);
+        fail.longerTreaties.putAll(longerTreaties);
         throw fail;
       }
 
@@ -453,6 +453,6 @@ public final class PrepareRequest {
       throw e;
     }
 
-    return longerContracts;
+    return longerTreaties;
   }
 }

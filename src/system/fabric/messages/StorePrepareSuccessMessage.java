@@ -25,17 +25,17 @@ public class StorePrepareSuccessMessage extends AsyncMessage {
   public final long tid;
   public final long time;
   // Map from onum to new, longer treaties.
-  public final OidKeyHashMap<TreatySet> longerContracts;
+  public final OidKeyHashMap<TreatySet> longerTreaties;
 
   /**
    * Used to prepare transactions at remote workers.
    */
   public StorePrepareSuccessMessage(long tid, long time,
-      OidKeyHashMap<TreatySet> longerContracts) {
+      OidKeyHashMap<TreatySet> longerTreaties) {
     super(MessageType.STORE_PREPARE_SUCCESS);
     this.tid = tid;
     this.time = time;
-    this.longerContracts = longerContracts;
+    this.longerTreaties = longerTreaties;
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -60,12 +60,12 @@ public class StorePrepareSuccessMessage extends AsyncMessage {
     // Serialize time.
     out.writeLong(time);
 
-    // Serialize longer contracts.
-    out.writeInt(longerContracts.storeSet().size());
-    for (Store s : longerContracts.storeSet()) {
+    // Serialize longer treaties.
+    out.writeInt(longerTreaties.storeSet().size());
+    for (Store s : longerTreaties.storeSet()) {
       out.writeUTF(s.name());
-      out.writeInt(longerContracts.get(s).size());
-      for (LongKeyMap.Entry<TreatySet> entry : longerContracts.get(s)
+      out.writeInt(longerTreaties.get(s).size());
+      for (LongKeyMap.Entry<TreatySet> entry : longerTreaties.get(s)
           .entrySet()) {
         out.writeLong(entry.getKey());
         entry.getValue().write(out);
@@ -79,13 +79,13 @@ public class StorePrepareSuccessMessage extends AsyncMessage {
     this.tid = in.readLong();
     this.time = in.readLong();
     int size = in.readInt();
-    this.longerContracts = new OidKeyHashMap<>();
+    this.longerTreaties = new OidKeyHashMap<>();
     for (int i = 0; i < size; i++) {
       Store s = Worker.getWorker().getStore(in.readUTF());
       int size2 = in.readInt();
       for (int j = 0; j < size2; j++) {
         long onum = in.readLong();
-        this.longerContracts.put(s, onum, TreatySet.read(in));
+        this.longerTreaties.put(s, onum, TreatySet.read(in));
       }
     }
   }

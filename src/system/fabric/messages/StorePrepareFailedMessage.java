@@ -31,7 +31,7 @@ public class StorePrepareFailedMessage extends AsyncMessage {
   public final OidKeyHashMap<SerializedObject> conflicts;
 
   // Map from oid to new, longer treaties
-  public final OidKeyHashMap<TreatySet> longerContracts;
+  public final OidKeyHashMap<TreatySet> longerTreaties;
 
   public final List<String> messages;
 
@@ -43,7 +43,7 @@ public class StorePrepareFailedMessage extends AsyncMessage {
     super(MessageType.STORE_PREPARE_FAILED);
     this.tid = tid;
     this.conflicts = e.versionConflicts;
-    this.longerContracts = e.longerContracts;
+    this.longerTreaties = e.longerTreaties;
     this.messages = e.messages;
   }
 
@@ -77,12 +77,12 @@ public class StorePrepareFailedMessage extends AsyncMessage {
       }
     }
 
-    // Serialize longer contracts.
-    out.writeInt(longerContracts.storeSet().size());
-    for (Store s : longerContracts.storeSet()) {
+    // Serialize longer treaties.
+    out.writeInt(longerTreaties.storeSet().size());
+    for (Store s : longerTreaties.storeSet()) {
       out.writeUTF(s.name());
-      out.writeInt(longerContracts.get(s).size());
-      for (LongKeyMap.Entry<TreatySet> entry : longerContracts.get(s)
+      out.writeInt(longerTreaties.get(s).size());
+      for (LongKeyMap.Entry<TreatySet> entry : longerTreaties.get(s)
           .entrySet()) {
         out.writeLong(entry.getKey());
         entry.getValue().write(out);
@@ -111,14 +111,14 @@ public class StorePrepareFailedMessage extends AsyncMessage {
       }
     }
 
-    this.longerContracts = new OidKeyHashMap<>();
+    this.longerTreaties = new OidKeyHashMap<>();
     size = in.readInt();
     for (int i = 0; i < size; i++) {
       Store s = Worker.getWorker().getStore(in.readUTF());
       int size2 = in.readInt();
       for (int j = 0; j < size2; j++) {
         long onum = in.readLong();
-        this.longerContracts.put(s, onum, TreatySet.read(in));
+        this.longerTreaties.put(s, onum, TreatySet.read(in));
       }
     }
 
