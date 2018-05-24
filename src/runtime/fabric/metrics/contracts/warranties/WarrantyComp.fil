@@ -3,7 +3,6 @@ package fabric.metrics.contracts.warranties;
 import fabric.util.ArrayList;
 
 import fabric.metrics.Metric;
-import fabric.metrics.contracts.Contract;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
@@ -13,6 +12,7 @@ import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.WarrantyValue;
 import fabric.worker.metrics.treaties.MetricTreaty;
+import fabric.worker.metrics.treaties.TreatyRef;
 import fabric.worker.transaction.TransactionManager;
 
 import java.util.logging.Level;
@@ -22,10 +22,10 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.Pair;
 
 /**
- * A computation that uses {@link Contract}s to cache and reuse results.
+ * A computation that uses {@link MetricTreaty}s to cache and reuse results.
  * <p>
- * Acts as an {@link Observer} of the currently associated {@link Contract}.
- * This helps to ensure that the {@link Contract} implying the currently cached
+ * Acts as an {@link Observer} of the currently associated {@link MetricTreaty}.
+ * This helps to ensure that the {@link MetricTreaty} implying the currently cached
  * result is correct doesn't get deactivated prematurely by the API
  * implementation.
  */
@@ -35,7 +35,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   protected /*T*/ Object curVal;
 
   /** The currently cached result. */
-  protected Contract curContract;
+  protected TreatyRef curTreaty;
 
   // TODO: Consider keeping a cache of per-store proxies?
   /** The set of proxy computations for this computation. */
@@ -56,7 +56,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   protected final boolean proactive;
 
   /**
-   * Create a new updated result paired with a contract that would enforce it
+   * Create a new updated result paired with a treaty that would enforce it
    * after this call.
    *
    * @param time
@@ -70,7 +70,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
    * @param time
    *            the current time we're applying this computation at
    * @return A {@link WarrantyValue} which holds the return value and the
-   * contract associated with it (guaranteed active when returned) that asserts
+   * treaty associated with it (guaranteed active when returned) that asserts
    * that the return value is consistent.
    */
   /*@Override*/
@@ -85,9 +85,9 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
    *            the current time we're applying this computation at
    * @param autoRetry
    *            flag indicating whether the computation should automatically
-   *            retry if the contract goes stale before returning.
+   *            retry if the treaty goes stale before returning.
    * @return A {@link WarrantyValue} which holds the return value and the
-   * contract associated with it (guaranteed active when returned) that asserts
+   * treaty associated with it (guaranteed active when returned) that asserts
    * that the return value is consistent.
    */
   /*@Override*/
@@ -108,12 +108,12 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
           WarrantyComp proxy = (WarrantyComp) iter.next();
           if (!static_dropOldValue(proxy)) {
             Object newVal = proxy.curVal;
-            Contract newContract = proxy.curContract;
+            TreatyRef newTreaty = proxy.curTreaty;
             //Logging.METRICS_LOGGER.log(Level.INFO, "USING RESULT FROM " + proxy + " IN " + Thread.currentThread());
             // Try the value.  If we're handling updates, it's possible the proxy
             // value is not good, despite appearances, so don't consider it done
             // unless the result "sticks"
-            static_setNewValue(tmp, newVal, newContract);
+            static_setNewValue(tmp, newVal, newTreaty);
             if (!static_dropOldValue(tmp)) {
               break;
             }
@@ -121,48 +121,50 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
         }
       }
 
-      if (tmp.curContract == null) {
+      if (tmp.curTreaty == null) {
         Logging.METRICS_LOGGER.log(Level.INFO, "GENERATING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         // Nobody had the result memoized, do it the old fashioned way.
         WarrantyValue computed = tmp.updatedVal(System.currentTimeMillis());
 
-        // If newVal's contract is null, tmp indicates that the programmer
+        // If newVal's treaty is null, tmp indicates that the programmer
         // doesn't want to memoize the result with a treaty.
-        if (computed.contract == null) {
+        if (computed.treaty == null) {
           TransactionManager.getInstance().stats.addMsg("Memoized: false");
           return computed;
         }
 
-        // Otherwise, updatedVal doesn't return the contract refreshed, so
+        // Otherwise, updatedVal doesn't return the treaty refreshed, so
         // refresh it now.
         Logging.METRICS_LOGGER.log(Level.INFO, "ACTIVATING RESULT FOR " + tmp + " IN " + Thread.currentThread());
-        String contractStoreName = computed.contract.$getStore().name();
-        if (!TransactionManager.getInstance().inTxn() &&
-            !(contractStoreName.equals(Worker.getWorkerName()))) {
-          RemoteWorker w = Worker.getWorker().getWorker(contractStoreName);
-          computed.contract.refresh_remote@w(null, false, computed.weakStats);
-        } else {
-          computed.contract.refresh(false, computed.weakStats);
-        }
+        // TODO: figure out remote call functionality for this.
+        //String treatyStoreName = computed.treaty.$getStore().name();
+        //if (!TransactionManager.getInstance().inTxn() &&
+        //    !(treatyStoreName.equals(Worker.getWorkerName()))) {
+        //  RemoteWorker w = Worker.getWorker().getWorker(treatyStoreName);
+        //  computed.treaty.refresh_remote@w(null, false, computed.weakStats);
+        //} else {
+        //  computed.treaty.refresh(false, computed.weakStats);
+        //}
+        TreatyRef activatedTreaty = new TreatyRef((MetricTreaty) computed.treaty.get().update(false, computed.weakStats).first);
 
         Logging.METRICS_LOGGER.log(Level.INFO, "SETTING RESULT FOR " + tmp + " IN " + Thread.currentThread());
-        static_setNewValue(tmp, computed.value, computed.contract);
+        static_setNewValue(tmp, computed.value, activatedTreaty);
         if (tmp.proactive) {
           for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
             // Update proxies to new value
             WarrantyComp proxy = (WarrantyComp) iter.next();
-            static_setNewValue(proxy, computed.value, computed.contract);
+            static_setNewValue(proxy, computed.value, activatedTreaty);
           }
         }
       }
 
       // Only bother to retry if we're supposed to and we don't have a valid
-      // contract.
+      // treaty.
       loop = autoRetry && static_dropOldValue(tmp);
       if (!loop)
         TransactionManager.getInstance().stats.addMsg("Memoized: true");
     }
-    return WarrantyValue.newValue(tmp.curVal, tmp.curContract);
+    return WarrantyValue.newValue(tmp.curVal, tmp.curTreaty);
   }
 
   private static boolean static_dropOldValue(WarrantyComp tmp) {
@@ -178,38 +180,40 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   }
 
   private boolean dropOldValue() {
-    Contract curContract = this.curContract;
-    if (curContract != null && !curContract.valid()) {
-      curContract.removeObserver(this);
-      this.curContract = null;
+    TreatyRef curTreaty = this.curTreaty;
+    if (curTreaty != null && !curTreaty.get().valid()) {
+      curTreaty.get().removeObserver(this);
+      this.curTreaty = null;
       this.$associated = null;
     }
-    return this.curContract == null;
+    return this.curTreaty == null;
   }
 
-  private static void static_setNewValue(WarrantyComp tmp, Object newVal, Contract newContract) {
+  private static void static_setNewValue(WarrantyComp tmp, Object newVal, TreatyRef newTreaty) {
     if (TransactionManager.getInstance().inTxn()) {
-      tmp.setNewValue(newVal, newContract);
+      tmp.setNewValue(newVal, newTreaty);
     } else {
       atomic {
-        tmp.setNewValue(newVal, newContract);
+        tmp.setNewValue(newVal, newTreaty);
       }
     }
   }
 
-  private void setNewValue(Object newVal, Contract newContract) {
-    if (this.dropOldValue() && newContract != null && newContract.valid()) {
+  private void setNewValue(Object newVal, TreatyRef newTreaty) {
+    if (this.dropOldValue() && newTreaty != null && newTreaty.get().valid()) {
       this.curVal = newVal;
-      this.curContract = newContract.getProxyContract(this.$getStore());
-      this.curContract.addObserver(this);
-      this.$associated = ImmutableSet.emptySet().add(this.curContract);
+      // TODO
+      //this.curTreaty = newTreaty.get().getProxyTreaty(this.$getStore());
+      this.curTreaty = new TreatyRef(this.curTreaty.get().addObserver(this));
+      // TODO
+      //this.$associated = ImmutableSet.emptySet().add(this.curTreaty);
     }
   }
 
   /*@Override*/
   public ImmutableMetricsVector/*<SampledMetric>*/ getLeafSubjects() {
-    if (curContract != null)
-      return curContract.getLeafSubjects();
+    if (curTreaty != null)
+      return curTreaty.get().getLeafSubjects();
     return ImmutableMetricsVector.emptyVector();
   }
 

@@ -3,6 +3,7 @@ package fabric.worker.metrics.treaties;
 import fabric.common.FastSerializable;
 import fabric.common.util.Pair;
 import fabric.metrics.util.Observer;
+import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
 
@@ -82,4 +83,9 @@ public interface Treaty<This extends Treaty<This>> extends FastSerializable {
    * Does this imply the other treaty?
    */
   public boolean implies(This other);
+
+  /**
+   * Get the associated leaf subjects in the tree.
+   */
+  public ImmutableMetricsVector getLeafSubjects();
 }

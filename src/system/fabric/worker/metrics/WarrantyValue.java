@@ -7,14 +7,15 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 
 import fabric.lang.WrappedJavaInlineable;
-import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.warranties.WarrantyComp;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.treaties.MetricTreaty;
+import fabric.worker.metrics.treaties.TreatyRef;
 
 /**
  * A utility class for tracking {@link WarrantyComp} results and associated
- * {@link Contract}s implying their validity.
+ * {@link MetricTreaty}s implying their validity.
  */
 public class WarrantyValue implements Serializable {
 
@@ -22,12 +23,12 @@ public class WarrantyValue implements Serializable {
   public fabric.lang.Object value;
 
   /**
-   * A {@link Contract} which, when valid, implies the value is current.
+   * A {@link TreatyRef} which, when valid, implies the value is current.
    */
-  public Contract contract;
+  public TreatyRef treaty;
 
   /**
-   * A set of weak statistics to use if activating the contract for the first
+   * A set of weak statistics to use if activating the treaty for the first
    * time.
    */
   public StatsMap weakStats;
@@ -35,29 +36,50 @@ public class WarrantyValue implements Serializable {
   /**
    * @param value
    *        the return value we're bundling in this {@link WarrantyValue}
-   * @param contract
-   *        the value's associated {@link Contract}
+   * @param treaty
+   *        the value's associated {@link MetricTreaty}
    */
-  public WarrantyValue(fabric.lang.Object value, Contract contract,
+  public WarrantyValue(fabric.lang.Object value, TreatyRef treaty,
       StatsMap weakStats) {
     this.value = value;
-    this.contract = contract;
+    this.treaty = treaty;
     this.weakStats = weakStats;
   }
 
-  public static WarrantyValue newValue(fabric.lang.Object value,
-      Contract contract) {
-    return new WarrantyValue(value, contract, StatsMap.emptyStats());
+  /**
+   * @param value
+   *        the return value we're bundling in this {@link WarrantyValue}
+   * @param treaty
+   *        the value's associated {@link MetricTreaty}
+   */
+  public WarrantyValue(fabric.lang.Object value, MetricTreaty treaty,
+      StatsMap weakStats) {
+    this(value, new TreatyRef(treaty), weakStats);
   }
 
   public static WarrantyValue newValue(fabric.lang.Object value,
-      Contract contract, StatsMap weakStats) {
-    return new WarrantyValue(value, contract, weakStats);
+      TreatyRef treaty) {
+    return new WarrantyValue(value, treaty, StatsMap.emptyStats());
+  }
+
+  public static WarrantyValue newValue(fabric.lang.Object value,
+      MetricTreaty treaty) {
+    return new WarrantyValue(value, treaty, StatsMap.emptyStats());
+  }
+
+  public static WarrantyValue newValue(fabric.lang.Object value,
+      TreatyRef treaty, StatsMap weakStats) {
+    return new WarrantyValue(value, treaty, weakStats);
+  }
+
+  public static WarrantyValue newValue(fabric.lang.Object value,
+      MetricTreaty treaty, StatsMap weakStats) {
+    return new WarrantyValue(value, treaty, weakStats);
   }
 
   @Override
   public String toString() {
-    return "WarrantyVal(" + value + ", " + contract + ")";
+    return "WarrantyVal(" + value + ", " + treaty + ")";
   }
 
   /* Serializable definitions, need to special case fabric references. */
@@ -76,7 +98,7 @@ public class WarrantyValue implements Serializable {
     } else {
       out.writeBoolean(false);
     }
-    if (contract != null) {
+    if (treaty != null) {
       out.writeBoolean(true);
       out.writeUTF(value.$getStore().name());
       out.writeLong(value.$getOnum());
@@ -97,15 +119,14 @@ public class WarrantyValue implements Serializable {
       }
     }
     if (in.readBoolean()) {
-      Store s = Worker.getWorker().getStore(in.readUTF());
-      contract = new fabric.metrics.contracts.Contract._Proxy(s, in.readLong());
+      treaty = new TreatyRef(in);
     }
     weakStats = new StatsMap(in);
   }
 
   private void readObjectNoData() throws ObjectStreamException {
     value = null;
-    contract = null;
+    treaty = null;
     weakStats = StatsMap.emptyStats();
   }
 }

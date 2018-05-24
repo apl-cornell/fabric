@@ -5,8 +5,11 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.util.Pair;
+import fabric.metrics.DerivedMetric;
 import fabric.metrics.Metric;
+import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Observer;
+import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
@@ -279,5 +282,15 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     return Long.toString(id) + "(" + activated + "): " + getMetric().toString()
         + " " + statement + " until " + expiry + " " + policy
         + " and observed by " + observers;
+  }
+
+  @Override
+  public ImmutableMetricsVector getLeafSubjects() {
+    if (getMetric() instanceof DerivedMetric) {
+      return ((DerivedMetric) getMetric()).getLeafSubjects();
+    } else if (getMetric() instanceof SampledMetric) {
+      return ImmutableMetricsVector.createVector(new Metric[] { getMetric() });
+    }
+    throw new InternalError("Unknown metric type!");
   }
 }
