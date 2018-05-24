@@ -50,7 +50,6 @@ import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
 import fabric.messages.CommitTransactionMessage;
-import fabric.messages.ContractExtensionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
 import fabric.messages.MakePrincipalMessage;
@@ -58,6 +57,7 @@ import fabric.messages.MessageToStoreHandler;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
+import fabric.messages.TreatyExtensionMessage;
 import fabric.messages.UnsubscribeMessage;
 import fabric.messages.WaitForUpdateMessage;
 import fabric.store.db.ObjectDB;
@@ -247,7 +247,7 @@ class Store extends MessageToStoreHandler {
         nameOf(client.principal), Long.toHexString(msg.tid));
 
     try {
-      OidKeyHashMap<TreatySet> longerContracts =
+      OidKeyHashMap<TreatySet> longerTreaties =
           prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
               msg.serializedWrites, msg.reads, msg.extensions,
               msg.extensionsTriggered, msg.delayedExtensions);
@@ -258,7 +258,7 @@ class Store extends MessageToStoreHandler {
         tm.commitTransaction(client, msg.tid);
       }
       client.node.notifyStorePrepareSuccess(msg.tid, prepareTime,
-          longerContracts);
+          longerTreaties);
     } catch (TransactionPrepareFailedException e) {
       client.node.notifyStorePrepareFailed(msg.tid, e);
     } catch (TransactionCommitFailedException e) {
@@ -378,14 +378,13 @@ class Store extends MessageToStoreHandler {
   }
 
   /**
-   * Processes the contract extension request.
+   * Processes the treaty extension request.
    */
   @Override
   public void handle(RemoteIdentity<RemoteWorker> client,
-      final ContractExtensionMessage message) {
+      final TreatyExtensionMessage message) {
     STORE_REQUEST_LOGGER.log(Level.FINER,
-        "Handling Contract Extension Message from {0}",
-        nameOf(client.principal));
+        "Handling Treaty Extension Message from {0}", nameOf(client.principal));
 
     for (fabric.worker.RemoteStore s : message.updates.keySet()) {
       for (SerializedObject obj : message.updates.get(s)) {
@@ -397,7 +396,7 @@ class Store extends MessageToStoreHandler {
   }
 
   /**
-   * Processes the contract extension request.
+   * Processes the treaty extension request.
    */
   @Override
   public WaitForUpdateMessage.Response handle(

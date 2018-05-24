@@ -75,8 +75,8 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
       throws AccessException;
 
   @Override
-  public abstract void handle(
-      RemoteIdentity<RemoteWorker> client, ContractExtensionMessage msg);
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      TreatyExtensionMessage msg);
 
   @Override
   public abstract void handle(RemoteIdentity<RemoteWorker> client,

@@ -104,10 +104,10 @@ public abstract class AsyncMessage {
    * for efficient encoding and decoding of the type of a message.
    */
   protected static enum MessageType {
-    CONTRACT_EXTENSION {
+    TREATY_EXTENSION {
       @Override
-      ContractExtensionMessage parse(DataInput in) throws IOException {
-        return new ContractExtensionMessage(in);
+      TreatyExtensionMessage parse(DataInput in) throws IOException {
+        return new TreatyExtensionMessage(in);
       }
     },
     OBJECT_UPDATE {

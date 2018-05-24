@@ -134,7 +134,7 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
 
   @Override
   public void handle(RemoteIdentity<RemoteWorker> client,
-      ContractExtensionMessage msg) throws ProtocolError {
+      TreatyExtensionMessage msg) throws ProtocolError {
     throw error(msg);
   }
 

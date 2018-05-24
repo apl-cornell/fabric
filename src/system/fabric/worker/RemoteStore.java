@@ -38,7 +38,6 @@ import fabric.lang.security.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
 import fabric.messages.CommitTransactionMessage;
-import fabric.messages.ContractExtensionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
 import fabric.messages.MakePrincipalMessage;
@@ -46,6 +45,7 @@ import fabric.messages.Message.NoException;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
+import fabric.messages.TreatyExtensionMessage;
 import fabric.messages.UnsubscribeMessage;
 import fabric.messages.WaitForUpdateMessage;
 import fabric.net.RemoteNode;
@@ -374,7 +374,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   public void sendExtensions(final LongSet extensions,
       final java.util.Map<RemoteStore, Collection<SerializedObject>> updates) {
     sendAsync(Worker.getWorker().authToStore,
-        new ContractExtensionMessage(extensions, updates));
+        new TreatyExtensionMessage(extensions, updates));
   }
 
   @Override

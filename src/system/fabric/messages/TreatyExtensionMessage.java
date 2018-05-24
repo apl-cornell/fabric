@@ -20,10 +20,10 @@ import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
 /**
- * A <code>ContractExtensionMessage</code> represents a request to
- * refresh a contract's expiry at the store.
+ * A <code>TreatyExtensionMessage</code> represents a request to
+ * refresh a treaty's expiry at the store.
  */
-public class ContractExtensionMessage extends AsyncMessage {
+public class TreatyExtensionMessage extends AsyncMessage {
   /* message contents */
 
   /**
@@ -37,11 +37,11 @@ public class ContractExtensionMessage extends AsyncMessage {
   public final Map<RemoteStore, Collection<SerializedObject>> updates;
 
   /**
-   * Used to refresh expiries of contracts.
+   * Used to refresh expiries of treaties.
    */
-  public ContractExtensionMessage(LongSet extensions,
+  public TreatyExtensionMessage(LongSet extensions,
       Map<RemoteStore, Collection<SerializedObject>> updates) {
-    super(MessageType.CONTRACT_EXTENSION);
+    super(MessageType.TREATY_EXTENSION);
     this.extensions = extensions;
     this.updates = updates;
   }
@@ -71,8 +71,8 @@ public class ContractExtensionMessage extends AsyncMessage {
   }
 
   /* readMessage */
-  protected ContractExtensionMessage(DataInput in) throws IOException {
-    super(MessageType.CONTRACT_EXTENSION);
+  protected TreatyExtensionMessage(DataInput in) throws IOException {
+    super(MessageType.TREATY_EXTENSION);
     int size = in.readInt();
     extensions = new LongHashSet(size);
     for (int i = 0; i < size; i++) {

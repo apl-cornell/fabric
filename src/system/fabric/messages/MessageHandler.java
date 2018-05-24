@@ -31,7 +31,7 @@ public interface MessageHandler {
       UnsubscribeMessage msg) throws ProtocolError;
 
   public void handle(RemoteIdentity<RemoteWorker> client,
-      ContractExtensionMessage msg) throws ProtocolError;
+      TreatyExtensionMessage msg) throws ProtocolError;
 
   public void handle(RemoteIdentity<RemoteWorker> client,
       PrepareTransactionMessage msg) throws ProtocolError;
