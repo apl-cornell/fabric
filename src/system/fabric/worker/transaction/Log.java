@@ -122,7 +122,7 @@ public final class Log {
    * don't count here. To keep them from being pinned, objects on local store
    * are not tracked here.
    */
-  protected final List<_Impl> creates;
+  protected final OidKeyHashMap<_Impl> creates;
 
   /**
    * Tracks objects created on local store. See <code>creates</code>.
@@ -135,7 +135,7 @@ public final class Log {
    * don't count here. To keep them from being pinned, objects on local store
    * are not tracked here.
    */
-  protected final List<_Impl> writes;
+  protected final OidKeyHashMap<_Impl> writes;
 
   /**
    * Collection of {@link Subjects} in this transaction that need to be/have
@@ -150,9 +150,9 @@ public final class Log {
   protected boolean resolving = false;
 
   /**
-   * A collection of {@link Contract}s that are extended by this transaction
+   * A collection of {@link TreatySet}s that are extended by this transaction
    */
-  protected final OidKeyHashMap<ExpiryExtension> extendedContracts;
+  protected final OidKeyHashMap<ExpiryExtension> extendedTreaties;
 
   /**
    * A collection of {@link Contract}s that are retracted by this transaction
@@ -160,8 +160,10 @@ public final class Log {
   protected final OidHashSet retractedContracts;
 
   /**
-   * A collection of {@link Contract}s that should be extended after this
-   * transaction, mapping to the objects that trigger this possible extension.
+   * A collection of {@link Oid}s that have treaties that should be extended
+   * after this transaction, mapping to the objects that trigger this possible
+   * extension.
+   * TODO: Maybe index by treaty id as well.
    */
   protected final OidKeyHashMap<Set<Oid>> delayedExtensions;
 
@@ -169,6 +171,7 @@ public final class Log {
    * A collection of Oids that trigger delayedExtensions to run after this
    * transaction. (Acts as the reverse map for delayedExtensions.) Null key used
    * for those extensions which have no trigger.
+   * TODO: Maybe specify treaty id in mapping target.
    */
   protected final OidKeyHashMap<Set<Oid>> extensionTriggers;
 
@@ -291,11 +294,11 @@ public final class Log {
     this.retrySignal = parent == null ? null : parent.retrySignal;
     this.reads = new OidKeyHashMap<>();
     this.readsReadByParent = new ArrayList<>();
-    this.creates = new ArrayList<>();
+    this.creates = new OidKeyHashMap<>();
     this.localStoreCreates = new WeakReferenceArrayList<>();
-    this.writes = new ArrayList<>();
+    this.writes = new OidKeyHashMap<>();
     this.unobservedSamples = new OidKeyHashMap<>();
-    this.extendedContracts = new OidKeyHashMap<>();
+    this.extendedTreaties = new OidKeyHashMap<>();
     this.retractedContracts = new OidHashSet();
     this.delayedExtensions = new OidKeyHashMap<>();
     this.extensionTriggers = new OidKeyHashMap<>();
@@ -381,11 +384,11 @@ public final class Log {
 
     result.addAll(reads.storeSet());
 
-    for (_Impl obj : writes) {
+    for (_Impl obj : writes.values()) {
       if (obj.$isOwned) result.add(obj.$getStore());
     }
 
-    for (_Impl obj : creates) {
+    for (_Impl obj : creates.values()) {
       if (obj.$isOwned) result.add(obj.$getStore());
     }
 
@@ -449,8 +452,10 @@ public final class Log {
           result.remove(write.$getOnum());
       } else {
         Iterable<_Impl> writesToExclude =
-            includeModified ? Collections.<_Impl> emptyList() : curLog.writes;
-        Iterable<_Impl> chain = SysUtil.chain(writesToExclude, curLog.creates);
+            includeModified ? Collections.<_Impl> emptyList()
+                : curLog.writes.values();
+        Iterable<_Impl> chain =
+            SysUtil.chain(writesToExclude, curLog.creates.values());
         for (_Impl write : chain)
           if (write.$getStore() == store) result.remove(write.$getOnum());
       }
@@ -471,7 +476,7 @@ public final class Log {
 
     if (store.isLocalStore()) {
       for (_Impl obj : localStoreWrites) {
-        if (!(obj instanceof Contract) || !extendedContracts.containsKey(obj)) {
+        if (!(obj instanceof Contract) || !extendedTreaties.containsKey(obj)) {
           result.put(obj.$getOnum(), obj);
         }
       }
@@ -480,15 +485,15 @@ public final class Log {
         result.remove(create.$getOnum());
       }
     } else {
-      for (_Impl obj : writes) {
+      for (_Impl obj : writes.values()) {
         if (obj.$getStore() == store && obj.$isOwned
             && !((obj instanceof Contract)
-                && extendedContracts.containsKey(obj))) {
+                && extendedTreaties.containsKey(obj))) {
           result.put(obj.$getOnum(), obj);
         }
       }
 
-      for (_Impl create : creates)
+      for (_Impl create : creates.values())
         if (create.$getStore() == store) result.remove(create.$getOnum());
     }
 
@@ -496,12 +501,12 @@ public final class Log {
   }
 
   Collection<ExpiryExtension> getExtensionsForStore(Store store) {
-    if (!extendedContracts.storeSet().contains(store)) {
+    if (!extendedTreaties.storeSet().contains(store)) {
       return Collections.emptyList();
     }
     List<ExpiryExtension> extensions =
-        new ArrayList<>(extendedContracts.get(store).size());
-    for (ExpiryExtension extension : extendedContracts.get(store).values()) {
+        new ArrayList<>(extendedTreaties.get(store).size());
+    for (ExpiryExtension extension : extendedTreaties.get(store).values()) {
       extensions.add(extension);
     }
     return extensions;
@@ -539,7 +544,7 @@ public final class Log {
         result.put(obj.$getOnum(), obj);
       }
     } else {
-      for (_Impl obj : creates)
+      for (_Impl obj : creates.values())
         if (obj.$getStore() == store && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
     }
@@ -611,7 +616,7 @@ public final class Log {
     Logging.log(HOTOS_LOGGER, Level.FINE,
         "aborted tid {0} ({1} stores, {2} retractions, {3} extensions, {4} delayed extensions)",
         tid, stores.size() - (stores.contains(localStore) ? 1 : 0),
-        retractedContracts.size(), extendedContracts.size(),
+        retractedContracts.size(), extendedTreaties.size(),
         delayedExtensions.size());
     // Release read locks.
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
@@ -624,7 +629,7 @@ public final class Log {
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
-    Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
+    Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
         if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
@@ -659,7 +664,7 @@ public final class Log {
       localStoreCreates.clear();
       writes.clear();
       unobservedSamples.clear();
-      extendedContracts.clear();
+      extendedTreaties.clear();
       retractedContracts.clear();
       delayedExtensions.clear();
       extensionTriggers.clear();
@@ -751,8 +756,8 @@ public final class Log {
     }
 
     // Merge writes and transfer write locks.
-    List<_Impl> parentWrites = parent.writes;
-    for (_Impl obj : writes) {
+    OidKeyHashMap<_Impl> parentWrites = parent.writes;
+    for (_Impl obj : writes.values()) {
       synchronized (obj) {
         if (obj.$history.$writeLockHolder == parent) {
           // The parent transaction already wrote to the object. Discard one
@@ -763,7 +768,7 @@ public final class Log {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
           synchronized (parentWrites) {
-            parentWrites.add(obj);
+            parentWrites.put(obj, obj);
           }
         }
         obj.$writer = null;
@@ -784,9 +789,9 @@ public final class Log {
         if (!parent.retractedContracts.contains(obs))
           parent.retractedContracts.add(obs);
       }
-      synchronized (parent.extendedContracts) {
-        if (parent.extendedContracts.containsKey(obs))
-          parent.extendedContracts.remove(obs);
+      synchronized (parent.extendedTreaties) {
+        if (parent.extendedTreaties.containsKey(obs))
+          parent.extendedTreaties.remove(obs);
       }
       synchronized (parent.delayedExtensions) {
         if (parent.markedForDelayedExtension(obs))
@@ -794,8 +799,8 @@ public final class Log {
       }
     }
 
-    for (Store s : extendedContracts.storeSet()) {
-      for (ExpiryExtension obs : extendedContracts.get(s).values()) {
+    for (Store s : extendedTreaties.storeSet()) {
+      for (ExpiryExtension obs : extendedTreaties.get(s).values()) {
         synchronized (parent.delayedExtensions) {
           if (parent.markedForDelayedExtension(new Oid(s, obs.onum)))
             parent.cancelDelayedExtension(new Oid(s, obs.onum));
@@ -804,9 +809,9 @@ public final class Log {
           if (parent.retractedContracts.contains(new Oid(s, obs.onum)))
             continue;
         }
-        synchronized (parent.extendedContracts) {
-          if (!parent.extendedContracts.containsKey(new Oid(s, obs.onum)))
-            parent.extendedContracts.put(new Oid(s, obs.onum), obs);
+        synchronized (parent.extendedTreaties) {
+          if (!parent.extendedTreaties.containsKey(new Oid(s, obs.onum)))
+            parent.extendedTreaties.put(new Oid(s, obs.onum), obs);
         }
       }
     }
@@ -818,8 +823,8 @@ public final class Log {
         synchronized (parent.retractedContracts) {
           if (parent.retractedContracts.contains(s, onum)) continue;
         }
-        synchronized (parent.extendedContracts) {
-          if (parent.extendedContracts.containsKey(s, onum)) continue;
+        synchronized (parent.extendedTreaties) {
+          if (parent.extendedTreaties.containsKey(s, onum)) continue;
         }
         synchronized (parent.delayedExtensions) {
           if (e.getValue().isEmpty()) {
@@ -859,10 +864,10 @@ public final class Log {
     }
 
     // Merge creates and transfer write locks.
-    List<_Impl> parentCreates = parent.creates;
+    OidKeyHashMap<_Impl> parentCreates = parent.creates;
     synchronized (parentCreates) {
-      for (_Impl obj : creates) {
-        parentCreates.add(obj);
+      for (_Impl obj : creates.values()) {
+        parentCreates.put(obj, obj);
         obj.$writeLockHolder = parent;
       }
     }
@@ -929,7 +934,7 @@ public final class Log {
     // XXX TRM 3/9/18: Do this before reads and writes so that nobody gets a
     // reference to the creates before we've released the writer locks on
     // creates.
-    Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
+    Iterable<_Impl> chain2 = SysUtil.chain(creates.values(), localStoreCreates);
     for (_Impl obj : chain2) {
       if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
         Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
@@ -965,7 +970,7 @@ public final class Log {
       throw new InternalError("something was read by a non-existent parent");
 
     // Release write locks and ownerships; update version numbers.
-    Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
+    Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
     for (_Impl obj : chain) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
@@ -985,7 +990,7 @@ public final class Log {
         obj.$writeLockStackTrace = null;
         // Don't increment the version if it's an extended metric contract
         if (!((obj instanceof Contract)
-            && (extendedContracts.containsKey(obj)))) {
+            && (extendedTreaties.containsKey(obj)))) {
           obj.$version++;
           obj.$readMapEntry.incrementVersionAndUpdateTreaties(obj.$treaties);
         } else {

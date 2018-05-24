@@ -924,7 +924,7 @@ public final class TransactionManager {
             HOTOS_current, commitLatency,
             stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0),
             HOTOS_current.retractedContracts.size(),
-            HOTOS_current.extendedContracts.size(),
+            HOTOS_current.extendedTreaties.size(),
             HOTOS_current.delayedExtensions.size(), acquiringLocks);
       }
     }
@@ -1106,8 +1106,8 @@ public final class TransactionManager {
       ensureOwnership(obj);
 
       // The object has been written, so it's not being extended.
-      synchronized (current.extendedContracts) {
-        current.extendedContracts.remove(obj);
+      synchronized (current.extendedTreaties) {
+        current.extendedTreaties.remove(obj);
       }
       current.cancelDelayedExtension(obj);
     } finally {
@@ -1215,8 +1215,8 @@ public final class TransactionManager {
     ExpiryExtension clobberedExtension = null;
     synchronized (obj) {
       // The object is being written, so it's not being extended.
-      synchronized (current.extendedContracts) {
-        clobberedExtension = current.extendedContracts.remove(obj);
+      synchronized (current.extendedTreaties) {
+        clobberedExtension = current.extendedTreaties.remove(obj);
       }
       current.cancelDelayedExtension(obj);
       if (obj.$writer == current
@@ -1268,8 +1268,8 @@ public final class TransactionManager {
     synchronized (obj) {
       boolean extending = TreatySet.checkExtension(oldTreaties, newTreaties);
       if (!extending) {
-        synchronized (current.extendedContracts) {
-          clobberedExtension = current.extendedContracts.remove(obj);
+        synchronized (current.extendedTreaties) {
+          clobberedExtension = current.extendedTreaties.remove(obj);
         }
         synchronized (current.retractedContracts) {
           current.retractedContracts.add(obj);
@@ -1287,13 +1287,13 @@ public final class TransactionManager {
 
       boolean alreadyWritten = false;
       synchronized (current.writes) {
-        alreadyWritten = current.writes.contains(obj);
+        alreadyWritten = current.writes.containsKey(obj);
       }
       // If this wasn't written and the treaties are extended, it's an
       // extension.
       if (!alreadyWritten && extending) {
-        synchronized (current.extendedContracts) {
-          current.extendedContracts.put(obj, new ExpiryExtension(obj));
+        synchronized (current.extendedTreaties) {
+          current.extendedTreaties.put(obj, new ExpiryExtension(obj));
         }
       }
 
@@ -1415,7 +1415,7 @@ public final class TransactionManager {
       }
     } else {
       synchronized (current.writes) {
-        current.writes.add(obj);
+        current.writes.put(obj, obj);
       }
     }
 
@@ -1467,7 +1467,7 @@ public final class TransactionManager {
         }
       } else {
         synchronized (current.creates) {
-          current.creates.add(obj);
+          current.creates.put(obj, obj);
         }
       }
     }
@@ -1523,13 +1523,13 @@ public final class TransactionManager {
     _Impl obj = (_Impl) toBeExtended.fetch();
     synchronized (obj) {
       synchronized (current.writes) {
-        if (current.writes.contains(obj)) return;
+        if (current.writes.containsKey(obj)) return;
       }
       synchronized (current.creates) {
-        if (current.creates.contains(obj)) return;
+        if (current.creates.containsKey(obj)) return;
       }
-      synchronized (current.extendedContracts) {
-        if (current.extendedContracts.containsKey(obj)) return;
+      synchronized (current.extendedTreaties) {
+        if (current.extendedTreaties.containsKey(obj)) return;
       }
       synchronized (current.delayedExtensions) {
         current.addDelayedExtension(toBeExtended, extendingObject);
@@ -1546,13 +1546,13 @@ public final class TransactionManager {
     _Impl obj = (_Impl) toBeExtended.fetch();
     synchronized (obj) {
       synchronized (current.writes) {
-        if (current.writes.contains(obj)) return;
+        if (current.writes.containsKey(obj)) return;
       }
       synchronized (current.creates) {
-        if (current.creates.contains(obj)) return;
+        if (current.creates.containsKey(obj)) return;
       }
-      synchronized (current.extendedContracts) {
-        if (current.extendedContracts.containsKey(obj)) return;
+      synchronized (current.extendedTreaties) {
+        if (current.extendedTreaties.containsKey(obj)) return;
       }
       synchronized (current.delayedExtensions) {
         current.addDelayedExtension(toBeExtended);
@@ -1862,6 +1862,6 @@ public final class TransactionManager {
    * Allow for an object to see the current pending extension for itself.
    */
   public ExpiryExtension getPendingExtension(_Impl obj) {
-    return current != null ? current.extendedContracts.get(obj) : null;
+    return current != null ? current.extendedTreaties.get(obj) : null;
   }
 }
