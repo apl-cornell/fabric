@@ -920,10 +920,9 @@ public final class TransactionManager {
           || !stores.contains(LOCAL_STORE)
               && !(stores.iterator().next() instanceof InProcessStore)) {
         Logging.log(HOTOS_LOGGER, Level.FINE,
-            "committed tid {0} (latency {1} ms, {2} stores, {3} retractions, {4} extensions, {5} delayed extensions, locking={6})",
+            "committed tid {0} (latency {1} ms, {2} stores, {3} extensions, {4} delayed extensions, locking={5})",
             HOTOS_current, commitLatency,
             stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0),
-            HOTOS_current.retractedContracts.size(),
             HOTOS_current.extendedTreaties.size(),
             HOTOS_current.delayedExtensions.size(), acquiringLocks);
       }
@@ -1270,9 +1269,6 @@ public final class TransactionManager {
       if (!extending) {
         synchronized (current.extendedTreaties) {
           clobberedExtension = current.extendedTreaties.remove(obj);
-        }
-        synchronized (current.retractedContracts) {
-          current.retractedContracts.add(obj);
         }
         current.cancelDelayedExtension(obj);
       }

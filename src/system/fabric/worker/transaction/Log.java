@@ -27,7 +27,6 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
-import fabric.common.util.OidHashSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.common.util.WeakReferenceArrayList;
@@ -153,11 +152,6 @@ public final class Log {
    * A collection of {@link TreatySet}s that are extended by this transaction
    */
   protected final OidKeyHashMap<ExpiryExtension> extendedTreaties;
-
-  /**
-   * A collection of {@link Contract}s that are retracted by this transaction
-   */
-  protected final OidHashSet retractedContracts;
 
   /**
    * A collection of {@link Oid}s that have treaties that should be extended
@@ -299,7 +293,6 @@ public final class Log {
     this.writes = new OidKeyHashMap<>();
     this.unobservedSamples = new OidKeyHashMap<>();
     this.extendedTreaties = new OidKeyHashMap<>();
-    this.retractedContracts = new OidHashSet();
     this.delayedExtensions = new OidKeyHashMap<>();
     this.extensionTriggers = new OidKeyHashMap<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
@@ -614,10 +607,9 @@ public final class Log {
     Set<Store> stores = storesToContact();
     // Note what we were trying to do before we aborted.
     Logging.log(HOTOS_LOGGER, Level.FINE,
-        "aborted tid {0} ({1} stores, {2} retractions, {3} extensions, {4} delayed extensions)",
+        "aborted tid {0} ({1} stores, {2} extensions, {3} delayed extensions)",
         tid, stores.size() - (stores.contains(localStore) ? 1 : 0),
-        retractedContracts.size(), extendedTreaties.size(),
-        delayedExtensions.size());
+        extendedTreaties.size(), delayedExtensions.size());
     // Release read locks.
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
       for (ReadMap.Entry entry : submap.values()) {
@@ -665,7 +657,6 @@ public final class Log {
       writes.clear();
       unobservedSamples.clear();
       extendedTreaties.clear();
-      retractedContracts.clear();
       delayedExtensions.clear();
       extensionTriggers.clear();
       localStoreWrites.clear();
@@ -755,6 +746,66 @@ public final class Log {
       entry.releaseLock(this);
     }
 
+    synchronized (parent.unobservedSamples) {
+      parent.unobservedSamples.clear();
+      parent.unobservedSamples.putAll(unobservedSamples);
+    }
+
+    // Do this before writes and creates!
+    for (Store s : extendedTreaties.storeSet()) {
+      for (ExpiryExtension obs : extendedTreaties.get(s).values()) {
+        synchronized (parent.delayedExtensions) {
+          if (parent.markedForDelayedExtension(new Oid(s, obs.onum)))
+            parent.cancelDelayedExtension(new Oid(s, obs.onum));
+        }
+        // Check if the parent already plans to extend the treaties, if so,
+        // update the mapping.
+        synchronized (parent.extendedTreaties) {
+          if (parent.extendedTreaties.containsKey(new Oid(s, obs.onum))) {
+            parent.extendedTreaties.put(new Oid(s, obs.onum), obs);
+            continue;
+          }
+        }
+        synchronized (parent.writes) {
+          if (parent.writes.containsKey(new Oid(s, obs.onum))) continue;
+        }
+        synchronized (parent.creates) {
+          if (parent.creates.containsKey(new Oid(s, obs.onum))) continue;
+        }
+        synchronized (parent.extendedTreaties) {
+          // If not already being written or created, add it to the extensions.
+          parent.extendedTreaties.put(new Oid(s, obs.onum), obs);
+        }
+      }
+    }
+
+    for (Store s : delayedExtensions.storeSet()) {
+      for (LongKeyMap.Entry<Set<Oid>> e : delayedExtensions.get(s).entrySet()) {
+        long onum = e.getKey();
+        Oid oid = new Oid(s, onum);
+        // Skip if the parent is doing any kind of write to the object.
+        synchronized (parent.writes) {
+          if (parent.writes.containsKey(s, onum)) continue;
+        }
+        synchronized (parent.creates) {
+          if (parent.creates.containsKey(s, onum)) continue;
+        }
+        synchronized (parent.extendedTreaties) {
+          if (parent.extendedTreaties.containsKey(s, onum)) continue;
+        }
+        synchronized (parent.delayedExtensions) {
+          if (e.getValue().isEmpty()) {
+            if (parent.markedForDelayedExtension(oid)) continue;
+            parent.addDelayedExtension(oid);
+          } else {
+            for (Oid trigger : e.getValue()) {
+              parent.addDelayedExtension(new Oid(s, onum), trigger);
+            }
+          }
+        }
+      }
+    }
+
     // Merge writes and transfer write locks.
     OidKeyHashMap<_Impl> parentWrites = parent.writes;
     for (_Impl obj : writes.values()) {
@@ -776,66 +827,6 @@ public final class Log {
 
         // Signal any readers/writers.
         //if (obj.$numWaiting > 0) obj.notifyAll();
-      }
-    }
-
-    synchronized (parent.unobservedSamples) {
-      parent.unobservedSamples.clear();
-      parent.unobservedSamples.putAll(unobservedSamples);
-    }
-
-    for (Oid obs : retractedContracts) {
-      synchronized (parent.retractedContracts) {
-        if (!parent.retractedContracts.contains(obs))
-          parent.retractedContracts.add(obs);
-      }
-      synchronized (parent.extendedTreaties) {
-        if (parent.extendedTreaties.containsKey(obs))
-          parent.extendedTreaties.remove(obs);
-      }
-      synchronized (parent.delayedExtensions) {
-        if (parent.markedForDelayedExtension(obs))
-          parent.cancelDelayedExtension(obs);
-      }
-    }
-
-    for (Store s : extendedTreaties.storeSet()) {
-      for (ExpiryExtension obs : extendedTreaties.get(s).values()) {
-        synchronized (parent.delayedExtensions) {
-          if (parent.markedForDelayedExtension(new Oid(s, obs.onum)))
-            parent.cancelDelayedExtension(new Oid(s, obs.onum));
-        }
-        synchronized (parent.retractedContracts) {
-          if (parent.retractedContracts.contains(new Oid(s, obs.onum)))
-            continue;
-        }
-        synchronized (parent.extendedTreaties) {
-          if (!parent.extendedTreaties.containsKey(new Oid(s, obs.onum)))
-            parent.extendedTreaties.put(new Oid(s, obs.onum), obs);
-        }
-      }
-    }
-
-    for (Store s : delayedExtensions.storeSet()) {
-      for (LongKeyMap.Entry<Set<Oid>> e : delayedExtensions.get(s).entrySet()) {
-        long onum = e.getKey();
-        Oid oid = new Oid(s, onum);
-        synchronized (parent.retractedContracts) {
-          if (parent.retractedContracts.contains(s, onum)) continue;
-        }
-        synchronized (parent.extendedTreaties) {
-          if (parent.extendedTreaties.containsKey(s, onum)) continue;
-        }
-        synchronized (parent.delayedExtensions) {
-          if (e.getValue().isEmpty()) {
-            if (parent.markedForDelayedExtension(oid)) continue;
-            parent.addDelayedExtension(oid);
-          } else {
-            for (Oid trigger : e.getValue()) {
-              parent.addDelayedExtension(new Oid(s, onum), trigger);
-            }
-          }
-        }
       }
     }
 
