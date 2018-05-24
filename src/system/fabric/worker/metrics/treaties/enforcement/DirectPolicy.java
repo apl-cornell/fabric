@@ -1,6 +1,5 @@
 package fabric.worker.metrics.treaties.enforcement;
 
-import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
@@ -11,11 +10,9 @@ import fabric.worker.metrics.treaties.MetricTreaty;
  */
 public class DirectPolicy extends EnforcementPolicy {
 
-  public DirectPolicy() {
-    super(EnforcementPolicy.Kind.DIRECT);
-  }
+  public static final DirectPolicy singleton = new DirectPolicy();
 
-  public DirectPolicy(DataInput in) {
+  private DirectPolicy() {
     super(EnforcementPolicy.Kind.DIRECT);
   }
 

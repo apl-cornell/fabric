@@ -277,7 +277,7 @@ public class SumMetric extends DerivedMetric {
       // Don't do this if we want to avoid conflicts between local concurrent
       // operations on different metrics in a derived metric...
       //if (isSingleStore())
-      //    return new DirectPolicy();
+      //    return DirectPolicy.singleton;
 
       long currentTime = System.currentTimeMillis();
       double baseNow = Bound.value(rate, base, currentTime);

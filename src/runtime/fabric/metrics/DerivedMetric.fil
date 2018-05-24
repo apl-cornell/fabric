@@ -525,7 +525,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
     // TODO: There's a better policy to override this with in MinMetric.
     if (isSingleStore()) {
-      return new DirectPolicy();
+      return DirectPolicy.singleton;
     } else {
       MetricTreaty native[] witnesses = new MetricTreaty native[terms.length()];
       // Defend all rows against the bound individually, using the strictest

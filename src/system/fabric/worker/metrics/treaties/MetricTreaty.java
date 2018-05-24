@@ -62,7 +62,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.activated = false;
     this.statement = statement;
     this.observers = ImmutableObserverSet.emptySet();
-    this.policy = new NoPolicy();
+    this.policy = NoPolicy.singleton;
     this.expiry = policy.calculateExpiry(this);
   }
 
@@ -286,7 +286,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     ImmutableObserverSet updatedObservers = observers.remove(obs);
     // Stop enforcing if we're no longer being watched by anyone.
     if (updatedObservers.isEmpty())
-      return new MetricTreaty(this, updatedObservers, new NoPolicy(), 0);
+      return new MetricTreaty(this, updatedObservers, NoPolicy.singleton, 0);
     return new MetricTreaty(this, updatedObservers);
   }
 
@@ -296,7 +296,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     ImmutableObserverSet updatedObservers = observers.remove(obs, id);
     // Stop enforcing if we're no longer being watched by anyone.
     if (updatedObservers.isEmpty())
-      return new MetricTreaty(this, updatedObservers, new NoPolicy(), 0);
+      return new MetricTreaty(this, updatedObservers, NoPolicy.singleton, 0);
     return new MetricTreaty(this, updatedObservers);
   }
 

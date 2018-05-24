@@ -15,13 +15,13 @@ public abstract class EnforcementPolicy implements FastSerializable {
     NONE {
       @Override
       protected NoPolicy read(DataInput in) throws IOException {
-        return new NoPolicy(in);
+        return NoPolicy.singleton;
       }
     },
     DIRECT {
       @Override
       protected DirectPolicy read(DataInput in) throws IOException {
-        return new DirectPolicy(in);
+        return DirectPolicy.singleton;
       }
     },
     WITNESS {

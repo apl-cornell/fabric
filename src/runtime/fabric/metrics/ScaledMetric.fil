@@ -163,13 +163,13 @@ public class ScaledMetric extends DerivedMetric {
         // Don't do this if we want to avoid conflicts between local concurrent
         // operations on different metrics in a derived metric...
         //if (isSingleStore())
-        //    return new DirectPolicy();
+        //    return DirectPolicy.singleton;
 
         // However, we don't want the infinite loop referred to below, so we
         // don't use a witness if the metric this transforms is a sampled
         // metric.
         if (term(0) instanceof SampledMetric)
-            return new DirectPolicy();
+            return DirectPolicy.singleton;
 
         MetricTreaty witness = null;
 

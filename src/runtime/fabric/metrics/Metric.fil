@@ -444,7 +444,7 @@ public abstract class Metric extends AbstractSubject
    *         being above bound.
    */
   public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
-    return new DirectPolicy();
+    return DirectPolicy.singleton;
   }
 
   /**
@@ -485,7 +485,7 @@ public abstract class Metric extends AbstractSubject
    *         being above bound.
    */
   public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
-    return new DirectPolicy();
+    return DirectPolicy.singleton;
   }
 
   /**

@@ -472,7 +472,7 @@ public class LinearMetric extends DerivedMetric {
   /*@Override*/
   public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store str) {
     if (isSingleStore())
-      return new DirectPolicy();
+      return DirectPolicy.singleton;
     Map/*<Metric, MetricTreaty>*/ witnesses = new LinkedHashMap/*<>*/();
 
     long currentTime = System.currentTimeMillis();

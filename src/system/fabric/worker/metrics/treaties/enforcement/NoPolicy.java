@@ -1,6 +1,5 @@
 package fabric.worker.metrics.treaties.enforcement;
 
-import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
@@ -11,11 +10,9 @@ import fabric.worker.metrics.treaties.MetricTreaty;
  */
 public class NoPolicy extends EnforcementPolicy {
 
-  public NoPolicy() {
-    super(EnforcementPolicy.Kind.NONE);
-  }
+  public static final NoPolicy singleton = new NoPolicy();
 
-  public NoPolicy(DataInput in) {
+  private NoPolicy() {
     super(EnforcementPolicy.Kind.NONE);
   }
 
