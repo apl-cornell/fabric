@@ -5,6 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.metrics.Metric;
+import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 
 /**
  * {@link TreatyStatement} for equality bounds.
@@ -63,5 +65,10 @@ public class EqualityStatement extends TreatyStatement {
   @Override
   public String toString() {
     return "== " + value;
+  }
+
+  @Override
+  public EnforcementPolicy getNewPolicy(Metric m, StatsMap weakStats) {
+    return m.equalityPolicy(value, weakStats, m.$getStore());
   }
 }

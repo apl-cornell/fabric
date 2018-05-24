@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import fabric.common.FastSerializable;
+import fabric.common.util.Oid;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -20,6 +21,7 @@ public final class OidRef<T extends fabric.lang.Object>
   public final String objStoreName;
   public final long objOnum;
 
+  private transient Oid cachedOid;
   private transient T cached;
 
   public OidRef(String objStoreName, long objOnum) {
@@ -29,6 +31,10 @@ public final class OidRef<T extends fabric.lang.Object>
 
   public OidRef(Store objStore, long objOnum) {
     this(objStore.name(), objOnum);
+  }
+
+  public OidRef(Oid oid) {
+    this(oid.store, oid.onum);
   }
 
   public <S extends T> OidRef(S obj) {
@@ -67,5 +73,11 @@ public final class OidRef<T extends fabric.lang.Object>
   @Override
   public String toString() {
     return objStoreName + "/" + objOnum;
+  }
+
+  public Oid toOid() {
+    if (cachedOid == null)
+      cachedOid = new Oid(Worker.getWorker().getStore(objStoreName), objOnum);
+    return cachedOid;
   }
 }

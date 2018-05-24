@@ -405,10 +405,12 @@ public class TransactionManager {
    * added to the queue, and the onum-request mapping is updated.
    */
   public void queueExtensions(LongSet extensions) {
+    /*
     for (LongIterator it = extensions.iterator(); it.hasNext();) {
       long onum = it.next();
       queueExtension(onum);
     }
+    */
   }
 
   public void queueExtension(long onum) {

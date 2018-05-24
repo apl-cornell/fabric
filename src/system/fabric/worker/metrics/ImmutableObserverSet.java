@@ -106,21 +106,6 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     this.map = new HashMap<>();
   }
 
-  public ImmutableObserverSet(DataInput in) throws IOException {
-    int size1 = in.readInt();
-    this.map = new HashMap<>(size1);
-    for (int i = 0; i < size1; i++) {
-      String storeName = in.readUTF();
-      int size2 = in.readInt();
-      LongKeyMap<ObserverGroup> submap = new LongKeyHashMap<>(size2);
-      for (int j = 0; j < size2; j++) {
-        long onum = in.readLong();
-        submap.put(onum, new ObserverGroup(in));
-      }
-      this.map.put(storeName, submap);
-    }
-  }
-
   private ImmutableObserverSet(ImmutableObserverSet orig) {
     this.map = new HashMap<>(orig.map.size());
     for (Map.Entry<String, LongKeyMap<ObserverGroup>> e : orig.map.entrySet()) {
@@ -340,6 +325,21 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
 
   /* Serializable definitions, need to special case fabric references. */
 
+  public ImmutableObserverSet(DataInput in) throws IOException {
+    int size1 = in.readInt();
+    this.map = new HashMap<>(size1);
+    for (int i = 0; i < size1; i++) {
+      String storeName = in.readUTF();
+      int size2 = in.readInt();
+      LongKeyMap<ObserverGroup> submap = new LongKeyHashMap<>(size2);
+      for (int j = 0; j < size2; j++) {
+        long onum = in.readLong();
+        submap.put(onum, new ObserverGroup(in));
+      }
+      this.map.put(storeName, submap);
+    }
+  }
+
   private void writeObject(ObjectOutputStream out) throws IOException {
     write(out);
   }
@@ -398,7 +398,7 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   }
 
   public LongSet onumsForStore(String s) {
-    return map.get(s).keySet();
+    return map.get(s) == null ? null : map.get(s).keySet();
   }
 
   /**

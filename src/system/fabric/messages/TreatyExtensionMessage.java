@@ -59,6 +59,7 @@ public class TreatyExtensionMessage extends AsyncMessage {
     for (LongIterator it = extensions.iterator(); it.hasNext();) {
       out.writeLong(it.next());
     }
+
     out.writeInt(updates.size());
     for (Map.Entry<RemoteStore, Collection<SerializedObject>> e : updates
         .entrySet()) {
@@ -79,13 +80,14 @@ public class TreatyExtensionMessage extends AsyncMessage {
       long onum = in.readLong();
       extensions.add(onum);
     }
-    int size2 = in.readInt();
-    updates = new HashMap<>(size2);
-    for (int i = 0; i < size2; i++) {
+
+    size = in.readInt();
+    updates = new HashMap<>(size);
+    for (int i = 0; i < size; i++) {
       RemoteStore s = Worker.getWorker().getStore(in.readUTF());
-      int size3 = in.readInt();
-      List<SerializedObject> vals = new ArrayList<>(size3);
-      for (int j = 0; j < size3; j++) {
+      int size2 = in.readInt();
+      List<SerializedObject> vals = new ArrayList<>(size);
+      for (int j = 0; j < size2; j++) {
         vals.add(new SerializedObject(in));
       }
       updates.put(s, vals);

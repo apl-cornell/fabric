@@ -16,6 +16,7 @@ import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.NoPolicy;
 import fabric.worker.metrics.treaties.statements.ThresholdStatement;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * An inlineable representation of a treaty defined as a statement about a
@@ -95,6 +96,8 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
   /**
    * Constructor for updating the observers, not affecting the expiry or policy.
+   *
+   * Updates the containing treaty set.
    */
   private MetricTreaty(MetricTreaty original, ImmutableObserverSet observers) {
     this.metric = original.metric;
@@ -104,26 +107,43 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = observers;
     this.policy = original.policy;
     this.expiry = original.expiry;
+
+    // Update containing treaty set.
+    TreatySet origSet = this.getMetric().get$$treaties();
+    TreatySet newSet = origSet.add(this);
+    if (origSet != newSet && !origSet.equals(newSet))
+      this.getMetric().set$$treaties(newSet);
   }
 
   /**
    * Constructor for updating the observers, affecting the policy and/or expiry.
+   *
+   * Updates the containing treaty set.
    */
   private MetricTreaty(MetricTreaty original, ImmutableObserverSet observers,
       EnforcementPolicy policy, long expiry) {
     this.metric = original.metric;
     this.id = original.id;
-    this.activated = original.activated;
+    this.activated = original.activated || !(policy instanceof NoPolicy);
     this.statement = original.statement;
     this.observers = observers;
     this.policy = policy;
     this.expiry = expiry;
+
+    // Update containing treaty set.
+    TreatySet origSet = this.getMetric().get$$treaties();
+    TreatySet newSet = origSet.add(this);
+    if (origSet != newSet && !origSet.equals(newSet))
+      this.getMetric().set$$treaties(newSet);
+
     // TODO update observing to move to the new policy
   }
 
   /**
    * Constructor for the update step, changing expiry but not changing the
    * policy.
+   *
+   * Updates the containing treaty set.
    */
   private MetricTreaty(MetricTreaty original, long newExpiry) {
     this.metric = original.metric;
@@ -133,10 +153,18 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = original.observers;
     this.policy = original.policy;
     this.expiry = newExpiry;
+
+    // Update containing treaty set.
+    TreatySet origSet = this.getMetric().get$$treaties();
+    TreatySet newSet = origSet.add(this);
+    if (origSet != newSet && !origSet.equals(newSet))
+      this.getMetric().set$$treaties(newSet);
   }
 
   /**
    * Constructor for the update step, changing both the policy and expiry.
+   *
+   * Updates the containing treaty set.
    */
   private MetricTreaty(MetricTreaty original, EnforcementPolicy policy,
       long newExpiry) {
@@ -147,6 +175,13 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = original.observers;
     this.policy = policy;
     this.expiry = newExpiry;
+
+    // Update containing treaty set.
+    TreatySet origSet = this.getMetric().get$$treaties();
+    TreatySet newSet = origSet.add(this);
+    if (origSet != newSet && !origSet.equals(newSet))
+      this.getMetric().set$$treaties(newSet);
+
     // TODO update observing to move to the new policy
   }
 
@@ -155,7 +190,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       StatsMap weakStats) {
     long oldExpiry = this.expiry;
     long updatedCurExpiry = this.policy.updatedExpiry(this);
-    if (updatedCurExpiry != oldExpiry) {
+    if (updatedCurExpiry != oldExpiry || !activated) {
       if (asyncExtension || updatedCurExpiry > System.currentTimeMillis()) {
         // Keep using the same policy if the policy still gives a good expiry or
         // we're only doing an async extension.
@@ -166,7 +201,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       } else {
         // Otherwise, try a different policy.
         // TODO
-        MetricTreaty updatedTreaty = this;
+        EnforcementPolicy newPolicy =
+            statement.getNewPolicy(getMetric(), weakStats);
+        MetricTreaty updatedTreaty =
+            new MetricTreaty(this, newPolicy, newPolicy.updatedExpiry(this));
         return new Pair<>(updatedTreaty,
             oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
                 : ImmutableObserverSet.emptySet());
@@ -178,7 +216,9 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
   @Override
   public boolean valid() {
-    return (expiry > System.currentTimeMillis());
+    boolean result = expiry > System.currentTimeMillis();
+    if (result) TransactionManager.getInstance().registerExpiryUse(expiry);
+    return result;
   }
 
   @Override

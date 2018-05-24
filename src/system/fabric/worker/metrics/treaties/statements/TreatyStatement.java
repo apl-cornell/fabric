@@ -6,6 +6,8 @@ import java.io.IOException;
 
 import fabric.common.FastSerializable;
 import fabric.metrics.Metric;
+import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 
 /**
  * A statement treaties can express on a metric
@@ -66,6 +68,11 @@ public abstract class TreatyStatement implements FastSerializable {
   public abstract boolean implies(TreatyStatement stmt);
 
   /**
+   * Get a new policy for enforcing this statement on the given metric.
+   */
+  public abstract EnforcementPolicy getNewPolicy(Metric m, StatsMap weakStats);
+
+  /**
    * Utility to read a TreatyStatement off a DataInput (for example, when
    * reading off of a network message).
    */
@@ -74,7 +81,7 @@ public abstract class TreatyStatement implements FastSerializable {
   }
 
   @Override
-  public void write(DataOutput out) throws IOException {
+  public final void write(DataOutput out) throws IOException {
     out.writeByte(kind.ordinal());
     writeStatementData(out);
   }

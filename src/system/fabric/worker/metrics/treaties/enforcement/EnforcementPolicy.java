@@ -20,16 +20,14 @@ public abstract class EnforcementPolicy implements FastSerializable {
     },
     DIRECT {
       @Override
-      protected EnforcementPolicy read(DataInput in) throws IOException {
-        // TODO
-        return null;
+      protected DirectPolicy read(DataInput in) throws IOException {
+        return new DirectPolicy(in);
       }
     },
     WITNESS {
       @Override
-      protected EnforcementPolicy read(DataInput in) throws IOException {
-        // TODO
-        return null;
+      protected WitnessPolicy read(DataInput in) throws IOException {
+        return new WitnessPolicy(in);
       }
     };
 
@@ -47,12 +45,12 @@ public abstract class EnforcementPolicy implements FastSerializable {
   }
 
   @Override
-  public void write(DataOutput out) throws IOException {
+  public final void write(DataOutput out) throws IOException {
     out.writeByte(kind.ordinal());
-    writeData(out);
+    writePolicyData(out);
   }
 
-  protected abstract void writeData(DataOutput out) throws IOException;
+  protected abstract void writePolicyData(DataOutput out) throws IOException;
 
   /**
    * Utility for getting the policy determined expiration.

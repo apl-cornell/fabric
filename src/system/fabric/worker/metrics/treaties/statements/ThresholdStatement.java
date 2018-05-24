@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import fabric.metrics.Metric;
 import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 
 /**
  * {@link TreatyStatement} for threshold bounds.
@@ -264,5 +265,10 @@ public class ThresholdStatement extends TreatyStatement {
   @Override
   public String toString() {
     return ">= " + rate + " * t + " + base;
+  }
+
+  @Override
+  public EnforcementPolicy getNewPolicy(Metric m, StatsMap weakStats) {
+    return m.thresholdPolicy(rate, base, weakStats, m.$getStore());
   }
 }

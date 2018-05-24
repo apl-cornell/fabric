@@ -9,6 +9,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.metrics.Metric;
+import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 /**
@@ -113,5 +114,14 @@ public class MetricTreatySet extends TreatySet {
         new MetricTreaty(updated.owner.get(), updated.nextId++, stmt);
     updated.items.put(newTreaty.getId(), newTreaty);
     return new Pair<TreatySet, MetricTreaty>(updated, newTreaty);
+  }
+
+  @Override
+  public ImmutableObserverSet getObservers() {
+    ImmutableObserverSet result = ImmutableObserverSet.emptySet();
+    for (MetricTreaty t : items.values()) {
+      result = result.addAll(t.getObservers());
+    }
+    return result;
   }
 }

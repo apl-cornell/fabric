@@ -54,7 +54,7 @@ public class WarrantyValue implements Serializable {
    */
   public WarrantyValue(fabric.lang.Object value, MetricTreaty treaty,
       StatsMap weakStats) {
-    this(value, new TreatyRef(treaty), weakStats);
+    this(value, treaty == null ? null : new TreatyRef(treaty), weakStats);
   }
 
   public static WarrantyValue newValue(fabric.lang.Object value,
@@ -100,8 +100,7 @@ public class WarrantyValue implements Serializable {
     }
     if (treaty != null) {
       out.writeBoolean(true);
-      out.writeUTF(value.$getStore().name());
-      out.writeLong(value.$getOnum());
+      treaty.write(out);
     } else {
       out.writeBoolean(false);
     }

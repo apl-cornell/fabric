@@ -1398,7 +1398,11 @@ public final class SerializedObject implements FastSerializable, Serializable {
           getRefTypeIterator(), getIntraStoreRefIterator(),
           getInterStoreRefIterator());
       result.$associated = getAssociated();
-      result.$treaties = getTreaties();
+      if (getTreaties() != null) {
+        result.$treaties = getTreaties();
+      } else {
+        setTreaties(result.$treaties);
+      }
 
       if (chaseSurrogates && (result instanceof Surrogate)) {
         // Chase the surrogate pointer.

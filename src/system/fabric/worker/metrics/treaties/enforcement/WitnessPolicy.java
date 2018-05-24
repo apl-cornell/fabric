@@ -55,7 +55,8 @@ public class WitnessPolicy extends EnforcementPolicy {
   }
 
   @Override
-  protected void writeData(DataOutput out) throws IOException {
+  protected void writePolicyData(DataOutput out) throws IOException {
+    out.writeInt(witnesses.length);
     for (TreatyRef witness : witnesses) {
       witness.write(out);
     }

@@ -101,7 +101,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
     boolean loop = static_dropOldValue(tmp);
     while (loop) {
       i++;
-      Logging.METRICS_LOGGER.log(Level.INFO, "RUNNING ATTEMPT " + i + " OF " + tmp + " IN " + Thread.currentThread());
+      Logging.METRICS_LOGGER.log(Level.FINE, "RUNNING ATTEMPT " + i + " OF " + tmp + " IN " + Thread.currentThread());
       if (!tmp.proactive) {
         for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
           // If any proxy has a good value, steal it
@@ -122,7 +122,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
       }
 
       if (tmp.curTreaty == null) {
-        Logging.METRICS_LOGGER.log(Level.INFO, "GENERATING RESULT FOR " + tmp + " IN " + Thread.currentThread());
+        Logging.METRICS_LOGGER.log(Level.FINE, "GENERATING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         // Nobody had the result memoized, do it the old fashioned way.
         WarrantyValue computed = tmp.updatedVal(System.currentTimeMillis());
 
@@ -135,7 +135,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
         // Otherwise, updatedVal doesn't return the treaty refreshed, so
         // refresh it now.
-        Logging.METRICS_LOGGER.log(Level.INFO, "ACTIVATING RESULT FOR " + tmp + " IN " + Thread.currentThread());
+        Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         // TODO: figure out remote call functionality for this.
         //String treatyStoreName = computed.treaty.$getStore().name();
         //if (!TransactionManager.getInstance().inTxn() &&
@@ -147,7 +147,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
         //}
         TreatyRef activatedTreaty = new TreatyRef((MetricTreaty) computed.treaty.get().update(false, computed.weakStats).first);
 
-        Logging.METRICS_LOGGER.log(Level.INFO, "SETTING RESULT FOR " + tmp + " IN " + Thread.currentThread());
+        Logging.METRICS_LOGGER.log(Level.FINE, "SETTING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         static_setNewValue(tmp, computed.value, activatedTreaty);
         if (tmp.proactive) {
           for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {

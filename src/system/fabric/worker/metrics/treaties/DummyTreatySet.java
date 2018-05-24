@@ -7,6 +7,7 @@ import java.util.Iterator;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.util.Pair;
 import fabric.metrics.Metric;
+import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 /**
@@ -86,5 +87,10 @@ public class DummyTreatySet extends TreatySet {
   public Pair<TreatySet, MetricTreaty> create(TreatyStatement stmt) {
     throw new NotImplementedException(
         "Dummy Treaty Sets should not be added to!");
+  }
+
+  @Override
+  public ImmutableObserverSet getObservers() {
+    return ImmutableObserverSet.emptySet();
   }
 }

@@ -38,7 +38,7 @@ public class DirectPolicy extends EnforcementPolicy {
   }
 
   @Override
-  protected void writeData(DataOutput out) throws IOException {
+  protected void writePolicyData(DataOutput out) throws IOException {
   }
 
   @Override

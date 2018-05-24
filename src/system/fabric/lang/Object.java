@@ -599,13 +599,16 @@ public interface Object {
       this.$numWaiting = 0;
       this.$ref = new FabricSoftRef(store, onum, this);
       this.$cacheEntry = store.newCacheEntry(this);
+      // Do this before read map entry is created to avoid null treaty set in
+      // entry, but after ref to avoid uninitialized value when getting the
+      // store of a metric.
+      this.$treaties = TreatySet.emptySet(this);
       this.$readMapEntry = TransactionManager.getReadMapEntry(this, expiry);
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
       this.writerMapVersion = -1;
       this.$expiry = expiry;
       this.$observers = observers;
-      this.$treaties = TreatySet.emptySet(this);
 
       if (TRACE_OBJECTS)
         this.$stackTrace = Thread.currentThread().getStackTrace();

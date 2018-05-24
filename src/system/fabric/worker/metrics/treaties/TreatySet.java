@@ -7,6 +7,7 @@ import java.io.IOException;
 import fabric.common.FastSerializable;
 import fabric.common.util.Pair;
 import fabric.metrics.Metric;
+import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 /**
@@ -67,7 +68,8 @@ public abstract class TreatySet
    * extending the still live treaties.
    */
   public static boolean checkExtension(TreatySet from, TreatySet to) {
-    return from.equals(to) || checkExtensionStrict(from, to);
+    return from == to || (from != null && to != null
+        && (from.equals(to) || checkExtensionStrict(from, to)));
   }
 
   /**
@@ -106,4 +108,9 @@ public abstract class TreatySet
    * returns null.
    */
   public abstract MetricTreaty get(long id);
+
+  /**
+   * Get the complete set of observers for the treaties.
+   */
+  public abstract ImmutableObserverSet getObservers();
 }
