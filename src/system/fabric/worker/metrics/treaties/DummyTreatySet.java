@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import fabric.common.exceptions.NotImplementedException;
-import fabric.common.util.Pair;
 import fabric.metrics.Metric;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
@@ -73,9 +72,15 @@ public class DummyTreatySet extends TreatySet {
   }
 
   @Override
-  public TreatySet add(MetricTreaty treaty) {
+  public void add(MetricTreaty treaty) {
     throw new NotImplementedException(
         "Dummy Treaty Sets should not be added to!");
+  }
+
+  @Override
+  public void remove(MetricTreaty treaty) {
+    throw new NotImplementedException(
+        "Dummy Treaty Sets should not be removed from!");
   }
 
   @Override
@@ -84,7 +89,7 @@ public class DummyTreatySet extends TreatySet {
   }
 
   @Override
-  public Pair<TreatySet, MetricTreaty> create(TreatyStatement stmt) {
+  public MetricTreaty create(TreatyStatement stmt) {
     throw new NotImplementedException(
         "Dummy Treaty Sets should not be added to!");
   }

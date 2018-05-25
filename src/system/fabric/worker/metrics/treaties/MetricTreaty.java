@@ -111,10 +111,14 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.expiry = original.expiry;
 
     // Update containing treaty set.
-    TreatySet origSet = this.getMetric().get$$treaties();
-    TreatySet newSet = origSet.add(this);
-    if (origSet != newSet && !origSet.equals(newSet))
-      this.getMetric().set$$treaties(newSet);
+    if (this.activated && this.policy instanceof NoPolicy) {
+      // Garbage collect if this is no longer enforced and has been activated
+      // previously.
+      this.getMetric().get$$treaties().remove(original);
+    } else {
+      // Otherwise, make sure the updated value is in the set.
+      this.getMetric().get$$treaties().add(this);
+    }
   }
 
   /**
@@ -133,10 +137,14 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.expiry = expiry;
 
     // Update containing treaty set.
-    TreatySet origSet = this.getMetric().get$$treaties();
-    TreatySet newSet = origSet.add(this);
-    if (origSet != newSet && !origSet.equals(newSet))
-      this.getMetric().set$$treaties(newSet);
+    if (this.activated && this.policy instanceof NoPolicy) {
+      // Garbage collect if this is no longer enforced and has been activated
+      // previously.
+      this.getMetric().get$$treaties().remove(original);
+    } else {
+      // Otherwise, make sure the updated value is in the set.
+      this.getMetric().get$$treaties().add(this);
+    }
 
     // Stop observing the old policy.
     original.policy.unapply(this);
@@ -161,10 +169,14 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.expiry = newExpiry;
 
     // Update containing treaty set.
-    TreatySet origSet = this.getMetric().get$$treaties();
-    TreatySet newSet = origSet.add(this);
-    if (origSet != newSet && !origSet.equals(newSet))
-      this.getMetric().set$$treaties(newSet);
+    if (this.activated && this.policy instanceof NoPolicy) {
+      // Garbage collect if this is no longer enforced and has been activated
+      // previously.
+      this.getMetric().get$$treaties().remove(original);
+    } else {
+      // Otherwise, make sure the updated value is in the set.
+      this.getMetric().get$$treaties().add(this);
+    }
   }
 
   /**
@@ -183,10 +195,14 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.expiry = newExpiry;
 
     // Update containing treaty set.
-    TreatySet origSet = this.getMetric().get$$treaties();
-    TreatySet newSet = origSet.add(this);
-    if (origSet != newSet && !origSet.equals(newSet))
-      this.getMetric().set$$treaties(newSet);
+    if (this.activated && this.policy instanceof NoPolicy) {
+      // Garbage collect if this is no longer enforced and has been activated
+      // previously.
+      this.getMetric().get$$treaties().remove(original);
+    } else {
+      // Otherwise, make sure the updated value is in the set.
+      this.getMetric().get$$treaties().add(this);
+    }
 
     // Stop observing the old policy.
     original.policy.unapply(this);
@@ -297,13 +313,13 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
   @Override
   public MetricTreaty addObserver(Observer obs) {
     if (observers.contains(obs)) return this;
-    return new MetricTreaty(this, observers.remove(obs));
+    return new MetricTreaty(this, observers.add(obs));
   }
 
   @Override
   public MetricTreaty addObserver(Observer obs, long id) {
     if (observers.contains(obs, id)) return this;
-    return new MetricTreaty(this, observers.remove(obs, id));
+    return new MetricTreaty(this, observers.add(obs, id));
   }
 
   @Override

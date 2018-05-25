@@ -429,10 +429,6 @@ public abstract class Contract extends AbstractSubject implements Observer {
       Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
         origTreaty.update(false, StatsMap.emptyStats());
       affected = affected.addAll((ImmutableObserverSet) treatyUpdate.second);
-
-      MetricTreaty newTreaty = (MetricTreaty) treatyUpdate.first;
-      if (!newTreaty.equals(origTreaty))
-        $treaties = $treaties.add(newTreaty);
     }
     //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INVALID");
     return affected;

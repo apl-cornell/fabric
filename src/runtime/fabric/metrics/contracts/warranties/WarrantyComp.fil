@@ -234,10 +234,6 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
       Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
         origTreaty.update(false, StatsMap.emptyStats());
       affected = affected.addAll((ImmutableObserverSet) treatyUpdate.second);
-
-      MetricTreaty newTreaty = (MetricTreaty) treatyUpdate.first;
-      if (!newTreaty.equals(origTreaty))
-        $treaties = $treaties.add(newTreaty);
     }
     return affected;
   }

@@ -11,7 +11,6 @@ import fabric.metrics.contracts.Bound;
 import fabric.metrics.util.Observer;
 
 import fabric.common.ConfigProperties;
-import fabric.common.util.Pair;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableMetricsVector;

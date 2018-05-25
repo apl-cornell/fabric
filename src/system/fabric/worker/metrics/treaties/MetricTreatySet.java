@@ -93,11 +93,20 @@ public class MetricTreatySet extends TreatySet {
   }
 
   @Override
-  public TreatySet add(MetricTreaty treaty) {
+  public void add(MetricTreaty treaty) {
     // TODO check if there's an actual update?
     MetricTreatySet updated = new MetricTreatySet(this);
     updated.items.put(treaty.getId(), treaty);
-    return updated;
+    owner.get().set$$treaties(updated);
+  }
+
+  @Override
+  public void remove(MetricTreaty treaty) {
+    // TODO check if there's an actual update?
+    // TODO check that it's a proper garbage collection?
+    MetricTreatySet updated = new MetricTreatySet(this);
+    updated.items.remove(treaty.getId());
+    owner.get().set$$treaties(updated);
   }
 
   @Override
@@ -106,14 +115,15 @@ public class MetricTreatySet extends TreatySet {
   }
 
   @Override
-  public Pair<TreatySet, MetricTreaty> create(TreatyStatement stmt) {
+  public MetricTreaty create(TreatyStatement stmt) {
     // TODO: could be worth exploring checking if we already have that statement
     // represented?
     MetricTreatySet updated = new MetricTreatySet(this);
     MetricTreaty newTreaty =
         new MetricTreaty(updated.owner.get(), updated.nextId++, stmt);
     updated.items.put(newTreaty.getId(), newTreaty);
-    return new Pair<TreatySet, MetricTreaty>(updated, newTreaty);
+    owner.get().set$$treaties(updated);
+    return newTreaty;
   }
 
   @Override

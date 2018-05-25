@@ -91,17 +91,20 @@ public abstract class TreatySet
   /**
    * Add a treaty, overwriting any pre-existing treaties with an equivalent
    * assertion.
-   *
-   * @return updated set ("this" if there's no change).
    */
-  public abstract TreatySet add(MetricTreaty treaty);
+  public abstract void add(MetricTreaty treaty);
+
+  /**
+   * Remove a treaty.  (This should only be called when deactivating a treaty.)
+   */
+  public abstract void remove(MetricTreaty treaty);
 
   /**
    * Create a new treaty with the given statement.
    *
    * @return updated set ("this" if there's no change) paired with the treaty.
    */
-  public abstract Pair<TreatySet, MetricTreaty> create(TreatyStatement stmt);
+  public abstract MetricTreaty create(TreatyStatement stmt);
 
   /**
    * @return the treaty for the given id, if it has been "garbage collected",

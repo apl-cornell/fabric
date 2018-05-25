@@ -628,10 +628,7 @@ public abstract class Metric extends AbstractSubject
    *       given bound.
    */
   protected MetricTreaty createThresholdTreaty(double rate, double base, long time) {
-    Pair/*<TreatySet, MetricTreaty>*/ updated = $treaties.create(new ThresholdStatement(rate, base, time));
-    if (!((TreatySet) updated.first).equals($treaties))
-      $treaties = (TreatySet) updated.first;
-    return (MetricTreaty) updated.second;
+    return $treaties.create(new ThresholdStatement(rate, base, time));
   }
 
   /**
@@ -642,10 +639,7 @@ public abstract class Metric extends AbstractSubject
    *       given bound.
    */
   protected MetricTreaty createEqualityTreaty(double value) {
-    Pair/*<TreatySet, MetricTreaty>*/ updated = $treaties.create(new EqualityStatement(value));
-    if (!((TreatySet) updated.first).equals($treaties))
-      $treaties = (TreatySet) updated.first;
-    return (MetricTreaty) updated.second;
+    return $treaties.create(new EqualityStatement(value));
   }
 
   /*@Override*/
