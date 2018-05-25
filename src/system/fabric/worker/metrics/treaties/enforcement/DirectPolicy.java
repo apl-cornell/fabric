@@ -3,6 +3,7 @@ package fabric.worker.metrics.treaties.enforcement;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 
 /**
@@ -17,25 +18,26 @@ public class DirectPolicy extends EnforcementPolicy {
   }
 
   @Override
-  public long calculateExpiry(MetricTreaty treaty) {
-    return treaty.statement.directExpiry(treaty.getMetric());
+  public long calculateExpiry(MetricTreaty treaty, StatsMap weakStats) {
+    return treaty.statement.directExpiry(treaty.getMetric(), weakStats);
   }
 
   @Override
-  public long updatedExpiry(MetricTreaty oldTreaty) {
+  public long updatedExpiry(MetricTreaty oldTreaty, StatsMap weakStats) {
     // Update if either we're advertising too optimistic of an expiry right
     // now or we're close enough to the advertised expiry to start ramping
     // up.
     return (oldTreaty.expiry > oldTreaty.statement
-        .trueExpiry(oldTreaty.getMetric()))
+        .trueExpiry(oldTreaty.getMetric(), weakStats))
         || (oldTreaty.expiry
             - System.currentTimeMillis() < MetricTreaty.UPDATE_THRESHOLD)
-                ? calculateExpiry(oldTreaty)
+                ? calculateExpiry(oldTreaty, weakStats)
                 : oldTreaty.expiry;
   }
 
   @Override
   protected void writePolicyData(DataOutput out) throws IOException {
+    // Do nothing.
   }
 
   @Override
@@ -51,5 +53,10 @@ public class DirectPolicy extends EnforcementPolicy {
   @Override
   public String toString() {
     return "enforced by watching metric";
+  }
+
+  @Override
+  public void activate(StatsMap weakStats) {
+    // Do nothing.
   }
 }

@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.FastSerializable;
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 
 /**
@@ -55,10 +56,16 @@ public abstract class EnforcementPolicy implements FastSerializable {
   /**
    * Utility for getting the policy determined expiration.
    */
-  public abstract long calculateExpiry(MetricTreaty treaty);
+  public abstract long calculateExpiry(MetricTreaty treaty, StatsMap weakStats);
 
   /**
    * Utility for getting the policy determined expiration.
    */
-  public abstract long updatedExpiry(MetricTreaty oldTreaty);
+  public abstract long updatedExpiry(MetricTreaty oldTreaty,
+      StatsMap weakStats);
+
+  /**
+   * Activate anything that needs activation for this policy to work.
+   */
+  public abstract void activate(StatsMap weakStats);
 }

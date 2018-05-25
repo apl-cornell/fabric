@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatyRef;
 
@@ -37,7 +38,7 @@ public class WitnessPolicy extends EnforcementPolicy {
   }
 
   @Override
-  public long calculateExpiry(MetricTreaty treaty) {
+  public long calculateExpiry(MetricTreaty treaty, StatsMap weakStats) {
     long calculated = Long.MAX_VALUE;
     for (TreatyRef witness : witnesses) {
       calculated = Math.min(calculated, witness.get().getExpiry());
@@ -46,7 +47,7 @@ public class WitnessPolicy extends EnforcementPolicy {
   }
 
   @Override
-  public long updatedExpiry(MetricTreaty oldTreaty) {
+  public long updatedExpiry(MetricTreaty oldTreaty, StatsMap weakStats) {
     long calculated = Long.MAX_VALUE;
     for (TreatyRef witness : witnesses) {
       calculated = Math.min(calculated, witness.get().getExpiry());
@@ -77,5 +78,13 @@ public class WitnessPolicy extends EnforcementPolicy {
   @Override
   public String toString() {
     return "enforced by " + Arrays.toString(witnesses);
+  }
+
+  @Override
+  public void activate(StatsMap weakStats) {
+    for (TreatyRef witness : witnesses) {
+      // TODO: Do we need to worry about observers returned here?
+      witness.get().update(false, weakStats);
+    }
   }
 }

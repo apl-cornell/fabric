@@ -3,6 +3,7 @@ package fabric.worker.metrics.treaties.enforcement;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 
 /**
@@ -17,17 +18,18 @@ public class NoPolicy extends EnforcementPolicy {
   }
 
   @Override
-  public long calculateExpiry(MetricTreaty treaty) {
+  public long calculateExpiry(MetricTreaty treaty, StatsMap weakStats) {
     return 0;
   }
 
   @Override
-  public long updatedExpiry(MetricTreaty oldTreaty) {
+  public long updatedExpiry(MetricTreaty oldTreaty, StatsMap weakStats) {
     return 0;
   }
 
   @Override
   protected void writePolicyData(DataOutput out) throws IOException {
+    // Do nothing.
   }
 
   @Override
@@ -43,5 +45,10 @@ public class NoPolicy extends EnforcementPolicy {
   @Override
   public String toString() {
     return "unenforced";
+  }
+
+  @Override
+  public void activate(StatsMap weakStats) {
+    // Do nothing.
   }
 }

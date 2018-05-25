@@ -48,14 +48,14 @@ public abstract class TreatyStatement implements FastSerializable {
    * @param m the metric we want a direct expiry relative to.
    * @return the expiry to be used as determined by the value of m
    */
-  public abstract long directExpiry(Metric m);
+  public abstract long directExpiry(Metric m, StatsMap weakStats);
 
   /**
    * @param m the metric we want a true expiry relative to.
    * @return the "true" expiry at which the statement will become false in the
    * absence of updates to m.
    */
-  public abstract long trueExpiry(Metric m);
+  public abstract long trueExpiry(Metric m, StatsMap weakStats);
 
   /**
    * Write out the specifics of the statement type.

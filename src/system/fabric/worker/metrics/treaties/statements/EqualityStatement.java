@@ -29,12 +29,12 @@ public class EqualityStatement extends TreatyStatement {
   }
 
   @Override
-  public long directExpiry(Metric m) {
-    return trueExpiry(m);
+  public long directExpiry(Metric m, StatsMap weakStats) {
+    return trueExpiry(m, weakStats);
   }
 
   @Override
-  public long trueExpiry(Metric m) {
+  public long trueExpiry(Metric m, StatsMap weakStats) {
     if (m.value() < value) {
       return 0;
     } else {

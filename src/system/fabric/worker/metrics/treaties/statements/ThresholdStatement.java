@@ -134,15 +134,15 @@ public class ThresholdStatement extends TreatyStatement {
   }
 
   @Override
-  public long directExpiry(Metric m) {
+  public long directExpiry(Metric m, StatsMap weakStats) {
     long time = System.currentTimeMillis();
     double b = rate * time + base;
     // Always use *correct* value for value
     double x = m.value();
     // Use weak v and n, x is the only part that needs to be exact.
     // TODO: reenable support for weak parameters.
-    double v = m.velocity(/*useWeakParameters*/);
-    double n = m.noise(/*useWeakParameters*/);
+    double v = m.velocity(weakStats);
+    double n = m.noise(weakStats);
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
@@ -237,7 +237,7 @@ public class ThresholdStatement extends TreatyStatement {
   }
 
   @Override
-  public long trueExpiry(Metric m) {
+  public long trueExpiry(Metric m, StatsMap weakStats) {
     return trueExpiry(m.value(), System.currentTimeMillis());
   }
 

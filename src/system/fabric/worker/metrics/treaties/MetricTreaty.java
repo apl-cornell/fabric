@@ -3,7 +3,9 @@ package fabric.worker.metrics.treaties;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.util.Pair;
 import fabric.metrics.DerivedMetric;
 import fabric.metrics.Metric;
@@ -63,7 +65,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.statement = statement;
     this.observers = ImmutableObserverSet.emptySet();
     this.policy = NoPolicy.singleton;
-    this.expiry = policy.calculateExpiry(this);
+    this.expiry = policy.calculateExpiry(this, StatsMap.emptyStats());
   }
 
   /**
@@ -189,22 +191,34 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
   public Pair<MetricTreaty, ImmutableObserverSet> update(boolean asyncExtension,
       StatsMap weakStats) {
     long oldExpiry = this.expiry;
-    long updatedCurExpiry = this.policy.updatedExpiry(this);
+    long updatedCurExpiry = this.policy.updatedExpiry(this, weakStats);
     if (updatedCurExpiry != oldExpiry || !activated) {
       if (asyncExtension || updatedCurExpiry > System.currentTimeMillis()) {
         // Keep using the same policy if the policy still gives a good expiry or
         // we're only doing an async extension.
         MetricTreaty updatedTreaty = new MetricTreaty(this, updatedCurExpiry);
+        Logging.METRICS_LOGGER.log(Level.FINEST,
+            "UPDATING {0} TO {1} IN {2} {3}",
+            new Object[] { this, updatedTreaty,
+                TransactionManager.getInstance().getCurrentTid(),
+                Thread.currentThread() });
         return new Pair<>(updatedTreaty,
             oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
                 : ImmutableObserverSet.emptySet());
       } else {
         // Otherwise, try a different policy.
-        // TODO
         EnforcementPolicy newPolicy =
             statement.getNewPolicy(getMetric(), weakStats);
-        MetricTreaty updatedTreaty =
-            new MetricTreaty(this, newPolicy, newPolicy.updatedExpiry(this));
+
+        newPolicy.activate(weakStats);
+
+        MetricTreaty updatedTreaty = new MetricTreaty(this, newPolicy,
+            newPolicy.updatedExpiry(this, weakStats));
+        Logging.METRICS_LOGGER.log(Level.FINEST,
+            "UPDATING {0} TO {1} IN {2} {3}",
+            new Object[] { this, updatedTreaty,
+                TransactionManager.getInstance().getCurrentTid(),
+                Thread.currentThread() });
         return new Pair<>(updatedTreaty,
             oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
                 : ImmutableObserverSet.emptySet());
@@ -216,6 +230,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
   @Override
   public boolean valid() {
+    Logging.METRICS_LOGGER.log(Level.FINEST,
+        "CHECKING VALIDITY OF {0} IN {1} {2}",
+        new Object[] { this, TransactionManager.getInstance().getCurrentTid(),
+            Thread.currentThread() });
     boolean result = expiry > System.currentTimeMillis();
     if (result) TransactionManager.getInstance().registerExpiryUse(expiry);
     return result;
