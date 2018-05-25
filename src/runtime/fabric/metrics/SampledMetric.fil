@@ -4,6 +4,8 @@ import fabric.util.ArrayList;
 import fabric.util.List;
 
 import fabric.metrics.util.Observer;
+import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.RunningMetricStats;
 import fabric.worker.metrics.StatsMap;
 
@@ -456,5 +458,16 @@ public class SampledMetric extends Metric {
       }
     }
     return result;
+  }
+
+  /*@Override*/
+  public ImmutableObserverSet handleDirectUpdates() {
+    // XXX: Does this ever happen?
+    throw new InternalError("This should never happen, sampled metrics don't observe anything.");
+  }
+
+  /*@Override*/
+  public ImmutableMetricsVector getLeafSubjects() {
+    return ImmutableMetricsVector.createVector(new Metric native [] { this });
   }
 }

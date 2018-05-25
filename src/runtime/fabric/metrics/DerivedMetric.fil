@@ -11,8 +11,6 @@ import fabric.metrics.contracts.Bound;
 import fabric.metrics.util.Observer;
 
 import fabric.common.ConfigProperties;
-import fabric.common.util.LongSet;
-import fabric.common.util.LongIterator;
 import fabric.common.util.Pair;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -176,33 +174,18 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   /*@Override*/
-  public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties) {
-    //Logging.METRICS_LOGGER.log(Level.FINER,
-    //    "CHECKING FOR UPDATE ON DERIVED METRIC");
+  public ImmutableObserverSet handleDirectUpdates() {
     ImmutableObserverSet affected = ImmutableObserverSet.emptySet();
-    if (includesObserver) {
-      double newValue = computeValue(StatsMap.emptyStats());
-      if (newValue != cachedValue) {
-        //Logging.METRICS_LOGGER.log(Level.FINER, "UPDATE ON DERIVED METRIC");
-        cachedValue = newValue;
-        cachedVelocity = computeVelocity(StatsMap.emptyStats());
-        cachedNoise = computeNoise(StatsMap.emptyStats());
-        cachedSamples = computeSamples(StatsMap.emptyStats());
-        cachedLastUpdate = System.currentTimeMillis();
-        cachedUpdateInterval = computeUpdateInterval(StatsMap.emptyStats());
-        affected = affected.addAll(getObservers());
-      }
-    }
-    for (LongIterator iter = treaties.iterator(); iter.hasNext();) {
-      long treatyId = iter.next();
-      MetricTreaty origTreaty = $treaties.get(treatyId);
-      Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
-        origTreaty.update(false, StatsMap.emptyStats());
-      affected = affected.addAll((ImmutableObserverSet) treatyUpdate.second);
-
-      MetricTreaty newTreaty = (MetricTreaty) treatyUpdate.first;
-      if (!newTreaty.equals(origTreaty))
-        $treaties = $treaties.add(newTreaty);
+    double newValue = computeValue(StatsMap.emptyStats());
+    if (newValue != cachedValue) {
+      //Logging.METRICS_LOGGER.log(Level.FINER, "UPDATE ON DERIVED METRIC");
+      cachedValue = newValue;
+      cachedVelocity = computeVelocity(StatsMap.emptyStats());
+      cachedNoise = computeNoise(StatsMap.emptyStats());
+      cachedSamples = computeSamples(StatsMap.emptyStats());
+      cachedLastUpdate = System.currentTimeMillis();
+      cachedUpdateInterval = computeUpdateInterval(StatsMap.emptyStats());
+      affected = affected.addAll(getObservers());
     }
     return affected;
   }

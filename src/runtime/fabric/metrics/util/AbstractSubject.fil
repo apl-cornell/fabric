@@ -58,6 +58,25 @@ public abstract class AbstractSubject implements Subject {
   }
 
   /*@Override*/
+  public void addObserver(Observer o, long id) {
+    static_addObserver(this, o, id);
+  }
+
+  private static void static_addObserver(AbstractSubject tmp, Observer o, long id) {
+    //Logging.METRICS_LOGGER.finer("ADD OBSERVER " + o + " FOR " + tmp + " IN " +
+    //    TransactionManager.getInstance().getCurrentTid());
+    if (TransactionManager.getInstance().inTxn()) {
+      if (!tmp.$observers.contains(o, id))
+        tmp.$observers = tmp.$observers.add(o, id);
+    } else {
+      atomic {
+        if (!tmp.$observers.contains(o, id))
+          tmp.$observers = tmp.$observers.add(o, id);
+      }
+    }
+  }
+
+  /*@Override*/
   public void removeObserver(Observer o) {
     static_removeObserver(this, o);
   }
@@ -72,6 +91,25 @@ public abstract class AbstractSubject implements Subject {
       atomic {
         if (tmp.$observers.contains(o))
           tmp.$observers = tmp.$observers.remove(o);
+      }
+    }
+  }
+
+  /*@Override*/
+  public void removeObserver(Observer o, long id) {
+    static_removeObserver(this, o, id);
+  }
+
+  public static void static_removeObserver(AbstractSubject tmp, Observer o, long id) {
+    //Logging.METRICS_LOGGER.finer("REMOVE OBSERVER " + o + " FOR " + tmp + " IN "
+    //    + TransactionManager.getInstance().getCurrentTid());
+    if (TransactionManager.getInstance().inTxn()) {
+      if (tmp.$observers.contains(o, id))
+        tmp.$observers = tmp.$observers.remove(o, id);
+    } else {
+      atomic {
+        if (tmp.$observers.contains(o, id))
+          tmp.$observers = tmp.$observers.remove(o, id);
       }
     }
   }

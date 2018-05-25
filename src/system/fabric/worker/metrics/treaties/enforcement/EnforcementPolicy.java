@@ -68,4 +68,16 @@ public abstract class EnforcementPolicy implements FastSerializable {
    * Activate anything that needs activation for this policy to work.
    */
   public abstract void activate(StatsMap weakStats);
+
+  /**
+   * Add the given treaty as an observer of the values being used for this
+   * policy.
+   */
+  public abstract void apply(MetricTreaty t);
+
+  /**
+   * Remove the given treaty as an observer of the values being used for this
+   * policy.
+   */
+  public abstract void unapply(MetricTreaty t);
 }

@@ -138,7 +138,11 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     if (origSet != newSet && !origSet.equals(newSet))
       this.getMetric().set$$treaties(newSet);
 
-    // TODO update observing to move to the new policy
+    // Stop observing the old policy.
+    original.policy.unapply(this);
+
+    // Start observing the new policy.
+    policy.apply(this);
   }
 
   /**
@@ -184,7 +188,11 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     if (origSet != newSet && !origSet.equals(newSet))
       this.getMetric().set$$treaties(newSet);
 
-    // TODO update observing to move to the new policy
+    // Stop observing the old policy.
+    original.policy.unapply(this);
+
+    // Start observing the new policy.
+    policy.apply(this);
   }
 
   @Override

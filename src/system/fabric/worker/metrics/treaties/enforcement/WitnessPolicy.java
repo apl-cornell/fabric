@@ -87,4 +87,20 @@ public class WitnessPolicy extends EnforcementPolicy {
       witness.get().update(false, weakStats);
     }
   }
+
+  @Override
+  public void apply(MetricTreaty t) {
+    // Observe the witnesses
+    for (TreatyRef witness : witnesses) {
+      witness.get().addObserver(t.getMetric(), t.getId());
+    }
+  }
+
+  @Override
+  public void unapply(MetricTreaty t) {
+    // Stop observing the metric.
+    for (TreatyRef witness : witnesses) {
+      witness.get().removeObserver(t.getMetric(), t.getId());
+    }
+  }
 }

@@ -12,6 +12,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TransactionManager;
+import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.RunningMetricStats;
 import fabric.worker.metrics.treaties.MetricTreaty;
@@ -23,14 +24,16 @@ import fabric.worker.metrics.treaties.statements.ThresholdStatement;
 import fabric.lang.security.LabelUtil;
 
 import java.util.logging.Level;
+import java.util.Iterator;
 import fabric.common.Logging;
 import fabric.common.util.Pair;
+import fabric.common.util.LongSet;
 
 /**
  * Abstract class with base implementation of some {@link Metric} methods.
  */
 public abstract class Metric extends AbstractSubject
-        implements Comparable/*<Metric>*/ {
+        implements Comparable/*<Metric>*/, Observer {
 
   ////////////////////////////////////////////////////////////////////////////
   // External (user-facing) API
@@ -661,4 +664,34 @@ public abstract class Metric extends AbstractSubject
     }
     return thisHash - thatHash;
   }
+
+  /*@Override*/
+  public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties) {
+    //Logging.METRICS_LOGGER.log(Level.FINER,
+    //    "CHECKING FOR UPDATE ON METRIC");
+    ImmutableObserverSet affected = ImmutableObserverSet.emptySet();
+    if (includesObserver) {
+      affected = affected.addAll(handleDirectUpdates());
+    }
+    for (Iterator/*<MetricTreaty>*/ iter = $treaties.iterator(); iter.hasNext();) {
+      MetricTreaty treaty = (MetricTreaty) iter.next();
+      if (treaties.contains(treaty.getId()) || affected.contains(this, treaty.getId())) {
+        // Do the update
+        Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
+          treaty.update(false, StatsMap.emptyStats());
+
+        // Add resulting changes we need to handle.
+        affected = affected.addAll((ImmutableObserverSet) treatyUpdate.second);
+
+        // Remove this change, in case it was added by the observer itself.
+        affected = affected.remove(this, treaty.getId());
+      }
+    }
+    return affected;
+  }
+
+  /**
+   * Handle an update where the metric itself is observing.
+   */
+  public abstract ImmutableObserverSet handleDirectUpdates();
 }

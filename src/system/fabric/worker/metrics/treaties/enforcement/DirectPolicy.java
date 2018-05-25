@@ -59,4 +59,16 @@ public class DirectPolicy extends EnforcementPolicy {
   public void activate(StatsMap weakStats) {
     // Do nothing.
   }
+
+  @Override
+  public void apply(MetricTreaty t) {
+    // Observe the metric.
+    t.getMetric().addObserver(t.getMetric(), t.getId());
+  }
+
+  @Override
+  public void unapply(MetricTreaty t) {
+    // Stop observing the metric.
+    t.getMetric().removeObserver(t.getMetric(), t.getId());
+  }
 }

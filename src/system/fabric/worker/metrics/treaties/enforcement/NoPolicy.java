@@ -51,4 +51,14 @@ public class NoPolicy extends EnforcementPolicy {
   public void activate(StatsMap weakStats) {
     // Do nothing.
   }
+
+  @Override
+  public void apply(MetricTreaty t) {
+    // Do nothing.
+  }
+
+  @Override
+  public void unapply(MetricTreaty t) {
+    // Do nothing.
+  }
 }
