@@ -25,7 +25,7 @@ public class UnsubscribeMessage extends AsyncMessage {
    * TODO
    */
   public UnsubscribeMessage(LongSet unsubscribes) {
-    super(MessageType.OBJECT_UPDATE);
+    super(MessageType.UNSUBSCRIBE);
     this.unsubscribes = unsubscribes;
   }
 
@@ -53,7 +53,7 @@ public class UnsubscribeMessage extends AsyncMessage {
 
   /* readMessage */
   protected UnsubscribeMessage(DataInput in) throws IOException {
-    super(MessageType.OBJECT_UPDATE);
+    super(MessageType.UNSUBSCRIBE);
 
     int size = in.readInt();
     unsubscribes = new LongHashSet(size);
