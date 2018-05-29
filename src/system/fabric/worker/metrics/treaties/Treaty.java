@@ -3,6 +3,7 @@ package fabric.worker.metrics.treaties;
 import fabric.common.FastSerializable;
 import fabric.common.util.Pair;
 import fabric.metrics.util.Observer;
+import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
@@ -88,4 +89,10 @@ public interface Treaty<This extends Treaty<This>> extends FastSerializable {
    * Get the associated leaf subjects in the tree.
    */
   public ImmutableMetricsVector getLeafSubjects();
+
+  /**
+   * Get a proxy treaty (by way of proxy metric) for this treaty.  Activated
+   * before returning if this treaty is activated.
+   */
+  public MetricTreaty getProxyTreaty(Store s);
 }

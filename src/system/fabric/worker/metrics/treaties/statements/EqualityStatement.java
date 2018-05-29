@@ -5,7 +5,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.metrics.Metric;
+import fabric.worker.Store;
 import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 
 /**
@@ -70,5 +72,10 @@ public class EqualityStatement extends TreatyStatement {
   @Override
   public EnforcementPolicy getNewPolicy(Metric m, StatsMap weakStats) {
     return m.equalityPolicy(value, weakStats, m.$getStore());
+  }
+
+  @Override
+  public MetricTreaty getProxy(Metric m, Store s) {
+    return m.getProxy(s).getEqualityTreaty(value);
   }
 }

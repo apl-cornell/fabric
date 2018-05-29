@@ -181,10 +181,12 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
   private boolean dropOldValue() {
     TreatyRef curTreaty = this.curTreaty;
-    if (curTreaty != null && !curTreaty.get().valid()) {
-      curTreaty.get().removeObserver(this);
-      this.curTreaty = null;
-      this.$associated = null;
+    if (curTreaty != null) {
+      if (curTreaty.get() == null || !curTreaty.get().valid()) {
+        if (curTreaty.get() != null) curTreaty.get().removeObserver(this);
+        this.curTreaty = null;
+        this.$associated = null;
+      }
     }
     return this.curTreaty == null;
   }
@@ -202,17 +204,16 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   private void setNewValue(Object newVal, TreatyRef newTreaty) {
     if (this.dropOldValue() && newTreaty != null && newTreaty.get().valid()) {
       this.curVal = newVal;
-      // TODO
-      //this.curTreaty = newTreaty.get().getProxyTreaty(this.$getStore());
-      this.curTreaty = new TreatyRef(newTreaty.get().addObserver(this));
-      // TODO
-      //this.$associated = ImmutableSet.emptySet().add(this.curTreaty);
+      this.curTreaty = new TreatyRef(newTreaty.get()
+          .getProxyTreaty(this.$getStore())
+          .addObserver(this));
+      this.$associated = ImmutableSet.emptySet().add(this.curTreaty.get().getMetric());
     }
   }
 
   /*@Override*/
   public ImmutableMetricsVector/*<SampledMetric>*/ getLeafSubjects() {
-    if (curTreaty != null)
+    if (curTreaty != null && curTreaty.get() != null)
       return curTreaty.get().getLeafSubjects();
     return ImmutableMetricsVector.emptyVector();
   }

@@ -1,0 +1,98 @@
+package fabric.worker.metrics.proxies;
+
+import fabric.lang.JavaInlineable;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import fabric.metrics.Metric;
+import fabric.worker.Store;
+import fabric.worker.metrics.treaties.OidRef;
+
+/**
+ * Utility for an inlined mapping from stores to proxies for metrics.
+ */
+public class ProxyMap implements Serializable, JavaInlineable {
+
+  /**
+   * Create an empty map for the given metric.
+   */
+  public static native ProxyMap emptyMap();
+
+  /**
+   * Clear the map.
+   * @return the cleared out map.
+   */
+  public native ProxyMap clear();
+
+  /**
+   * @return true iff the given store is a key in this map.
+   */
+  public native boolean containsKey(Store s);
+
+  /**
+   * @return true iff the given store name is a key in this map.
+   */
+  public native boolean containsKey(String name);
+
+  /**
+   * @return true iff the given value is a value in this map.
+   */
+  public native boolean containsValue(Metric value);
+
+  /**
+   * @return true iff the given value is a value in this map.
+   */
+  public native boolean containsValue(OidRef/*<Metric>*/ value);
+
+  /**
+   * @return a Set of entries for this ProxyMap.
+   */
+  public native Set/*<Entry<Store, Metric>>*/ entrySet();
+  /**
+   * @return the Metric mapped to by the given store key.
+   */
+  public native Metric get(Store key);
+  /**
+   * @return the Metric mapped to by the given store key.
+   */
+  public native Metric get(String key);
+
+  /** @return true iff this map is empty. */
+  public native boolean isEmpty();
+
+  /** @return a set of the keys in this map. */
+  public native Set/*<Store>*/ keySet();
+
+  /**
+   * Put the given store-metric mapping.
+   * @return the updated map.
+   */
+  public native ProxyMap put(Store key, Metric value);
+
+  /**
+   * Put all of the given store-metric mappings.
+   * @return the updated map.
+   */
+  public native ProxyMap putAll(ProxyMap m);
+
+  /**
+   * Remove the mapping for the given store.
+   * @return the updated map.
+   */
+  public native ProxyMap remove(Store key);
+
+  /**
+   * Remove the mapping for the given store name.
+   * @return the updated map.
+   */
+  public native ProxyMap remove(String key);
+
+  /** @return the size of this map. */
+  public native int size();
+
+  /** @return A set of the metrics in this map */
+  public native Collection/*<Metric>*/ values();
+}

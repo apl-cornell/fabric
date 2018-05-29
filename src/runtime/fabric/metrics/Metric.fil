@@ -15,6 +15,7 @@ import fabric.worker.transaction.TransactionManager;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.RunningMetricStats;
+import fabric.worker.metrics.proxies.ProxyMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
@@ -347,13 +348,29 @@ public abstract class Metric extends AbstractSubject
   public abstract double getPresetV();
   public abstract double getPresetN();
 
+  protected ProxyMap proxies;
+
   /**
    * @param store
    *            the Store that holds this {@link Metric}
    */
   protected Metric fabric$metrics$Metric$() {
     fabric$metrics$util$AbstractSubject$();
+    this.proxies = ProxyMap.emptyMap();
     return this;
+  }
+
+  /**
+   * Get a proxy metric for this metric (returns this if the store is the same).
+   */
+  public Metric getProxy(Store s) {
+    if ($getStore().equals(s))
+      return this;
+    if (this.proxies.containsKey(s))
+      return this.proxies.get(s);
+    Metric result = new ProxyMetric@s().fabric$metrics$ProxyMetric$(this);
+    proxies = proxies.put(s, result);
+    return result;
   }
 
   /**

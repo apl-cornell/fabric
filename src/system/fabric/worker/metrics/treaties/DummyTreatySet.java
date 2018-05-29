@@ -89,6 +89,11 @@ public class DummyTreatySet extends TreatySet {
   }
 
   @Override
+  public MetricTreaty get(TreatyStatement stmt) {
+    return null;
+  }
+
+  @Override
   public MetricTreaty create(TreatyStatement stmt) {
     throw new NotImplementedException(
         "Dummy Treaty Sets should not be added to!");

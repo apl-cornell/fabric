@@ -3,11 +3,12 @@ package fabric.worker.metrics.treaties;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Pair;
 import fabric.metrics.Metric;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
@@ -20,31 +21,21 @@ public class MetricTreatySet extends TreatySet {
   private OidRef<Metric> owner;
   private LongKeyMap<MetricTreaty> items;
   private long nextId;
+  private Map<TreatyStatement, MetricTreaty> statementMap;
 
   public MetricTreatySet(Metric owner) {
     super(TreatySet.Kind.METRIC);
     this.owner = new OidRef<>(owner);
     this.items = new LongKeyHashMap<>();
+    this.statementMap = new HashMap<>();
     this.nextId = 0;
-  }
-
-  public MetricTreatySet(DataInput in) throws IOException {
-    super(TreatySet.Kind.METRIC);
-    this.owner = new OidRef<>(in);
-    this.nextId = in.readLong();
-    int size = in.readInt();
-    this.items = new LongKeyHashMap<>(size);
-    for (int i = 0; i < size; i++) {
-      // Keys aren't serialized separately, it's already in the treaty.
-      MetricTreaty m = new MetricTreaty(this.owner, in);
-      this.items.put(m.getId(), m);
-    }
   }
 
   private MetricTreatySet(MetricTreatySet original) {
     super(TreatySet.Kind.METRIC);
     this.owner = original.owner;
     this.items = new LongKeyHashMap<>(original.items);
+    this.statementMap = new HashMap<>(original.statementMap);
     this.nextId = original.nextId;
   }
 
@@ -76,11 +67,28 @@ public class MetricTreatySet extends TreatySet {
     return this.items.hashCode();
   }
 
+  public MetricTreatySet(DataInput in) throws IOException {
+    super(TreatySet.Kind.METRIC);
+    this.owner = new OidRef<>(in);
+    this.nextId = in.readLong();
+    int size = in.readInt();
+    this.items = new LongKeyHashMap<>(size);
+    this.statementMap = new HashMap<>(size);
+    for (int i = 0; i < size; i++) {
+      // Keys aren't serialized separately, it's already in the treaty.
+      MetricTreaty m = new MetricTreaty(this.owner, in);
+      this.items.put(m.getId(), m);
+      this.statementMap.put(m.statement, m);
+    }
+  }
+
   @Override
   public void writeData(DataOutput out) throws IOException {
     owner.write(out);
     out.writeLong(this.nextId);
     out.writeInt(this.items.size());
+    if (this.items.size() != this.statementMap.size())
+      throw new InternalError("Invariant violated!");
     // Don't bother writing out the keys, it's already included in the values.
     for (MetricTreaty treaty : this.items.values()) {
       treaty.write(out);
@@ -94,18 +102,26 @@ public class MetricTreatySet extends TreatySet {
 
   @Override
   public void add(MetricTreaty treaty) {
-    // TODO check if there's an actual update?
+    // Don't do anything if there's no actual change.
+    if (items.containsKey(treaty.getId())
+        && items.get(treaty.getId()).equals(treaty))
+      return;
+
     MetricTreatySet updated = new MetricTreatySet(this);
     updated.items.put(treaty.getId(), treaty);
+    updated.statementMap.put(treaty.statement, treaty);
     owner.get().set$$treaties(updated);
   }
 
   @Override
   public void remove(MetricTreaty treaty) {
-    // TODO check if there's an actual update?
+    // Don't do anything if there's no actual change.
+    if (!items.containsKey(treaty.getId())) return;
+
     // TODO check that it's a proper garbage collection?
     MetricTreatySet updated = new MetricTreatySet(this);
     updated.items.remove(treaty.getId());
+    updated.statementMap.remove(treaty.statement);
     owner.get().set$$treaties(updated);
   }
 
@@ -115,13 +131,19 @@ public class MetricTreatySet extends TreatySet {
   }
 
   @Override
+  public MetricTreaty get(TreatyStatement stmt) {
+    return statementMap.get(stmt);
+  }
+
+  @Override
   public MetricTreaty create(TreatyStatement stmt) {
-    // TODO: could be worth exploring checking if we already have that statement
-    // represented?
+    if (statementMap.containsKey(stmt)) return statementMap.get(stmt);
+
     MetricTreatySet updated = new MetricTreatySet(this);
     MetricTreaty newTreaty =
         new MetricTreaty(updated.owner.get(), updated.nextId++, stmt);
     updated.items.put(newTreaty.getId(), newTreaty);
+    updated.statementMap.put(newTreaty.statement, newTreaty);
     owner.get().set$$treaties(updated);
     return newTreaty;
   }

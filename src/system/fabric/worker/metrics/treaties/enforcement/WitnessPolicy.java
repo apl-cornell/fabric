@@ -41,7 +41,7 @@ public class WitnessPolicy extends EnforcementPolicy {
   public long calculateExpiry(MetricTreaty treaty, StatsMap weakStats) {
     long calculated = Long.MAX_VALUE;
     for (TreatyRef witness : witnesses) {
-      calculated = Math.min(calculated, witness.get().getExpiry());
+      calculated = Math.min(calculated, witness.get() == null ? 0 : witness.get().getExpiry());
     }
     return calculated;
   }
@@ -50,7 +50,7 @@ public class WitnessPolicy extends EnforcementPolicy {
   public long updatedExpiry(MetricTreaty oldTreaty, StatsMap weakStats) {
     long calculated = Long.MAX_VALUE;
     for (TreatyRef witness : witnesses) {
-      calculated = Math.min(calculated, witness.get().getExpiry());
+      calculated = Math.min(calculated, witness.get() == null ? 0 : witness.get().getExpiry());
     }
     return calculated;
   }
@@ -83,7 +83,9 @@ public class WitnessPolicy extends EnforcementPolicy {
   @Override
   public void activate(StatsMap weakStats) {
     for (TreatyRef witness : witnesses) {
-      // TODO: Do we need to worry about observers returned here?
+      // Don't worry about missing witnesses, it's possible they were cleared
+      // out and we're still resolving this.
+      if (witness.get() == null) continue;
       witness.get().update(false, weakStats);
     }
   }
@@ -100,6 +102,9 @@ public class WitnessPolicy extends EnforcementPolicy {
   public void unapply(MetricTreaty t) {
     // Stop observing the metric.
     for (TreatyRef witness : witnesses) {
+      // Don't worry about missing witnesses, it's possible they were cleared
+      // out anticipating this.
+      if (witness.get() == null) continue;
       witness.get().removeObserver(t.getMetric(), t.getId());
     }
   }

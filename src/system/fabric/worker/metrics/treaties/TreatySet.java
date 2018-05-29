@@ -5,7 +5,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.FastSerializable;
-import fabric.common.util.Pair;
 import fabric.metrics.Metric;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
@@ -111,6 +110,11 @@ public abstract class TreatySet
    * returns null.
    */
   public abstract MetricTreaty get(long id);
+
+  /**
+   * @return a treaty for the statement, creating one if necessary.
+   */
+  public abstract MetricTreaty get(TreatyStatement stmt);
 
   /**
    * Get the complete set of observers for the treaties.

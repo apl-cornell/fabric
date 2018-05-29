@@ -6,7 +6,9 @@ import java.io.IOException;
 
 import fabric.common.FastSerializable;
 import fabric.metrics.Metric;
+import fabric.worker.Store;
 import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 
 /**
@@ -73,6 +75,11 @@ public abstract class TreatyStatement implements FastSerializable {
   public abstract EnforcementPolicy getNewPolicy(Metric m, StatsMap weakStats);
 
   /**
+   * Get a proxy treaty for the same statement on the given store.
+   */
+  public abstract MetricTreaty getProxy(Metric m, Store s);
+
+  /**
    * Utility to read a TreatyStatement off a DataInput (for example, when
    * reading off of a network message).
    */
@@ -85,4 +92,5 @@ public abstract class TreatyStatement implements FastSerializable {
     out.writeByte(kind.ordinal());
     writeStatementData(out);
   }
+
 }

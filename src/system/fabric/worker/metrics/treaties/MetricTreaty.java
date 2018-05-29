@@ -11,6 +11,7 @@ import fabric.metrics.DerivedMetric;
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Observer;
+import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
@@ -130,11 +131,20 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       EnforcementPolicy policy, long expiry) {
     this.metric = original.metric;
     this.id = original.id;
-    this.activated = original.activated || !(policy instanceof NoPolicy);
+    //this.activated = original.activated || !(policy instanceof NoPolicy);
+    this.activated = true;
     this.statement = original.statement;
     this.observers = observers;
     this.policy = policy;
     this.expiry = expiry;
+
+    if (!original.policy.equals(policy)) {
+      // Stop observing the old policy.
+      original.policy.unapply(this);
+
+      // Start observing the new policy.
+      policy.apply(this);
+    }
 
     // Update containing treaty set.
     if (this.activated && this.policy instanceof NoPolicy) {
@@ -145,12 +155,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       // Otherwise, make sure the updated value is in the set.
       this.getMetric().get$$treaties().add(this);
     }
-
-    // Stop observing the old policy.
-    original.policy.unapply(this);
-
-    // Start observing the new policy.
-    policy.apply(this);
   }
 
   /**
@@ -188,11 +192,20 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       long newExpiry) {
     this.metric = original.metric;
     this.id = original.id;
-    this.activated = original.activated || !(policy instanceof NoPolicy);
+    //this.activated = original.activated || !(policy instanceof NoPolicy);
+    this.activated = true;
     this.statement = original.statement;
     this.observers = original.observers;
     this.policy = policy;
     this.expiry = newExpiry;
+
+    if (!original.policy.equals(policy)) {
+      // Stop observing the old policy.
+      original.policy.unapply(this);
+
+      // Start observing the new policy.
+      policy.apply(this);
+    }
 
     // Update containing treaty set.
     if (this.activated && this.policy instanceof NoPolicy) {
@@ -203,12 +216,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       // Otherwise, make sure the updated value is in the set.
       this.getMetric().get$$treaties().add(this);
     }
-
-    // Stop observing the old policy.
-    original.policy.unapply(this);
-
-    // Start observing the new policy.
-    policy.apply(this);
   }
 
   @Override
@@ -236,16 +243,26 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
         newPolicy.activate(weakStats);
 
-        MetricTreaty updatedTreaty = new MetricTreaty(this, newPolicy,
-            newPolicy.updatedExpiry(this, weakStats));
-        Logging.METRICS_LOGGER.log(Level.FINEST,
-            "UPDATING {0} TO {1} IN {2} {3}",
-            new Object[] { this, updatedTreaty,
-                TransactionManager.getInstance().getCurrentTid(),
-                Thread.currentThread() });
-        return new Pair<>(updatedTreaty,
-            oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
-                : ImmutableObserverSet.emptySet());
+        // Check if the new policy works. Otherwise, this is dead.
+        if (newPolicy.updatedExpiry(this, weakStats) > System
+            .currentTimeMillis()) {
+          MetricTreaty updatedTreaty = new MetricTreaty(this, newPolicy,
+              newPolicy.updatedExpiry(this, weakStats));
+          Logging.METRICS_LOGGER.log(Level.FINEST,
+              "UPDATING {0} TO {1} IN {2} {3}",
+              new Object[] { this, updatedTreaty,
+                  TransactionManager.getInstance().getCurrentTid(),
+                  Thread.currentThread() });
+          return new Pair<>(updatedTreaty,
+              oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
+                  : ImmutableObserverSet.emptySet());
+        } else {
+          MetricTreaty updatedTreaty =
+              new MetricTreaty(this, NoPolicy.singleton, 0);
+          return new Pair<>(updatedTreaty,
+              oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
+                  : ImmutableObserverSet.emptySet());
+        }
       }
     }
     // If nothing changed, don't update.
@@ -374,5 +391,13 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       return ImmutableMetricsVector.createVector(new Metric[] { getMetric() });
     }
     throw new InternalError("Unknown metric type!");
+  }
+
+  @Override
+  public MetricTreaty getProxyTreaty(Store s) {
+    MetricTreaty result = statement.getProxy(getMetric(), s);
+    if (activated && !result.activated)
+      result = result.update(false, StatsMap.emptyStats()).first;
+    return result;
   }
 }

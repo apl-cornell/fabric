@@ -1,0 +1,82 @@
+package fabric.metrics;
+
+import fabric.worker.Store;
+import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.proxies.ProxyMap;
+import fabric.worker.metrics.treaties.MetricTreaty;
+import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
+import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
+
+import fabric.common.exceptions.InternalError;
+
+/**
+ * A {@link DerivedMetric} that exists purely to proxy for another metric.
+ */
+public class ProxyMetric extends DerivedMetric {
+
+  public ProxyMetric fabric$metrics$ProxyMetric$(Metric primary) {
+    if (primary instanceof ProxyMetric) {
+      // Avoid overly long proxy chains.
+      primary = ((ProxyMetric) primary).term(0);
+    }
+    fabric$metrics$DerivedMetric$(new Metric native[] { primary });
+    initialize();
+    return this;
+  }
+
+  /*@Override*/
+  public Metric getProxy(Store s) {
+    if ($getStore().equals(s))
+      return this;
+    return term(0).getProxy(s);
+  }
+
+  /*@Override*/
+  public double computePresetR() {
+    return term(0).getPresetR();
+  }
+
+  /*@Override*/
+  public double computePresetB() {
+    return term(0).getPresetB();
+  }
+
+  /*@Override*/
+  public double computePresetV() {
+    return term(0).getPresetV();
+  }
+
+  /*@Override*/
+  public double computePresetN() {
+    return term(0).getPresetN();
+  }
+
+  /*@Override*/
+  protected double computeValue(StatsMap weakStats) {
+    if (weakStats.containsKey(this)) return weakStats.getValue(this);
+    return this.term(0).value(weakStats);
+  }
+  /*@Override*/
+  protected double computeVelocity(StatsMap weakStats) {
+    if (weakStats.containsKey(this)) return weakStats.getVelocity(this);
+    return this.term(0).velocity(weakStats);
+  }
+
+  /*@Override*/
+  protected double computeNoise(StatsMap weakStats) {
+    if (weakStats.containsKey(this)) return weakStats.getNoise(this);
+    return this.term(0).noise(weakStats);
+  }
+
+  /*@Override*/
+  public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
+    // TODO: Is this right?
+    return new WitnessPolicy(new MetricTreaty native [] { term(0).getEqualityTreaty(value) });
+  }
+
+  /*@Override*/
+  public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
+    // TODO: Is this right?
+    return new WitnessPolicy(new MetricTreaty native [] { term(0).getThresholdTreaty(rate, base) });
+  }
+}
