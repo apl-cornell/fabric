@@ -362,6 +362,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
   @Override
   public boolean equals(Object obj) {
     if (!(obj instanceof MetricTreaty)) return false;
+    if (obj == this) return true;
     MetricTreaty other = (MetricTreaty) obj;
     return metric.equals(other.metric) && id == other.id
         && activated == other.activated && statement.equals(other.statement)
@@ -399,5 +400,12 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     if (activated && !result.activated)
       result = result.update(false, StatsMap.emptyStats()).first;
     return result;
+  }
+
+  @Override
+  public boolean isStrictExtensionOf(MetricTreaty t) {
+    return metric.equals(t.metric) && id == t.id && activated == t.activated
+        && statement.equals(t.statement) && observers.equals(t.observers)
+        && policy.equals(t.policy) && expiry > t.expiry;
   }
 }

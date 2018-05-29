@@ -202,7 +202,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   }
 
   private void setNewValue(Object newVal, TreatyRef newTreaty) {
-    if (this.dropOldValue() && newTreaty != null && newTreaty.get().valid()) {
+    if (this.dropOldValue() && newTreaty != null && newTreaty.get() != null && newTreaty.get().valid()) {
       this.curVal = newVal;
       this.curTreaty = new TreatyRef(newTreaty.get()
           .getProxyTreaty(this.$getStore())

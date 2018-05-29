@@ -62,7 +62,6 @@ public class ThresholdStatement extends TreatyStatement {
     // Always use *correct* value for value
     double x = m.value();
     // Use weak v and n, x is the only part that needs to be exact.
-    // TODO: reenable support for weak parameters.
     double v = m.velocity(weakStats);
     double n = m.noise(weakStats);
 
@@ -142,7 +141,6 @@ public class ThresholdStatement extends TreatyStatement {
     // Always use *correct* value for value
     double x = m.value();
     // Use weak v and n, x is the only part that needs to be exact.
-    // TODO: reenable support for weak parameters.
     double v = m.velocity(weakStats);
     double n = m.noise(weakStats);
 

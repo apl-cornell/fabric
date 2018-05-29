@@ -156,4 +156,24 @@ public class MetricTreatySet extends TreatySet {
     }
     return result;
   }
+
+  @Override
+  public boolean isStrictExtensionOf(TreatySet t) {
+    if (t instanceof MetricTreatySet) {
+      MetricTreatySet other = (MetricTreatySet) t;
+      boolean hasExtension = false;
+      if (other.items.keySet().equals(this.items.keySet())) {
+        for (MetricTreaty oldTreaty : other) {
+          MetricTreaty newTreaty = items.get(oldTreaty.getId());
+          if (newTreaty.isStrictExtensionOf(oldTreaty)) {
+            hasExtension = true;
+          } else if (!newTreaty.equals(oldTreaty)) {
+            return false;
+          }
+        }
+        return hasExtension;
+      }
+    }
+    return false;
+  }
 }

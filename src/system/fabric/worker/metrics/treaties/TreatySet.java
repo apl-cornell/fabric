@@ -68,24 +68,13 @@ public abstract class TreatySet
    */
   public static boolean checkExtension(TreatySet from, TreatySet to) {
     return from == to || (from != null && to != null
-        && (from.equals(to) || checkExtensionStrict(from, to)));
+        && (from.equals(to) || to.isStrictExtensionOf(from)));
   }
 
   /**
-   * Check if the second TreatySet is a strict extension of all treaties in
-   * the first TreatySet.
-   *
-   * @param from
-   *    the starting {@link TreatySet}
-   * @param to
-   *    the ending {@link TreatySet}
-   * @return true if from and to are not equal and to only differs with from by
-   * extending the still live treaties.
+   * Check if this is a *strict* extension of the given TreatySet.
    */
-  public static boolean checkExtensionStrict(TreatySet from, TreatySet to) {
-    // TODO
-    return false;
-  }
+  public abstract boolean isStrictExtensionOf(TreatySet t);
 
   /**
    * Add a treaty, overwriting any pre-existing treaties with an equivalent

@@ -95,4 +95,9 @@ public interface Treaty<This extends Treaty<This>> extends FastSerializable {
    * before returning if this treaty is activated.
    */
   public MetricTreaty getProxyTreaty(Store s);
+
+  /**
+   * Return true iff this treaty is a strict extension of the given treaty.
+   */
+  public boolean isStrictExtensionOf(This t);
 }

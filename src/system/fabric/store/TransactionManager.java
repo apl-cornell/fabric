@@ -389,8 +389,7 @@ public class TransactionManager {
 
       int curVersion = database.getVersion(onum);
       TreatySet curTreaties = database.getTreaties(onum);
-      if (curVersion != version
-          || (TreatySet.checkExtensionStrict(treaties, curTreaties))) {
+      if (curVersion != version || curTreaties.isStrictExtensionOf(treaties)) {
         result.add(database.read(onum));
       }
     }
@@ -406,6 +405,7 @@ public class TransactionManager {
    */
   public void queueExtensions(LongSet extensions) {
     /*
+     * TODO
     for (LongIterator it = extensions.iterator(); it.hasNext();) {
       long onum = it.next();
       queueExtension(onum);

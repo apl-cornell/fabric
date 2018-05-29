@@ -103,4 +103,9 @@ public class DummyTreatySet extends TreatySet {
   public ImmutableObserverSet getObservers() {
     return ImmutableObserverSet.emptySet();
   }
+
+  @Override
+  public boolean isStrictExtensionOf(TreatySet t) {
+    return false;
+  }
 }
