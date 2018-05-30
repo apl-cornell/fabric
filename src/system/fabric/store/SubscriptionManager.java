@@ -151,7 +151,10 @@ public class SubscriptionManager {
           }
           continue;
         }
-        boolean isDissem = subMap.get(worker);
+        Boolean isDissem = subMap.get(worker);
+
+        // Skip if the worker has been unsubscribed from under us.
+        if (isDissem == null) continue;
 
         GroupContainer groupContainer;
         try {
