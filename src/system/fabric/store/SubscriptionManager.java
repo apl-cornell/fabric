@@ -1,5 +1,7 @@
 package fabric.store;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -131,8 +133,12 @@ public class SubscriptionManager {
           runGroup(curGroup);
         }
       } catch (Throwable t) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        t.printStackTrace(pw);
         Logging.MISC_LOGGER.log(Level.SEVERE,
-            "Subscription runner exited with exception", t);
+            "Subscription runner exited with exception {0}\n{1}",
+            new Object[] { t, sw });
       }
     }
 
