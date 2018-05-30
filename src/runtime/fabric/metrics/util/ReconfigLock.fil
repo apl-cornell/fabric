@@ -8,7 +8,7 @@ import fabric.common.Logging;
 import java.util.logging.Level;
 
 /**
- * Utility class acting as a lock for Contracts to help with reconfigurations.
+ * Utility class acting as a lock for treaties to help with reconfigurations.
  */
 public class ReconfigLock {
 

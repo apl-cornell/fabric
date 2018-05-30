@@ -657,12 +657,12 @@ public abstract class ObjectDB {
   public final void prepareRead(long tid, Principal worker, long onum,
       int version, TreatySet treaties,
       OidKeyHashMap<SerializedObject> versionConflicts,
-      OidKeyHashMap<TreatySet> longerContracts)
+      OidKeyHashMap<TreatySet> longerTreaties)
       throws TransactionPrepareFailedException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, "Aborted by another thread");
+          longerTreaties, "Aborted by another thread");
     }
 
     PendingTransaction tx;
@@ -670,7 +670,7 @@ public abstract class ObjectDB {
       if (!submap.containsKey(worker)
           || submap.get(worker).state == PendingTransaction.State.ABORTING)
         throw new TransactionPrepareFailedException(versionConflicts,
-            longerContracts, "Aborted by another thread");
+            longerTreaties, "Aborted by another thread");
 
       tx = submap.get(worker);
     }
@@ -686,14 +686,14 @@ public abstract class ObjectDB {
       curTreaties = getTreaties(onum);
     } catch (AccessException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, e.getMessage());
+          longerTreaties, e.getMessage());
     }
 
     if (curVersion != version) {
       versionConflicts.put(Worker.getWorker().getStore(getName()), onum,
           read(onum));
     } else if (TreatySet.checkExtension(treaties, curTreaties)) {
-      longerContracts.put(Worker.getWorker().getStore(getName()), onum,
+      longerTreaties.put(Worker.getWorker().getStore(getName()), onum,
           curTreaties);
     }
   }
@@ -715,12 +715,12 @@ public abstract class ObjectDB {
    */
   public final void prepareUpdate(long tid, Principal worker,
       SerializedObject obj, OidKeyHashMap<SerializedObject> versionConflicts,
-      OidKeyHashMap<TreatySet> longerContracts, UpdateMode mode)
+      OidKeyHashMap<TreatySet> longerTreaties, UpdateMode mode)
       throws TransactionPrepareFailedException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, "Aborted by another thread");
+          longerTreaties, "Aborted by another thread");
     }
 
     long onum = obj.getOnum();
@@ -730,7 +730,7 @@ public abstract class ObjectDB {
           || submap.get(worker).state == PendingTransaction.State.ABORTING)
         throw new TransactionPrepareFailedException(versionConflicts,
 
-            longerContracts, "Aborted by another thread");
+            longerTreaties, "Aborted by another thread");
       tx = submap.get(worker);
     }
 
@@ -744,7 +744,7 @@ public abstract class ObjectDB {
       if (exists(onum)) {
         throw new TransactionPrepareFailedException(versionConflicts,
 
-            longerContracts, "Object " + onum + " already exists.");
+            longerTreaties, "Object " + onum + " already exists.");
       }
 
       // Set the object's initial version number.
@@ -788,19 +788,19 @@ public abstract class ObjectDB {
    *          If the object modified was out of date, then a new entry will be
    *          added to this map, binding the object's onum to its current
    *          version.
-   * @param longerContracts
-   *          the running set of contracts to send back to the worker which have
+   * @param longerTreaties
+   *          the running set of treaties to send back to the worker which have
    *          a later expiry than the worker has.
    */
   public final void prepareExtension(long tid, Principal worker,
       ExpiryExtension extension,
       OidKeyHashMap<SerializedObject> versionConflicts,
-      OidKeyHashMap<TreatySet> longerContracts)
+      OidKeyHashMap<TreatySet> longerTreaties)
       throws TransactionPrepareFailedException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts, "Aborted by another thread");
+          longerTreaties, "Aborted by another thread");
     }
 
     long onum = extension.onum;
@@ -809,7 +809,7 @@ public abstract class ObjectDB {
       if (!submap.containsKey(worker)
           || submap.get(worker).state == PendingTransaction.State.ABORTING)
         throw new TransactionPrepareFailedException(versionConflicts,
-            longerContracts, "Aborted by another thread");
+            longerTreaties, "Aborted by another thread");
       tx = submap.get(worker);
     }
 
@@ -831,7 +831,7 @@ public abstract class ObjectDB {
     TreatySet curTreaties = storeCopy.getTreaties();
     if (TreatySet.checkExtension(extension.treaties, curTreaties)) {
       if (!curTreaties.equals(extension.treaties)) {
-        longerContracts.put(Worker.getWorker().getStore(getName()), onum,
+        longerTreaties.put(Worker.getWorker().getStore(getName()), onum,
             curTreaties);
       }
       // Only a read, demote from an extension.
@@ -985,19 +985,6 @@ public abstract class ObjectDB {
     if (obj == null) throw new AccessException(name, onum);
 
     return obj.getVersion();
-  }
-
-  /**
-   * Returns the expiry on the object stored at a particular onum.
-   *
-   * @throws AccessException
-   *           if no object exists at the given onum.
-   */
-  public long getExpiry(long onum) throws AccessException {
-    SerializedObject obj = read(onum);
-    if (obj == null) throw new AccessException(name, onum);
-
-    return obj.getExpiry();
   }
 
   /**

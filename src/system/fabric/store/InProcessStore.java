@@ -140,7 +140,7 @@ public class InProcessStore extends RemoteStore {
         sm.createSurrogates(req);
 
         try {
-          OidKeyHashMap<TreatySet> longerContracts =
+          OidKeyHashMap<TreatySet> longerTreaties =
               tm.prepare(Worker.getWorker().getPrincipal(), req);
 
           long prepareTime = System.currentTimeMillis();
@@ -149,7 +149,7 @@ public class InProcessStore extends RemoteStore {
             tm.commitTransaction(getLocalWorkerIdentity(), tid);
           }
           Worker.getWorker().inProcessRemoteWorker
-              .notifyStorePrepareSuccess(tid, prepareTime, longerContracts);
+              .notifyStorePrepareSuccess(tid, prepareTime, longerTreaties);
         } catch (TransactionPrepareFailedException e) {
           Worker.getWorker().inProcessRemoteWorker.notifyStorePrepareFailed(tid,
               e);

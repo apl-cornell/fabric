@@ -87,8 +87,8 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   }
 
   public void notifyStorePrepareSuccess(long tid, long time,
-      OidKeyHashMap<TreatySet> longerContracts) {
-    sendAsync(new StorePrepareSuccessMessage(tid, time, longerContracts));
+      OidKeyHashMap<TreatySet> longerTreaties) {
+    sendAsync(new StorePrepareSuccessMessage(tid, time, longerTreaties));
   }
 
   public void notifyStoreCommitted(long tid) {
@@ -101,8 +101,8 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   }
 
   public void notifyWorkerPrepareSuccess(long tid, long time,
-      OidKeyHashMap<TreatySet> longerContracts) {
-    sendAsync(new WorkerPrepareSuccessMessage(tid, time, longerContracts));
+      OidKeyHashMap<TreatySet> longerTreaties) {
+    sendAsync(new WorkerPrepareSuccessMessage(tid, time, longerTreaties));
   }
 
   public void notifyWorkerCommitted(long tid) {

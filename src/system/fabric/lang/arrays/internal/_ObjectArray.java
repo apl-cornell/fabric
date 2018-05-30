@@ -51,13 +51,13 @@ public interface _ObjectArray<T extends Object> extends Object {
     /**
      * Used for deserializing.
      */
-    public _Impl(Store store, long onum, int version, long expiry,
+    public _Impl(Store store, long onum, int version,
         ImmutableObserverSet observers, Store labelStore, long labelOnum,
         Store accessPolicyStore, long accessPolicyOnum, ObjectInput in,
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, observers, labelStore, labelOnum,
+      super(store, onum, version, observers, labelStore, labelOnum,
           accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
           interStoreRefs);
       proxyType = (Class<? extends Object._Proxy>) Worker.getWorker()

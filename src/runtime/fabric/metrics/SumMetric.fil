@@ -120,7 +120,7 @@ public class SumMetric extends DerivedMetric {
     /*@Override*/
     // Pushing down really messes with tree structure when sharing weak
     // estimation across subexpressions but not doing so causes handling
-    // negation of multistore contracts to loop.  For now we push down. In the
+    // negation of multistore treaties to loop.  For now we push down. In the
     // future, we should improve handling of negated metrics to get the best of
     // both worlds.
     //

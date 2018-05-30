@@ -208,7 +208,7 @@ public abstract class AbstractList extends AbstractCollection implements List
    * Obtains a hash code for this list. In order to obey the general
    * contract of the hashCode method of class Object, this value is
    * calculated as follows:
-   * 
+   *
 <pre>hashCode = 1;
 Iterator i = list.iterator(LOCAL_STORE);
 while (i.hasNext())
@@ -270,7 +270,7 @@ while (i.hasNext())
     // Bah, Sun's implementation forbids using listIterator(0).
     return (AnonymousIterator) new AnonymousIterator@store().fabric$util$AbstractList$AnonymousIterator$();
   }
-  
+
   private class AnonymousIterator implements Iterator {
 
 
@@ -296,7 +296,7 @@ while (i.hasNext())
     /**
      * Checks for modifications made to the list from elsewhere while iteration
      * is in progress.
-     * 
+     *
      * @throws ConcurrentModificationException
      *           if the list has been modified elsewhere.
      */
@@ -306,7 +306,7 @@ while (i.hasNext())
 
     /**
      * Tests to see if there are any more objects to return.
-     * 
+     *
      * @return True if the end of the list has not yet been reached.
      */
     public boolean hasNext() {
@@ -315,7 +315,7 @@ while (i.hasNext())
 
     /**
      * Retrieves the next object from the list.
-     * 
+     *
      * @return The next object.
      * @throws NoSuchElementException
      *           if there are no more objects to retrieve.
@@ -332,7 +332,7 @@ while (i.hasNext())
     /**
      * Removes the last object retrieved by <code>next()</code> from the list,
      * if the list supports object removal.
-     * 
+     *
      * @throws ConcurrentModificationException
      *           if the list has been modified elsewhere.
      * @throws IllegalStateException
@@ -519,7 +519,7 @@ while (i.hasNext())
    *
    * All methods first check to see if the actual modCount of the backing
    * list is equal to its expected value, and throw a
-   * ConcurrentModificationException if it is not. 
+   * ConcurrentModificationException if it is not.
    *
    * @param fromIndex the index that the returned list should start from
    *        (inclusive)
@@ -546,11 +546,11 @@ while (i.hasNext())
   }
 
   /**
-   * 
+   *
    */
   private final class AbstractListIterator implements ListIterator {
     /**
-     * 
+     *
      */
     private final int index;
 
@@ -724,7 +724,7 @@ while (i.hasNext())
     /**
      * Adds the supplied object before the element that would be returned
      * by a call to <code>next()</code>, if the list supports addition.
-     * 
+     *
      * @param o The object to add to the list.
      * @throws UnsupportedOperationException if the list doesn't support
      *         the addition of new elements.
@@ -771,11 +771,11 @@ while (i.hasNext())
     }
 
     /**
-     * 
+     *
      */
     private final class SubListIterator implements ListIterator {
       /**
-       * 
+       *
        */
       private final int index;
 
@@ -918,7 +918,7 @@ while (i.hasNext())
       /**
        * Adds the supplied object before the element that would be returned
        * by a call to <code>next()</code>, if the list supports addition.
-       * 
+       *
        * @param o The object to add to the list.
        * @throws UnsupportedOperationException if the list doesn't support
        *         the addition of new elements.

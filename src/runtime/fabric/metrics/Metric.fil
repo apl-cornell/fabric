@@ -483,7 +483,7 @@ public abstract class Metric extends AbstractSubject
    */
   public EnforcementPolicy equalityPolicy(double value, final Store s) {
     // This is only called if we're computing a new policy for a *pre-existing*
-    // contract so this is when a coordination occurs in the protocol.
+    // treaty so this is when a coordination occurs in the protocol.
     return equalityPolicy(value, StatsMap.emptyStats(), s);
   }
 
@@ -524,7 +524,7 @@ public abstract class Metric extends AbstractSubject
    */
   public EnforcementPolicy thresholdPolicy(double rate, double base, final Store s) {
     // This is only called if we're computing a new policy for a *pre-existing*
-    // contract so this is when a coordination occurs in the protocol.
+    // treaty so this is when a coordination occurs in the protocol.
     return thresholdPolicy(rate, base, StatsMap.emptyStats(), s);
   }
 
@@ -639,7 +639,7 @@ public abstract class Metric extends AbstractSubject
 
   /**
    * @param bound
-   *        the bound that the contract will enforce on this
+   *        the bound that the treaty will enforce on this
    *        {@link Metric}
    * @return a {@link MetricTreaty} asserting this metric satisfies the
    *       given bound.
@@ -650,7 +650,7 @@ public abstract class Metric extends AbstractSubject
 
   /**
    * @param bound
-   *        the bound that the contract will enforce on this
+   *        the bound that the treaty will enforce on this
    *        {@link Metric}
    * @return a {@link MetricTreaty} asserting this metric satisfies the
    *       given bound.

@@ -6,35 +6,25 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 
-import com.sleepycat.je.LockConflictException;
-
 import fabric.common.AuthorizationUtil;
-import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
-import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
-import fabric.common.util.ConcurrentLongKeyHashMap;
-import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
-import fabric.common.util.Triple;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
-import fabric.metrics.contracts.Contract;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
-import fabric.worker.AbortException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -62,7 +52,8 @@ public class TransactionManager {
   public TransactionManager(ObjectDB database) {
     this.database = database;
     this.sm = new SubscriptionManager(database.getName(), this);
-    Threading.getPool().submit(extensionsRunner);
+    // TODO
+    //Threading.getPool().submit(extensionsRunner);
   }
 
   /**
@@ -122,7 +113,7 @@ public class TransactionManager {
    *
    * @param worker
    *          The worker requesting the prepare
-   * @return a collection of onums and expiries for contracts that were prepared
+   * @return a collection of onums and expiries for treaties that were prepared
    *         for extension or reading that were already longer lasting on the
    *         store.
    * @throws TransactionPrepareFailedException
@@ -414,6 +405,7 @@ public class TransactionManager {
   }
 
   public void queueExtension(long onum) {
+    /* TODO
     long expiry = 0;
     try {
       expiry = database.getExpiry(onum);
@@ -449,6 +441,7 @@ public class TransactionManager {
         }
       }
     }
+    */
   }
 
   /**
@@ -456,16 +449,19 @@ public class TransactionManager {
    * replace the request with a new (to be handled earlier) request, if
    * necessary.
    */
-  private final ConcurrentLongKeyMap<DelayedExtension> unresolvedExtensions =
-      new ConcurrentLongKeyHashMap<>();
+  // TODO
+  //private final ConcurrentLongKeyMap<DelayedExtension> unresolvedExtensions =
+  //    new ConcurrentLongKeyHashMap<>();
 
   /**
    * The extensions waiting to run.
    */
-  private final DelayQueue<DelayedExtension> waitingExtensions =
-      new DelayQueue<>();
+  // TODO
+  //private final DelayQueue<DelayedExtension> waitingExtensions =
+  //    new DelayQueue<>();
 
-  private final int EXTENSION_WINDOW = 1500;
+  // TODO
+  //private final int EXTENSION_WINDOW = 1500;
 
   /**
    * A thread that goes through the extensions queue, waiting until the next
@@ -474,6 +470,7 @@ public class TransactionManager {
    * {@code DelayedExtension}'s time, handles the extension in a transaction,
    * then dequeues the extension.
    */
+  /* TODO
   private final Threading.NamedRunnable extensionsRunner =
       new Threading.NamedRunnable("Extensions runner") {
         @Override
@@ -595,6 +592,7 @@ public class TransactionManager {
           }
         }
       };
+   */
 
   /**
    * Wait for an update to occur to push the version for the given onum past the

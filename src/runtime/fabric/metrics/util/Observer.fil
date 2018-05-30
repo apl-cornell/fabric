@@ -4,14 +4,13 @@ import fabric.util.Set;
 
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
-import fabric.metrics.contracts.Contract;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.common.util.LongSet;
 
 /**
  * Abstraction for tracking trees of observers/subjects. Unifies tracking
- * between {@link Metric} trees and {@link Contract} trees.
+ * of {@link Metric} trees.
  * <p>
  * An {@link Observer} can be attached to {@link Subject}s. When
  * {@link Subject}s the {@link Observer} are associated with are updated,

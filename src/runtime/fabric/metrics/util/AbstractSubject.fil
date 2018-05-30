@@ -9,7 +9,6 @@ import fabric.util.List;
 import java.util.Iterator;
 
 import fabric.metrics.SampledMetric;
-import fabric.metrics.contracts.Contract;
 
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;

@@ -603,7 +603,7 @@ public interface ArrayList
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
+ fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                      long labelOnum, fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
@@ -611,7 +611,7 @@ public interface ArrayList
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, observers, labelStore, labelOnum,
+            super(store, onum, version, observers, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.size = in.readInt();
@@ -796,7 +796,7 @@ public interface ArrayList
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
+ fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -804,7 +804,7 @@ public interface ArrayList
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, observers, labelStore, labelOnum,
+                super(store, onum, version, observers, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.serialVersionUID = in.readLong();

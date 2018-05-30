@@ -376,7 +376,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   /*@Override*/
   public void addObserver(Observer obs) {
     if (!isObserved()) {
-      // Start tracking terms if this is now used by a contract directly.
+      // Start tracking terms if this is now used by a treaty directly.
       for (int i = 0; i < terms.length(); i++) {
         term(i).addObserver(this);
       }

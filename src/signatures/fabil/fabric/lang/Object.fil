@@ -11,22 +11,17 @@ public class Object extends java.lang.Object {
   protected final Label $updateLabel;
 
   /**
-   * The expiry for contracts
-   */
-  protected long $expiry;
-
-  /**
-   * The observers for contracts and metrics
+   * The observers for treaties and metrics
    */
   protected ImmutableObserverSet $observers;
 
   /**
-   * The associated for contracts and metrics
+   * The associated for treaties and metrics
    */
   protected ImmutableSet $associated;
 
   /**
-   * The associated for contracts and metrics
+   * The treaties on this object.
    */
   protected TreatySet $treaties;
 

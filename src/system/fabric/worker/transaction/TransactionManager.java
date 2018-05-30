@@ -136,12 +136,12 @@ public final class TransactionManager {
   /**
    * The locks currently held by this Thread's transaction manager.
    */
-  protected OidKeyHashMap<Boolean> contractLocksHeld = new OidKeyHashMap<>();
+  protected OidKeyHashMap<Boolean> treatyLocksHeld = new OidKeyHashMap<>();
 
   /**
    * The locks to acquire before the next transaction attempt.
    */
-  protected OidKeyHashMap<Boolean> contractsToAcquire = new OidKeyHashMap<>();
+  protected OidKeyHashMap<Boolean> treatiesToAcquire = new OidKeyHashMap<>();
 
   /**
    * The locks that some other transaction acquired that we're waiting on.
@@ -153,7 +153,7 @@ public final class TransactionManager {
    * a "single attempt" transaction in the system code.
    */
   public void clearLockObjectState() {
-    contractsToAcquire.clear();
+    treatiesToAcquire.clear();
     waitingOn.clear();
     // Don't clear out locks held, that would cause issues.
   }
@@ -174,7 +174,7 @@ public final class TransactionManager {
         new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
     current.acquires.put(lock, true);
     if (!acquiringLocks && !current.locksCreated.containsKey(lock)) {
-      contractsToAcquire.put(lock, true);
+      treatiesToAcquire.put(lock, true);
     }
   }
 
@@ -184,11 +184,11 @@ public final class TransactionManager {
     Logging.log(METRICS_LOGGER, Level.FINER, "CHECKING LOCK {0}/{1} IN {2}/{3}",
         lock.$getStore(), new Long(lock.$getOnum()), Thread.currentThread(),
         getCurrentTid());
-    if (contractLocksHeld.containsKey(lock)) {
+    if (treatyLocksHeld.containsKey(lock)) {
       // If you're checking for it and you have it, you're 'using' it.
       if (!current.locksCreated.containsKey(lock)) {
         // If you didn't create it, mark it as something to reacquire on retry.
-        contractsToAcquire.put(lock, true);
+        treatiesToAcquire.put(lock, true);
       }
       return true;
     }
@@ -212,7 +212,7 @@ public final class TransactionManager {
   // anyways.
   public void registerLockConflict(fabric.lang.Object lock) {
     // Don't get locks on retry
-    contractsToAcquire.clear();
+    treatiesToAcquire.clear();
     // Mark the lock as being waited on.
     waitingOn.put(lock, ((_Impl) lock.fetch()).$version);
     TransactionID curTID = current.tid;
@@ -224,10 +224,10 @@ public final class TransactionManager {
   }
 
   protected void releaseHeldLocks() {
-    if (!contractLocksHeld.isEmpty()) {
+    if (!treatyLocksHeld.isEmpty()) {
       List<Future<?>> releaseFutures = new ArrayList<>();
-      for (final Store s : contractLocksHeld.storeSet()) {
-        final LongSet onums = contractLocksHeld.get(s).keySet();
+      for (final Store s : treatyLocksHeld.storeSet()) {
+        final LongSet onums = treatyLocksHeld.get(s).keySet();
         releaseFutures
             .add(Threading.getPool().submit(new Threading.NamedRunnable(
                 "Store " + s.name() + " lock object release") {
@@ -272,9 +272,9 @@ public final class TransactionManager {
         }
       }
       if (METRICS_LOGGER.isLoggable(Level.FINER)) {
-        for (Store s : contractLocksHeld.storeSet()) {
-          for (LongIterator it =
-              contractLocksHeld.get(s).keySet().iterator(); it.hasNext();) {
+        for (Store s : treatyLocksHeld.storeSet()) {
+          for (LongIterator it = treatyLocksHeld.get(s).keySet().iterator(); it
+              .hasNext();) {
             long onum = it.next();
             Logging.log(METRICS_LOGGER, Level.FINER,
                 "RELEASED LOCK {0}/{1} IN {2}", s, onum,
@@ -282,7 +282,7 @@ public final class TransactionManager {
           }
         }
       }
-      contractLocksHeld.clear();
+      treatyLocksHeld.clear();
     }
   }
 
@@ -329,13 +329,13 @@ public final class TransactionManager {
     waitingOn.clear();
   }
 
-  protected void acquireContractLocks() {
+  protected void acquireTreatyLocks() {
     // Nothing needed if we have all the locks we need and aren't waiting on
     // other locks.
-    if (!contractsToAcquire.equals(contractLocksHeld) || !waitingOn.isEmpty()) {
+    if (!treatiesToAcquire.equals(treatyLocksHeld) || !waitingOn.isEmpty()) {
       // Grab locks still needed.
-      final OidKeyHashMap<Boolean> contractsToAcquireF =
-          new OidKeyHashMap<>(contractsToAcquire);
+      final OidKeyHashMap<Boolean> treatiesToAcquireF =
+          new OidKeyHashMap<>(treatiesToAcquire);
 
       // First release any held locks.
       releaseHeldLocks();
@@ -344,7 +344,7 @@ public final class TransactionManager {
       waitForOutstandingLocks();
 
       // Only bother with lock dance if there's a change in locks we want.
-      if (!contractsToAcquireF.equals(contractLocksHeld)) {
+      if (!treatiesToAcquireF.equals(treatyLocksHeld)) {
         boolean success = false;
         int attempts = 0;
         int successes = 0;
@@ -383,11 +383,11 @@ public final class TransactionManager {
           // Attempt to acquire locks.
           success = true;
           successes = 0;
-          if (!contractsToAcquireF.isEmpty()) {
+          if (!treatiesToAcquireF.isEmpty()) {
             List<Future<Triple<Store, Boolean, OidKeyHashMap<Integer>>>> acquireFutures =
                 new ArrayList<>();
-            for (final Store s : contractsToAcquireF.storeSet()) {
-              final LongSet onums = contractsToAcquireF.get(s).keySet();
+            for (final Store s : treatiesToAcquireF.storeSet()) {
+              final LongSet onums = treatiesToAcquireF.get(s).keySet();
               acquireFutures.add(Threading.getPool().submit(
                   new Threading.NamedCallable<Triple<Store, Boolean, OidKeyHashMap<Integer>>>(
                       "Store " + s.name() + " lock object acquire") {
@@ -437,10 +437,10 @@ public final class TransactionManager {
                 if (p.second) {
                   successes++;
                   for (LongIterator it =
-                      contractsToAcquireF.get(p.first).keySet().iterator(); it
+                      treatiesToAcquireF.get(p.first).keySet().iterator(); it
                           .hasNext();) {
                     long onum = it.next();
-                    contractLocksHeld.put(p.first, onum, true);
+                    treatyLocksHeld.put(p.first, onum, true);
                     Logging.log(METRICS_LOGGER, Level.FINER,
                         "ACQUIRED LOCK {0}/{1} IN {2}", p.first, onum,
                         Thread.currentThread());
@@ -473,12 +473,12 @@ public final class TransactionManager {
       }
       // Again, check if there are more locks to wait for after the "lock dance"
       waitForOutstandingLocks();
-      contractsToAcquire.clear();
+      treatiesToAcquire.clear();
     }
   }
 
-  protected void releaseContractLocks() {
-    OidKeyHashMap<Boolean> locksCopy = new OidKeyHashMap<>(contractLocksHeld);
+  protected void releaseTreatyLocks() {
+    OidKeyHashMap<Boolean> locksCopy = new OidKeyHashMap<>(treatyLocksHeld);
     locksCopy.putAll(current.locksCreated);
     if (!acquiringLocks) {
       locksCopy.putAll(current.acquires);
@@ -511,7 +511,7 @@ public final class TransactionManager {
         for (LongIterator it = acquires.get(s).keySet().iterator(); it
             .hasNext();) {
           long onum = it.next();
-          contractLocksHeld.put(s, onum, true);
+          treatyLocksHeld.put(s, onum, true);
           Logging.log(METRICS_LOGGER, Level.FINER,
               "ACQUIRED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
         }
@@ -521,7 +521,7 @@ public final class TransactionManager {
             .hasNext();) {
           stats.markLocksUsed();
           long onum = it.next();
-          contractLocksHeld.remove(s, onum);
+          treatyLocksHeld.remove(s, onum);
           Logging.log(METRICS_LOGGER, Level.FINER,
               "RELEASED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
         }
@@ -570,7 +570,7 @@ public final class TransactionManager {
     readMap.abortReaders(store, onum);
   }
 
-  public static ReadMap.Entry getReadMapEntry(_Impl impl, long expiry) {
+  public static ReadMap.Entry getReadMapEntry(_Impl impl) {
     return readMap.getEntry(impl);
   }
 
@@ -621,7 +621,7 @@ public final class TransactionManager {
         if (current.commitState.value != PREPARING) {
           // Transaction failed due to reasons that are definitely not a
           // collision on a remote value, don't start using pessimistic locks.
-          contractsToAcquire.clear();
+          treatiesToAcquire.clear();
         }
         while (current.commitState.value == PREPARING) {
           try {
@@ -751,15 +751,15 @@ public final class TransactionManager {
           METRICS_LOGGER.log(Level.FINEST, "RELEASING LOCKS AT THE END OF {0}",
               current);
           if (METRICS_LOGGER.isLoggable(Level.FINEST)) {
-            for (Store s : contractLocksHeld.storeSet()) {
+            for (Store s : treatyLocksHeld.storeSet()) {
               for (LongIterator it =
-                  contractLocksHeld.get(s).keySet().iterator(); it.hasNext();) {
+                  treatyLocksHeld.get(s).keySet().iterator(); it.hasNext();) {
                 METRICS_LOGGER.log(Level.FINEST,
                     "\t" + s.name() + "://" + it.next());
               }
             }
           }
-          releaseContractLocks();
+          releaseTreatyLocks();
         }
       } catch (LockConflictException e) {
         TransactionID tid = current.tid;
@@ -957,7 +957,7 @@ public final class TransactionManager {
    * Sends prepare messages to the cohorts in a distributed transaction. Also
    * sends abort messages if any cohort fails to prepare.
    *
-   * @return A map from stores to maps from onums to contracts that have longer
+   * @return A map from stores to maps from onums to treaties that have longer
    * expiries at the store, to update in the cache after this transaction
    * commits.
    *
@@ -976,7 +976,7 @@ public final class TransactionManager {
    * prepare fails, the local portion and given branch of the transaction is
    * rolled back.
    *
-   * @return A map from stores to maps from onums to contracts that have longer
+   * @return A map from stores to maps from onums to treaties that have longer
    * expiries at the store, to update in the cache after this transaction
    * commits.
    *
@@ -1066,7 +1066,7 @@ public final class TransactionManager {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST,
         "{0} committed at stores...updating data structures", current);
     current.commitTopLevel();
-    contractsToAcquire.clear();
+    treatiesToAcquire.clear();
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committed", current);
 
     synchronized (current.commitState) {
@@ -1507,7 +1507,7 @@ public final class TransactionManager {
   }
 
   /**
-   * Registers a contract that can and should be extended later closer to the
+   * Registers a treaty that can and should be extended later closer to the
    * expiration.  This will be done by sending an extension message after the
    * transaction completes.
    *
@@ -1534,7 +1534,7 @@ public final class TransactionManager {
   }
 
   /**
-   * Registers a contract that can and should be extended later closer to the
+   * Registers a treaty that can and should be extended later closer to the
    * expiration.  This will be done by sending an extension message after the
    * transaction completes.
    */
@@ -1662,7 +1662,7 @@ public final class TransactionManager {
     if ((current == null || current.tid == null) && !acquiringLocks) {
       stats.markTxnAttempt();
       acquiringLocks = true;
-      acquireContractLocks();
+      acquireTreatyLocks();
       acquiringLocks = false;
     }
 

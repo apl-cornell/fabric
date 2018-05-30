@@ -56,7 +56,7 @@ public class ConfigProperties {
   public final Map<String, Short> inDelays;
 
   /**
-   * Contract properties (allows for selecting which strategy to use for either
+   * Treaty properties (allows for selecting which strategy to use for either
    * our approach or "baseline" approaches).
    */
   // Flag to indicate if the strategy should be a preset (instead of the
@@ -163,7 +163,7 @@ public class ConfigProperties {
       p.remove(INBOUND_DELAY_PROPERTY_PREFIX + node);
     }
 
-    /************************** Contract Properties ***************************/
+    /************************** Treaty Properties ***************************/
     this.usePreset = Boolean
         .parseBoolean(removeProperty(p, "fabric.metrics.usePreset", "false"));
 

@@ -8,10 +8,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.DelayQueue;
-import java.util.logging.Level;
 
-import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
@@ -19,8 +16,6 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
-import fabric.common.util.ConcurrentLongKeyHashMap;
-import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
@@ -37,11 +32,9 @@ import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.messages.StoreCommittedMessage;
 import fabric.messages.StorePrepareSuccessMessage;
-import fabric.metrics.contracts.Contract;
 import fabric.store.DelayedExtension;
 import fabric.util.HashMap;
 import fabric.util.Map;
-import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.TransactionManager;
@@ -218,14 +211,16 @@ public final class LocalStore implements Store, Serializable {
    * replace the request with a new (to be handled earlier) request, if
    * necessary.
    */
-  private final ConcurrentLongKeyMap<DelayedExtension> unresolvedExtensions =
-      new ConcurrentLongKeyHashMap<>();
+  // TODO
+  //private final ConcurrentLongKeyMap<DelayedExtension> unresolvedExtensions =
+  //    new ConcurrentLongKeyHashMap<>();
 
   /**
    * The extensions waiting to run.
    */
-  private final DelayQueue<DelayedExtension> waitingExtensions =
-      new DelayQueue<>();
+  // TODO
+  //private final DelayQueue<DelayedExtension> waitingExtensions =
+  //    new DelayQueue<>();
 
   /**
    * A thread that goes through the extensions queue, waiting until the next
@@ -234,6 +229,7 @@ public final class LocalStore implements Store, Serializable {
    * {@code DelayedExtension}'s time, handles the extension in a transaction,
    * then dequeues the extension.
    */
+  /* TODO
   private final Threading.NamedRunnable extensionsRunner =
       new Threading.NamedRunnable("Extensions runner") {
         @Override
@@ -284,6 +280,7 @@ public final class LocalStore implements Store, Serializable {
           }
         }
       };
+      */
 
   /**
    * The singleton LocalStore object is managed by the Worker class.
@@ -467,7 +464,7 @@ public final class LocalStore implements Store, Serializable {
     this.cache.put((_Impl) publicReadonlyLabel.fetch());
 
     // Start the extensions runner.
-    Threading.getPool().submit(extensionsRunner);
+    //Threading.getPool().submit(extensionsRunner);
   }
 
   // ////////////////////////////////

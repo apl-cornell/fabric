@@ -6,7 +6,7 @@ import fabric.worker.Store;
 
 /**
  * A linear time-varying bound that can be applied to a {@link Metric}'s value
- * and enforced by a {@link MetricContract} of
+ * and enforced by a treaty of
  * <code>&gt;= r * (t - startTime) + b</code>.
  */
 public class Bound {

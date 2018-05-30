@@ -65,11 +65,6 @@ public interface Object {
 
   TreatySet set$$treaties(TreatySet treaties);
 
-  /** The expiry of a contract. */
-  long get$$expiry();
-
-  long set$$expiry(long expiry);
-
   /** The observers of this object. */
   ImmutableObserverSet get$$observers();
 
@@ -310,16 +305,6 @@ public interface Object {
     @Override
     public final TreatySet set$$treaties(TreatySet treaties) {
       return fetch().set$$treaties(treaties);
-    }
-
-    @Override
-    public final long get$$expiry() {
-      return fetch().get$$expiry();
-    }
-
-    @Override
-    public final long set$$expiry(long expiry) {
-      return fetch().set$$expiry(expiry);
     }
 
     @Override
@@ -571,24 +556,19 @@ public interface Object {
     public TreatySet $treaties;
 
     /**
-     * The expiry field, to be used by Contracts.
-     */
-    public long $expiry;
-
-    /**
-     * The observers field, to be used by Contracts and Metrics.
+     * The observers field, to be used by Treaties and Metrics.
      */
     public ImmutableObserverSet $observers;
 
     /**
-     * The observers field, to be used by Contracts and Metrics.
+     * The observers field, to be used by Treaties and Metrics.
      */
     public ImmutableSet $associated;
 
     /**
      * A private constructor for initializing transaction-management state.
      */
-    private _Impl(Store store, long onum, int version, long expiry,
+    private _Impl(Store store, long onum, int version,
         ImmutableObserverSet observers) {
       this.$version = version;
       this.$writer = null;
@@ -603,11 +583,10 @@ public interface Object {
       // entry, but after ref to avoid uninitialized value when getting the
       // store of a metric.
       this.$treaties = TreatySet.emptySet(this);
-      this.$readMapEntry = TransactionManager.getReadMapEntry(this, expiry);
+      this.$readMapEntry = TransactionManager.getReadMapEntry(this);
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
       this.writerMapVersion = -1;
-      this.$expiry = expiry;
       this.$observers = observers;
 
       if (TRACE_OBJECTS)
@@ -629,7 +608,7 @@ public interface Object {
      *          the location for the object
      */
     public _Impl(Store store) throws UnreachableNodeException {
-      this(store, store.createOnum(), 0, 0, null);
+      this(store, store.createOnum(), 0, null);
       store.cache(this);
 
       // Register the new object with the transaction manager.
@@ -746,7 +725,6 @@ public interface Object {
       $isOwned = other.$isOwned;
       writerMapVersion = other.writerMapVersion;
       $copyAppStateFrom(other);
-      $expiry = other.$expiry;
       $observers = other.$observers;
       $associated = other.$associated;
       $treaties = other.$treaties;
@@ -777,22 +755,6 @@ public interface Object {
     @Override
     public final Label get$$updateLabel() {
       return $updateLabel;
-    }
-
-    @Override
-    public final long get$$expiry() {
-      TransactionManager tm = TransactionManager.getInstance();
-      tm.registerRead(this);
-      return $expiry;
-    }
-
-    @Override
-    public final long set$$expiry(long expiry) {
-      TransactionManager tm = TransactionManager.getInstance();
-      boolean transactionCreated = tm.registerWrite(this);
-      this.$expiry = expiry;
-      if (transactionCreated) tm.commitTransaction();
-      return this.$expiry;
     }
 
     @Override
@@ -831,9 +793,6 @@ public interface Object {
         ImmutableObserverSet observers) {
       TransactionManager tm = TransactionManager.getInstance();
       boolean transactionCreated = tm.registerWrite(this);
-      // TODO something like the below.
-      //boolean transactionCreated =
-      //    tm.registerExpiryWrite(this, this.$expiry, expiry);
       this.$observers = observers;
       if (transactionCreated) tm.commitTransaction();
       return $observers;
@@ -846,13 +805,10 @@ public interface Object {
     }
 
     @Override
-    public final ImmutableSet set$$associated(ImmutableSet observers) {
+    public final ImmutableSet set$$associated(ImmutableSet associated) {
       TransactionManager tm = TransactionManager.getInstance();
       boolean transactionCreated = tm.registerWrite(this);
-      // TODO something like the below.
-      //boolean transactionCreated =
-      //    tm.registerExpiryWrite(this, this.$expiry, expiry);
-      this.$associated = observers;
+      this.$associated = associated;
       if (transactionCreated) tm.commitTransaction();
       return $associated;
     }
@@ -965,14 +921,14 @@ public interface Object {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public _Impl(Store store, long onum, int version, long expiry,
+    public _Impl(Store store, long onum, int version,
         ImmutableObserverSet observers, Store updateLabelStore,
         long updateLabelOnum, Store accessPolicyStore, long accessPolicyOnum,
         ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws IOException, ClassNotFoundException {
-      this(store, onum, version, expiry, observers);
+      this(store, onum, version, observers);
       this.$updateLabel = new Label._Proxy(updateLabelStore, updateLabelOnum);
       this.$accessPolicy =
           new ConfPolicy._Proxy(accessPolicyStore, accessPolicyOnum);
@@ -1233,14 +1189,14 @@ public interface Object {
         super(store);
       }
 
-      public _Impl(Store store, long onum, int version, long expiry,
+      public _Impl(Store store, long onum, int version,
           ImmutableObserverSet observers, Store updateLabelStore,
           long updateLabelOnum, Store accessPolicyStore, long accessPolicyOnum,
           ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
           Iterator<Long> intraStoreRefs,
           Iterator<Pair<String, Long>> interStoreRefs)
           throws IOException, ClassNotFoundException {
-        super(store, onum, version, expiry, observers, updateLabelStore,
+        super(store, onum, version, observers, updateLabelStore,
             updateLabelOnum, accessPolicyStore, accessPolicyOnum,
             serializedInput, refTypes, intraStoreRefs, interStoreRefs);
       }

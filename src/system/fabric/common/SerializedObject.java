@@ -89,7 +89,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
   private static class Header implements FastSerializable, Serializable {
     private long onum;
     private int version;
-    private long expiry;
     private ImmutableObserverSet observers;
     private ImmutableSet associated;
     private TreatySet treaties;
@@ -100,7 +99,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
     public Header(long onum) {
       this.onum = onum;
       this.version = 0;
-      this.expiry = 0;
       this.observers = null;
       this.associated = null;
       this.treaties = null;
@@ -112,7 +110,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
     public Header(_Impl obj) {
       this.onum = obj.$getOnum();
       this.version = obj.$version;
-      this.expiry = obj.$expiry;
       this.observers = obj.$observers;
       this.associated = obj.$associated;
       this.treaties = obj.$treaties;
@@ -125,7 +122,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       try {
         this.onum = in.readLong();
         this.version = in.readInt();
-        this.expiry = in.readLong();
         if (in.readBoolean()) {
           this.observers = new ImmutableObserverSet(in);
         }
@@ -145,7 +141,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       try {
         out.writeLong(onum);
         out.writeInt(version);
-        out.writeLong(expiry);
         if (observers != null) {
           out.writeBoolean(true);
           observers.write(out);
@@ -188,20 +183,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
      */
     public void setVersion(int version) {
       this.version = version;
-    }
-
-    /**
-     * @return the expiry
-     */
-    public long getExpiry() {
-      return expiry;
-    }
-
-    /**
-     * @param expiry the expiry to set
-     */
-    public void setExpiry(long expiry) {
-      this.expiry = expiry;
     }
 
     /**
@@ -254,7 +235,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
         throws IOException, ClassNotFoundException {
       this.onum = in.readLong();
       this.version = in.readInt();
-      this.expiry = in.readLong();
       if (in.readBoolean()) {
         this.observers = new ImmutableObserverSet(in);
       }
@@ -454,22 +434,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public void setVersion(final int version) {
     header.setVersion(version);
-  }
-
-  /**
-   * @return the serialized object's promise expiration time
-   */
-  public long getExpiry() {
-    return header.getExpiry();
-  }
-
-  /**
-   * Modifies the serialized object's promise expiry
-   *
-   * @param expiry
-   */
-  public void setExpiry(long expiry) {
-    header.setExpiry(expiry);
   }
 
   /**
@@ -1363,9 +1327,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       if (constructor == null) {
         constructor = implClass.getConstructor(Store.class, long.class,
-            int.class, long.class, ImmutableObserverSet.class, Store.class,
-            long.class, Store.class, long.class, ObjectInput.class,
-            Iterator.class, Iterator.class, Iterator.class);
+            int.class, ImmutableObserverSet.class, Store.class, long.class,
+            Store.class, long.class, ObjectInput.class, Iterator.class,
+            Iterator.class, Iterator.class);
         constructorTable.put(implClass, constructor);
       }
 
@@ -1392,8 +1356,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
       }
 
       _Impl result = (_Impl) constructor.newInstance(store, getOnum(),
-          getVersion(), getExpiry(), getObservers(), updateLabelStore,
-          updateLabelOnum, accessPolicyStore, accessPolicyOnum,
+          getVersion(), getObservers(), updateLabelStore, updateLabelOnum,
+          accessPolicyStore, accessPolicyOnum,
           new ObjectInputStream(getSerializedDataStream()),
           getRefTypeIterator(), getIntraStoreRefIterator(),
           getInterStoreRefIterator());

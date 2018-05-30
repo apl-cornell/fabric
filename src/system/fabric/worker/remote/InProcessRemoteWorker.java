@@ -74,12 +74,12 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public void notifyStorePrepareSuccess(long tid, long time,
-      OidKeyHashMap<TreatySet> longerContracts) {
+      OidKeyHashMap<TreatySet> longerTreaties) {
     // Don't bother with another thread, a thread would have been created for
     // the prepare processing already.
     TransactionManager.pendingPrepares.get(tid).markSuccess(
         inProcessStore.name(),
-        new StorePrepareSuccessMessage(tid, time, longerContracts));
+        new StorePrepareSuccessMessage(tid, time, longerTreaties));
   }
 
   @Override
@@ -103,12 +103,12 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public void notifyWorkerPrepareSuccess(long tid, long time,
-      OidKeyHashMap<TreatySet> longerContracts) {
+      OidKeyHashMap<TreatySet> longerTreaties) {
     // Don't bother with another thread, a thread would have been created for
     // the prepare processing already.
     TransactionManager.pendingPrepares.get(tid).markSuccess(
         Worker.getWorkerName(),
-        new WorkerPrepareSuccessMessage(tid, time, longerContracts));
+        new WorkerPrepareSuccessMessage(tid, time, longerTreaties));
   }
 
   @Override
