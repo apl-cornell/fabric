@@ -496,10 +496,12 @@ public final class ObjectCache {
       synchronized (curEntry) {
         if (replaceOnly && curEntry.isEvicted()) return null;
 
-        // Check if object in current entry is an older version.
-        if (curEntry.getVersion() >= update.getVersion()) return curEntry;
+        if (!curEntry.isEvicted()) {
+          // Check if object in current entry is an older version.
+          if (curEntry.getVersion() >= update.getVersion()) return curEntry;
 
-        curEntry.evict();
+          curEntry.evict();
+        }
       }
 
       // abort pre-existing readers.
