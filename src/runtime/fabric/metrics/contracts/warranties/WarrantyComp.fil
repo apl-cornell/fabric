@@ -229,13 +229,6 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
         affected = affected.addAll(getObservers());
       }
     }
-    for (LongIterator iter = treaties.iterator(); iter.hasNext();) {
-      long treatyId = iter.next();
-      MetricTreaty origTreaty = $treaties.get(treatyId);
-      Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
-        origTreaty.update(false, StatsMap.emptyStats());
-      affected = affected.addAll((ImmutableObserverSet) treatyUpdate.second);
-    }
     return affected;
   }
 
