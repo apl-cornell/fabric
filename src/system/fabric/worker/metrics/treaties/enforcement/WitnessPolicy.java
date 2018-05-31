@@ -1,9 +1,12 @@
 package fabric.worker.metrics.treaties.enforcement;
 
+import static fabric.common.Logging.METRICS_LOGGER;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.logging.Level;
 
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
@@ -41,7 +44,8 @@ public class WitnessPolicy extends EnforcementPolicy {
   public long calculateExpiry(MetricTreaty treaty, StatsMap weakStats) {
     long calculated = Long.MAX_VALUE;
     for (TreatyRef witness : witnesses) {
-      calculated = Math.min(calculated, witness.get() == null ? 0 : witness.get().getExpiry());
+      calculated = Math.min(calculated,
+          witness.get() == null ? 0 : witness.get().getExpiry());
     }
     return calculated;
   }
@@ -50,7 +54,8 @@ public class WitnessPolicy extends EnforcementPolicy {
   public long updatedExpiry(MetricTreaty oldTreaty, StatsMap weakStats) {
     long calculated = Long.MAX_VALUE;
     for (TreatyRef witness : witnesses) {
-      calculated = Math.min(calculated, witness.get() == null ? 0 : witness.get().getExpiry());
+      calculated = Math.min(calculated,
+          witness.get() == null ? 0 : witness.get().getExpiry());
     }
     return calculated;
   }
@@ -94,6 +99,11 @@ public class WitnessPolicy extends EnforcementPolicy {
   public void apply(MetricTreaty t) {
     // Observe the witnesses
     for (TreatyRef witness : witnesses) {
+      if (witness == null) METRICS_LOGGER.log(Level.SEVERE,
+          "A witness was null applying to {0}", t);
+      if (witness.get() == null) METRICS_LOGGER.log(Level.SEVERE,
+          "Witness {0} was a dead reference applying to {1}",
+          new Object[] { witness, t });
       witness.get().addObserver(t.getMetric(), t.getId());
     }
   }

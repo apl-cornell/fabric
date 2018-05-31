@@ -244,10 +244,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
         newPolicy.activate(weakStats);
 
         // Check if the new policy works. Otherwise, this is dead.
-        if (newPolicy.updatedExpiry(this, weakStats) > System
-            .currentTimeMillis()) {
-          MetricTreaty updatedTreaty = new MetricTreaty(this, newPolicy,
-              newPolicy.updatedExpiry(this, weakStats));
+        long newExpiry = newPolicy.calculateExpiry(this, weakStats);
+        if (newExpiry > System.currentTimeMillis()) {
+          MetricTreaty updatedTreaty =
+              new MetricTreaty(this, newPolicy, newExpiry);
           Logging.METRICS_LOGGER.log(Level.FINEST,
               "UPDATING {0} TO {1} IN {2} {3}",
               new Object[] { this, updatedTreaty,

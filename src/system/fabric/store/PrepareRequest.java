@@ -101,8 +101,7 @@ public final class PrepareRequest {
         if (value != null) {
           if (value.getVersion() != getVersion()) {
             versionConflicts.put(thisStore, getOnum(), value);
-          } else if (TreatySet.checkExtension(getTreaties(),
-              value.getTreaties())) {
+          } else if (value.getTreaties().isStrictExtensionOf(getTreaties())) {
             longerTreaties.put(thisStore, getOnum(), value.getTreaties());
           }
         }

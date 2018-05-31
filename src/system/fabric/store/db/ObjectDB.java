@@ -692,7 +692,7 @@ public abstract class ObjectDB {
     if (curVersion != version) {
       versionConflicts.put(Worker.getWorker().getStore(getName()), onum,
           read(onum));
-    } else if (TreatySet.checkExtension(treaties, curTreaties)) {
+    } else if (curTreaties.isStrictExtensionOf(treaties)) {
       longerTreaties.put(Worker.getWorker().getStore(getName()), onum,
           curTreaties);
     }
@@ -830,7 +830,7 @@ public abstract class ObjectDB {
     // Check if this is a "real" extension, otherwise we skip it.
     TreatySet curTreaties = storeCopy.getTreaties();
     if (TreatySet.checkExtension(extension.treaties, curTreaties)) {
-      if (!curTreaties.equals(extension.treaties)) {
+      if (curTreaties.isStrictExtensionOf(extension.treaties)) {
         longerTreaties.put(Worker.getWorker().getStore(getName()), onum,
             curTreaties);
       }

@@ -59,22 +59,15 @@ public class ThresholdStatement extends TreatyStatement {
   public static long hedgedEstimate(Metric m, double rate, double base,
       long time, StatsMap weakStats) {
     double b = rate * time + base;
-    // Always use *correct* value for value
-    double x = m.value();
-    // Use weak v and n, x is the only part that needs to be exact.
+    // Use weak stats because this is just an estimate.
+    double x = m.value(weakStats);
     double v = m.velocity(weakStats);
     double n = m.noise(weakStats);
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
     // expiration.
-    long hedgedResult = trueExpiry(rate, base, m.value(), time);
-
-    // Non-positive rate bounds don't need to be hedged, they should always
-    // stay true in the absence of updates.
-    if (rate <= 0) {
-      return hedgedResult;
-    }
+    long hedgedResult = trueExpiry(rate, base, x, time);
 
     // Account for the desired number of standard deviations and scale based
     // on how long trueExpiry is from here.

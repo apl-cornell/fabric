@@ -556,8 +556,8 @@ public final class ObjectCache {
                       curEntry.getTreaties())))
             return curEntry;
 
-          if (curEntry.getVersion() == update.getVersion() && TreatySet
-              .checkExtension(curEntry.getTreaties(), update.getTreaties())) {
+          if (curEntry.getVersion() == update.getVersion() && update
+              .getTreaties().isStrictExtensionOf(curEntry.getTreaties())) {
             curEntry.setTreaties(update.getTreaties());
             return curEntry;
           }
@@ -571,6 +571,9 @@ public final class ObjectCache {
 
       // Keep retrying until we know we succeeded.
     } while (!entries.replace(onum, curEntry, newEntry));
+
+    if (update.getObservers() != null) update.getObservers().prefetch(store);
+    if (update.getTreaties() != null) update.getTreaties().prefetch(store);
 
     return newEntry;
   }

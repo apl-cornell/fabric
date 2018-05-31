@@ -97,6 +97,11 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
         out.writeLong(iter.next());
       }
     }
+
+    @Override
+    public String toString() {
+      return "owner:" + includesOwner + ",treaties:" + treaties;
+    }
   }
 
   // 2 level map, store name -> onum -> ObserverGroup

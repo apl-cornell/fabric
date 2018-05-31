@@ -27,12 +27,27 @@ public class DirectPolicy extends EnforcementPolicy {
     // Update if either we're advertising too optimistic of an expiry right
     // now or we're close enough to the advertised expiry to start ramping
     // up.
-    return (oldTreaty.expiry > oldTreaty.statement
-        .trueExpiry(oldTreaty.getMetric(), weakStats))
-        || (oldTreaty.expiry
-            - System.currentTimeMillis() < MetricTreaty.UPDATE_THRESHOLD)
-                ? calculateExpiry(oldTreaty, weakStats)
-                : oldTreaty.expiry;
+    long currentTime = System.currentTimeMillis();
+    long trueTime =
+        oldTreaty.statement.trueExpiry(oldTreaty.getMetric(), weakStats);
+    if (trueTime < currentTime && currentTime <= oldTreaty.expiry) {
+      // We can't actually enforce it.
+      return 0;
+    }
+    if (oldTreaty.expiry > trueTime
+        || oldTreaty.expiry - currentTime <= MetricTreaty.UPDATE_THRESHOLD) {
+      // We're either in need of a corrected value or we're close enough to the
+      // expiry that it's worth updating if we've got something better now.
+      long hedgedTime = calculateExpiry(oldTreaty, weakStats);
+      if (oldTreaty.expiry <= trueTime) {
+        // If the currently advertised time is still good, move to new
+        // hedgedTime if it's larger.
+        return Math.max(oldTreaty.expiry, hedgedTime);
+      }
+      // Otherwise, just move to new expiry.
+      return hedgedTime;
+    }
+    return oldTreaty.expiry;
   }
 
   @Override

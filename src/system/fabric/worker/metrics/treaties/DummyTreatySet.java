@@ -6,6 +6,7 @@ import java.util.Iterator;
 
 import fabric.common.exceptions.NotImplementedException;
 import fabric.metrics.Metric;
+import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
@@ -107,5 +108,10 @@ public class DummyTreatySet extends TreatySet {
   @Override
   public boolean isStrictExtensionOf(TreatySet t) {
     return false;
+  }
+
+  @Override
+  public void prefetch(Store triggeringStore) {
+    // Do nothing.
   }
 }

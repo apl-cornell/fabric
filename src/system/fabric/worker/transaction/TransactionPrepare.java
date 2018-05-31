@@ -24,6 +24,7 @@ import fabric.messages.StorePrepareSuccessMessage;
 import fabric.messages.WorkerCommittedMessage;
 import fabric.messages.WorkerPrepareFailedMessage;
 import fabric.messages.WorkerPrepareSuccessMessage;
+import fabric.worker.ObjectCache;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionRestartingException;
@@ -121,7 +122,8 @@ public class TransactionPrepare {
           .entrySet()) {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
-        store.readFromCache(onum).setTreaties(treaties);
+        ObjectCache.Entry curEntry = store.readFromCache(onum);
+        if (curEntry != null) curEntry.setTreaties(treaties);
         this.longerTreaties.put(store, onum, treaties);
       }
     }
@@ -154,7 +156,8 @@ public class TransactionPrepare {
           .entrySet()) {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
-        store.readFromCache(onum).setTreaties(treaties);
+        ObjectCache.Entry curEntry = store.readFromCache(onum);
+        if (curEntry != null) curEntry.setTreaties(treaties);
       }
     }
     abort(s);
@@ -214,7 +217,8 @@ public class TransactionPrepare {
           .entrySet()) {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
-        store.readFromCache(onum).setTreaties(treaties);
+        ObjectCache.Entry curEntry = store.readFromCache(onum);
+        if (curEntry != null) curEntry.setTreaties(treaties);
       }
     }
     cleanUp();
@@ -244,7 +248,8 @@ public class TransactionPrepare {
           .entrySet()) {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
-        store.readFromCache(onum).setTreaties(treaties);
+        ObjectCache.Entry curEntry = store.readFromCache(onum);
+        if (curEntry != null) curEntry.setTreaties(treaties);
       }
     }
     abort(w);

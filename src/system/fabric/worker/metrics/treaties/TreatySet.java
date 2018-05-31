@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import fabric.common.FastSerializable;
 import fabric.metrics.Metric;
+import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
@@ -109,4 +110,9 @@ public abstract class TreatySet
    * Get the complete set of observers for the treaties.
    */
   public abstract ImmutableObserverSet getObservers();
+
+  /**
+   * Run a prefetch for all observers of the treaties in this set.
+   */
+  public abstract void prefetch(Store triggeringStore);
 }

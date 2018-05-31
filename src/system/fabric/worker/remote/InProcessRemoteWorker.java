@@ -241,29 +241,35 @@ public class InProcessRemoteWorker extends RemoteWorker {
     }
 
     // Go back and make sure associated globs are forced into cache.
-    for (LongIterator iter = processed.iterator(); iter.hasNext();) {
-      long onum = iter.next();
-      if (associatedOnums.containsKey(onum)) {
-        for (LongIterator iter2 = associatedOnums.get(onum).iterator(); iter2
-            .hasNext();) {
-          long associated = iter2.next();
-          if (processed.contains(associated)) continue;
-          ObjectGlob associatedGlob = gMap.get(associated);
-          try {
-            associatedGlob.verifySignature(storeKey);
-            // TODO: Force dissem cache too.
-            for (SerializedObject obj : associatedGlob.decrypt().objects()
-                .values()) {
-              store.forceCache(obj);
+    LongSet needsAssociates = processed;
+    while (!needsAssociates.isEmpty()) {
+      LongSet associates = new LongHashSet();
+      for (LongIterator iter = needsAssociates.iterator(); iter.hasNext();) {
+        long onum = iter.next();
+        if (associatedOnums.containsKey(onum)) {
+          for (LongIterator iter2 = associatedOnums.get(onum).iterator(); iter2
+              .hasNext();) {
+            long associated = iter2.next();
+            if (processed.contains(associated)) continue;
+            ObjectGlob associatedGlob = gMap.get(associated);
+            try {
+              associatedGlob.verifySignature(storeKey);
+              // TODO: Force dissem cache too.
+              for (SerializedObject obj : associatedGlob.decrypt().objects()
+                  .values()) {
+                store.forceCache(obj);
+              }
+              associates.addAll(updates.get(associatedGlob));
+            } catch (InvalidKeyException e) {
+              e.printStackTrace();
+            } catch (SignatureException e) {
+              e.printStackTrace();
             }
-            processed.addAll(updates.get(associatedGlob));
-          } catch (InvalidKeyException e) {
-            e.printStackTrace();
-          } catch (SignatureException e) {
-            e.printStackTrace();
           }
         }
       }
+      processed.addAll(associates);
+      needsAssociates = associates;
     }
 
     response.removeAll(processed);

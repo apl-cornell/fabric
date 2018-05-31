@@ -10,6 +10,7 @@ import java.util.Map;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.metrics.Metric;
+import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
@@ -175,5 +176,12 @@ public class MetricTreatySet extends TreatySet {
       }
     }
     return false;
+  }
+
+  @Override
+  public void prefetch(Store triggeringStore) {
+    for (MetricTreaty t : this) {
+      t.getObservers().prefetch(triggeringStore);
+    }
   }
 }

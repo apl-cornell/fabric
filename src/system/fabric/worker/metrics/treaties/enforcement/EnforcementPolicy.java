@@ -54,12 +54,14 @@ public abstract class EnforcementPolicy implements FastSerializable {
   protected abstract void writePolicyData(DataOutput out) throws IOException;
 
   /**
-   * Utility for getting the policy determined expiration.
+   * Utility for getting the policy determined expiration, no consideration for
+   * existing advertised expiry.
    */
   public abstract long calculateExpiry(MetricTreaty treaty, StatsMap weakStats);
 
   /**
-   * Utility for getting the policy determined expiration.
+   * Utility for getting the policy determined expiration, assuming this is an
+   * update from a state already using this policy.
    */
   public abstract long updatedExpiry(MetricTreaty oldTreaty,
       StatsMap weakStats);
