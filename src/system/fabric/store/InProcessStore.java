@@ -1,14 +1,11 @@
 package fabric.store;
 
-import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -86,9 +83,8 @@ public class InProcessStore extends RemoteStore {
           Worker.getWorker().getLocalWorker()
               .notifyStoreCommitted(transactionID);
         } catch (TransactionCommitFailedException e) {
-          STORE_TRANSACTION_LOGGER.log(Level.FINE,
-              "Commit of transaction {0} failed.",
-              Long.toHexString(transactionID));
+          throw new InternalError(
+              "Commit phase failed for " + Long.toHexString(transactionID), e);
         }
       }
     });
