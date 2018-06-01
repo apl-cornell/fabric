@@ -948,13 +948,20 @@ public final class Log {
       obj.$writeLockHolder = null;
       obj.$writeLockStackTrace = null;
       obj.$version = 1;
-      obj.$readMapEntry.incrementVersionAndUpdateExpiry(obj.$expiry);
+      obj.$readMapEntry.incrementVersionAndUpdateExpiry(
+          extendedContracts.containsKey(obj) ? extendedContracts.get(obj).expiry
+              : obj.$expiry);
       obj.$isOwned = false;
     }
 
     // Release read locks.
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
-      for (ReadMap.Entry entry : submap.values()) {
+      for (LongKeyMap.Entry<ReadMap.Entry> e : submap.entrySet()) {
+        long onum = e.getKey();
+        ReadMap.Entry entry = e.getValue();
+        // Extend the expiry if we did so in this transaction.
+        if (extendedContracts.containsKey(entry.getStore(), onum)) entry
+            .extendExpiry(extendedContracts.get(entry.getStore(), onum).expiry);
         entry.releaseLock(this);
       }
     }
@@ -988,7 +995,9 @@ public final class Log {
           obj.$version++;
           obj.$readMapEntry.incrementVersionAndUpdateExpiry(obj.$expiry);
         } else {
-          obj.$readMapEntry.extendExpiry(obj.$expiry);
+          obj.$readMapEntry.extendExpiry(extendedContracts.containsKey(obj)
+              ? extendedContracts.get(obj).expiry
+              : obj.$expiry);
         }
         obj.$isOwned = false;
 
