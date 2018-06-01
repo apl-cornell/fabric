@@ -21,7 +21,6 @@ public final class OidRef<T extends fabric.lang.Object>
   public final String objStoreName;
   public final long objOnum;
 
-  private transient Oid cachedOid;
   private transient T cached;
 
   public OidRef(String objStoreName, long objOnum) {
@@ -73,11 +72,5 @@ public final class OidRef<T extends fabric.lang.Object>
   @Override
   public String toString() {
     return objStoreName + "/" + objOnum;
-  }
-
-  public Oid toOid() {
-    if (cachedOid == null)
-      cachedOid = new Oid(Worker.getWorker().getStore(objStoreName), objOnum);
-    return cachedOid;
   }
 }
