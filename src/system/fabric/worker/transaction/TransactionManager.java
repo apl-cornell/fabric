@@ -1242,18 +1242,6 @@ public final class TransactionManager {
   }
 
   /**
-   * This should be called <i>before</i> the object's expiry is modified.
-   *
-   * @return whether a new (top-level) transaction was created.
-   */
-  @Deprecated
-  public boolean registerExpiryWrite(_Impl obj, long oldExpiry,
-      long newExpiry) {
-    // TODO: this is now deprecated.
-    return false;
-  }
-
-  /**
    * This should be called <i>before</i> the object's TreatySet is modified.
    *
    * @return whether a new (top-level) transaction was created.
@@ -1845,13 +1833,6 @@ public final class TransactionManager {
 
     // Start new transactions if necessary.
     if (commonAncestor.depth != tid.depth) startTransaction(tid, true);
-  }
-
-  /**
-   * Note that a coordination happened.
-   */
-  public void markCoordination() {
-    // TODO: This is deprecated.
   }
 
   /**
