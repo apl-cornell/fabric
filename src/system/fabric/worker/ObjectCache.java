@@ -251,7 +251,8 @@ public final class ObjectCache {
      */
     public synchronized TreatySet getTreaties() {
       if (next != null) return next.getTreaties();
-      if (impl != null) return impl.$treaties;
+      if (impl != null) return impl.$writer == null ? impl.$treaties
+          : impl.$history.$treaties;
       if (serialized != null) return serialized.getTreaties();
       return null;
     }
