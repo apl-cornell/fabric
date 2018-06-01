@@ -1,7 +1,6 @@
 package fabric.store;
 
 import static fabric.common.Logging.STORE_REQUEST_LOGGER;
-import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
 import static fabric.common.ONumConstants.STORE_PRINCIPAL;
 
 import java.io.IOException;
@@ -229,9 +228,9 @@ class Store extends MessageToStoreHandler {
       tm.commitTransaction(client, message.transactionID);
       client.node.notifyStoreCommitted(message.transactionID);
     } catch (TransactionCommitFailedException e) {
-      STORE_TRANSACTION_LOGGER.log(Level.FINE,
-          "Commit of transaction {0} failed.",
-          Long.toHexString(message.transactionID));
+      throw new InternalError(
+          "Commit phase failed for " + Long.toHexString(message.transactionID),
+          e);
     }
   }
 
