@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import fabric.common.FastSerializable;
-import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
@@ -414,20 +413,16 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     for (final Map.Entry<String, LongKeyMap<ObserverGroup>> e : map
         .entrySet()) {
       if (e.getKey().equals(triggeringStore.name())) continue;
-      Threading.getPool().submit(new Runnable() {
-        @Override
-        public void run() {
-          for (LongIterator iter = e.getValue().keySet().iterator(); iter
-              .hasNext();) {
-            long onum = iter.next();
-            try {
-              Worker.getWorker().getStore(e.getKey()).readObjectNoWait(onum);
-            } catch (AccessException e) {
-              throw new InternalError(e);
-            }
-          }
+      Store s = Worker.getWorker().getStore(e.getKey());
+      for (LongIterator iter = e.getValue().keySet().iterator(); iter
+          .hasNext();) {
+        long onum = iter.next();
+        try {
+          s.readObjectNoWait(onum);
+        } catch (AccessException ex) {
+          throw new InternalError(ex);
         }
-      });
+      }
     }
   }
 }
