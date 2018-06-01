@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatyRef;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * Policy enforcing the treaty by directly monitoring the metric value.
@@ -102,8 +103,9 @@ public class WitnessPolicy extends EnforcementPolicy {
       if (witness == null) METRICS_LOGGER.log(Level.SEVERE,
           "A witness was null applying to {0}", t);
       if (witness.get() == null) METRICS_LOGGER.log(Level.SEVERE,
-          "Witness {0} was a dead reference applying to {1}",
-          new Object[] { witness, t });
+          "Witness {0} was a dead reference applying to {1} in {2}",
+          new Object[] { witness, t,
+              TransactionManager.getInstance().getCurrentTid() });
       witness.get().addObserver(t.getMetric(), t.getId());
     }
   }
