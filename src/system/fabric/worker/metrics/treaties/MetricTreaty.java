@@ -67,6 +67,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = ImmutableObserverSet.emptySet();
     this.policy = NoPolicy.singleton;
     this.expiry = policy.calculateExpiry(this, StatsMap.emptyStats());
+    Logging.METRICS_LOGGER.log(Level.FINEST, "CREATED TREATY {0}", this);
   }
 
   /**
@@ -257,6 +258,9 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
               oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
                   : ImmutableObserverSet.emptySet());
         } else {
+          // Run unapply to clean up the policy.
+          newPolicy.unapply(this);
+
           MetricTreaty updatedTreaty =
               new MetricTreaty(this, NoPolicy.singleton, 0);
           return new Pair<>(updatedTreaty,
@@ -341,7 +345,11 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
   @Override
   public MetricTreaty removeObserver(Observer obs) {
-    if (!observers.contains(obs)) return this;
+    if (!observers.contains(obs)) {
+      if (observers.isEmpty())
+        return new MetricTreaty(this, observers, NoPolicy.singleton, 0);
+      return this;
+    }
     ImmutableObserverSet updatedObservers = observers.remove(obs);
     // Stop enforcing if we're no longer being watched by anyone.
     if (updatedObservers.isEmpty())
@@ -351,7 +359,11 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
   @Override
   public MetricTreaty removeObserver(Observer obs, long id) {
-    if (!observers.contains(obs, id)) return this;
+    if (!observers.contains(obs, id)) {
+      if (observers.isEmpty())
+        return new MetricTreaty(this, observers, NoPolicy.singleton, 0);
+      return this;
+    }
     ImmutableObserverSet updatedObservers = observers.remove(obs, id);
     // Stop enforcing if we're no longer being watched by anyone.
     if (updatedObservers.isEmpty())
