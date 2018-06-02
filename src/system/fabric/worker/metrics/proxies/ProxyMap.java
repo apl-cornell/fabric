@@ -7,20 +7,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
-import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import fabric.common.FastSerializable;
 import fabric.metrics.Metric;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-import fabric.worker.metrics.treaties.OidRef;
 
 /**
  * Utility for an inlined mapping from stores to proxies for metrics.
@@ -28,7 +24,7 @@ import fabric.worker.metrics.treaties.OidRef;
 @SuppressWarnings("serial")
 public class ProxyMap implements FastSerializable, Serializable {
 
-  private Map<String, Long> map;
+  private Map<Store, Metric> map;
 
   private static final ProxyMap EMPTY = new ProxyMap();
 
@@ -61,56 +57,28 @@ public class ProxyMap implements FastSerializable, Serializable {
    * @return true iff the given store is a key in this map.
    */
   public boolean containsKey(Store s) {
-    return map.containsKey(s.name());
-  }
-
-  /**
-   * @return true iff the given store name is a key in this map.
-   */
-  public boolean containsKey(String name) {
-    return map.containsKey(name);
+    return map.containsKey(s);
   }
 
   /**
    * @return true iff the given value is a value in this map.
    */
   public boolean containsValue(Metric value) {
-    return map.containsValue(value.$getOnum());
-  }
-
-  /**
-   * @return true iff the given value is a value in this map.
-   */
-  public boolean containsValue(OidRef<Metric> value) {
-    return map.containsValue(value.objOnum);
+    return map.containsValue(value);
   }
 
   /**
    * @return a Set of entries for this ProxyMap.
    */
-  @SuppressWarnings("unused") // Ugh the type inference is being lame.
   public Set<Entry<Store, Metric>> entrySet() {
-    return map.entrySet().stream()
-        .map(e -> new AbstractMap.SimpleImmutableEntry<Store, Metric>(
-            Worker.getWorker().getStore(e.getKey()),
-            (Metric) new Metric._Proxy(Worker.getWorker().getStore(e.getKey()),
-                e.getValue()).$getProxy()))
-        .collect(Collectors.toCollection(() -> new HashSet<>()));
+    return map.entrySet();
   }
 
   /**
    * @return the Metric mapped to by the given store key.
    */
   public Metric get(Store key) {
-    return (Metric) new Metric._Proxy(key, map.get(key.name())).$getProxy();
-  }
-
-  /**
-   * @return the Metric mapped to by the given store key.
-   */
-  public Metric get(String key) {
-    Store s = Worker.getWorker().getStore(key);
-    return (Metric) new Metric._Proxy(s, map.get(key)).$getProxy();
+    return map.get(key);
   }
 
   /** @return true iff this map is empty. */
@@ -120,8 +88,7 @@ public class ProxyMap implements FastSerializable, Serializable {
 
   /** @return a set of the keys in this map. */
   public Set<Store> keySet() {
-    return map.keySet().stream().map(s -> Worker.getWorker().getStore(s))
-        .collect(Collectors.toCollection(() -> new HashSet<>()));
+    return map.keySet();
   }
 
   /**
@@ -130,7 +97,7 @@ public class ProxyMap implements FastSerializable, Serializable {
    */
   public ProxyMap put(Store key, Metric value) {
     ProxyMap updated = new ProxyMap(this);
-    updated.map.put(key.name(), value.$getOnum());
+    updated.map.put(key, (Metric) value.$getProxy());
     return updated;
   }
 
@@ -150,16 +117,6 @@ public class ProxyMap implements FastSerializable, Serializable {
    */
   public ProxyMap remove(Store key) {
     ProxyMap updated = new ProxyMap(this);
-    updated.map.remove(key.name());
-    return updated;
-  }
-
-  /**
-   * Remove the mapping for the given store name.
-   * @return the updated map.
-   */
-  public ProxyMap remove(String key) {
-    ProxyMap updated = new ProxyMap(this);
     updated.map.remove(key);
     return updated;
   }
@@ -171,10 +128,7 @@ public class ProxyMap implements FastSerializable, Serializable {
 
   /** @return A set of the metrics in this map */
   public Collection<Metric> values() {
-    return map.entrySet().stream().map(e -> {
-      Store s = Worker.getWorker().getStore(e.getKey());
-      return (Metric) new Metric._Proxy(s, e.getValue()).$getProxy();
-    }).collect(Collectors.toCollection(() -> new HashSet<>()));
+    return map.values();
   }
 
   /* Serializable definitions, need to special case fabric references. */
@@ -187,7 +141,8 @@ public class ProxyMap implements FastSerializable, Serializable {
     int size = in.readInt();
     this.map = new HashMap<>(size);
     for (int i = 0; i < size; i++) {
-      this.map.put(in.readUTF(), in.readLong());
+      Store s = Worker.getWorker().getStore(in.readUTF());
+      this.map.put(s, (Metric) new Metric._Proxy(s, in.readLong()).$getProxy());
     }
   }
 
@@ -199,7 +154,8 @@ public class ProxyMap implements FastSerializable, Serializable {
     int size = in.readInt();
     this.map = new HashMap<>(size);
     for (int i = 0; i < size; i++) {
-      this.map.put(in.readUTF(), in.readLong());
+      Store s = Worker.getWorker().getStore(in.readUTF());
+      this.map.put(s, (Metric) new Metric._Proxy(s, in.readLong()).$getProxy());
     }
   }
 
@@ -214,9 +170,9 @@ public class ProxyMap implements FastSerializable, Serializable {
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(map.size());
-    for (Map.Entry<String, Long> e : map.entrySet()) {
-      out.writeUTF(e.getKey());
-      out.writeLong(e.getValue());
+    for (Map.Entry<Store, Metric> e : map.entrySet()) {
+      out.writeUTF(e.getKey().name());
+      out.writeLong(e.getValue().$getOnum());
     }
   }
 }
