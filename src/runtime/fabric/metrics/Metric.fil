@@ -348,7 +348,7 @@ public abstract class Metric extends AbstractSubject
   public abstract double getPresetV();
   public abstract double getPresetN();
 
-  protected ProxyMap proxies;
+  protected ProxyMap/*<Metric>*/ proxies;
 
   /**
    * @param store
@@ -367,7 +367,7 @@ public abstract class Metric extends AbstractSubject
     if ($getStore().equals(s))
       return this;
     if (this.proxies.containsKey(s))
-      return this.proxies.get(s);
+      return (Metric) this.proxies.get(s);
     Metric result = new ProxyMetric@s().fabric$metrics$ProxyMetric$(this);
     proxies = proxies.put(s, result);
     return result;

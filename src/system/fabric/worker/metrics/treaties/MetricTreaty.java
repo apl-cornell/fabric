@@ -28,7 +28,7 @@ import fabric.worker.transaction.TransactionManager;
 public class MetricTreaty implements Treaty<MetricTreaty> {
 
   /** The metric this treaty is over. */
-  public final OidRef<Metric> metric;
+  public final MetricRef metric;
 
   /**
    * The id of this treaty within the metric.  Used to reference treaties
@@ -60,7 +60,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
   public final long expiry;
 
   public MetricTreaty(Metric metric, long id, TreatyStatement statement) {
-    this.metric = new OidRef<>(metric);
+    this.metric = new MetricRef(metric);
     this.id = id;
     this.activated = false;
     this.statement = statement;
@@ -76,7 +76,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
    * Metric is provided on the side to avoid unnecessary repeated references in
    * serialized TreatySet.
    */
-  public MetricTreaty(OidRef<Metric> m, DataInput in) throws IOException {
+  public MetricTreaty(MetricRef m, DataInput in) throws IOException {
     this.metric = m;
     this.id = in.readLong();
     this.activated = in.readBoolean();

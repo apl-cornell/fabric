@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import fabric.common.FastSerializable;
+import fabric.metrics.Metric;
 import fabric.worker.Store;
 
 /**
@@ -15,16 +16,16 @@ import fabric.worker.Store;
 @SuppressWarnings("serial")
 public final class TreatyRef implements FastSerializable, Serializable {
 
-  public final OidRef<fabric.lang.Object> objRef;
+  public final MetricRef objRef;
   public final long treatyId;
 
-  public TreatyRef(OidRef<fabric.lang.Object> objRef, long treatyId) {
+  public TreatyRef(MetricRef objRef, long treatyId) {
     this.objRef = objRef;
     this.treatyId = treatyId;
   }
 
   public TreatyRef(DataInput in) throws IOException {
-    this.objRef = new OidRef<>(in);
+    this.objRef = new MetricRef(in);
     this.treatyId = in.readLong();
   }
 
@@ -35,7 +36,7 @@ public final class TreatyRef implements FastSerializable, Serializable {
   }
 
   public TreatyRef(String objStoreName, long objOnum, long treatyId) {
-    this.objRef = new OidRef<>(objStoreName, objOnum);
+    this.objRef = new MetricRef(objStoreName, objOnum);
     this.treatyId = treatyId;
   }
 
@@ -43,8 +44,8 @@ public final class TreatyRef implements FastSerializable, Serializable {
     this(objStore.name(), objOnum, treatyId);
   }
 
-  public TreatyRef(fabric.lang.Object obj, long treatyId) {
-    this(new OidRef<>(obj), treatyId);
+  public TreatyRef(Metric obj, long treatyId) {
+    this(new MetricRef(obj), treatyId);
   }
 
   public TreatyRef(MetricTreaty treaty) {

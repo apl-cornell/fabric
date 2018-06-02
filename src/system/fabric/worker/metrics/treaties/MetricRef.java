@@ -7,6 +7,7 @@ import java.io.Serializable;
 
 import fabric.common.FastSerializable;
 import fabric.common.util.Oid;
+import fabric.metrics.Metric;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -15,32 +16,31 @@ import fabric.worker.Worker;
  * intended to help with inlineable structures like TreatySet.
  */
 @SuppressWarnings("serial")
-public final class OidRef<T extends fabric.lang.Object>
-    implements FastSerializable, Serializable {
+public final class MetricRef implements FastSerializable, Serializable {
 
   public final String objStoreName;
   public final long objOnum;
 
-  private transient T cached;
+  private transient Metric cached;
 
-  public OidRef(String objStoreName, long objOnum) {
+  public MetricRef(String objStoreName, long objOnum) {
     this.objStoreName = objStoreName;
     this.objOnum = objOnum;
   }
 
-  public OidRef(Store objStore, long objOnum) {
+  public MetricRef(Store objStore, long objOnum) {
     this(objStore.name(), objOnum);
   }
 
-  public OidRef(Oid oid) {
+  public MetricRef(Oid oid) {
     this(oid.store, oid.onum);
   }
 
-  public <S extends T> OidRef(S obj) {
+  public MetricRef(Metric obj) {
     this(obj.$getStore(), obj.$getOnum());
   }
 
-  public OidRef(DataInput in) throws IOException {
+  public MetricRef(DataInput in) throws IOException {
     this.objStoreName = in.readUTF();
     this.objOnum = in.readLong();
   }
@@ -51,16 +51,16 @@ public final class OidRef<T extends fabric.lang.Object>
     out.writeLong(this.objOnum);
   }
 
-  public T get() {
-    if (cached == null) cached = (T) new fabric.lang.Object._Proxy(
-        Worker.getWorker().getStore(objStoreName), objOnum).$getProxy();
+  public Metric get() {
+    if (cached == null) cached =
+        new Metric._Proxy(Worker.getWorker().getStore(objStoreName), objOnum);
     return cached;
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof OidRef)) return false;
-    OidRef<?> other = (OidRef<?>) obj;
+    if (!(obj instanceof MetricRef)) return false;
+    MetricRef other = (MetricRef) obj;
     return objStoreName.equals(other.objStoreName) && objOnum == other.objOnum;
   }
 

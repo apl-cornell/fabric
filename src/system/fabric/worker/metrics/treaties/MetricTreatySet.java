@@ -19,14 +19,14 @@ import fabric.worker.metrics.treaties.statements.TreatyStatement;
  */
 public class MetricTreatySet extends TreatySet {
 
-  private OidRef<Metric> owner;
+  private MetricRef owner;
   private LongKeyMap<MetricTreaty> items;
   private long nextId;
   private Map<TreatyStatement, MetricTreaty> statementMap;
 
   public MetricTreatySet(Metric owner) {
     super(TreatySet.Kind.METRIC);
-    this.owner = new OidRef<>(owner);
+    this.owner = new MetricRef(owner);
     this.items = new LongKeyHashMap<>();
     this.statementMap = new HashMap<>();
     this.nextId = 0;
@@ -70,7 +70,7 @@ public class MetricTreatySet extends TreatySet {
 
   public MetricTreatySet(DataInput in) throws IOException {
     super(TreatySet.Kind.METRIC);
-    this.owner = new OidRef<>(in);
+    this.owner = new MetricRef(in);
     this.nextId = in.readLong();
     int size = in.readInt();
     this.items = new LongKeyHashMap<>(size);

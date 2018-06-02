@@ -8,9 +8,9 @@ import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
-import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.WarrantyValue;
+import fabric.worker.metrics.proxies.ProxyMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatyRef;
 import fabric.worker.transaction.TransactionManager;
@@ -39,7 +39,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
   // TODO: Consider keeping a cache of per-store proxies?
   /** The set of proxy computations for this computation. */
-  protected ImmutableSet/*<WarrantyComp>*/ proxies;
+  protected ProxyMap/*<WarrantyComp>*/ proxies;
 
   /**
    * Flag determining if a new result should be immediately acquired when the
@@ -103,7 +103,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
       i++;
       Logging.METRICS_LOGGER.log(Level.FINE, "RUNNING ATTEMPT " + i + " OF " + tmp + " IN " + Thread.currentThread());
       if (!tmp.proactive) {
-        for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+        for (java.util.Iterator iter = tmp.proxies.values().iterator(); iter.hasNext();) {
           // If any proxy has a good value, steal it
           WarrantyComp proxy = (WarrantyComp) iter.next();
           if (!static_dropOldValue(proxy)) {
@@ -150,7 +150,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
         Logging.METRICS_LOGGER.log(Level.FINE, "SETTING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         static_setNewValue(tmp, computed.value, activatedTreaty);
         if (tmp.proactive) {
-          for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+          for (java.util.Iterator iter = tmp.proxies.values().iterator(); iter.hasNext();) {
             // Update proxies to new value
             WarrantyComp proxy = (WarrantyComp) iter.next();
             static_setNewValue(proxy, computed.value, activatedTreaty);
@@ -255,7 +255,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
         rtn = tmp;
       } else {
         // See if we already have a proxy for that store.
-        for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+        for (java.util.Iterator iter = tmp.proxies.values().iterator(); iter.hasNext();) {
           WarrantyComp proxy = (WarrantyComp) iter.next();
           if (proxy.$getStore().equals(proxyStore)) {
             rtn = proxy;
@@ -265,14 +265,14 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
         if (rtn == null) {
           rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
           // Update proxies
-          for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+          for (java.util.Iterator iter = tmp.proxies.values().iterator(); iter.hasNext();) {
             WarrantyComp proxy = (WarrantyComp) iter.next();
-            proxy.proxies = proxy.proxies.add(rtn);
+            proxy.proxies = proxy.proxies.put(rtn.$getStore(), rtn);
           }
           // Update the new proxy
-          rtn.proxies = tmp.proxies.add(tmp);
+          rtn.proxies = tmp.proxies.put(tmp.$getStore(), tmp);
           // Update tmp
-          tmp.proxies = tmp.proxies.add(rtn);
+          tmp.proxies = tmp.proxies.put(rtn.$getStore(), rtn);
         }
       }
     } else {
@@ -281,7 +281,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
           rtn = tmp;
         } else {
           // See if we already have a proxy for that store.
-          for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+          for (java.util.Iterator iter = tmp.proxies.values().iterator(); iter.hasNext();) {
             WarrantyComp proxy = (WarrantyComp) iter.next();
             if (proxy.$getStore().equals(proxyStore)) {
               rtn = proxy;
@@ -291,14 +291,14 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
           if (rtn == null) {
             rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
             // Update proxies
-            for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+            for (java.util.Iterator iter = tmp.proxies.values().iterator(); iter.hasNext();) {
               WarrantyComp proxy = (WarrantyComp) iter.next();
-              proxy.proxies = proxy.proxies.add(rtn);
+              proxy.proxies = proxy.proxies.put(rtn.$getStore(), rtn);
             }
             // Update the new proxy
-            rtn.proxies = tmp.proxies.add(tmp);
+            rtn.proxies = tmp.proxies.put(tmp.$getStore(), tmp);
             // Update tmp
-            tmp.proxies = tmp.proxies.add(rtn);
+            tmp.proxies = tmp.proxies.put(rtn.$getStore(), rtn);
           }
         }
       }
@@ -307,7 +307,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   }
 
   protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$(boolean recomputeOnInvalidation, boolean proactive) {
-    this.proxies = ImmutableSet.emptySet();
+    this.proxies = ProxyMap.emptyMap();
     this.recomputeOnInvalidation = recomputeOnInvalidation;
     this.proactive = proactive;
     fabric$metrics$util$AbstractSubject$();

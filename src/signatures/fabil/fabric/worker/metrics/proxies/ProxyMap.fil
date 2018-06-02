@@ -7,9 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import fabric.metrics.Metric;
 import fabric.worker.Store;
-import fabric.worker.metrics.treaties.OidRef;
 
 /**
  * Utility for an inlined mapping from stores to proxies for metrics.
@@ -33,32 +31,18 @@ public class ProxyMap implements Serializable, JavaInlineable {
   public native boolean containsKey(Store s);
 
   /**
-   * @return true iff the given store name is a key in this map.
-   */
-  public native boolean containsKey(String name);
-
-  /**
    * @return true iff the given value is a value in this map.
    */
-  public native boolean containsValue(Metric value);
-
-  /**
-   * @return true iff the given value is a value in this map.
-   */
-  public native boolean containsValue(OidRef/*<Metric>*/ value);
+  public native boolean containsValue(fabric.lang.Object value);
 
   /**
    * @return a Set of entries for this ProxyMap.
    */
-  public native Set/*<Entry<Store, Metric>>*/ entrySet();
+  public native Set/*<Entry<Store, fabric.lang.Object>>*/ entrySet();
   /**
-   * @return the Metric mapped to by the given store key.
+   * @return the fabric.lang.Object mapped to by the given store key.
    */
-  public native Metric get(Store key);
-  /**
-   * @return the Metric mapped to by the given store key.
-   */
-  public native Metric get(String key);
+  public native fabric.lang.Object get(Store key);
 
   /** @return true iff this map is empty. */
   public native boolean isEmpty();
@@ -70,7 +54,7 @@ public class ProxyMap implements Serializable, JavaInlineable {
    * Put the given store-metric mapping.
    * @return the updated map.
    */
-  public native ProxyMap put(Store key, Metric value);
+  public native ProxyMap put(Store key, fabric.lang.Object value);
 
   /**
    * Put all of the given store-metric mappings.
@@ -84,15 +68,9 @@ public class ProxyMap implements Serializable, JavaInlineable {
    */
   public native ProxyMap remove(Store key);
 
-  /**
-   * Remove the mapping for the given store name.
-   * @return the updated map.
-   */
-  public native ProxyMap remove(String key);
-
   /** @return the size of this map. */
   public native int size();
 
   /** @return A set of the metrics in this map */
-  public native Collection/*<Metric>*/ values();
+  public native Collection/*<fabric.lang.Object>*/ values();
 }

@@ -1,7 +1,6 @@
 package fabric.lang;
 
 import fabric.worker.metrics.ImmutableObserverSet;
-import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.metrics.treaties.TreatySet;
 
 public class Object extends java.lang.Object {
