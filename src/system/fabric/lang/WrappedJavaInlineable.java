@@ -10,7 +10,6 @@ import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObserverSet;
-import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.metrics.treaties.TreatySet;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
