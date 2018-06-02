@@ -16,11 +16,6 @@ public class Object extends java.lang.Object {
   protected ImmutableObserverSet $observers;
 
   /**
-   * The associated for treaties and metrics
-   */
-  protected ImmutableSet $associated;
-
-  /**
    * The treaties on this object.
    */
   protected TreatySet $treaties;

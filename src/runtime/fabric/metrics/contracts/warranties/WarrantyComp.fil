@@ -185,7 +185,6 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
       if (curTreaty.get() == null || !curTreaty.get().valid()) {
         if (curTreaty.get() != null) curTreaty.get().removeObserver(this);
         this.curTreaty = null;
-        this.$associated = null;
       }
     }
     return this.curTreaty == null;
@@ -207,7 +206,6 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
       this.curTreaty = new TreatyRef(newTreaty.get()
           .getProxyTreaty(this.$getStore())
           .addObserver(this));
-      this.$associated = ImmutableSet.emptySet().add(this.curTreaty.get().getMetric());
     }
   }
 

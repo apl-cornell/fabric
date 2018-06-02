@@ -108,16 +108,6 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   }
 
   @Override
-  public ImmutableSet get$$associated() {
-    throw new InternalError("WrappedJavaInlineables don't have associated.");
-  }
-
-  @Override
-  public ImmutableSet set$$associated(ImmutableSet val) {
-    throw new InternalError("WrappedJavaInlineables don't have associated.");
-  }
-
-  @Override
   public ConfPolicy get$$accessPolicy() {
     throw new InternalError(
         "WrappedJavaInlineables don't have access policies.");

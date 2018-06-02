@@ -33,7 +33,6 @@ import fabric.worker.LocalStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableObserverSet;
-import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.metrics.treaties.TreatySet;
 
 /**
@@ -90,7 +89,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
     private long onum;
     private int version;
     private ImmutableObserverSet observers;
-    private ImmutableSet associated;
     private TreatySet treaties;
 
     /**
@@ -100,7 +98,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.onum = onum;
       this.version = 0;
       this.observers = null;
-      this.associated = null;
       this.treaties = null;
     }
 
@@ -111,7 +108,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.onum = obj.$getOnum();
       this.version = obj.$version;
       this.observers = obj.$observers;
-      this.associated = obj.$associated;
       this.treaties = obj.$treaties;
     }
 
@@ -124,9 +120,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
         this.version = in.readInt();
         if (in.readBoolean()) {
           this.observers = new ImmutableObserverSet(in);
-        }
-        if (in.readBoolean()) {
-          this.associated = new ImmutableSet(in);
         }
         if (in.readBoolean()) {
           this.treaties = TreatySet.read(in);
@@ -144,12 +137,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
         if (observers != null) {
           out.writeBoolean(true);
           observers.write(out);
-        } else {
-          out.writeBoolean(false);
-        }
-        if (associated != null) {
-          out.writeBoolean(true);
-          associated.write(out);
         } else {
           out.writeBoolean(false);
         }
@@ -213,20 +200,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.observers = observers;
     }
 
-    /**
-     * @return the associated
-     */
-    public ImmutableSet getAssociated() {
-      return associated;
-    }
-
-    /**
-     * @param associated the associated to set
-     */
-    public void setAssociated(ImmutableSet associated) {
-      this.associated = associated;
-    }
-
     private void writeObject(ObjectOutputStream out) throws IOException {
       write(out);
     }
@@ -237,9 +210,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.version = in.readInt();
       if (in.readBoolean()) {
         this.observers = new ImmutableObserverSet(in);
-      }
-      if (in.readBoolean()) {
-        this.associated = new ImmutableSet(in);
       }
       if (in.readBoolean()) {
         this.treaties = TreatySet.read(in);
@@ -450,22 +420,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public void setObservers(ImmutableObserverSet observers) {
     header.setObservers(observers);
-  }
-
-  /**
-   * @return the serialized object's associated
-   */
-  public ImmutableSet getAssociated() {
-    return header.getAssociated();
-  }
-
-  /**
-   * Modifies the serialized object's associated
-   *
-   * @param associated
-   */
-  public void setAssociated(ImmutableSet associated) {
-    header.setAssociated(associated);
   }
 
   /**
@@ -1361,7 +1315,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
           new ObjectInputStream(getSerializedDataStream()),
           getRefTypeIterator(), getIntraStoreRefIterator(),
           getInterStoreRefIterator());
-      result.$associated = getAssociated();
       if (getTreaties() != null) {
         result.$treaties = getTreaties();
       } else {

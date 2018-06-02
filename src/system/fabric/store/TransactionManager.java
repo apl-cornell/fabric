@@ -32,7 +32,6 @@ import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.ImmutableObserverSet;
-import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
@@ -247,19 +246,6 @@ public class TransactionManager {
         }
       }
     }
-    // Go through associated
-    ImmutableSet set2 = obj.getAssociated();
-    if (set2 != null) {
-      LongSet subSet = set2.onumsForStore(store);
-      if (subSet != null) {
-        for (LongIterator iter = subSet.iterator(); iter.hasNext();) {
-          long associate = iter.next();
-          if (explored.contains(associate)) continue;
-          explored.add(associate);
-          getAssociatedOnums(associate, explored);
-        }
-      }
-    }
     // Go through treaty observers.
     TreatySet set3 = obj.getTreaties();
     if (set3 != null) {
@@ -403,6 +389,11 @@ public class TransactionManager {
       TreatySet curTreaties = database.getTreaties(onum);
       if (curVersion != version || curTreaties.isStrictExtensionOf(treaties)) {
         result.add(database.read(onum));
+        for (LongIterator iter =
+            getAssociatedOnumsExcluded(onum, versionsAndTreaties.keySet())
+                .iterator(); iter.hasNext();) {
+          result.add(database.read(iter.next()));
+        }
       }
     }
 
