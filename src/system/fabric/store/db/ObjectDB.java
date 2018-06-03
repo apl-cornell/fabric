@@ -19,7 +19,6 @@ import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
-import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
@@ -1051,29 +1050,23 @@ public abstract class ObjectDB {
       for (PendingTransaction p : submap.values()) {
         for (final Map.Entry<Store, Pair<LongSet, LongSet>> e : p.extensionsTriggered
             .entrySet()) {
-          final Store s = e.getKey();
-          final LongSet delayedOnums = e.getValue().first;
-          final LongSet updatedOnums = e.getValue().second;
-          Threading.getPool().submit(new Runnable() {
-            @Override
-            public void run() {
-              Map<RemoteStore, Collection<SerializedObject>> updates =
-                  new HashMap<>();
-              if (!(s instanceof InProcessStore)
-                  && !(s instanceof LocalStore)) {
-                // Only bother to package things up when it's going to a
-                // distinct node.
-                List<SerializedObject> updateVals =
-                    new ArrayList<>(updatedOnums.size());
-                for (LongIterator it = updatedOnums.iterator(); it.hasNext();) {
-                  updateVals.add(read(it.next()));
-                }
-                updates.put(Worker.getWorker().getStore(Worker.getWorkerName()),
-                    updateVals);
-              }
-              s.sendExtensions(delayedOnums, updates);
+          Store s = e.getKey();
+          LongSet delayedOnums = e.getValue().first;
+          LongSet updatedOnums = e.getValue().second;
+          Map<RemoteStore, Collection<SerializedObject>> updates =
+              new HashMap<>();
+          if (!(s instanceof InProcessStore) && !(s instanceof LocalStore)) {
+            // Only bother to package things up when it's going to a
+            // distinct node.
+            List<SerializedObject> updateVals =
+                new ArrayList<>(updatedOnums.size());
+            for (LongIterator it = updatedOnums.iterator(); it.hasNext();) {
+              updateVals.add(read(it.next()));
             }
-          });
+            updates.put(Worker.getWorker().getStore(Worker.getWorkerName()),
+                updateVals);
+          }
+          s.sendExtensions(delayedOnums, updates);
         }
       }
     }
