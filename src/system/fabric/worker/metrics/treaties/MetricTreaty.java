@@ -408,6 +408,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
   @Override
   public MetricTreaty getProxyTreaty(Store s) {
+    if (getMetric().$getStore().equals(s)) return this;
     MetricTreaty result = statement.getProxy(getMetric(), s);
     if (activated && !result.activated)
       result = result.update(false, StatsMap.emptyStats()).first;
