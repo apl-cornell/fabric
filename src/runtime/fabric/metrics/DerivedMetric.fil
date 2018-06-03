@@ -92,9 +92,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
     this.singleStore = single;
     this.terms = ImmutableMetricsVector.createVector(terms);
     // Presets
-    ConfigProperties config = Worker.getWorker().config;
-    this.usePreset = config.usePreset;
-    if (this.usePreset) {
+    if (getUsePreset()) {
       this.presetR = computePresetR();
       this.presetB = computePresetB();
       this.presetV = computePresetV();
@@ -109,11 +107,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
     return this;
   }
 
-  // Stuff to allow for preset strategies.
-  public final boolean usePreset;
   /*@Override*/
   public boolean getUsePreset() {
-    return usePreset;
+    return Worker.getWorker().config.usePreset;
   }
 
   public final double presetR;
@@ -320,7 +316,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   private static double static_velocity(DerivedMetric tmp, StatsMap weakStats) {
-    if (tmp.usePreset) return tmp.presetV;
+    if (tmp.getUsePreset()) return tmp.presetV;
     if (weakStats.containsKey(tmp)) return weakStats.getVelocity(tmp);
     if (tmp.isObserved()) {
       // Separated here because we're not expecting regular updates unless
@@ -344,7 +340,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   private static double static_noise(DerivedMetric tmp, StatsMap weakStats) {
-    if (tmp.usePreset) return tmp.presetN;
+    if (tmp.getUsePreset()) return tmp.presetN;
     if (weakStats.containsKey(tmp)) return weakStats.getNoise(tmp);
     if (tmp.isObserved()) {
       // Separated here because we're not expecting regular updates unless

@@ -50,8 +50,7 @@ public class SampledMetric extends Metric {
 
     // Presets
     ConfigProperties config = Worker.getWorker().config;
-    this.usePreset = config.usePreset;
-    if (this.usePreset) {
+    if (getUsePreset()) {
       String key = name + "@" + s.name();
       // XXX Ugh, a hack but to avoid needing to specify all elements for a
       // static-equal run, let's just default for keys that don't exist.
@@ -85,11 +84,9 @@ public class SampledMetric extends Metric {
     return this;
   }
 
-  // Stuff to allow for preset strategies.
-  public final boolean usePreset;
   /*@Override*/
   public boolean getUsePreset() {
-    return usePreset;
+    return Worker.getWorker().config.usePreset;
   }
 
   public final double presetR;
@@ -177,7 +174,7 @@ public class SampledMetric extends Metric {
 
   private static long static_computeSamples(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.usePreset) {
+      if (tmp.getUsePreset()) {
         return 0;
       } else {
         RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
@@ -187,7 +184,7 @@ public class SampledMetric extends Metric {
     } else {
       long rtn = 0;
       atomic {
-        if (tmp.usePreset) {
+        if (tmp.getUsePreset()) {
           rtn = 0;
         } else {
           RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
@@ -206,7 +203,7 @@ public class SampledMetric extends Metric {
 
   private static long static_computeLastUpdate(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.usePreset) {
+      if (tmp.getUsePreset()) {
         return 0;
       } else {
         RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
@@ -216,7 +213,7 @@ public class SampledMetric extends Metric {
     } else {
       long rtn = 0;
       atomic {
-        if (tmp.usePreset) {
+        if (tmp.getUsePreset()) {
           rtn = 0;
         } else {
           RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
@@ -235,7 +232,7 @@ public class SampledMetric extends Metric {
 
   private static double static_computeUpdateInterval(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.usePreset) {
+      if (tmp.getUsePreset()) {
         return 0;
       } else {
         RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
@@ -245,7 +242,7 @@ public class SampledMetric extends Metric {
     } else {
       double rtn = 0;
       atomic {
-        if (tmp.usePreset) {
+        if (tmp.getUsePreset()) {
           rtn = 0;
         } else {
           RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
@@ -264,7 +261,7 @@ public class SampledMetric extends Metric {
 
   private static double static_computeVelocity(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.usePreset) {
+      if (tmp.getUsePreset()) {
         return tmp.presetV;
       } else {
         RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
@@ -274,7 +271,7 @@ public class SampledMetric extends Metric {
     } else {
       double rtn = 0;
       atomic {
-        if (tmp.usePreset) {
+        if (tmp.getUsePreset()) {
           rtn = tmp.presetV;
         } else {
           RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
@@ -293,7 +290,7 @@ public class SampledMetric extends Metric {
 
   private static double static_computeNoise(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.usePreset) {
+      if (tmp.getUsePreset()) {
         return tmp.presetN;
       } else {
         RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
@@ -303,7 +300,7 @@ public class SampledMetric extends Metric {
     } else {
       double rtn = 0;
       atomic {
-        if (tmp.usePreset) {
+        if (tmp.getUsePreset()) {
           rtn = tmp.presetN;
         } else {
           RunningMetricStats preloaded = tmp.stats.preload(tmp.name);
