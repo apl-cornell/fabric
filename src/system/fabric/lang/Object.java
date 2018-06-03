@@ -548,7 +548,7 @@ public interface Object {
      * A private constructor for initializing transaction-management state.
      */
     private _Impl(Store store, long onum, int version,
-        ImmutableObserverSet observers) {
+        ImmutableObserverSet observers, TreatySet treaties) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
@@ -561,7 +561,7 @@ public interface Object {
       // Do this before read map entry is created to avoid null treaty set in
       // entry, but after ref to avoid uninitialized value when getting the
       // store of a metric.
-      this.$treaties = TreatySet.emptySet(this);
+      this.$treaties = treaties == null ? TreatySet.emptySet(this) : treaties;
       this.$readMapEntry = TransactionManager.getReadMapEntry(this);
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
@@ -587,7 +587,7 @@ public interface Object {
      *          the location for the object
      */
     public _Impl(Store store) throws UnreachableNodeException {
-      this(store, store.createOnum(), 0, null);
+      this(store, store.createOnum(), 0, null, null);
       store.cache(this);
 
       // Register the new object with the transaction manager.
@@ -747,10 +747,12 @@ public interface Object {
     @Override
     public final TreatySet set$$treaties(TreatySet treaties) {
       TransactionManager tm = TransactionManager.getInstance();
+      ExpiryExtension ex = tm.getPendingExtension(this);
+      TreatySet current = ex == null ? this.$treaties : ex.treaties;
       boolean transactionCreated =
-          tm.registerTreatySetWrite(this, this.$treaties, treaties);
+          tm.registerTreatySetWrite(this, current, treaties);
       TreatySet rtn = treaties;
-      if (TreatySet.checkExtension(this.$treaties, treaties)
+      if (TreatySet.checkExtension(current, treaties)
           && tm.getPendingExtension(this) != null) {
         tm.getPendingExtension(this).treaties = treaties;
       } else {
@@ -885,13 +887,13 @@ public interface Object {
      * @throws ClassNotFoundException
      */
     public _Impl(Store store, long onum, int version,
-        ImmutableObserverSet observers, Store updateLabelStore,
-        long updateLabelOnum, Store accessPolicyStore, long accessPolicyOnum,
-        ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs,
+        ImmutableObserverSet observers, TreatySet treaties,
+        Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
+        long accessPolicyOnum, ObjectInput serializedInput,
+        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws IOException, ClassNotFoundException {
-      this(store, onum, version, observers);
+      this(store, onum, version, observers, treaties);
       this.$updateLabel = new Label._Proxy(updateLabelStore, updateLabelOnum);
       this.$accessPolicy =
           new ConfPolicy._Proxy(accessPolicyStore, accessPolicyOnum);
@@ -1153,13 +1155,13 @@ public interface Object {
       }
 
       public _Impl(Store store, long onum, int version,
-          ImmutableObserverSet observers, Store updateLabelStore,
-          long updateLabelOnum, Store accessPolicyStore, long accessPolicyOnum,
-          ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
-          Iterator<Long> intraStoreRefs,
+          ImmutableObserverSet observers, TreatySet treaties,
+          Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
+          long accessPolicyOnum, ObjectInput serializedInput,
+          Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
           Iterator<Pair<String, Long>> interStoreRefs)
           throws IOException, ClassNotFoundException {
-        super(store, onum, version, observers, updateLabelStore,
+        super(store, onum, version, observers, treaties, updateLabelStore,
             updateLabelOnum, accessPolicyStore, accessPolicyOnum,
             serializedInput, refTypes, intraStoreRefs, interStoreRefs);
       }

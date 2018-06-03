@@ -1281,9 +1281,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       if (constructor == null) {
         constructor = implClass.getConstructor(Store.class, long.class,
-            int.class, ImmutableObserverSet.class, Store.class, long.class,
-            Store.class, long.class, ObjectInput.class, Iterator.class,
-            Iterator.class, Iterator.class);
+            int.class, ImmutableObserverSet.class, TreatySet.class, Store.class,
+            long.class, Store.class, long.class, ObjectInput.class,
+            Iterator.class, Iterator.class, Iterator.class);
         constructorTable.put(implClass, constructor);
       }
 
@@ -1310,16 +1310,11 @@ public final class SerializedObject implements FastSerializable, Serializable {
       }
 
       _Impl result = (_Impl) constructor.newInstance(store, getOnum(),
-          getVersion(), getObservers(), updateLabelStore, updateLabelOnum,
-          accessPolicyStore, accessPolicyOnum,
+          getVersion(), getObservers(), getTreaties(), updateLabelStore,
+          updateLabelOnum, accessPolicyStore, accessPolicyOnum,
           new ObjectInputStream(getSerializedDataStream()),
           getRefTypeIterator(), getIntraStoreRefIterator(),
           getInterStoreRefIterator());
-      if (getTreaties() != null) {
-        result.$treaties = getTreaties();
-      } else {
-        setTreaties(result.$treaties);
-      }
 
       if (chaseSurrogates && (result instanceof Surrogate)) {
         // Chase the surrogate pointer.

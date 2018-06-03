@@ -187,13 +187,13 @@ public interface Capability extends fabric.lang.Object {
     }
 
     public _Impl(fabric.worker.Store store, long onum, int version,
-        fabric.worker.metrics.ImmutableObserverSet observers,
+        fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.metrics.treaties.TreatySet treaties,
         fabric.worker.Store labelStore, long labelOnum,
         fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
         java.io.ObjectInput in, java.util.Iterator refTypes,
         java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
         throws java.io.IOException, java.lang.ClassNotFoundException {
-      super(store, onum, version, observers, labelStore, labelOnum,
+      super(store, onum, version, observers, treaties, labelStore, labelOnum,
           accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
           interStoreRefs);
       this.jif$jif_lang_Capability_P =
@@ -255,13 +255,13 @@ public interface Capability extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, labelStore, labelOnum,
+        super(store, onum, version, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
       }

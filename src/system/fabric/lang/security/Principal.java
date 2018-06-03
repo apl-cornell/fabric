@@ -16,6 +16,7 @@ import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.TransactionManager;
 
 /**
@@ -189,12 +190,13 @@ public interface Principal extends fabric.lang.Object {
     }
 
     public _Impl(Store store, long onum, int version,
-        ImmutableObserverSet observers, Store labelStore, long labelOnum,
-        Store accessPolicyStore, long accessPolicyOnum, ObjectInput in,
-        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+        ImmutableObserverSet observers, TreatySet treaties, Store labelStore,
+        long labelOnum, Store accessPolicyStore, long accessPolicyOnum,
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws java.io.IOException, ClassNotFoundException {
-      super(store, onum, version, observers, labelStore, labelOnum,
+      super(store, onum, version, observers, treaties, labelStore, labelOnum,
           accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
           interStoreRefs);
     }

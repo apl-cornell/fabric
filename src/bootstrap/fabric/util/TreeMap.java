@@ -315,7 +315,7 @@ public interface TreeMap
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
- fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
+ fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.metrics.treaties.TreatySet treaties, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -323,7 +323,7 @@ public interface TreeMap
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, observers, labelStore, labelOnum,
+                super(store, onum, version, observers, treaties, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.color = in.readInt();
@@ -410,7 +410,7 @@ public interface TreeMap
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
- fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
+ fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.metrics.treaties.TreatySet treaties, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -419,7 +419,7 @@ public interface TreeMap
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, observers, labelStore, labelOnum,
+                    super(store, onum, version, observers, treaties, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
@@ -1172,7 +1172,7 @@ public interface TreeMap
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
- fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
+ fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.metrics.treaties.TreatySet treaties, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -1180,7 +1180,7 @@ public interface TreeMap
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, observers, labelStore, labelOnum,
+                super(store, onum, version, observers, treaties, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.out$ = (fabric.util.TreeMap)
@@ -1280,7 +1280,7 @@ public interface TreeMap
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
- fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
+ fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.metrics.treaties.TreatySet treaties, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -1289,7 +1289,7 @@ public interface TreeMap
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, observers, labelStore, labelOnum,
+                    super(store, onum, version, observers, treaties, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
@@ -1619,7 +1619,7 @@ public interface TreeMap
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
- fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
+ fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.metrics.treaties.TreatySet treaties, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -1627,7 +1627,7 @@ public interface TreeMap
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, observers, labelStore, labelOnum,
+                super(store, onum, version, observers, treaties, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.out$ = (fabric.util.TreeMap)
@@ -1722,7 +1722,7 @@ public interface TreeMap
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
- fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
+ fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.metrics.treaties.TreatySet treaties, fabric.worker.Store labelStore,
                              long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
@@ -1731,7 +1731,7 @@ public interface TreeMap
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, observers, labelStore, labelOnum,
+                    super(store, onum, version, observers, treaties, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
@@ -2481,7 +2481,7 @@ public interface TreeMap
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
- fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
+ fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.metrics.treaties.TreatySet treaties, fabric.worker.Store labelStore,
                      long labelOnum, fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
@@ -2489,7 +2489,7 @@ public interface TreeMap
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, observers, labelStore, labelOnum,
+            super(store, onum, version, observers, treaties, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.nil = (fabric.util.TreeMap.Node)
@@ -2691,7 +2691,7 @@ public interface TreeMap
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
- fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.Store labelStore,
+ fabric.worker.metrics.ImmutableObserverSet observers, fabric.worker.metrics.treaties.TreatySet treaties, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
@@ -2699,7 +2699,7 @@ public interface TreeMap
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, observers, labelStore, labelOnum,
+                super(store, onum, version, observers, treaties, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.RED = in.readInt();
