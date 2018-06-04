@@ -54,7 +54,7 @@ public class DummyTreatySet extends TreatySet {
 
   @Override
   public boolean equals(Object obj) {
-    return (obj instanceof DummyTreatySet) && this == obj;
+    return (obj instanceof DummyTreatySet);
   }
 
   @Override

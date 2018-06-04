@@ -68,6 +68,8 @@ public abstract class TreatySet
    * extending the still live treaties.
    */
   public static boolean checkExtension(TreatySet from, TreatySet to) {
+    if (from == null || to == null)
+      throw new InternalError("This shouldn't be possible");
     return from == to || (from != null && to != null
         && (from.equals(to) || to.isStrictExtensionOf(from)));
   }

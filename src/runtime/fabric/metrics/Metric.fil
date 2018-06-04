@@ -26,6 +26,9 @@ import fabric.lang.security.LabelUtil;
 
 import java.util.logging.Level;
 import java.util.Iterator;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongSet;
 import fabric.common.Logging;
 import fabric.common.util.Pair;
 import fabric.common.util.LongSet;
@@ -680,23 +683,24 @@ public abstract class Metric extends AbstractSubject
   public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties) {
     //Logging.METRICS_LOGGER.log(Level.FINER,
     //    "CHECKING FOR UPDATE ON METRIC");
+    LongSet treatiesToProcess = new LongHashSet(treaties);
     ImmutableObserverSet affected = ImmutableObserverSet.emptySet();
     if (includesObserver) {
       affected = affected.addAll(handleDirectUpdates());
+      treatiesToProcess.addAll(affected.getTreaties(this));
     }
-    for (Iterator/*<MetricTreaty>*/ iter = $treaties.iterator(); iter.hasNext();) {
-      MetricTreaty treaty = (MetricTreaty) iter.next();
-      if (treaties.contains(treaty.getId()) || affected.contains(this, treaty.getId())) {
-        // Do the update
-        Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
-          treaty.update(false, StatsMap.emptyStats());
+    for (LongIterator iter = treatiesToProcess.iterator(); iter.hasNext();) {
+      long treatyId = iter.next();
+      MetricTreaty treaty = $treaties.get(treatyId);
+      // Do the update
+      Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
+        treaty.update(false, StatsMap.emptyStats());
 
-        // Add resulting changes we need to handle.
-        affected = affected.addAll((ImmutableObserverSet) treatyUpdate.second);
+      // Add resulting changes we need to handle.
+      affected = affected.addAll((ImmutableObserverSet) treatyUpdate.second);
 
-        // Remove this change, in case it was added by the observer itself.
-        affected = affected.remove(this, treaty.getId());
-      }
+      // Remove this change, in case it was added by the observer itself.
+      affected = affected.remove(this, treaty.getId());
     }
     return affected;
   }

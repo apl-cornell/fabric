@@ -269,6 +269,14 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
             .contains(id);
   }
 
+  /** @return the treaties for a given obs */
+  public LongSet getTreaties(Observer obs) {
+    if (map.containsKey(obs.$getStore().name())
+        && map.get(obs.$getStore().name()).containsKey(obs.$getOnum()))
+      return map.get(obs.$getStore().name()).get(obs.$getOnum()).treaties;
+    return new LongHashSet();
+  }
+
   /** @return true iff the given set is fully contained in this set */
   public boolean containsAll(ImmutableObserverSet other) {
     // Superset of stores

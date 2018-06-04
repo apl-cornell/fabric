@@ -6,13 +6,16 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.metrics.Metric;
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * Utility class to easily express a set of treaties associated with a Metric.
@@ -119,6 +122,9 @@ public class MetricTreatySet extends TreatySet {
     // Don't do anything if there's no actual change.
     if (!items.containsKey(treaty.getId())) return;
 
+    Logging.METRICS_LOGGER.log(Level.FINEST, "REMOVING TREATY {0} IN {1} {2}",
+        new Object[] { treaty, TransactionManager.getInstance().getCurrentTid(),
+            Thread.currentThread() });
     // TODO check that it's a proper garbage collection?
     MetricTreatySet updated = new MetricTreatySet(this);
     updated.items.remove(treaty.getId());

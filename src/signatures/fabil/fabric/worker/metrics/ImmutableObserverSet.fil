@@ -2,6 +2,7 @@ package fabric.worker.metrics;
 
 import fabric.metrics.util.Observer;
 import java.util.Iterator;
+import fabric.common.util.LongSet;
 
 /**
  * Utility class to easily express an immutable vector of items.
@@ -43,6 +44,9 @@ public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Triple<O
 
   /** @return true iff the given set is fully contained in this set */
   public native boolean containsAll(ImmutableObserverSet other);
+
+  /** @return the treaties for a given obs */
+  public native LongSet getTreaties(Observer obs);
 
   /** @return true iff the set is empty */
   public native boolean isEmpty();
