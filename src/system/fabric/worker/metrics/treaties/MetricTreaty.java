@@ -121,6 +121,12 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       // Otherwise, make sure the updated value is in the set.
       this.getMetric().get$$treaties().add(this);
     }
+
+    Logging.METRICS_LOGGER.log(Level.FINEST,
+        "UPDATING {0} TO {1} IN {2} {3}",
+        new Object[] { original, this,
+            TransactionManager.getInstance().getCurrentTid(),
+            Thread.currentThread() });
   }
 
   /**
@@ -156,6 +162,12 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       // Otherwise, make sure the updated value is in the set.
       this.getMetric().get$$treaties().add(this);
     }
+
+    Logging.METRICS_LOGGER.log(Level.FINEST,
+        "UPDATING {0} TO {1} IN {2} {3}",
+        new Object[] { original, this,
+            TransactionManager.getInstance().getCurrentTid(),
+            Thread.currentThread() });
   }
 
   /**
@@ -177,11 +189,22 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     if (this.activated && this.policy instanceof NoPolicy) {
       // Garbage collect if this is no longer enforced and has been activated
       // previously.
+      Logging.METRICS_LOGGER.log(Level.FINEST,
+          "DEACTIVATING {0} IN {1} {2}",
+          new Object[] { original,
+              TransactionManager.getInstance().getCurrentTid(),
+              Thread.currentThread() });
       this.getMetric().get$$treaties().remove(original);
     } else {
       // Otherwise, make sure the updated value is in the set.
       this.getMetric().get$$treaties().add(this);
     }
+
+    Logging.METRICS_LOGGER.log(Level.FINEST,
+        "UPDATING {0} TO {1} IN {2} {3}",
+        new Object[] { original, this,
+            TransactionManager.getInstance().getCurrentTid(),
+            Thread.currentThread() });
   }
 
   /**
@@ -212,11 +235,22 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     if (this.activated && this.policy instanceof NoPolicy) {
       // Garbage collect if this is no longer enforced and has been activated
       // previously.
+      Logging.METRICS_LOGGER.log(Level.FINEST,
+          "DEACTIVATING {0} IN {1} {2}",
+          new Object[] { original,
+              TransactionManager.getInstance().getCurrentTid(),
+              Thread.currentThread() });
       this.getMetric().get$$treaties().remove(original);
     } else {
       // Otherwise, make sure the updated value is in the set.
       this.getMetric().get$$treaties().add(this);
     }
+
+    Logging.METRICS_LOGGER.log(Level.FINEST,
+        "UPDATING {0} TO {1} IN {2} {3}",
+        new Object[] { original, this,
+            TransactionManager.getInstance().getCurrentTid(),
+            Thread.currentThread() });
   }
 
   @Override
@@ -229,11 +263,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
         // Keep using the same policy if the policy still gives a good expiry or
         // we're only doing an async extension.
         MetricTreaty updatedTreaty = new MetricTreaty(this, updatedCurExpiry);
-        Logging.METRICS_LOGGER.log(Level.FINEST,
-            "UPDATING {0} TO {1} IN {2} {3}",
-            new Object[] { this, updatedTreaty,
-                TransactionManager.getInstance().getCurrentTid(),
-                Thread.currentThread() });
         return new Pair<>(updatedTreaty,
             oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
                 : ImmutableObserverSet.emptySet());
@@ -249,11 +278,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
         if (newExpiry > System.currentTimeMillis()) {
           MetricTreaty updatedTreaty =
               new MetricTreaty(this, newPolicy, newExpiry);
-          Logging.METRICS_LOGGER.log(Level.FINEST,
-              "UPDATING {0} TO {1} IN {2} {3}",
-              new Object[] { this, updatedTreaty,
-                  TransactionManager.getInstance().getCurrentTid(),
-                  Thread.currentThread() });
           return new Pair<>(updatedTreaty,
               oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
                   : ImmutableObserverSet.emptySet());
@@ -391,9 +415,9 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
   @Override
   public String toString() {
-    return Long.toString(id) + "(" + activated + "): " + getMetric().toString()
-        + " " + statement + " until " + expiry + " " + policy
-        + " and observed by " + observers;
+    return Long.toString(id) + "(" + activated + "): METRIC " + metric + " "
+        + statement + " until " + expiry + " " + policy + " and observed by "
+        + observers;
   }
 
   @Override

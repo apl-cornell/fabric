@@ -68,7 +68,7 @@ public class MetricTreatySet extends TreatySet {
 
   @Override
   public int hashCode() {
-    return this.items.hashCode();
+    return this.owner.hashCode() ^ this.items.hashCode();
   }
 
   public MetricTreatySet(DataInput in) throws IOException {
@@ -113,7 +113,12 @@ public class MetricTreatySet extends TreatySet {
 
     MetricTreatySet updated = new MetricTreatySet(this);
     updated.items.put(treaty.getId(), treaty);
-    updated.statementMap.put(treaty.statement, treaty);
+    MetricTreaty old = updated.statementMap.put(treaty.statement, treaty);
+    if (old != null && old.getId() != treaty.getId()) Logging.METRICS_LOGGER
+        .log(Level.SEVERE, "MASKED TREATY {0} WITH {3} IN {1} {2}",
+            new Object[] { old,
+                TransactionManager.getInstance().getCurrentTid(),
+                Thread.currentThread(), treaty });
     owner.get().set$$treaties(updated);
   }
 
@@ -127,8 +132,8 @@ public class MetricTreatySet extends TreatySet {
             Thread.currentThread() });
     // TODO check that it's a proper garbage collection?
     MetricTreatySet updated = new MetricTreatySet(this);
-    updated.items.remove(treaty.getId());
-    updated.statementMap.remove(treaty.statement);
+    MetricTreaty val = updated.items.remove(treaty.getId());
+    updated.statementMap.remove(treaty.statement, val);
     owner.get().set$$treaties(updated);
   }
 

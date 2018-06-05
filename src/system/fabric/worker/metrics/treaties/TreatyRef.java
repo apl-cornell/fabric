@@ -3,6 +3,9 @@ package fabric.worker.metrics.treaties;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 
 import fabric.common.FastSerializable;
@@ -16,12 +19,28 @@ import fabric.worker.Store;
 @SuppressWarnings("serial")
 public final class TreatyRef implements FastSerializable, Serializable {
 
-  public final MetricRef objRef;
-  public final long treatyId;
+  public MetricRef objRef;
+  public long treatyId;
 
   public TreatyRef(MetricRef objRef, long treatyId) {
     this.objRef = objRef;
     this.treatyId = treatyId;
+  }
+
+  /* Serializable definitions, need to special case fabric references. */
+
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    write(out);
+  }
+
+  private void readObject(ObjectInputStream in)
+      throws IOException, ClassNotFoundException {
+    this.objRef = new MetricRef(in);
+    this.treatyId = in.readLong();
+  }
+
+  private void readObjectNoData() throws ObjectStreamException {
+    // Do nothing?
   }
 
   public TreatyRef(DataInput in) throws IOException {

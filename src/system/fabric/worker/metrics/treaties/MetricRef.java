@@ -3,6 +3,9 @@ package fabric.worker.metrics.treaties;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 
 import fabric.common.FastSerializable;
@@ -18,8 +21,8 @@ import fabric.worker.Worker;
 @SuppressWarnings("serial")
 public final class MetricRef implements FastSerializable, Serializable {
 
-  public final String objStoreName;
-  public final long objOnum;
+  public String objStoreName;
+  public long objOnum;
 
   private transient Metric cached;
 
@@ -38,6 +41,22 @@ public final class MetricRef implements FastSerializable, Serializable {
 
   public MetricRef(Metric obj) {
     this(obj.$getStore(), obj.$getOnum());
+  }
+
+  /* Serializable definitions, need to special case fabric references. */
+
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    write(out);
+  }
+
+  private void readObject(ObjectInputStream in)
+      throws IOException, ClassNotFoundException {
+    this.objStoreName = in.readUTF();
+    this.objOnum = in.readLong();
+  }
+
+  private void readObjectNoData() throws ObjectStreamException {
+    // Do nothing?
   }
 
   public MetricRef(DataInput in) throws IOException {
