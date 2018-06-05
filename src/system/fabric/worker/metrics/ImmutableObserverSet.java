@@ -152,13 +152,11 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     }
 
     // Get or Add Second Level
-    ObserverGroup orig =
-        updated.map.get(obs.$getStore().name()).get(obs.$getOnum());
+    ObserverGroup orig = submap.get(obs.$getOnum());
     if (orig == null) orig = ObserverGroup.EMPTY;
 
     // Add Third Level.
-    updated.map.get(obs.$getStore().name()).put(obs.$getOnum(),
-        orig.addOwner());
+    submap.put(obs.$getOnum(), orig.addOwner());
     return updated;
   }
 
@@ -176,13 +174,11 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     }
 
     // Get or Add Second Level
-    ObserverGroup orig =
-        updated.map.get(obs.$getStore().name()).get(obs.$getOnum());
+    ObserverGroup orig = submap.get(obs.$getOnum());
     if (orig == null) orig = ObserverGroup.EMPTY;
 
     // Add Third Level.
-    updated.map.get(obs.$getStore().name()).put(obs.$getOnum(),
-        orig.addTreaty(id));
+    submap.put(obs.$getOnum(), orig.addTreaty(id));
     return updated;
   }
 
@@ -211,14 +207,17 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     LongKeyMap<ObserverGroup> submap = updated.map.get(obs.$getStore().name());
 
     // Get Second Level
-    ObserverGroup orig =
-        updated.map.get(obs.$getStore().name()).get(obs.$getOnum());
+    ObserverGroup orig = submap.get(obs.$getOnum());
 
     // Remove Third Level
     ObserverGroup updatedGrp = orig.removeOwner();
 
-    // Remove Second Level
-    if (updatedGrp.isEmpty()) submap.remove(obs.$getOnum());
+    // Remove or Update Second Level
+    if (updatedGrp.isEmpty()) {
+      submap.remove(obs.$getOnum());
+    } else {
+      submap.put(obs.$getOnum(), updatedGrp);
+    }
 
     // Remove First Level
     if (submap.isEmpty()) updated.map.remove(obs.$getStore().name());
@@ -236,14 +235,17 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     LongKeyMap<ObserverGroup> submap = updated.map.get(obs.$getStore().name());
 
     // Get Second Level
-    ObserverGroup orig =
-        updated.map.get(obs.$getStore().name()).get(obs.$getOnum());
+    ObserverGroup orig = submap.get(obs.$getOnum());
 
     // Remove Third Level
     ObserverGroup updatedGrp = orig.removeTreaty(id);
 
-    // Remove Second Level
-    if (updatedGrp.isEmpty()) submap.remove(obs.$getOnum());
+    // Remove or Update Second Level
+    if (updatedGrp.isEmpty()) {
+      submap.remove(obs.$getOnum());
+    } else {
+      submap.put(obs.$getOnum(), updatedGrp);
+    }
 
     // Remove First Level
     if (submap.isEmpty()) updated.map.remove(obs.$getStore().name());
