@@ -333,13 +333,15 @@ public final class ObjectCache {
   /**
    * Notify waiters that the onum has been fetched into cache.
    */
-  void notifyFetched(long onum) {
-    FetchLock curLock = fetchLocks.get(onum);
-    if (curLock != null) {
-      synchronized (curLock) {
-        curLock.object = get(onum);
-        curLock.notifyAll();
-        fetchLocks.remove(onum, curLock);
+  void notifyFetched(long onum, Entry result) {
+    if (result != null) {
+      FetchLock curLock = fetchLocks.get(onum);
+      if (curLock != null) {
+        synchronized (curLock) {
+          curLock.object = result;
+          curLock.notifyAll();
+          fetchLocks.remove(onum, curLock);
+        }
       }
     }
   }
@@ -391,7 +393,7 @@ public final class ObjectCache {
         if (entries.replace(onum, existingEntry, impl.$cacheEntry)) return;
       }
     } finally {
-      notifyFetched(onum);
+      notifyFetched(onum, impl.$cacheEntry);
     }
   }
 
@@ -427,7 +429,7 @@ public final class ObjectCache {
       return existingEntry;
     }
 
-    notifyFetched(obj.getOnum());
+    notifyFetched(obj.getOnum(), newEntry);
     return newEntry;
   }
 
