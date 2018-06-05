@@ -86,6 +86,12 @@ public final class Log {
   volatile TransactionID retrySignal;
 
   /**
+   * An exception with stack trace and reason for retry being signalled.  Null
+   * if there's no retry being signalled.
+   */
+  volatile RetrySignalException retryCause;
+
+  /**
    * Maps OIDs to <code>readMap</code> entries for objects read in this
    * transaction or completed sub-transactions. Reads from running or aborted
    * sub-transactions don't count here.
@@ -217,6 +223,7 @@ public final class Log {
     this.child = null;
     this.thread = Thread.currentThread();
     this.retrySignal = parent == null ? null : parent.retrySignal;
+    this.retryCause = parent == null ? null : parent.retryCause;
     this.reads = new OidKeyHashMap<>();
     this.readsReadByParent = new ArrayList<>();
     this.creates = new ArrayList<>();
@@ -436,7 +443,8 @@ public final class Log {
         WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got retry signal",
             this);
 
-        throw new TransactionRestartingException(this.retrySignal);
+        throw new TransactionRestartingException(this.retrySignal,
+            this.retryCause);
       }
     }
   }
@@ -444,7 +452,7 @@ public final class Log {
   /**
    * Sets the retry flag on this and the logs of all sub-transactions.
    */
-  public void flagRetry() {
+  public void flagRetry(String reason) {
     Queue<Log> toFlag = new LinkedList<>();
     toFlag.add(this);
     while (!toFlag.isEmpty()) {
@@ -453,6 +461,11 @@ public final class Log {
         if (log.child != null) toFlag.add(log.child);
         if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid)) {
           log.retrySignal = tid;
+          try {
+            throw new RetrySignalException(reason);
+          } catch (RetrySignalException e) {
+            log.retryCause = e;
+          }
 
           // Grab the currently marked blocking dependency
           final Object curWaitingOn = log.waitsOn;
@@ -539,7 +552,10 @@ public final class Log {
 
       if (retrySignal != null) {
         synchronized (this) {
-          if (retrySignal.equals(tid)) retrySignal = null;
+          if (retrySignal.equals(tid)) {
+            retrySignal = null;
+            retryCause = null;
+          }
         }
       }
     }
