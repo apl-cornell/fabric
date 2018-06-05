@@ -19,7 +19,6 @@ import fabric.worker.transaction.TransactionManager;
 public class WitnessPolicy extends EnforcementPolicy {
 
   private final TreatyRef[] witnesses;
-  private String str;
 
   public WitnessPolicy(MetricTreaty[] witnesses) {
     super(EnforcementPolicy.Kind.WITNESS);
@@ -27,7 +26,6 @@ public class WitnessPolicy extends EnforcementPolicy {
     for (int i = 0; i < witnesses.length; i++) {
       this.witnesses[i] = new TreatyRef(witnesses[i]);
     }
-    str = Arrays.toString(witnesses);
   }
 
   public WitnessPolicy(DataInput in) throws IOException {
@@ -36,7 +34,6 @@ public class WitnessPolicy extends EnforcementPolicy {
     for (int i = 0; i < this.witnesses.length; i++) {
       this.witnesses[i] = new TreatyRef(in);
     }
-    this.str = in.readUTF();
   }
 
   @Override
@@ -65,7 +62,6 @@ public class WitnessPolicy extends EnforcementPolicy {
     for (TreatyRef witness : witnesses) {
       witness.write(out);
     }
-    out.writeUTF(str);
   }
 
   @Override
@@ -83,7 +79,7 @@ public class WitnessPolicy extends EnforcementPolicy {
 
   @Override
   public String toString() {
-    return "enforced by " + str;
+    return "enforced by " + Arrays.toString(witnesses);
   }
 
   @Override
