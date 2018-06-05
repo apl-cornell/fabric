@@ -742,7 +742,6 @@ public abstract class ObjectDB {
       // Make sure the onum doesn't already exist in the database.
       if (exists(onum)) {
         throw new TransactionPrepareFailedException(versionConflicts,
-
             longerContracts, "Object " + onum + " already exists.");
       }
 
