@@ -87,7 +87,7 @@ public final class ReadMap {
       return versionNumber;
     }
 
-    synchronized TreatySet getTreaties() {
+    public synchronized TreatySet getTreaties() {
       return treaties;
     }
 

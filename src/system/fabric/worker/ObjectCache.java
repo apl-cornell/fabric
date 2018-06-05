@@ -251,8 +251,7 @@ public final class ObjectCache {
      */
     public synchronized TreatySet getTreaties() {
       if (next != null) return next.getTreaties();
-      if (impl != null) return impl.$writer == null ? impl.$treaties
-          : impl.$history.$treaties;
+      if (impl != null) return impl.$readMapEntry.getTreaties();
       if (serialized != null) return serialized.getTreaties();
       return null;
     }
@@ -260,9 +259,9 @@ public final class ObjectCache {
     /**
      * Updates the object's expiry in place.
      */
-    public synchronized void setTreaties(TreatySet newTreaties) {
+    public synchronized void extendTreaties(TreatySet newTreaties) {
       if (next != null) {
-        next.setTreaties(newTreaties);
+        next.extendTreaties(newTreaties);
         return;
       }
       if (impl != null) {
@@ -270,13 +269,16 @@ public final class ObjectCache {
         _Impl curImpl = impl;
         // Run through history and update as well.
         while (curImpl != null && curImpl.$version == ver) {
-          curImpl.$treaties = newTreaties;
+          if (newTreaties.isStrictExtensionOf(curImpl.$treaties))
+            curImpl.$treaties = newTreaties;
+          curImpl.$readMapEntry.extendTreaties(newTreaties);
           curImpl = curImpl.$history;
         }
         return;
       }
       if (serialized != null) {
-        serialized.setTreaties(newTreaties);
+        if (newTreaties.isStrictExtensionOf(serialized.getTreaties()))
+          serialized.setTreaties(newTreaties);
         return;
       }
     }
@@ -561,7 +563,7 @@ public final class ObjectCache {
 
           if (curEntry.getVersion() == update.getVersion() && update
               .getTreaties().isStrictExtensionOf(curEntry.getTreaties())) {
-            curEntry.setTreaties(update.getTreaties());
+            curEntry.extendTreaties(update.getTreaties());
             return curEntry;
           }
 

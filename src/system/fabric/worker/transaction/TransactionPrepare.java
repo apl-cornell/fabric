@@ -123,7 +123,7 @@ public class TransactionPrepare {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
         ObjectCache.Entry curEntry = store.readFromCache(onum);
-        if (curEntry != null) curEntry.setTreaties(treaties);
+        if (curEntry != null) curEntry.extendTreaties(treaties);
         this.longerTreaties.put(store, onum, treaties);
       }
     }
@@ -157,7 +157,7 @@ public class TransactionPrepare {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
         ObjectCache.Entry curEntry = store.readFromCache(onum);
-        if (curEntry != null) curEntry.setTreaties(treaties);
+        if (curEntry != null) curEntry.extendTreaties(treaties);
       }
     }
     abort(s);
@@ -218,7 +218,7 @@ public class TransactionPrepare {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
         ObjectCache.Entry curEntry = store.readFromCache(onum);
-        if (curEntry != null) curEntry.setTreaties(treaties);
+        if (curEntry != null) curEntry.extendTreaties(treaties);
       }
     }
     cleanUp();
@@ -249,7 +249,7 @@ public class TransactionPrepare {
         long onum = entry.getKey();
         TreatySet treaties = entry.getValue();
         ObjectCache.Entry curEntry = store.readFromCache(onum);
-        if (curEntry != null) curEntry.setTreaties(treaties);
+        if (curEntry != null) curEntry.extendTreaties(treaties);
       }
     }
     abort(w);
