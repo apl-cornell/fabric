@@ -120,7 +120,7 @@ public class TransactionPrepare {
           .entrySet()) {
         long onum = entry.getKey();
         long expiry = entry.getValue();
-        store.readFromCache(onum).setExpiry(expiry);
+        store.readFromCache(onum).extendExpiry(expiry);
         this.longerContracts.put(store, onum, expiry);
       }
     }
@@ -153,7 +153,7 @@ public class TransactionPrepare {
           .entrySet()) {
         long onum = entry.getKey();
         long expiry = entry.getValue();
-        store.readFromCache(onum).setExpiry(expiry);
+        store.readFromCache(onum).extendExpiry(expiry);
       }
     }
     abort(s);
@@ -213,7 +213,7 @@ public class TransactionPrepare {
           .entrySet()) {
         long onum = entry.getKey();
         long expiry = entry.getValue();
-        store.readFromCache(onum).setExpiry(expiry);
+        store.readFromCache(onum).extendExpiry(expiry);
       }
     }
     cleanUp();
@@ -243,7 +243,7 @@ public class TransactionPrepare {
           .entrySet()) {
         long onum = entry.getKey();
         long expiry = entry.getValue();
-        store.readFromCache(onum).setExpiry(expiry);
+        store.readFromCache(onum).extendExpiry(expiry);
       }
     }
     abort(w);

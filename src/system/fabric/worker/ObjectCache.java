@@ -250,7 +250,7 @@ public final class ObjectCache {
      */
     public synchronized Long getExpiry() {
       if (next != null) return next.getExpiry();
-      if (impl != null) return impl.$expiry;
+      if (impl != null) return impl.$readMapEntry.getExpiry();
       if (serialized != null) return serialized.getExpiry();
       return null;
     }
@@ -258,9 +258,9 @@ public final class ObjectCache {
     /**
      * Updates the object's expiry in place.
      */
-    public synchronized void setExpiry(long newExpiry) {
+    public synchronized void extendExpiry(long newExpiry) {
       if (next != null) {
-        next.setExpiry(newExpiry);
+        next.extendExpiry(newExpiry);
         return;
       }
       if (impl != null) {
@@ -268,13 +268,14 @@ public final class ObjectCache {
         _Impl curImpl = impl;
         // Run through history and update as well.
         while (curImpl != null && curImpl.$version == ver) {
-          curImpl.$expiry = newExpiry;
+          curImpl.$expiry = Math.max(curImpl.$expiry, newExpiry);
+          curImpl.$readMapEntry.extendExpiry(newExpiry);
           curImpl = curImpl.$history;
         }
         return;
       }
       if (serialized != null) {
-        serialized.setExpiry(newExpiry);
+        if (serialized.getExpiry() < newExpiry) serialized.setExpiry(newExpiry);
         return;
       }
     }
@@ -558,7 +559,7 @@ public final class ObjectCache {
 
           if (curEntry.getVersion() == update.getVersion()
               && curEntry.getExpiry() < update.getExpiry()) {
-            curEntry.setExpiry(update.getExpiry());
+            curEntry.extendExpiry(update.getExpiry());
             return curEntry;
           }
 

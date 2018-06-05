@@ -86,7 +86,7 @@ public final class ReadMap {
       return versionNumber;
     }
 
-    synchronized long getExpiry() {
+    public synchronized long getExpiry() {
       return expiry;
     }
 
