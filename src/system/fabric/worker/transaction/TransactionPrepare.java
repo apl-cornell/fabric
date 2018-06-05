@@ -271,10 +271,10 @@ public class TransactionPrepare {
 
     // Send prepares to workers.
     for (RemoteWorker w : outstandingWorkers.keySet()) {
-      w.prepareTransaction(txnLog.tid.topTid);
+      outstandingWorkers.put(w, true);
       WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending prepare to {1}",
           new Object[] { txnLog, w });
-      outstandingWorkers.put(w, true);
+      w.prepareTransaction(txnLog.tid.topTid);
     }
 
     // Send prepares to stores.
@@ -288,12 +288,12 @@ public class TransactionPrepare {
       LongKeyMap<Set<Oid>> extensionsTriggered =
           txnLog.getTriggeredExtensionsForStore(store);
       LongSet delayedExtensions = txnLog.getDelayedExtensionsForStore(store);
+      outstandingStores.put(store, true);
+      WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending prepare to {1}",
+          new Object[] { txnLog, store });
       store.prepareTransaction(txnLog.tid.topTid, singleStore, readOnly,
           txnLog.expiry(), creates, reads, writes, extensions,
           extensionsTriggered, delayedExtensions);
-      WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending prepare to {1}",
-          new Object[] { txnLog, store });
-      outstandingStores.put(store, true);
     }
 
     try {
@@ -328,16 +328,16 @@ public class TransactionPrepare {
 
         // Tell workers to commit.
         for (RemoteWorker w : respondedWorkers) {
-          w.commitTransaction(txnLog.tid.topTid);
           WORKER_TRANSACTION_LOGGER.log(Level.FINER,
               "{0} sending commit to {1}", new Object[] { txnLog, w });
+          w.commitTransaction(txnLog.tid.topTid);
         }
 
         // Tell stores to commit.
         for (Store s : respondedStores) {
-          s.commitTransaction(txnLog.tid.topTid);
           WORKER_TRANSACTION_LOGGER.log(Level.FINER,
               "{0} sending commit to {1}", new Object[] { txnLog, s });
+          s.commitTransaction(txnLog.tid.topTid);
         }
 
         // TODO: figure out how to make it safe to pipeline the next transaction
@@ -427,14 +427,14 @@ public class TransactionPrepare {
     // Abort the rest.
     for (RemoteWorker w : SysUtil.chain(outstandingWorkers.keySet(),
         respondedWorkers)) {
-      w.abortTransaction(txnLog.tid);
       WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
           new Object[] { txnLog, w });
+      w.abortTransaction(txnLog.tid);
     }
     for (Store s : SysUtil.chain(outstandingStores.keySet(), respondedStores)) {
-      s.abortTransaction(txnLog.tid);
       WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
           new Object[] { txnLog, s });
+      s.abortTransaction(txnLog.tid);
     }
 
     // Flag that local locks should be released.
