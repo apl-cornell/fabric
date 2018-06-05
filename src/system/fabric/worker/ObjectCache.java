@@ -443,7 +443,7 @@ public final class ObjectCache {
         if (entries.replace(onum, existingEntry, impl.$cacheEntry)) return;
       }
     } finally {
-      notifyFetched(onum, impl.$cacheEntry);
+      notifyFetched(onum, get(onum));
     }
   }
 
