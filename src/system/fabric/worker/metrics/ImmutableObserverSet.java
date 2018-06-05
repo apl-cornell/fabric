@@ -101,6 +101,18 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     public String toString() {
       return "owner:" + includesOwner + ",treaties:" + treaties;
     }
+
+    @Override
+    public boolean equals(Object o) {
+      return o == this || ((o instanceof ObserverGroup)
+          && ((ObserverGroup) o).includesOwner == includesOwner
+          && ((ObserverGroup) o).treaties.equals(treaties));
+    }
+
+    @Override
+    public int hashCode() {
+      return Boolean.hashCode(includesOwner) ^ treaties.hashCode();
+    }
   }
 
   // 2 level map, store name -> onum -> ObserverGroup
