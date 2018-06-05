@@ -776,10 +776,11 @@ public final class TransactionManager {
         e.printStackTrace(pw);
         if (checkForStaleObjects()) {
           // Ugh. Need to restart.
+          TransactionID tid = current.tid;
           METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS " + current
               + " RESTARTING WITH " + e + "\n" + sw);
           abortTransaction();
-          throw new AbortException(e);
+          throw new TransactionRestartingException(tid, e);
         }
         METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS " + current
             + " DIED WITH " + e + "\n" + sw);
