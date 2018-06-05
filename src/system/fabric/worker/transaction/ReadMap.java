@@ -180,13 +180,13 @@ public final class ReadMap {
     /**
      * Aborts all transactions that have this entry in their logs.
      */
-    synchronized void abortReaders() {
+    synchronized void abortReaders(String reason) {
       for (Log reader : readLocks) {
         if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
           Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
               "Cache updated for {0}, aborting reader {1}", obj.onum, reader);
         }
-        reader.flagRetry();
+        reader.flagRetry(reason);
       }
     }
 
@@ -216,7 +216,8 @@ public final class ReadMap {
           if (versionNumber != impl.$version) {
             // Version numbers don't match. Retry all other transactions.
             // XXX What if we were given an older copy of the object?
-            abortReaders();
+            abortReaders("updating " + impl.$getStore() + "/" + impl.$getOnum()
+                + " to ver. " + impl.$version + " in read map");
             defunct = true;
             return false;
           }
@@ -290,9 +291,9 @@ public final class ReadMap {
   /**
    * Sends abort signals to all transactions that have read the given OID.
    */
-  void abortReaders(Store store, long onum) {
+  void abortReaders(Store store, long onum, String reason) {
     Entry entry = map.get(store, onum);
-    if (entry != null) entry.abortReaders();
+    if (entry != null) entry.abortReaders(reason);
   }
 
   /**

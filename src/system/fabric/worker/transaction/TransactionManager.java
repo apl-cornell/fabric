@@ -565,8 +565,8 @@ public final class TransactionManager {
     return readMap.haveReaders(store, onum);
   }
 
-  public static void abortReaders(Store store, long onum) {
-    readMap.abortReaders(store, onum);
+  public static void abortReaders(Store store, long onum, String reason) {
+    readMap.abortReaders(store, onum, reason);
   }
 
   public static ReadMap.Entry getReadMapEntry(_Impl impl, long expiry) {
@@ -670,7 +670,7 @@ public final class TransactionManager {
     HOTOS_LOGGER.log(Level.FINEST, "aborting {0}", current);
 
     // Set the retry flag in all our children, if that hasn't happened already.
-    current.flagRetry();
+    current.flagRetry("manager triggered abort");
 
     // Wait for all other threads to finish.
     current.waitForThreads();
@@ -1347,7 +1347,8 @@ public final class TransactionManager {
                         Thread.currentThread());
                   }
                   waitsFor.add(lock);
-                  lock.flagRetry();
+                  lock.flagRetry("writer " + current.tid + " wants to write "
+                      + obj.$getStore() + "/" + obj.$getOnum());
                 }
               }
 

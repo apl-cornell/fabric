@@ -432,7 +432,7 @@ public class TransactionPrepare {
     }
 
     // Flag that local locks should be released.
-    txnLog.flagRetry();
+    txnLog.flagRetry("failure during prepare phase");
     txnLog.prepare = null;
   }
 

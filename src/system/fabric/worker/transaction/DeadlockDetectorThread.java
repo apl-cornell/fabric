@@ -257,7 +257,7 @@ public class DeadlockDetectorThread extends Thread {
 
       // Abort the transaction.
       WORKER_DEADLOCK_LOGGER.log(Level.FINE, "Aborting {0}", toAbort);
-      toAbort.flagRetry();
+      toAbort.flagRetry("breaking deadlock");
 
       // Fix up our data structures to reflect the aborted transaction.
       for (Iterator<Set<Log>> cycleIt = cycles.iterator(); cycleIt.hasNext();) {
