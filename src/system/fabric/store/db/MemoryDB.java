@@ -5,7 +5,10 @@ import static fabric.common.Logging.STORE_DB_LOGGER;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.security.PrivateKey;
+import java.util.logging.Level;
 
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
@@ -64,20 +67,29 @@ public class MemoryDB extends ObjectDB {
     this.isInitialized = false;
     long nextOnum = ONumConstants.FIRST_UNRESERVED;
 
-    try {
-      ObjectInputStream oin =
-          new ObjectInputStream(Resources.readFile("var", name));
+    if (Resources.getFile("var", name).exists()) {
+      try {
+        ObjectInputStream oin =
+            new ObjectInputStream(Resources.readFile("var", name));
 
-      this.isInitialized = oin.readBoolean();
+        this.isInitialized = oin.readBoolean();
 
-      nextOnum = oin.readLong();
+        nextOnum = oin.readLong();
 
-      int size = oin.readInt();
-      this.objectTable = new ConcurrentLongKeyHashMap<>(size);
-      for (int i = 0; i < size; i++)
-        this.objectTable.put(oin.readLong(), new SerializedObject(oin));
-    } catch (Exception e) {
-      // TODO: distinguish invalid files from nonexistent
+        int size = oin.readInt();
+        this.objectTable = new ConcurrentLongKeyHashMap<>(size);
+        for (int i = 0; i < size; i++)
+          this.objectTable.put(oin.readLong(), new SerializedObject(oin));
+      } catch (Exception e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        STORE_DB_LOGGER.log(Level.SEVERE,
+            "There was a problem reading in the db, initializing with blank state: {0}\n{1}",
+            new Object[] { e, sw });
+        this.objectTable = new ConcurrentLongKeyHashMap<>();
+      }
+    } else {
       this.objectTable = new ConcurrentLongKeyHashMap<>();
     }
 
@@ -204,6 +216,14 @@ public class MemoryDB extends ObjectDB {
       }
 
       oout.flush();
+    } catch (IOException e) {
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      e.printStackTrace(pw);
+      STORE_DB_LOGGER.log(Level.SEVERE,
+          "There was a problem writing db to disk: {0}\n{1}",
+          new Object[] { e, sw });
+      throw e;
     }
   }
 
