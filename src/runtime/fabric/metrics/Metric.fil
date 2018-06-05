@@ -692,9 +692,6 @@ public abstract class Metric extends AbstractSubject
     for (LongIterator iter = treatiesToProcess.iterator(); iter.hasNext();) {
       long treatyId = iter.next();
       MetricTreaty treaty = $treaties.get(treatyId);
-      if (treaty == null) {
-        Logging.METRICS_LOGGER.severe("TREATY " + treatyId + " OF METRIC " + this.$getStore() + "/" + this.$getOnum() + " WAS NULL IN " + TransactionManager.getInstance().getCurrentTid() + "/" + Thread.currentThread());
-      }
       // Do the update
       Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
         treaty.update(false, StatsMap.emptyStats());
