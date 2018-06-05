@@ -197,7 +197,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
                 }
               }
             } else {
-              cache.notifyFetched(onum);
+              cache.notifyFetched(onum, lock.object);
             }
           }
         });
