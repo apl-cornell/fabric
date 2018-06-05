@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 
 import fabric.common.FabricThread;
@@ -922,7 +920,9 @@ public final class TransactionManager {
     int numNodesToContact = stores.size() + current.workersCalled.size();
     final List<RemoteNode<?>> nodesWithStaleObjects = Collections
         .synchronizedList(new ArrayList<RemoteNode<?>>(numNodesToContact));
-    List<Future<?>> futures = new ArrayList<>(numNodesToContact);
+    // A single cell array to synchronize on for checks.  Notified when a check
+    // has finished, cell contains the number of still outstanding checks.
+    final int[] outstandingChecks = new int[] { 0 };
 
     // Go through each worker and send check messages in parallel.
     for (final RemoteWorker worker : current.workersCalled) {
@@ -933,13 +933,20 @@ public final class TransactionManager {
               try {
                 if (worker.checkForStaleObjects(current.tid))
                   nodesWithStaleObjects.add(worker);
+                synchronized (outstandingChecks) {
+                  outstandingChecks[0]--;
+                  outstandingChecks.notifyAll();
+                }
               } catch (UnreachableNodeException e) {
                 // Conservatively assume it had stale objects.
                 nodesWithStaleObjects.add(worker);
               }
             }
           };
-      futures.add(Threading.getPool().submit(runnable));
+      synchronized (outstandingChecks) {
+        outstandingChecks[0]++;
+      }
+      Threading.getPool().submit(runnable);
     }
 
     // Go through each store and send check messages in parallel.
@@ -952,28 +959,25 @@ public final class TransactionManager {
               LongKeyMap<Integer> reads = current.getReadsForStore(store, true);
               if (store.checkForStaleObjects(reads))
                 nodesWithStaleObjects.add((RemoteNode<?>) store);
+              synchronized (outstandingChecks) {
+                outstandingChecks[0]--;
+                outstandingChecks.notifyAll();
+              }
             }
           };
-
-      // Optimization: only start a new thread if there are more stores to
-      // contact
-      if (storeIt.hasNext()) {
-        futures.add(Threading.getPool().submit(runnable));
-      } else {
-        runnable.run();
+      synchronized (outstandingChecks) {
+        outstandingChecks[0]++;
       }
+      Threading.getPool().submit(runnable);
     }
 
-    // Wait for replies.
-    for (Future<?> future : futures) {
-      while (true) {
+    // Wait until there is a stale result or we've finished all checks.
+    synchronized (outstandingChecks) {
+      while (outstandingChecks[0] > 0 && nodesWithStaleObjects.isEmpty()) {
         try {
-          future.get();
-          break;
+          outstandingChecks.wait();
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
-        } catch (ExecutionException e) {
-          e.printStackTrace();
         }
       }
     }
