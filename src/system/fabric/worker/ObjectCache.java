@@ -570,7 +570,8 @@ public final class ObjectCache {
       }
 
       // abort pre-existing readers.
-      TransactionManager.abortReaders(store, update.getOnum());
+      TransactionManager.abortReaders(store, update.getOnum(),
+          "cache update of " + store + "/" + update.getOnum());
 
       // Keep retrying until we know we succeeded.
     } while (!entries.replace(onum, curEntry, newEntry));
