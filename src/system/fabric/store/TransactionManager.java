@@ -389,11 +389,6 @@ public class TransactionManager {
       TreatySet curTreaties = database.getTreaties(onum);
       if (curVersion != version || curTreaties.isStrictExtensionOf(treaties)) {
         result.add(database.read(onum));
-        for (LongIterator iter =
-            getAssociatedOnumsExcluded(onum, versionsAndTreaties.keySet())
-                .iterator(); iter.hasNext();) {
-          result.add(database.read(iter.next()));
-        }
       }
     }
 
