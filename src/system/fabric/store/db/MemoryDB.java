@@ -139,13 +139,6 @@ public class MemoryDB extends ObjectDB {
     }
     for (SerializedObject o : tx.getWrites()) {
       objectTable.put(o.getOnum(), o);
-
-      // Update the local worker cache if this is a remote worker updating the
-      // value.
-      // If the update is from the local worker, the already deserialized
-      // version in the worker transaction will be in the cache after 2PC.
-      if (!workerIdentity.node.equals(Worker.getWorker().inProcessRemoteWorker))
-        Worker.getWorker().getStore(getName()).updateCache(o);
     }
 
     LongSet writtenOnums = new LongHashSet();

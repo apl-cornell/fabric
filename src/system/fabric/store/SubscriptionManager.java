@@ -102,6 +102,18 @@ public class SubscriptionManager {
     subscribers.putIfAbsent(worker, dissemSubscribe);
   }
 
+  /**
+   * @param onum
+   *        Onum for the object being checked.
+   * @param worker
+   *        Worker whose subscription is being checked.
+   * @return true iff the worker is currently subscribed to the onum.
+   */
+  public boolean subscribed(long onum, RemoteWorker worker) {
+    ConcurrentMap<RemoteWorker, Boolean> subscribers = subscriptions.get(onum);
+    return subscribers != null && subscribers.containsKey(worker);
+  }
+
   private class UpdateNotifier extends Threading.NamedRunnable {
 
     private final RemoteWorker worker;
@@ -189,11 +201,14 @@ public class SubscriptionManager {
               long associated = iter.next();
               if (!trueOnums.contains(associated)) continue;
               // Subscribe the worker to the associated, if it wasn't already.
-              subscribe(associated, worker, true);
+              // Otherwise, skip since we'll already be handling the
+              // subscription.
               // Don't bother packaging each onum separately
               GroupContainer associatedContainer =
                   tm.getGroupContainer(associated);
               trueOnums.removeAll(associatedContainer.onums);
+              if (subscribed(associated, worker)) continue;
+              subscribe(associated, worker, true);
               trueOnums.add(associated);
               ObjectGlob associatedGlob = associatedContainer.getGlob();
               if (!globs.containsKey(associatedGlob)) {
@@ -205,15 +220,21 @@ public class SubscriptionManager {
           } else {
             onumsSent.add(onum);
             groups.add(groupContainer.getGroup(worker.getPrincipal()));
+            LongSet trueOnums = new LongHashSet();
             for (LongIterator iter = curAssociatedOnums.iterator(); iter
                 .hasNext();) {
               long associated = iter.next();
               // Subscribe the worker to the associated, if it wasn't already.
+              // Otherwise, skip since we'll already be handling the
+              // subscription.
+              if (subscribed(associated, worker)) continue;
               subscribe(associated, worker, false);
               GroupContainer associatedContainer =
                   tm.getGroupContainer(associated);
+              trueOnums.add(associated);
               groups.add(associatedContainer.getGroup(worker.getPrincipal()));
             }
+            curAssociatedOnums = trueOnums;
           }
           associatedOnums.put(onum, curAssociatedOnums);
         } catch (AccessException e) {

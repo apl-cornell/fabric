@@ -728,7 +728,6 @@ public abstract class ObjectDB {
       if (!submap.containsKey(worker)
           || submap.get(worker).state == PendingTransaction.State.ABORTING)
         throw new TransactionPrepareFailedException(versionConflicts,
-
             longerTreaties, "Aborted by another thread");
       tx = submap.get(worker);
     }
