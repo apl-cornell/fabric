@@ -29,7 +29,7 @@ import fabric.common.util.Pair;
  * result is correct doesn't get deactivated prematurely by the API
  * implementation.
  */
-public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*LongFunction<T>,*/ Observer {
+public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observer {
 
   /** The currently cached result. */
   protected /*T*/ Object curVal;
@@ -224,7 +224,6 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
         // try to get a new value
         if (recomputeOnInvalidation)
           apply(System.currentTimeMillis(), false);
-        affected = affected.addAll(getObservers());
       }
     }
     return affected;
@@ -255,13 +254,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
         rtn = tmp;
       } else {
         // See if we already have a proxy for that store.
-        for (java.util.Iterator iter = tmp.proxies.values().iterator(); iter.hasNext();) {
-          WarrantyComp proxy = (WarrantyComp) iter.next();
-          if (proxy.$getStore().equals(proxyStore)) {
-            rtn = proxy;
-            break;
-          }
-        }
+        rtn = (WarrantyComp) tmp.proxies.get(proxyStore);
         if (rtn == null) {
           rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
           // Update proxies
@@ -281,13 +274,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
           rtn = tmp;
         } else {
           // See if we already have a proxy for that store.
-          for (java.util.Iterator iter = tmp.proxies.values().iterator(); iter.hasNext();) {
-            WarrantyComp proxy = (WarrantyComp) iter.next();
-            if (proxy.$getStore().equals(proxyStore)) {
-              rtn = proxy;
-              break;
-            }
-          }
+          rtn = (WarrantyComp) tmp.proxies.get(proxyStore);
           if (rtn == null) {
             rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
             // Update proxies
@@ -307,10 +294,10 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   }
 
   protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$(boolean recomputeOnInvalidation, boolean proactive) {
-    this.proxies = ProxyMap.emptyMap();
     this.recomputeOnInvalidation = recomputeOnInvalidation;
     this.proactive = proactive;
-    fabric$metrics$util$AbstractSubject$();
+    fabric$lang$Object$();
+    this.proxies = ProxyMap.emptyMap();
     return this;
   }
 
