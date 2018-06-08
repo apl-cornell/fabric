@@ -79,4 +79,9 @@ public class ProxyMetric extends DerivedMetric {
     // TODO: Is this right?
     return new WitnessPolicy(new MetricTreaty native [] { term(0).getThresholdTreaty(rate, base) });
   }
+
+  /*@Override*/
+  public String toString() {
+    return "Proxy at " + $getStore().toString() + " for " + term(0).toString();
+  }
 }

@@ -145,7 +145,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
         //} else {
         //  computed.treaty.refresh(false, computed.weakStats);
         //}
-        TreatyRef activatedTreaty = new TreatyRef((MetricTreaty) computed.treaty.get().update(false, computed.weakStats).first);
+        TreatyRef activatedTreaty = TreatyRef.createRef((MetricTreaty) computed.treaty.get().update(false, computed.weakStats).first);
 
         Logging.METRICS_LOGGER.log(Level.FINE, "SETTING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         static_setNewValue(tmp, computed.value, activatedTreaty);
@@ -180,10 +180,9 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   }
 
   private boolean dropOldValue() {
-    TreatyRef curTreaty = this.curTreaty;
-    if (curTreaty != null) {
-      if (curTreaty.get() == null || !curTreaty.get().valid()) {
-        if (curTreaty.get() != null) curTreaty.get().removeObserver(this);
+    if (this.curTreaty != null) {
+      if (this.curTreaty.get() == null || !this.curTreaty.get().valid()) {
+        if (this.curTreaty.get() != null) this.curTreaty.get().removeObserver(this);
         this.curTreaty = null;
       }
     }
@@ -203,7 +202,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   private void setNewValue(Object newVal, TreatyRef newTreaty) {
     if (this.dropOldValue() && newTreaty != null && newTreaty.get() != null && newTreaty.get().valid()) {
       this.curVal = newVal;
-      this.curTreaty = new TreatyRef(newTreaty.get()
+      this.curTreaty = TreatyRef.createRef(newTreaty.get()
           .getProxyTreaty(this.$getStore())
           .addObserver(this));
     }
