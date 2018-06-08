@@ -67,7 +67,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = ImmutableObserverSet.emptySet();
     this.policy = NoPolicy.singleton;
     this.expiry = policy.calculateExpiry(this, StatsMap.emptyStats());
-    Logging.METRICS_LOGGER.log(Level.FINEST, "CREATED TREATY {0}", this);
+    Logging.METRICS_LOGGER.log(Level.FINEST, "CREATED TREATY {0} FOR {1}", new Object[] {this, getMetric()});
   }
 
   /**
@@ -397,8 +397,8 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof MetricTreaty)) return false;
     if (obj == this) return true;
+    if (!(obj instanceof MetricTreaty)) return false;
     MetricTreaty other = (MetricTreaty) obj;
     return metric.equals(other.metric) && id == other.id
         && activated == other.activated && statement.equals(other.statement)

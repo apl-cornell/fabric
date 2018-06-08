@@ -98,8 +98,7 @@ public final class ReadMap {
     }
 
     public synchronized void extendTreaties(TreatySet newTreaties) {
-      if (TreatySet.checkExtension(treaties, newTreaties))
-        treaties = newTreaties;
+      if (newTreaties.isExtensionOf(treaties)) treaties = newTreaties;
     }
 
     /**

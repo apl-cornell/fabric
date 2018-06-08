@@ -556,9 +556,8 @@ public final class ObjectCache {
         if (!curEntry.isEvicted()) {
           // Check if object in current entry is an older version.
           if (curEntry.getVersion() > update.getVersion()
-              || (curEntry.getVersion() == update.getVersion()
-                  && TreatySet.checkExtension(update.getTreaties(),
-                      curEntry.getTreaties())))
+              || (curEntry.getVersion() == update.getVersion() && curEntry
+                  .getTreaties().isExtensionOf(update.getTreaties())))
             return curEntry;
 
           if (curEntry.getVersion() == update.getVersion() && update

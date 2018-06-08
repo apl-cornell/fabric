@@ -35,10 +35,6 @@ public final class MetricRef implements FastSerializable, Serializable {
     this(objStore.name(), objOnum);
   }
 
-  public MetricRef(Oid oid) {
-    this(oid.store, oid.onum);
-  }
-
   public MetricRef(Metric obj) {
     this(obj.$getStore(), obj.$getOnum());
   }
@@ -78,9 +74,9 @@ public final class MetricRef implements FastSerializable, Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof MetricRef)) return false;
-    MetricRef other = (MetricRef) obj;
-    return objStoreName.equals(other.objStoreName) && objOnum == other.objOnum;
+    return obj == this || (obj instanceof MetricRef
+        && objStoreName.equals(((MetricRef) obj).objStoreName)
+        && objOnum == ((MetricRef) obj).objOnum);
   }
 
   @Override

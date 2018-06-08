@@ -752,7 +752,7 @@ public interface Object {
       boolean transactionCreated =
           tm.registerTreatySetWrite(this, current, treaties);
       TreatySet rtn = treaties;
-      if (TreatySet.checkExtension(current, treaties)
+      if (treaties.isExtensionOf(current)
           && tm.getPendingExtension(this) != null) {
         tm.getPendingExtension(this).treaties = treaties;
       } else {

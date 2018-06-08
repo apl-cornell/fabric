@@ -1254,7 +1254,7 @@ public final class TransactionManager {
 
     ExpiryExtension clobberedExtension = null;
     synchronized (obj) {
-      boolean extending = TreatySet.checkExtension(oldTreaties, newTreaties);
+      boolean extending = newTreaties.isExtensionOf(oldTreaties);
       if (!extending) {
         synchronized (current.extendedTreaties) {
           clobberedExtension = current.extendedTreaties.remove(obj);

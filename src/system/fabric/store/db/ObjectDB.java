@@ -826,7 +826,7 @@ public abstract class ObjectDB {
 
     // Check if this is a "real" extension, otherwise we skip it.
     TreatySet curTreaties = storeCopy.getTreaties();
-    if (TreatySet.checkExtension(extension.treaties, curTreaties)) {
+    if (extension.treaties.isExtensionOf(curTreaties)) {
       if (curTreaties.isStrictExtensionOf(extension.treaties)) {
         longerTreaties.put(Worker.getWorker().getStore(getName()), onum,
             curTreaties);

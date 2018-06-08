@@ -245,9 +245,9 @@ public class ThresholdStatement extends TreatyStatement {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof ThresholdStatement)) return false;
-    ThresholdStatement other = (ThresholdStatement) obj;
-    return rate == other.rate && base == other.base;
+    return obj == this || (obj instanceof ThresholdStatement
+        && rate == ((ThresholdStatement) obj).rate
+        && base == ((ThresholdStatement) obj).base);
   }
 
   @Override

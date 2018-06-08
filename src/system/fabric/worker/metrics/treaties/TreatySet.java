@@ -57,22 +57,14 @@ public abstract class TreatySet
   protected abstract void writeData(DataOutput out) throws IOException;
 
   /**
-   * Check if the second TreatySet is an effective extension of all treaties in
-   * the first TreatySet.
+   * Check if this TreatySet is an effective extension (or equals) the given TreatySet.
    *
    * @param from
    *    the starting {@link TreatySet}
-   * @param to
-   *    the ending {@link TreatySet}
    * @return true if from and to are equal or to only differs with from by
    * extending the still live treaties.
    */
-  public static boolean checkExtension(TreatySet from, TreatySet to) {
-    if (from == null || to == null)
-      throw new InternalError("This shouldn't be possible");
-    return from == to || (from != null && to != null
-        && (from.equals(to) || to.isStrictExtensionOf(from)));
-  }
+  public abstract boolean isExtensionOf(TreatySet from);
 
   /**
    * Check if this is a *strict* extension of the given TreatySet.

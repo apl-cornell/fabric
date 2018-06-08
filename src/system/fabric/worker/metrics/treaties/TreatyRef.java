@@ -22,6 +22,10 @@ public final class TreatyRef implements FastSerializable, Serializable {
   public MetricRef objRef;
   public long treatyId;
 
+  public static TreatyRef createRef(MetricTreaty treaty) {
+    return new TreatyRef(treaty);
+  }
+
   public TreatyRef(MetricRef objRef, long treatyId) {
     this.objRef = objRef;
     this.treatyId = treatyId;
@@ -77,6 +81,7 @@ public final class TreatyRef implements FastSerializable, Serializable {
 
   @Override
   public boolean equals(Object obj) {
+    if (obj == this) return true;
     if (!(obj instanceof TreatyRef)) return false;
     TreatyRef other = (TreatyRef) obj;
     return objRef.equals(other.objRef) && treatyId == other.treatyId;

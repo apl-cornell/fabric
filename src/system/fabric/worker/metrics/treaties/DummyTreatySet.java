@@ -114,4 +114,9 @@ public class DummyTreatySet extends TreatySet {
   public void prefetch(Store triggeringStore) {
     // Do nothing.
   }
+
+  @Override
+  public boolean isExtensionOf(TreatySet from) {
+    return equals(from);
+  }
 }

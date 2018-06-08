@@ -54,9 +54,8 @@ public class EqualityStatement extends TreatyStatement {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof EqualityStatement)) return false;
-    EqualityStatement other = (EqualityStatement) obj;
-    return value == other.value;
+    return obj == this || (obj instanceof EqualityStatement
+        && value == ((EqualityStatement) obj).value);
   }
 
   @Override

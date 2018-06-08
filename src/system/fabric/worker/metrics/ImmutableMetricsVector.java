@@ -6,9 +6,9 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import fabric.metrics.Metric;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-import fabric.metrics.Metric;
 
 /**
  * Utility class to easily express an immutable vector of items.
@@ -94,8 +94,8 @@ public class ImmutableMetricsVector implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    return (obj instanceof ImmutableMetricsVector) &&
-      Arrays.equals(this.items, ((ImmutableMetricsVector) obj).items);
+    return obj == this || (obj instanceof ImmutableMetricsVector
+        && Arrays.equals(this.items, ((ImmutableMetricsVector) obj).items));
   }
 
   @Override

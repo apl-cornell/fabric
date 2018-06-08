@@ -61,9 +61,9 @@ public class MetricTreatySet extends TreatySet {
 
   @Override
   public boolean equals(Object obj) {
-    return (obj instanceof MetricTreatySet)
+    return this == obj || (obj instanceof MetricTreatySet
         && this.owner.equals(((MetricTreatySet) obj).owner)
-        && this.items.equals(((MetricTreatySet) obj).items);
+        && this.items.equals(((MetricTreatySet) obj).items));
   }
 
   @Override
@@ -173,8 +173,8 @@ public class MetricTreatySet extends TreatySet {
   public boolean isStrictExtensionOf(TreatySet t) {
     if (t instanceof MetricTreatySet) {
       MetricTreatySet other = (MetricTreatySet) t;
-      boolean hasExtension = false;
       if (other.items.keySet().equals(this.items.keySet())) {
+        boolean hasExtension = false;
         for (MetricTreaty oldTreaty : other) {
           MetricTreaty newTreaty = items.get(oldTreaty.getId());
           if (newTreaty.isStrictExtensionOf(oldTreaty)) {
@@ -184,6 +184,24 @@ public class MetricTreatySet extends TreatySet {
           }
         }
         return hasExtension;
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public boolean isExtensionOf(TreatySet from) {
+    if (from instanceof MetricTreatySet) {
+      MetricTreatySet other = (MetricTreatySet) from;
+      if (other.items.keySet().equals(this.items.keySet())) {
+        for (MetricTreaty oldTreaty : other) {
+          MetricTreaty newTreaty = items.get(oldTreaty.getId());
+          if (!newTreaty.equals(oldTreaty)
+              && !newTreaty.isStrictExtensionOf(oldTreaty)) {
+            return false;
+          }
+        }
+        return true;
       }
     }
     return false;

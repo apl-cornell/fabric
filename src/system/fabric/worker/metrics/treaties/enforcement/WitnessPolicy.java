@@ -66,9 +66,8 @@ public class WitnessPolicy extends EnforcementPolicy {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof WitnessPolicy)) return false;
-    WitnessPolicy other = (WitnessPolicy) obj;
-    return Arrays.equals(witnesses, other.witnesses);
+    return obj == this || (obj instanceof WitnessPolicy
+        && Arrays.equals(witnesses, ((WitnessPolicy) obj).witnesses));
   }
 
   @Override
