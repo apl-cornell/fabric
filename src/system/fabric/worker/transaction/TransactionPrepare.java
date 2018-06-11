@@ -299,7 +299,6 @@ public class TransactionPrepare {
     try {
       // Wait for success or abort.
       while (currentStatus == Status.PREPARING) {
-        txnLog.checkRetrySignal();
         try {
           txnLog.setWaitsFor(this);
           wait();
