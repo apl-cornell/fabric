@@ -87,7 +87,8 @@ public class TransactionManager {
             Long.toHexString(transactionID));
       }
     } catch (final AccessException e) {
-      throw new TransactionCommitFailedException("Insufficient Authorization");
+      throw new TransactionCommitFailedException("Insufficient Authorization",
+          e);
     } catch (final RuntimeException e) {
       throw new TransactionCommitFailedException(
           "something went wrong; store experienced a runtime exception during "
