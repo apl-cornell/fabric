@@ -389,6 +389,31 @@ public abstract class DerivedMetric extends Metric implements Observer {
   /**
    * {@inheritDoc}
    *
+   * If this is the first observer, then this metric is being monitored for
+   * changes and so it stops computing on demand and instead caches the last
+   * updated value (computed on checks). This metric then becomes an observer
+   * of its terms.
+   */
+  /*@Override*/
+  public void addObserver(Observer obs, long id) {
+    if (!isObserved()) {
+      // Start tracking terms if this is now used by a treaty directly.
+      for (int i = 0; i < terms.length(); i++) {
+        term(i).addObserver(this);
+      }
+      cachedValue = computeValue(StatsMap.emptyStats());
+      cachedVelocity = computeVelocity(StatsMap.emptyStats());
+      cachedNoise = computeNoise(StatsMap.emptyStats());
+      cachedSamples = computeSamples(StatsMap.emptyStats());
+      cachedLastUpdate = System.currentTimeMillis();
+      cachedUpdateInterval = computeUpdateInterval(StatsMap.emptyStats());
+    }
+    super.addObserver(obs, id);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
    * If there are no observers after removing the given one, this metric stops
    * acting as an observer of its terms (and goes back to computing on demand
    * rather than caching the last updated value).
