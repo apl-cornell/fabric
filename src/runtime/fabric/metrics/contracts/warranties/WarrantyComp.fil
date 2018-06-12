@@ -138,13 +138,8 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
         Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         // TODO: figure out remote call functionality for this.
         String treatyStoreName = computed.treaty.get().getMetric().$getStore().name();
-        if (!TransactionManager.getInstance().inTxn() &&
-            !(treatyStoreName.equals(Worker.getWorkerName()))) {
-          RemoteWorker w = Worker.getWorker().getWorker(treatyStoreName);
-          computed.treaty.get().getMetric().refreshTreaty_remote@w(null, false, computed.treaty.get().getId(), computed.weakStats);
-        } else {
-          computed.treaty.get().getMetric().refreshTreaty(false, computed.treaty.get().getId(), computed.weakStats);
-        }
+        RemoteWorker w = Worker.getWorker().getWorker(treatyStoreName);
+        computed.treaty.get().getMetric().refreshTreaty_remote@w(null, false, computed.treaty.get().getId(), computed.weakStats);
         // Reference is now for an activated treaty.
         TreatyRef activatedTreaty = computed.treaty;
 
