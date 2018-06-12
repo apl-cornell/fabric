@@ -679,6 +679,20 @@ public abstract class Metric extends AbstractSubject
     return thisHash - thatHash;
   }
 
+  public void refreshTreaty_remote(fabric.lang.security.Principal p, boolean asyncExtension, long treatyId, StatsMap weakStats) {
+    this.refreshTreaty(asyncExtension, treatyId, weakStats);
+  }
+
+  public void refreshTreaty(boolean asyncExtension, long treatyId, StatsMap weakStats) {
+    if (TransactionManager.getInstance().inTxn()) {
+      $treaties.get(treatyId).update(asyncExtension, weakStats);
+    } else {
+      atomic {
+        $treaties.get(treatyId).update(asyncExtension, weakStats);
+      }
+    }
+  }
+
   /*@Override*/
   public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties) {
     //Logging.METRICS_LOGGER.log(Level.FINER,
