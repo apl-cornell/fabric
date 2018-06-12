@@ -1569,15 +1569,16 @@ public final class TransactionManager {
     // A single cell array to synchronize on for checks.  Notified when a check
     // has finished, cell contains the number of still outstanding checks.
     final int[] outstandingChecks = new int[] { 0 };
+    final Log checkingLog = current;
 
     // Go through each worker and send check messages in parallel.
-    for (final RemoteWorker worker : current.workersCalled) {
+    for (final RemoteWorker worker : checkingLog.workersCalled) {
       NamedRunnable runnable =
           new NamedRunnable("worker freshness check to " + worker.name()) {
             @Override
             public void runImpl() {
               try {
-                if (worker.checkForStaleObjects(current.tid))
+                if (worker.checkForStaleObjects(checkingLog.tid))
                   nodesWithStaleObjects.add(worker);
                 synchronized (outstandingChecks) {
                   outstandingChecks[0]--;
@@ -1603,7 +1604,7 @@ public final class TransactionManager {
             @Override
             public void runImpl() {
               LongKeyMap<Pair<Integer, Long>> reads =
-                  current.getReadsForStore(store, true);
+                  checkingLog.getReadsForStore(store, true);
               if (store.checkForStaleObjects(reads))
                 nodesWithStaleObjects.add((RemoteNode<?>) store);
               synchronized (outstandingChecks) {
