@@ -684,13 +684,7 @@ public abstract class Metric extends AbstractSubject
   }
 
   public void refreshTreaty(boolean asyncExtension, long treatyId, StatsMap weakStats) {
-    if (TransactionManager.getInstance().inTxn()) {
-      $treaties.get(treatyId).update(asyncExtension, weakStats);
-    } else {
-      atomic {
-        $treaties.get(treatyId).update(asyncExtension, weakStats);
-      }
-    }
+    $treaties.get(treatyId).update(asyncExtension, weakStats);
   }
 
   /*@Override*/

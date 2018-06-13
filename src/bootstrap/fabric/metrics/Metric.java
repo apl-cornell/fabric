@@ -2747,131 +2747,8 @@ public interface Metric
         
         public void refreshTreaty(boolean asyncExtension, long treatyId,
                                   fabric.worker.metrics.StatsMap weakStats) {
-            if (fabric.worker.transaction.TransactionManager.getInstance().
-                  inTxn()) {
-                this.get$$treaties().get(treatyId).update(asyncExtension,
-                                                          weakStats);
-            }
-            else {
-                {
-                    fabric.worker.transaction.TransactionManager $tm193 =
-                      fabric.worker.transaction.TransactionManager.getInstance(
-                                                                     );
-                    boolean $backoffEnabled196 =
-                      fabric.worker.Worker.getWorker().config.txRetryBackoff;
-                    int $backoff194 = 1;
-                    boolean $doBackoff195 = true;
-                    boolean $retry190 = true;
-                    $label188: for (boolean $commit189 = false; !$commit189; ) {
-                        if ($backoffEnabled196) {
-                            if ($doBackoff195) {
-                                if ($backoff194 > 32) {
-                                    while (true) {
-                                        try {
-                                            java.lang.Thread.sleep($backoff194);
-                                            break;
-                                        }
-                                        catch (java.lang.
-                                                 InterruptedException $e191) {
-                                            
-                                        }
-                                    }
-                                }
-                                if ($backoff194 < 5000) $backoff194 *= 2;
-                            }
-                            $doBackoff195 = $backoff194 <= 32 || !$doBackoff195;
-                        }
-                        $commit189 = true;
-                        fabric.worker.transaction.TransactionManager.
-                          getInstance().startTransaction();
-                        try {
-                            this.get$$treaties().get(treatyId).update(
-                                                                 asyncExtension,
-                                                                 weakStats);
-                        }
-                        catch (final fabric.worker.RetryException $e191) {
-                            $commit189 = false;
-                            continue $label188;
-                        }
-                        catch (final fabric.worker.
-                                 TransactionRestartingException $e191) {
-                            $commit189 = false;
-                            fabric.common.TransactionID $currentTid192 =
-                              $tm193.getCurrentTid();
-                            if ($e191.tid.isDescendantOf($currentTid192))
-                                continue $label188;
-                            if ($currentTid192.parent != null) {
-                                $retry190 = false;
-                                throw $e191;
-                            }
-                            throw new InternalError(
-                                    "Something is broken with " +
-                                        "transaction management. Got a signal to restart a " +
-                                        "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e191) {
-                            $commit189 = false;
-                            if ($tm193.checkForStaleObjects()) continue;
-                            fabric.common.TransactionID $currentTid192 =
-                              $tm193.getCurrentTid();
-                            if ($e191.tid.isDescendantOf($currentTid192)) {
-                                $retry190 = true;
-                            }
-                            else if ($currentTid192.parent != null) {
-                                $retry190 = false;
-                                throw $e191;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
-                        }
-                        catch (final Throwable $e191) {
-                            $commit189 = false;
-                            if ($tm193.checkForStaleObjects())
-                                continue $label188;
-                            $retry190 = false;
-                            throw new fabric.worker.AbortException($e191);
-                        }
-                        finally {
-                            if ($commit189) {
-                                try {
-                                    fabric.worker.transaction.TransactionManager.
-                                      getInstance().commitTransaction();
-                                }
-                                catch (final fabric.worker.
-                                         AbortException $e191) {
-                                    $commit189 = false;
-                                }
-                                catch (final fabric.worker.
-                                         TransactionRestartingException $e191) {
-                                    $commit189 = false;
-                                    fabric.common.TransactionID $currentTid192 =
-                                      $tm193.getCurrentTid();
-                                    if ($currentTid192 != null) {
-                                        if ($e191.tid.equals($currentTid192) ||
-                                              !$e191.tid.isDescendantOf(
-                                                           $currentTid192)) {
-                                            throw $e191;
-                                        }
-                                    }
-                                }
-                            }
-                            else {
-                                fabric.worker.transaction.TransactionManager.
-                                  getInstance().abortTransaction();
-                            }
-                            if (!$commit189 && $retry190) {
-                                {  }
-                                continue $label188;
-                            }
-                        }
-                    }
-                }
-            }
+            this.get$$treaties().get(treatyId).update(asyncExtension,
+                                                      weakStats);
         }
         
         public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
@@ -3018,11 +2895,11 @@ public interface Metric
         
     }
     
-    public static final byte[] $classHash = new byte[] { 73, -21, -107, 41, -68,
-    -71, 100, 118, -34, -105, -93, 88, 4, 71, -115, -120, -20, -25, -84, -87,
-    -45, 47, -108, 37, -1, 51, 62, -81, 10, 34, -35, -1 };
+    public static final byte[] $classHash = new byte[] { 63, -110, 77, -113,
+    -45, -9, -16, 107, 7, -97, -120, -99, 98, 22, 66, -55, 113, -8, -21, -79,
+    -3, -98, 0, -115, 113, 36, 3, -17, 44, 101, 80, -60 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1528839756000L;
+    public static final long jlc$SourceLastModified$fabil = 1528911678000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

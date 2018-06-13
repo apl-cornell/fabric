@@ -12,6 +12,8 @@ import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Observer;
 import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
@@ -67,7 +69,8 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = ImmutableObserverSet.emptySet();
     this.policy = NoPolicy.singleton;
     this.expiry = policy.calculateExpiry(this, StatsMap.emptyStats());
-    Logging.METRICS_LOGGER.log(Level.FINEST, "CREATED TREATY {0} FOR {1}", new Object[] {this, getMetric()});
+    Logging.METRICS_LOGGER.log(Level.FINEST, "CREATED TREATY {0} FOR {1}",
+        new Object[] { this, getMetric() });
   }
 
   /**
@@ -122,8 +125,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       this.getMetric().get$$treaties().add(this);
     }
 
-    Logging.METRICS_LOGGER.log(Level.FINEST,
-        "UPDATING {0} TO {1} IN {2} {3}",
+    Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
         new Object[] { original, this,
             TransactionManager.getInstance().getCurrentTid(),
             Thread.currentThread() });
@@ -163,8 +165,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       this.getMetric().get$$treaties().add(this);
     }
 
-    Logging.METRICS_LOGGER.log(Level.FINEST,
-        "UPDATING {0} TO {1} IN {2} {3}",
+    Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
         new Object[] { original, this,
             TransactionManager.getInstance().getCurrentTid(),
             Thread.currentThread() });
@@ -189,8 +190,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     if (this.activated && this.policy instanceof NoPolicy) {
       // Garbage collect if this is no longer enforced and has been activated
       // previously.
-      Logging.METRICS_LOGGER.log(Level.FINEST,
-          "DEACTIVATING {0} IN {1} {2}",
+      Logging.METRICS_LOGGER.log(Level.FINEST, "DEACTIVATING {0} IN {1} {2}",
           new Object[] { original,
               TransactionManager.getInstance().getCurrentTid(),
               Thread.currentThread() });
@@ -200,8 +200,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       this.getMetric().get$$treaties().add(this);
     }
 
-    Logging.METRICS_LOGGER.log(Level.FINEST,
-        "UPDATING {0} TO {1} IN {2} {3}",
+    Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
         new Object[] { original, this,
             TransactionManager.getInstance().getCurrentTid(),
             Thread.currentThread() });
@@ -235,8 +234,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     if (this.activated && this.policy instanceof NoPolicy) {
       // Garbage collect if this is no longer enforced and has been activated
       // previously.
-      Logging.METRICS_LOGGER.log(Level.FINEST,
-          "DEACTIVATING {0} IN {1} {2}",
+      Logging.METRICS_LOGGER.log(Level.FINEST, "DEACTIVATING {0} IN {1} {2}",
           new Object[] { original,
               TransactionManager.getInstance().getCurrentTid(),
               Thread.currentThread() });
@@ -246,8 +244,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       this.getMetric().get$$treaties().add(this);
     }
 
-    Logging.METRICS_LOGGER.log(Level.FINEST,
-        "UPDATING {0} TO {1} IN {2} {3}",
+    Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
         new Object[] { original, this,
             TransactionManager.getInstance().getCurrentTid(),
             Thread.currentThread() });
@@ -256,45 +253,114 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
   @Override
   public Pair<MetricTreaty, ImmutableObserverSet> update(boolean asyncExtension,
       StatsMap weakStats) {
-    long oldExpiry = this.expiry;
-    long updatedCurExpiry = this.policy.updatedExpiry(this, weakStats);
-    if (updatedCurExpiry != oldExpiry || !activated) {
-      if (asyncExtension || updatedCurExpiry > System.currentTimeMillis()) {
-        // Keep using the same policy if the policy still gives a good expiry or
-        // we're only doing an async extension.
-        MetricTreaty updatedTreaty = new MetricTreaty(this, updatedCurExpiry);
-        return new Pair<>(updatedTreaty,
-            oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
-                : ImmutableObserverSet.emptySet());
-      } else {
-        // Otherwise, try a different policy.
-        EnforcementPolicy newPolicy =
-            statement.getNewPolicy(getMetric(), weakStats);
-
-        newPolicy.activate(weakStats);
-
-        // Check if the new policy works. Otherwise, this is dead.
-        long newExpiry = newPolicy.calculateExpiry(this, weakStats);
-        if (newExpiry > System.currentTimeMillis()) {
-          MetricTreaty updatedTreaty =
-              new MetricTreaty(this, newPolicy, newExpiry);
-          return new Pair<>(updatedTreaty,
-              oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
-                  : ImmutableObserverSet.emptySet());
-        } else {
-          // Run unapply to clean up the policy.
-          newPolicy.unapply(this);
-
-          MetricTreaty updatedTreaty =
-              new MetricTreaty(this, NoPolicy.singleton, 0);
-          return new Pair<>(updatedTreaty,
-              oldExpiry > updatedTreaty.expiry ? updatedTreaty.observers
-                  : ImmutableObserverSet.emptySet());
-        }
+    Pair<MetricTreaty, CurPolicyResult> usingCur =
+        TransactionManager.getInstance().inTxn()
+            ? updateWithCurPolicy(asyncExtension, weakStats)
+            : Worker.runInSubTransaction(
+                new Code<Pair<MetricTreaty, CurPolicyResult>>() {
+                  @Override
+                  public Pair<MetricTreaty, CurPolicyResult> run() {
+                    return updateWithCurPolicy(asyncExtension, weakStats);
+                  }
+                });
+    MetricTreaty curTreaty = usingCur.first;
+    switch (usingCur.second) {
+    case NO_POLICY:
+    case POLICY_BAD:
+      if (!asyncExtension) {
+        return curTreaty.updateToNewPolicy(asyncExtension, weakStats);
       }
+      // $FALL-THROUGH$
+    case POLICY_GOOD:
+      return new Pair<>(curTreaty, ImmutableObserverSet.emptySet());
+    case POLICY_RETRACTED:
+      return new Pair<>(curTreaty, curTreaty.observers);
     }
-    // If nothing changed, don't update.
-    return new Pair<>(this, ImmutableObserverSet.emptySet());
+    // This shouldn't be possible
+    throw new InternalError(
+        "Bad result updating with the current policy for " + this);
+  }
+
+  /* Return values for running update with current policy. */
+  private static enum CurPolicyResult {
+    NO_POLICY, POLICY_BAD, POLICY_RETRACTED, POLICY_GOOD;
+  }
+
+  /**
+   * Handle attempting to update with the current policy.
+   */
+  private Pair<MetricTreaty, CurPolicyResult> updateWithCurPolicy(
+      boolean asyncExtension, StatsMap weakStats) {
+    if (this.policy instanceof NoPolicy)
+      return new Pair<>(this, CurPolicyResult.NO_POLICY);
+
+    long updatedCurExpiry = this.policy.updatedExpiry(this, weakStats);
+
+    // TODO: is it possible to reach this state during an async extension?
+    if (updatedCurExpiry < System.currentTimeMillis())
+      return new Pair<>(this, CurPolicyResult.POLICY_BAD);
+
+    // Policy's still good, update and indicate if this was a retraction or not.
+    MetricTreaty updatedTreaty = new MetricTreaty(this, updatedCurExpiry);
+    return new Pair<>(updatedTreaty,
+        this.expiry > updatedTreaty.expiry ? CurPolicyResult.POLICY_RETRACTED
+            : CurPolicyResult.POLICY_GOOD);
+  }
+
+  /**
+   * Handle attempting to update to a new policy.
+   */
+  private Pair<MetricTreaty, ImmutableObserverSet> updateToNewPolicy(
+      boolean asyncExtension, StatsMap weakStats) {
+    // Get a policy
+    EnforcementPolicy newPolicy = TransactionManager.getInstance().inTxn()
+        ? statement.getNewPolicy(getMetric(), weakStats)
+        : Worker.runInSubTransaction(new Code<EnforcementPolicy>() {
+          @Override
+          public EnforcementPolicy run() {
+            return statement.getNewPolicy(getMetric(), weakStats);
+          }
+        });
+
+    // Activate children
+    newPolicy.activate(weakStats);
+
+    // Activate this.
+    return TransactionManager.getInstance().inTxn()
+        ? switchToNewPolicy(newPolicy, asyncExtension, weakStats)
+        : Worker.runInSubTransaction(
+            new Code<Pair<MetricTreaty, ImmutableObserverSet>>() {
+              @Override
+              public Pair<MetricTreaty, ImmutableObserverSet> run() {
+                return switchToNewPolicy(newPolicy, asyncExtension, weakStats);
+              }
+            });
+  }
+
+  /**
+   * Actually switch to a new policy (or deactivate if the new policy is no
+   * good).
+   */
+  private Pair<MetricTreaty, ImmutableObserverSet> switchToNewPolicy(
+      EnforcementPolicy newPolicy, boolean asyncExtension, StatsMap weakStats) {
+    long newExpiry = newPolicy.calculateExpiry(this, weakStats);
+
+    // Check if the new policy works. Otherwise, this is dead.
+    if (newExpiry >= System.currentTimeMillis()) {
+      MetricTreaty updatedTreaty = new MetricTreaty(this, newPolicy, newExpiry);
+      return new Pair<>(updatedTreaty,
+          this.expiry > updatedTreaty.expiry ? updatedTreaty.observers
+              : ImmutableObserverSet.emptySet());
+    } else {
+      // Run unapply to clean up the policy.
+      newPolicy.unapply(this);
+
+      MetricTreaty updatedTreaty =
+          new MetricTreaty(this, NoPolicy.singleton, 0);
+      return new Pair<>(updatedTreaty,
+          this.expiry > updatedTreaty.expiry ? updatedTreaty.observers
+              : ImmutableObserverSet.emptySet());
+    }
   }
 
   @Override
