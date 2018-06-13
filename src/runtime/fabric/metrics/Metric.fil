@@ -683,8 +683,22 @@ public abstract class Metric extends AbstractSubject
     this.refreshTreaty(asyncExtension, treatyId, weakStats);
   }
 
+  private static void refreshTreaty_static(Metric tmp, boolean asyncExtension, long treatyId, StatsMap weakStats) {
+    // ugh need to make sure treaty is present when run through an async remote
+    // call.
+    MetricTreaty t = null;
+    if (TransactionManager.getInstance().inTxn()) {
+      t = tmp.$treaties.get(treatyId);
+    } else {
+      atomic {
+        t = tmp.$treaties.get(treatyId);
+      }
+    }
+    t.update(asyncExtension, weakStats);
+  }
+
   public void refreshTreaty(boolean asyncExtension, long treatyId, StatsMap weakStats) {
-    $treaties.get(treatyId).update(asyncExtension, weakStats);
+    refreshTreaty_static(this, asyncExtension, treatyId, weakStats);
   }
 
   /*@Override*/

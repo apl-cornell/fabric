@@ -6,8 +6,14 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 
+import fabric.common.Logging;
+import fabric.common.Threading;
+import fabric.metrics.Metric;
+import fabric.worker.Worker;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatyRef;
@@ -83,11 +89,37 @@ public class WitnessPolicy extends EnforcementPolicy {
 
   @Override
   public void activate(StatsMap weakStats) {
-    for (TreatyRef witness : witnesses) {
-      // Don't worry about missing witnesses, it's possible they were cleared
-      // out and we're still resolving this.
-      if (witness.get() == null) continue;
-      witness.get().update(false, weakStats);
+    if (TransactionManager.getInstance().inTxn()) {
+      for (TreatyRef witness : witnesses) {
+        // Don't worry about missing witnesses, it's possible they were cleared
+        // out and we're still resolving this.
+        if (witness.get() == null) continue;
+        witness.objRef.get().refreshTreaty(false, witness.treatyId, weakStats);
+      }
+    } else {
+      Future<?> futures[] = new Future<?>[witnesses.length];
+      for (int i = 0; i < witnesses.length; i++) {
+        final TreatyRef witness = witnesses[i];
+        futures[i] = Threading.getPool().submit(new Runnable() {
+          @Override
+          public void run() {
+            ((Metric._Proxy) witness.objRef.get().$getProxy())
+                .refreshTreaty$remote(
+                    Worker.getWorker().getWorker(witness.objRef.objStoreName),
+                    null, false, witness.treatyId, weakStats);
+          }
+        });
+      }
+      for (Future<?> f : futures) {
+        try {
+          f.get();
+        } catch (ExecutionException e) {
+          throw new InternalError(
+              "Execution exception running witness activation!", e);
+        } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
+        }
+      }
     }
   }
 
