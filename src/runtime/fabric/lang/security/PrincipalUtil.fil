@@ -42,13 +42,13 @@ public class PrincipalUtil {
     final Store localStore = Worker.getWorker().getLocalStore();
     final SecurityCache cache =
       TransactionManager.getInstance().getSecurityCache();
-    
+
     // try cache
     SecurityCache.ActsForPair pair = new SecurityCache.ActsForPair(p, q);
     if (cache.containsActsFor(pair)) {
       return cache.getActsFor(pair);
     }
-    
+
     if (cache.containsNotActsFor(pair)) return null;
 
     if (delegatesTo(q, p)) return (DelegatesProof) new DelegatesProof@store().fabric$lang$security$DelegatesProof$(p, q);
@@ -67,7 +67,7 @@ public class PrincipalUtil {
       // add dependencies that this actsfor relies on.
       java.util.Set s = new HashSet();
       prf.gatherDelegationDependencies(s);
-      
+
       // for each DelegationPair in s, if that delegation is removed, the
       // proof is no longer valid.
       for (java.util.Iterator iter = s.iterator(); iter.hasNext();) {
@@ -111,7 +111,7 @@ public class PrincipalUtil {
   /**
    * Search for an ActsForProof between p and q. An ActsForProof between p and q
    * is a a checkable proof object.
-   * 
+   *
    * @param p
    * @param q
    * @param searchState
@@ -139,7 +139,7 @@ public class PrincipalUtil {
           // p and q are already on the goal stack. Prevent an infinite recursion.
           return null;
         }
-        newss = (ProofSearchState) new ProofSearchState@localStore().fabric$lang$security$PrincipalUtil$ProofSearchState$(ss, p, q);                                        
+        newss = (ProofSearchState) new ProofSearchState@localStore().fabric$lang$security$PrincipalUtil$ProofSearchState$(ss, p, q);
       } else {
         newss = (ProofSearchState) new ProofSearchState@localStore().fabric$lang$security$PrincipalUtil$ProofSearchState$(p, q);
       }
@@ -175,7 +175,10 @@ public class PrincipalUtil {
   }
 
   private static class ProofSearchState {
-    private SecurityCache.ActsForPair native[] goalstack;
+    // XXX Tom 6/18/18: Marking this as transient because, AFAICT, this type is
+    // purely intended for in-transaction bookkeeping and will neither be
+    // persisted or shared between nodes.
+    private transient SecurityCache.ActsForPair native[] goalstack;
 
     public ProofSearchState fabric$lang$security$PrincipalUtil$ProofSearchState$(Principal p, Principal q) {
       goalstack = new SecurityCache.ActsForPair native[1];
