@@ -1,6 +1,7 @@
 package fabric.worker.metrics;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import fabric.worker.Worker;
 
@@ -196,18 +197,19 @@ public class RunningMetricStats implements Serializable {
   }
 
   /**
-   * Support preloading based on a string key.
+   * Support preloading based on a long key.
    *
    * Should be called right before the next update to ensure the lastUpdate
    * configuration is roughly accurate.
    */
-  public RunningMetricStats preload(String key) {
+  public RunningMetricStats preload(long key) {
     // Only bother if this is a fresh slate
     if (samples == 0) {
-      PresetMetricStatistics p = Worker.getWorker().config.presets.get(key);
+      Map.Entry<Long, PresetMetricStatistics> entry =
+          Worker.getWorker().config.presets.floorEntry(key);
       // If there's a preset, load it in.
-      if (p != null) {
-        return new RunningMetricStats(p, value);
+      if (entry != null && entry.getValue() != null) {
+        return new RunningMetricStats(entry.getValue(), value);
       }
     }
     return this;
