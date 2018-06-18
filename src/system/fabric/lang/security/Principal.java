@@ -3,19 +3,15 @@ package fabric.lang.security;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.Iterator;
 import java.util.List;
 
-import fabric.common.Crypto;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-import fabric.worker.transaction.TransactionManager;
 
 /**
  * This is implemented in Java so that the constructor can create a key pair for
@@ -41,10 +37,6 @@ public interface Principal extends fabric.lang.Object {
 
   ActsForProof findProofDownto(final Store store, final Principal q,
       final java.lang.Object searchState);
-
-  PublicKey getPublicKey();
-
-  PrivateKeyObject getPrivateKeyObject();
 
   public static class _Proxy extends fabric.lang.Object._Proxy
       implements Principal {
@@ -96,16 +88,6 @@ public interface Principal extends fabric.lang.Object {
       return ((Principal) fetch()).findProofDownto(store, q, searchState);
     }
 
-    @Override
-    public PublicKey getPublicKey() {
-      return ((Principal) fetch()).getPublicKey();
-    }
-
-    @Override
-    public PrivateKeyObject getPrivateKeyObject() {
-      return ((Principal) fetch()).getPrivateKeyObject();
-    }
-
     public static Principal jif$cast$fabric_lang_security_Principal(Object o) {
       return Principal._Impl.jif$cast$fabric_lang_security_Principal(o);
     }
@@ -113,9 +95,6 @@ public interface Principal extends fabric.lang.Object {
 
   abstract public static class _Impl extends fabric.lang.Object._Impl
       implements Principal {
-
-    private PublicKey publicKey;
-    private PrivateKeyObject privateKeyObject;
 
     public _Impl(Store store) {
       super(store);
@@ -143,14 +122,6 @@ public interface Principal extends fabric.lang.Object {
     @Override
     public Principal fabric$lang$security$Principal$() {
       fabric$lang$Object$();
-      // Generate a new key pair for this principal.
-      KeyPair keyPair = Crypto.genKeyPair();
-      this.publicKey = keyPair.getPublic();
-
-      this.privateKeyObject = new PrivateKeyObject._Impl($getStore())
-          .fabric$lang$security$PrivateKeyObject$((Principal) $getProxy(),
-              keyPair.getPrivate());
-
       return (Principal) this.$getProxy();
     }
 
@@ -195,18 +166,6 @@ public interface Principal extends fabric.lang.Object {
         throws java.io.IOException, ClassNotFoundException {
       super(store, onum, version, labelStore, labelOnum, accessPolicyStore,
           accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
-    }
-
-    @Override
-    public final PublicKey getPublicKey() {
-      TransactionManager.getInstance().registerRead(this);
-      return publicKey;
-    }
-
-    @Override
-    public final PrivateKeyObject getPrivateKeyObject() {
-      TransactionManager.getInstance().registerRead(this);
-      return privateKeyObject;
     }
 
     public static Principal jif$cast$fabric_lang_security_Principal(Object o) {
