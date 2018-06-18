@@ -9,9 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.logging.Level;
 
-import fabric.common.util.RegexMapping;
 import fabric.worker.metrics.PresetMetricStatistics;
 
 public class ConfigProperties {
@@ -73,7 +73,7 @@ public class ConfigProperties {
   // Noises to use if using presets
   public final Map<String, Double> noises;
   // Mapping regexes to preset values for statistics
-  public final RegexMapping<PresetMetricStatistics> presets;
+  public final TreeMap<Long, PresetMetricStatistics> presets;
   // Whether to use estimation for metrics
   public final boolean useEstimation;
   // Statistics estimation parameters
@@ -216,17 +216,21 @@ public class ConfigProperties {
 
     String[] rawPresets =
         removeProperty(p, "fabric.metrics.presets", "").split(";");
-    this.presets = new RegexMapping<>();
+    this.presets = new TreeMap<>();
     for (int i = 0; i < rawPresets.length; i++) {
       String[] kv = rawPresets[i].split(":");
       if (kv.length != 2) continue;
-      String[] values = kv[1].split(",");
-      // TODO: note the bad mapping?
-      if (values.length != 4) continue;
-      PresetMetricStatistics val = new PresetMetricStatistics(
-          Double.parseDouble(values[0]), Double.parseDouble(values[1]),
-          Double.parseDouble(values[2]), Integer.parseInt(values[3]));
-      this.presets.put(kv[0], val);
+      if (kv[1].equals("null")) {
+        this.presets.put(Long.parseLong(kv[0]), null);
+      } else {
+        String[] values = kv[1].split(",");
+        // TODO: note the bad mapping?
+        if (values.length != 4) continue;
+        PresetMetricStatistics val = new PresetMetricStatistics(
+            Double.parseDouble(values[0]), Double.parseDouble(values[1]),
+            Double.parseDouble(values[2]), Integer.parseInt(values[3]));
+        this.presets.put(Long.parseLong(kv[0]), val);
+      }
     }
 
     this.useEstimation = Boolean.parseBoolean(

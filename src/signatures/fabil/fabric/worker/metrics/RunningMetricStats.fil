@@ -77,12 +77,12 @@ public class RunningMetricStats implements Serializable, JavaInlineable {
   private static native double getAlpha(long samples);
 
   /**
-   * Support preloading based on a string key.
+   * Support preloading based on a long key.
    *
    * Should be called right before the next update to ensure the lastUpdate
    * configuration is roughly accurate.
    */
-  public native RunningMetricStats preload(String key);
+  public native RunningMetricStats preload(long key);
 
   /**
    * Utility for converting a stale velocity estimate to a properly "decayed"

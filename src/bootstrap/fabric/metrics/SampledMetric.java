@@ -30,21 +30,26 @@ import fabric.common.Logging;
  * transaction context performs the proper book-keeping.
  */
 public interface SampledMetric extends fabric.metrics.Metric {
-    public java.lang.String get$name();
+    public long get$key();
     
-    public java.lang.String set$name(java.lang.String val);
+    public long set$key(long val);
+    
+    public long postInc$key();
+    
+    public long postDec$key();
     
     /**
    * @param store
    *            the {@link Store} that holds this {@link Metric}
-   * @param name
-   *            the name the {@link Store} associates with this
-   *            {@link SampledMetric}, so it can be easily retrieved later
+   * @param key
+   *            the key the {@link Store} associates with this
+   *            {@link SampledMetric}, so it can be easily retrieved later for
+   *            configuration purposes.
    * @param init
    *        the initial value of this {@link Metric}
    */
     public fabric.metrics.SampledMetric fabric$metrics$SampledMetric$(
-      java.lang.String name, double init);
+      long key, double init);
     
     public boolean getUsePreset();
     
@@ -161,12 +166,20 @@ public interface SampledMetric extends fabric.metrics.Metric {
     
     public static class _Proxy extends fabric.metrics.Metric._Proxy
       implements fabric.metrics.SampledMetric {
-        public java.lang.String get$name() {
-            return ((fabric.metrics.SampledMetric._Impl) fetch()).get$name();
+        public long get$key() {
+            return ((fabric.metrics.SampledMetric._Impl) fetch()).get$key();
         }
         
-        public java.lang.String set$name(java.lang.String val) {
-            return ((fabric.metrics.SampledMetric._Impl) fetch()).set$name(val);
+        public long set$key(long val) {
+            return ((fabric.metrics.SampledMetric._Impl) fetch()).set$key(val);
+        }
+        
+        public long postInc$key() {
+            return ((fabric.metrics.SampledMetric._Impl) fetch()).postInc$key();
+        }
+        
+        public long postDec$key() {
+            return ((fabric.metrics.SampledMetric._Impl) fetch()).postDec$key();
         }
         
         public double get$presetR() {
@@ -256,7 +269,7 @@ public interface SampledMetric extends fabric.metrics.Metric {
         }
         
         public fabric.metrics.SampledMetric fabric$metrics$SampledMetric$(
-          java.lang.String arg1, double arg2) {
+          long arg1, double arg2) {
             return ((fabric.metrics.SampledMetric) fetch()).
               fabric$metrics$SampledMetric$(arg1, arg2);
         }
@@ -291,34 +304,47 @@ public interface SampledMetric extends fabric.metrics.Metric {
     
     public static class _Impl extends fabric.metrics.Metric._Impl
       implements fabric.metrics.SampledMetric {
-        public java.lang.String get$name() { return this.name; }
+        public long get$key() { return this.key; }
         
-        public java.lang.String set$name(java.lang.String val) {
+        public long set$key(long val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
             boolean transactionCreated = tm.registerWrite(this);
-            this.name = val;
+            this.key = val;
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
         
-        private java.lang.String name;
+        public long postInc$key() {
+            long tmp = this.get$key();
+            this.set$key((long) (tmp + 1));
+            return tmp;
+        }
+        
+        public long postDec$key() {
+            long tmp = this.get$key();
+            this.set$key((long) (tmp - 1));
+            return tmp;
+        }
+        
+        private long key;
         
         /**
    * @param store
    *            the {@link Store} that holds this {@link Metric}
-   * @param name
-   *            the name the {@link Store} associates with this
-   *            {@link SampledMetric}, so it can be easily retrieved later
+   * @param key
+   *            the key the {@link Store} associates with this
+   *            {@link SampledMetric}, so it can be easily retrieved later for
+   *            configuration purposes.
    * @param init
    *        the initial value of this {@link Metric}
    */
         public fabric.metrics.SampledMetric fabric$metrics$SampledMetric$(
-          java.lang.String name, double init) {
+          long key, double init) {
             fabric.lang.security.Label lbl =
               fabric.lang.security.LabelUtil._Impl.noComponents();
             fabric.worker.Store s = $getStore();
-            this.set$name(name);
+            this.set$key((long) key);
             this.
               set$stats(
                 fabric.worker.metrics.RunningMetricStats.
@@ -326,28 +352,31 @@ public interface SampledMetric extends fabric.metrics.Metric {
             fabric.common.ConfigProperties config =
               fabric.worker.Worker.getWorker().config;
             if (getUsePreset()) {
-                java.lang.String key = name + "@" + s.name();
-                this.set$presetR((double)
-                                   (config.rates.containsKey(key)
-                                      ? ((java.lang.Double)
-                                           config.rates.get(key)).doubleValue()
-                                      : 0.0));
-                this.set$presetB((double)
-                                   (config.bounds.containsKey(key)
-                                      ? ((java.lang.Double)
-                                           config.bounds.get(key)).doubleValue()
-                                      : 1.0));
+                java.lang.String presetKey = "" + key + "@" + s.name();
+                this.set$presetR(
+                       (double)
+                         (config.rates.containsKey(presetKey)
+                            ? ((java.lang.Double)
+                                 config.rates.get(presetKey)).doubleValue()
+                            : 0.0));
+                this.set$presetB(
+                       (double)
+                         (config.bounds.containsKey(presetKey)
+                            ? ((java.lang.Double)
+                                 config.bounds.get(presetKey)).doubleValue()
+                            : 1.0));
                 this.set$presetV(
                        (double)
-                         (config.velocities.containsKey(key)
+                         (config.velocities.containsKey(presetKey)
                             ? ((java.lang.Double)
-                                 config.velocities.get(key)).doubleValue()
+                                 config.velocities.get(presetKey)).doubleValue()
                             : 0.0));
-                this.set$presetN((double)
-                                   (config.noises.containsKey(key)
-                                      ? ((java.lang.Double)
-                                           config.noises.get(key)).doubleValue()
-                                      : 0.0));
+                this.set$presetN(
+                       (double)
+                         (config.noises.containsKey(presetKey)
+                            ? ((java.lang.Double)
+                                 config.noises.get(presetKey)).doubleValue()
+                            : 0.0));
             } else {
                 this.set$presetR((double) 0.0);
                 this.set$presetB((double) 0.0);
@@ -516,7 +545,7 @@ public interface SampledMetric extends fabric.metrics.Metric {
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
                 fabric.worker.metrics.RunningMetricStats preloaded =
-                  tmp.get$stats().preload(tmp.get$name());
+                  tmp.get$stats().preload(tmp.get$key());
                 if (!fabric.lang.Object._Proxy.idEquals(preloaded,
                                                         tmp.get$stats()))
                     tmp.set$stats(preloaded);
@@ -524,159 +553,7 @@ public interface SampledMetric extends fabric.metrics.Metric {
             }
             else {
                 {
-                    double result$var229 = result;
-                    fabric.worker.transaction.TransactionManager $tm235 =
-                      fabric.worker.transaction.TransactionManager.getInstance(
-                                                                     );
-                    boolean $backoffEnabled238 =
-                      fabric.worker.Worker.getWorker().config.txRetryBackoff;
-                    int $backoff236 = 1;
-                    boolean $doBackoff237 = true;
-                    boolean $retry232 = true;
-                    $label230: for (boolean $commit231 = false; !$commit231; ) {
-                        if ($backoffEnabled238) {
-                            if ($doBackoff237) {
-                                if ($backoff236 > 32) {
-                                    while (true) {
-                                        try {
-                                            java.lang.Thread.sleep($backoff236);
-                                            break;
-                                        }
-                                        catch (java.lang.
-                                                 InterruptedException $e233) {
-                                            
-                                        }
-                                    }
-                                }
-                                if ($backoff236 < 5000) $backoff236 *= 2;
-                            }
-                            $doBackoff237 = $backoff236 <= 32 || !$doBackoff237;
-                        }
-                        $commit231 = true;
-                        fabric.worker.transaction.TransactionManager.
-                          getInstance().startTransaction();
-                        try {
-                            fabric.worker.metrics.RunningMetricStats preloaded =
-                              tmp.get$stats().preload(tmp.get$name());
-                            if (!fabric.lang.Object._Proxy.idEquals(
-                                                             preloaded,
-                                                             tmp.get$stats()))
-                                tmp.set$stats(preloaded);
-                            result = tmp.get$stats().getValue();
-                        }
-                        catch (final fabric.worker.RetryException $e233) {
-                            $commit231 = false;
-                            continue $label230;
-                        }
-                        catch (final fabric.worker.
-                                 TransactionRestartingException $e233) {
-                            $commit231 = false;
-                            fabric.common.TransactionID $currentTid234 =
-                              $tm235.getCurrentTid();
-                            if ($e233.tid.isDescendantOf($currentTid234))
-                                continue $label230;
-                            if ($currentTid234.parent != null) {
-                                $retry232 = false;
-                                throw $e233;
-                            }
-                            throw new InternalError(
-                                    "Something is broken with " +
-                                        "transaction management. Got a signal to restart a " +
-                                        "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e233) {
-                            $commit231 = false;
-                            if ($tm235.checkForStaleObjects()) continue;
-                            fabric.common.TransactionID $currentTid234 =
-                              $tm235.getCurrentTid();
-                            if ($e233.tid.isDescendantOf($currentTid234)) {
-                                $retry232 = true;
-                            }
-                            else if ($currentTid234.parent != null) {
-                                $retry232 = false;
-                                throw $e233;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
-                        }
-                        catch (final Throwable $e233) {
-                            $commit231 = false;
-                            if ($tm235.checkForStaleObjects())
-                                continue $label230;
-                            $retry232 = false;
-                            throw new fabric.worker.AbortException($e233);
-                        }
-                        finally {
-                            if ($commit231) {
-                                try {
-                                    fabric.worker.transaction.TransactionManager.
-                                      getInstance().commitTransaction();
-                                }
-                                catch (final fabric.worker.
-                                         AbortException $e233) {
-                                    $commit231 = false;
-                                }
-                                catch (final fabric.worker.
-                                         TransactionRestartingException $e233) {
-                                    $commit231 = false;
-                                    fabric.common.TransactionID $currentTid234 =
-                                      $tm235.getCurrentTid();
-                                    if ($currentTid234 != null) {
-                                        if ($e233.tid.equals($currentTid234) ||
-                                              !$e233.tid.isDescendantOf(
-                                                           $currentTid234)) {
-                                            throw $e233;
-                                        }
-                                    }
-                                }
-                            }
-                            else {
-                                fabric.worker.transaction.TransactionManager.
-                                  getInstance().abortTransaction();
-                            }
-                            if (!$commit231 && $retry232) {
-                                { result = result$var229; }
-                                continue $label230;
-                            }
-                        }
-                    }
-                }
-            }
-            return result;
-        }
-        
-        public long computeSamples(fabric.worker.metrics.StatsMap weakStats) {
-            return fabric.metrics.SampledMetric._Impl.
-              static_computeSamples((fabric.metrics.SampledMetric)
-                                      this.$getProxy(), weakStats);
-        }
-        
-        private static long static_computeSamples(
-          fabric.metrics.SampledMetric tmp,
-          fabric.worker.metrics.StatsMap weakStats) {
-            if (fabric.worker.transaction.TransactionManager.getInstance().
-                  inTxn()) {
-                if (tmp.getUsePreset()) {
-                    return 0;
-                }
-                else {
-                    fabric.worker.metrics.RunningMetricStats preloaded =
-                      tmp.get$stats().preload(tmp.get$name());
-                    if (!fabric.lang.Object._Proxy.idEquals(preloaded,
-                                                            tmp.get$stats()))
-                        tmp.set$stats(preloaded);
-                    return tmp.get$stats().getSamples();
-                }
-            }
-            else {
-                long rtn = 0;
-                {
-                    long rtn$var239 = rtn;
+                    double result$var239 = result;
                     fabric.worker.transaction.TransactionManager $tm245 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
@@ -708,20 +585,13 @@ public interface SampledMetric extends fabric.metrics.Metric {
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            if (tmp.getUsePreset()) {
-                                rtn = 0;
-                            }
-                            else {
-                                fabric.worker.metrics.RunningMetricStats
-                                  preloaded =
-                                  tmp.get$stats().preload(tmp.get$name());
-                                if (!fabric.lang.Object._Proxy.idEquals(
-                                                                 preloaded,
-                                                                 tmp.get$stats(
-                                                                       )))
-                                    tmp.set$stats(preloaded);
-                                rtn = tmp.get$stats().getSamples();
-                            }
+                            fabric.worker.metrics.RunningMetricStats preloaded =
+                              tmp.get$stats().preload(tmp.get$key());
+                            if (!fabric.lang.Object._Proxy.idEquals(
+                                                             preloaded,
+                                                             tmp.get$stats()))
+                                tmp.set$stats(preloaded);
+                            result = tmp.get$stats().getValue();
                         }
                         catch (final fabric.worker.RetryException $e243) {
                             $commit241 = false;
@@ -799,24 +669,23 @@ public interface SampledMetric extends fabric.metrics.Metric {
                                   getInstance().abortTransaction();
                             }
                             if (!$commit241 && $retry242) {
-                                { rtn = rtn$var239; }
+                                { result = result$var239; }
                                 continue $label240;
                             }
                         }
                     }
                 }
-                return rtn;
             }
+            return result;
         }
         
-        public long computeLastUpdate(
-          fabric.worker.metrics.StatsMap weakStats) {
+        public long computeSamples(fabric.worker.metrics.StatsMap weakStats) {
             return fabric.metrics.SampledMetric._Impl.
-              static_computeLastUpdate((fabric.metrics.SampledMetric)
-                                         this.$getProxy(), weakStats);
+              static_computeSamples((fabric.metrics.SampledMetric)
+                                      this.$getProxy(), weakStats);
         }
         
-        private static long static_computeLastUpdate(
+        private static long static_computeSamples(
           fabric.metrics.SampledMetric tmp,
           fabric.worker.metrics.StatsMap weakStats) {
             if (fabric.worker.transaction.TransactionManager.getInstance().
@@ -826,11 +695,11 @@ public interface SampledMetric extends fabric.metrics.Metric {
                 }
                 else {
                     fabric.worker.metrics.RunningMetricStats preloaded =
-                      tmp.get$stats().preload(tmp.get$name());
+                      tmp.get$stats().preload(tmp.get$key());
                     if (!fabric.lang.Object._Proxy.idEquals(preloaded,
                                                             tmp.get$stats()))
                         tmp.set$stats(preloaded);
-                    return tmp.get$stats().getLastUpdate();
+                    return tmp.get$stats().getSamples();
                 }
             }
             else {
@@ -874,13 +743,13 @@ public interface SampledMetric extends fabric.metrics.Metric {
                             else {
                                 fabric.worker.metrics.RunningMetricStats
                                   preloaded =
-                                  tmp.get$stats().preload(tmp.get$name());
+                                  tmp.get$stats().preload(tmp.get$key());
                                 if (!fabric.lang.Object._Proxy.idEquals(
                                                                  preloaded,
                                                                  tmp.get$stats(
                                                                        )))
                                     tmp.set$stats(preloaded);
-                                rtn = tmp.get$stats().getLastUpdate();
+                                rtn = tmp.get$stats().getSamples();
                             }
                         }
                         catch (final fabric.worker.RetryException $e253) {
@@ -969,14 +838,14 @@ public interface SampledMetric extends fabric.metrics.Metric {
             }
         }
         
-        public double computeUpdateInterval(
+        public long computeLastUpdate(
           fabric.worker.metrics.StatsMap weakStats) {
             return fabric.metrics.SampledMetric._Impl.
-              static_computeUpdateInterval((fabric.metrics.SampledMetric)
-                                             this.$getProxy(), weakStats);
+              static_computeLastUpdate((fabric.metrics.SampledMetric)
+                                         this.$getProxy(), weakStats);
         }
         
-        private static double static_computeUpdateInterval(
+        private static long static_computeLastUpdate(
           fabric.metrics.SampledMetric tmp,
           fabric.worker.metrics.StatsMap weakStats) {
             if (fabric.worker.transaction.TransactionManager.getInstance().
@@ -986,17 +855,17 @@ public interface SampledMetric extends fabric.metrics.Metric {
                 }
                 else {
                     fabric.worker.metrics.RunningMetricStats preloaded =
-                      tmp.get$stats().preload(tmp.get$name());
+                      tmp.get$stats().preload(tmp.get$key());
                     if (!fabric.lang.Object._Proxy.idEquals(preloaded,
                                                             tmp.get$stats()))
                         tmp.set$stats(preloaded);
-                    return tmp.get$stats().getIntervalEstimate();
+                    return tmp.get$stats().getLastUpdate();
                 }
             }
             else {
-                double rtn = 0;
+                long rtn = 0;
                 {
-                    double rtn$var259 = rtn;
+                    long rtn$var259 = rtn;
                     fabric.worker.transaction.TransactionManager $tm265 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
@@ -1034,13 +903,13 @@ public interface SampledMetric extends fabric.metrics.Metric {
                             else {
                                 fabric.worker.metrics.RunningMetricStats
                                   preloaded =
-                                  tmp.get$stats().preload(tmp.get$name());
+                                  tmp.get$stats().preload(tmp.get$key());
                                 if (!fabric.lang.Object._Proxy.idEquals(
                                                                  preloaded,
                                                                  tmp.get$stats(
                                                                        )))
                                     tmp.set$stats(preloaded);
-                                rtn = tmp.get$stats().getIntervalEstimate();
+                                rtn = tmp.get$stats().getLastUpdate();
                             }
                         }
                         catch (final fabric.worker.RetryException $e263) {
@@ -1129,28 +998,28 @@ public interface SampledMetric extends fabric.metrics.Metric {
             }
         }
         
-        public double computeVelocity(
+        public double computeUpdateInterval(
           fabric.worker.metrics.StatsMap weakStats) {
             return fabric.metrics.SampledMetric._Impl.
-              static_computeVelocity((fabric.metrics.SampledMetric)
-                                       this.$getProxy(), weakStats);
+              static_computeUpdateInterval((fabric.metrics.SampledMetric)
+                                             this.$getProxy(), weakStats);
         }
         
-        private static double static_computeVelocity(
+        private static double static_computeUpdateInterval(
           fabric.metrics.SampledMetric tmp,
           fabric.worker.metrics.StatsMap weakStats) {
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
                 if (tmp.getUsePreset()) {
-                    return tmp.get$presetV();
+                    return 0;
                 }
                 else {
                     fabric.worker.metrics.RunningMetricStats preloaded =
-                      tmp.get$stats().preload(tmp.get$name());
+                      tmp.get$stats().preload(tmp.get$key());
                     if (!fabric.lang.Object._Proxy.idEquals(preloaded,
                                                             tmp.get$stats()))
                         tmp.set$stats(preloaded);
-                    return tmp.get$stats().getVelocityEstimate();
+                    return tmp.get$stats().getIntervalEstimate();
                 }
             }
             else {
@@ -1189,18 +1058,18 @@ public interface SampledMetric extends fabric.metrics.Metric {
                           getInstance().startTransaction();
                         try {
                             if (tmp.getUsePreset()) {
-                                rtn = tmp.get$presetV();
+                                rtn = 0;
                             }
                             else {
                                 fabric.worker.metrics.RunningMetricStats
                                   preloaded =
-                                  tmp.get$stats().preload(tmp.get$name());
+                                  tmp.get$stats().preload(tmp.get$key());
                                 if (!fabric.lang.Object._Proxy.idEquals(
                                                                  preloaded,
                                                                  tmp.get$stats(
                                                                        )))
                                     tmp.set$stats(preloaded);
-                                rtn = tmp.get$stats().getVelocityEstimate();
+                                rtn = tmp.get$stats().getIntervalEstimate();
                             }
                         }
                         catch (final fabric.worker.RetryException $e273) {
@@ -1289,27 +1158,28 @@ public interface SampledMetric extends fabric.metrics.Metric {
             }
         }
         
-        public double computeNoise(fabric.worker.metrics.StatsMap weakStats) {
+        public double computeVelocity(
+          fabric.worker.metrics.StatsMap weakStats) {
             return fabric.metrics.SampledMetric._Impl.
-              static_computeNoise((fabric.metrics.SampledMetric)
-                                    this.$getProxy(), weakStats);
+              static_computeVelocity((fabric.metrics.SampledMetric)
+                                       this.$getProxy(), weakStats);
         }
         
-        private static double static_computeNoise(
+        private static double static_computeVelocity(
           fabric.metrics.SampledMetric tmp,
           fabric.worker.metrics.StatsMap weakStats) {
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
                 if (tmp.getUsePreset()) {
-                    return tmp.get$presetN();
+                    return tmp.get$presetV();
                 }
                 else {
                     fabric.worker.metrics.RunningMetricStats preloaded =
-                      tmp.get$stats().preload(tmp.get$name());
+                      tmp.get$stats().preload(tmp.get$key());
                     if (!fabric.lang.Object._Proxy.idEquals(preloaded,
                                                             tmp.get$stats()))
                         tmp.set$stats(preloaded);
-                    return tmp.get$stats().getNoiseEstimate();
+                    return tmp.get$stats().getVelocityEstimate();
                 }
             }
             else {
@@ -1348,18 +1218,18 @@ public interface SampledMetric extends fabric.metrics.Metric {
                           getInstance().startTransaction();
                         try {
                             if (tmp.getUsePreset()) {
-                                rtn = tmp.get$presetN();
+                                rtn = tmp.get$presetV();
                             }
                             else {
                                 fabric.worker.metrics.RunningMetricStats
                                   preloaded =
-                                  tmp.get$stats().preload(tmp.get$name());
+                                  tmp.get$stats().preload(tmp.get$key());
                                 if (!fabric.lang.Object._Proxy.idEquals(
                                                                  preloaded,
                                                                  tmp.get$stats(
                                                                        )))
                                     tmp.set$stats(preloaded);
-                                rtn = tmp.get$stats().getNoiseEstimate();
+                                rtn = tmp.get$stats().getVelocityEstimate();
                             }
                         }
                         catch (final fabric.worker.RetryException $e283) {
@@ -1448,77 +1318,33 @@ public interface SampledMetric extends fabric.metrics.Metric {
             }
         }
         
-        public java.lang.String toString() {
-            return "SampledMetric(" + this.get$name() + ")@" +
-            getStore().name();
-        }
-        
-        public boolean isSingleStore() { return true; }
-        
-        public fabric.worker.metrics.RunningMetricStats get$stats() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.stats;
-        }
-        
-        public fabric.worker.metrics.RunningMetricStats set$stats(
-          fabric.worker.metrics.RunningMetricStats val) {
-            fabric.worker.transaction.TransactionManager tm =
-              fabric.worker.transaction.TransactionManager.getInstance();
-            boolean transactionCreated = tm.registerWrite(this);
-            this.stats = val;
-            if (transactionCreated) tm.commitTransaction();
-            return val;
-        }
-        
-        /**
-   * The statistics for this metric.
-   */
-        protected fabric.worker.metrics.RunningMetricStats stats;
-        
-        /**
-   * Updates the velocity and interval estimates with the given observation.
-   *
-   * @param newVal
-   *        the new value of the measured quantity
-   * @param eventTime
-   *        the time, in milliseconds, this update happened
-   */
-        public void updateEstimates(double newVal, long eventTime) {
-            fabric.worker.metrics.RunningMetricStats preloaded =
-              this.get$stats().preload(this.get$name());
-            if (!fabric.lang.Object._Proxy.idEquals(preloaded,
-                                                    this.get$stats()))
-                this.set$stats(preloaded);
-            this.set$stats(this.get$stats().update(newVal));
-            if (this.get$stats().getSamples() %
-                  fabric.worker.Worker.getWorker(
-                                         ).config.metricStatsLogInterval == 0) {
-                fabric.common.Logging.METRICS_LOGGER.
-                  log(
-                    java.util.logging.Level.INFO,
-                    "STATS {0} {1}", new java.lang.Object[] { (java.lang.Object) fabric.lang.WrappedJavaInlineable.$unwrap((fabric.metrics.SampledMetric) this.$getProxy()), this.get$stats() });
-            }
-        }
-        
-        public double value(fabric.worker.metrics.StatsMap weakStats) {
+        public double computeNoise(fabric.worker.metrics.StatsMap weakStats) {
             return fabric.metrics.SampledMetric._Impl.
-              static_value((fabric.metrics.SampledMetric) this.$getProxy(),
-                           weakStats);
+              static_computeNoise((fabric.metrics.SampledMetric)
+                                    this.$getProxy(), weakStats);
         }
         
-        private static double static_value(
+        private static double static_computeNoise(
           fabric.metrics.SampledMetric tmp,
           fabric.worker.metrics.StatsMap weakStats) {
-            if (weakStats.containsKey(tmp)) return weakStats.getValue(tmp);
-            double result = 0;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                result = tmp.computeValue(weakStats);
+                if (tmp.getUsePreset()) {
+                    return tmp.get$presetN();
+                }
+                else {
+                    fabric.worker.metrics.RunningMetricStats preloaded =
+                      tmp.get$stats().preload(tmp.get$key());
+                    if (!fabric.lang.Object._Proxy.idEquals(preloaded,
+                                                            tmp.get$stats()))
+                        tmp.set$stats(preloaded);
+                    return tmp.get$stats().getNoiseEstimate();
+                }
             }
             else {
+                double rtn = 0;
                 {
-                    double result$var289 = result;
+                    double rtn$var289 = rtn;
                     fabric.worker.transaction.TransactionManager $tm295 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
@@ -1549,7 +1375,22 @@ public interface SampledMetric extends fabric.metrics.Metric {
                         $commit291 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
-                        try { result = tmp.computeValue(weakStats); }
+                        try {
+                            if (tmp.getUsePreset()) {
+                                rtn = tmp.get$presetN();
+                            }
+                            else {
+                                fabric.worker.metrics.RunningMetricStats
+                                  preloaded =
+                                  tmp.get$stats().preload(tmp.get$key());
+                                if (!fabric.lang.Object._Proxy.idEquals(
+                                                                 preloaded,
+                                                                 tmp.get$stats(
+                                                                       )))
+                                    tmp.set$stats(preloaded);
+                                rtn = tmp.get$stats().getNoiseEstimate();
+                            }
+                        }
                         catch (final fabric.worker.RetryException $e293) {
                             $commit291 = false;
                             continue $label290;
@@ -1626,34 +1467,86 @@ public interface SampledMetric extends fabric.metrics.Metric {
                                   getInstance().abortTransaction();
                             }
                             if (!$commit291 && $retry292) {
-                                { result = result$var289; }
+                                { rtn = rtn$var289; }
                                 continue $label290;
                             }
                         }
                     }
                 }
+                return rtn;
             }
-            return result;
         }
         
-        public long samples(fabric.worker.metrics.StatsMap weakStats) {
+        public java.lang.String toString() {
+            return "SampledMetric(" + this.get$key() + ")@" + getStore().name();
+        }
+        
+        public boolean isSingleStore() { return true; }
+        
+        public fabric.worker.metrics.RunningMetricStats get$stats() {
+            fabric.worker.transaction.TransactionManager.getInstance().
+              registerRead(this);
+            return this.stats;
+        }
+        
+        public fabric.worker.metrics.RunningMetricStats set$stats(
+          fabric.worker.metrics.RunningMetricStats val) {
+            fabric.worker.transaction.TransactionManager tm =
+              fabric.worker.transaction.TransactionManager.getInstance();
+            boolean transactionCreated = tm.registerWrite(this);
+            this.stats = val;
+            if (transactionCreated) tm.commitTransaction();
+            return val;
+        }
+        
+        /**
+   * The statistics for this metric.
+   */
+        protected fabric.worker.metrics.RunningMetricStats stats;
+        
+        /**
+   * Updates the velocity and interval estimates with the given observation.
+   *
+   * @param newVal
+   *        the new value of the measured quantity
+   * @param eventTime
+   *        the time, in milliseconds, this update happened
+   */
+        public void updateEstimates(double newVal, long eventTime) {
+            fabric.worker.metrics.RunningMetricStats preloaded =
+              this.get$stats().preload(this.get$key());
+            if (!fabric.lang.Object._Proxy.idEquals(preloaded,
+                                                    this.get$stats()))
+                this.set$stats(preloaded);
+            this.set$stats(this.get$stats().update(newVal));
+            if (this.get$stats().getSamples() %
+                  fabric.worker.Worker.getWorker(
+                                         ).config.metricStatsLogInterval == 0) {
+                fabric.common.Logging.METRICS_LOGGER.
+                  log(
+                    java.util.logging.Level.INFO,
+                    "STATS {0} {1}", new java.lang.Object[] { (java.lang.Object) fabric.lang.WrappedJavaInlineable.$unwrap((fabric.metrics.SampledMetric) this.$getProxy()), this.get$stats() });
+            }
+        }
+        
+        public double value(fabric.worker.metrics.StatsMap weakStats) {
             return fabric.metrics.SampledMetric._Impl.
-              static_samples((fabric.metrics.SampledMetric) this.$getProxy(),
-                             weakStats);
+              static_value((fabric.metrics.SampledMetric) this.$getProxy(),
+                           weakStats);
         }
         
-        private static long static_samples(
+        private static double static_value(
           fabric.metrics.SampledMetric tmp,
           fabric.worker.metrics.StatsMap weakStats) {
-            if (weakStats.containsKey(tmp)) return weakStats.getSamples(tmp);
-            long result = 0;
+            if (weakStats.containsKey(tmp)) return weakStats.getValue(tmp);
+            double result = 0;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                result = tmp.computeSamples(weakStats);
+                result = tmp.computeValue(weakStats);
             }
             else {
                 {
-                    long result$var299 = result;
+                    double result$var299 = result;
                     fabric.worker.transaction.TransactionManager $tm305 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
@@ -1684,7 +1577,7 @@ public interface SampledMetric extends fabric.metrics.Metric {
                         $commit301 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
-                        try { result = tmp.computeSamples(weakStats); }
+                        try { result = tmp.computeValue(weakStats); }
                         catch (final fabric.worker.RetryException $e303) {
                             $commit301 = false;
                             continue $label300;
@@ -1771,20 +1664,20 @@ public interface SampledMetric extends fabric.metrics.Metric {
             return result;
         }
         
-        public long lastUpdate(fabric.worker.metrics.StatsMap weakStats) {
+        public long samples(fabric.worker.metrics.StatsMap weakStats) {
             return fabric.metrics.SampledMetric._Impl.
-              static_lastUpdate((fabric.metrics.SampledMetric) this.$getProxy(),
-                                weakStats);
+              static_samples((fabric.metrics.SampledMetric) this.$getProxy(),
+                             weakStats);
         }
         
-        private static long static_lastUpdate(
+        private static long static_samples(
           fabric.metrics.SampledMetric tmp,
           fabric.worker.metrics.StatsMap weakStats) {
-            if (weakStats.containsKey(tmp)) return weakStats.getLastUpdate(tmp);
+            if (weakStats.containsKey(tmp)) return weakStats.getSamples(tmp);
             long result = 0;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                result = tmp.computeLastUpdate(weakStats);
+                result = tmp.computeSamples(weakStats);
             }
             else {
                 {
@@ -1819,7 +1712,7 @@ public interface SampledMetric extends fabric.metrics.Metric {
                         $commit311 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
-                        try { result = tmp.computeLastUpdate(weakStats); }
+                        try { result = tmp.computeSamples(weakStats); }
                         catch (final fabric.worker.RetryException $e313) {
                             $commit311 = false;
                             continue $label310;
@@ -1906,25 +1799,24 @@ public interface SampledMetric extends fabric.metrics.Metric {
             return result;
         }
         
-        public double updateInterval(fabric.worker.metrics.StatsMap weakStats) {
+        public long lastUpdate(fabric.worker.metrics.StatsMap weakStats) {
             return fabric.metrics.SampledMetric._Impl.
-              static_updateInterval((fabric.metrics.SampledMetric)
-                                      this.$getProxy(), weakStats);
+              static_lastUpdate((fabric.metrics.SampledMetric) this.$getProxy(),
+                                weakStats);
         }
         
-        private static double static_updateInterval(
+        private static long static_lastUpdate(
           fabric.metrics.SampledMetric tmp,
           fabric.worker.metrics.StatsMap weakStats) {
-            if (weakStats.containsKey(tmp))
-                return weakStats.getUpdateInterval(tmp);
-            double result = 0;
+            if (weakStats.containsKey(tmp)) return weakStats.getLastUpdate(tmp);
+            long result = 0;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                result = tmp.computeUpdateInterval(weakStats);
+                result = tmp.computeLastUpdate(weakStats);
             }
             else {
                 {
-                    double result$var319 = result;
+                    long result$var319 = result;
                     fabric.worker.transaction.TransactionManager $tm325 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
@@ -1955,7 +1847,7 @@ public interface SampledMetric extends fabric.metrics.Metric {
                         $commit321 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
-                        try { result = tmp.computeUpdateInterval(weakStats); }
+                        try { result = tmp.computeLastUpdate(weakStats); }
                         catch (final fabric.worker.RetryException $e323) {
                             $commit321 = false;
                             continue $label320;
@@ -2042,20 +1934,21 @@ public interface SampledMetric extends fabric.metrics.Metric {
             return result;
         }
         
-        public double velocity(fabric.worker.metrics.StatsMap weakStats) {
+        public double updateInterval(fabric.worker.metrics.StatsMap weakStats) {
             return fabric.metrics.SampledMetric._Impl.
-              static_velocity((fabric.metrics.SampledMetric) this.$getProxy(),
-                              weakStats);
+              static_updateInterval((fabric.metrics.SampledMetric)
+                                      this.$getProxy(), weakStats);
         }
         
-        private static double static_velocity(
+        private static double static_updateInterval(
           fabric.metrics.SampledMetric tmp,
           fabric.worker.metrics.StatsMap weakStats) {
-            if (weakStats.containsKey(tmp)) return weakStats.getVelocity(tmp);
+            if (weakStats.containsKey(tmp))
+                return weakStats.getUpdateInterval(tmp);
             double result = 0;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                result = tmp.computeVelocity(weakStats);
+                result = tmp.computeUpdateInterval(weakStats);
             }
             else {
                 {
@@ -2090,7 +1983,7 @@ public interface SampledMetric extends fabric.metrics.Metric {
                         $commit331 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
-                        try { result = tmp.computeVelocity(weakStats); }
+                        try { result = tmp.computeUpdateInterval(weakStats); }
                         catch (final fabric.worker.RetryException $e333) {
                             $commit331 = false;
                             continue $label330;
@@ -2177,20 +2070,20 @@ public interface SampledMetric extends fabric.metrics.Metric {
             return result;
         }
         
-        public double noise(fabric.worker.metrics.StatsMap weakStats) {
+        public double velocity(fabric.worker.metrics.StatsMap weakStats) {
             return fabric.metrics.SampledMetric._Impl.
-              static_noise((fabric.metrics.SampledMetric) this.$getProxy(),
-                           weakStats);
+              static_velocity((fabric.metrics.SampledMetric) this.$getProxy(),
+                              weakStats);
         }
         
-        private static double static_noise(
+        private static double static_velocity(
           fabric.metrics.SampledMetric tmp,
           fabric.worker.metrics.StatsMap weakStats) {
-            if (weakStats.containsKey(tmp)) return weakStats.getNoise(tmp);
+            if (weakStats.containsKey(tmp)) return weakStats.getVelocity(tmp);
             double result = 0;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                result = tmp.computeNoise(weakStats);
+                result = tmp.computeVelocity(weakStats);
             }
             else {
                 {
@@ -2225,7 +2118,7 @@ public interface SampledMetric extends fabric.metrics.Metric {
                         $commit341 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
-                        try { result = tmp.computeNoise(weakStats); }
+                        try { result = tmp.computeVelocity(weakStats); }
                         catch (final fabric.worker.RetryException $e343) {
                             $commit341 = false;
                             continue $label340;
@@ -2312,6 +2205,141 @@ public interface SampledMetric extends fabric.metrics.Metric {
             return result;
         }
         
+        public double noise(fabric.worker.metrics.StatsMap weakStats) {
+            return fabric.metrics.SampledMetric._Impl.
+              static_noise((fabric.metrics.SampledMetric) this.$getProxy(),
+                           weakStats);
+        }
+        
+        private static double static_noise(
+          fabric.metrics.SampledMetric tmp,
+          fabric.worker.metrics.StatsMap weakStats) {
+            if (weakStats.containsKey(tmp)) return weakStats.getNoise(tmp);
+            double result = 0;
+            if (fabric.worker.transaction.TransactionManager.getInstance().
+                  inTxn()) {
+                result = tmp.computeNoise(weakStats);
+            }
+            else {
+                {
+                    double result$var349 = result;
+                    fabric.worker.transaction.TransactionManager $tm355 =
+                      fabric.worker.transaction.TransactionManager.getInstance(
+                                                                     );
+                    boolean $backoffEnabled358 =
+                      fabric.worker.Worker.getWorker().config.txRetryBackoff;
+                    int $backoff356 = 1;
+                    boolean $doBackoff357 = true;
+                    boolean $retry352 = true;
+                    $label350: for (boolean $commit351 = false; !$commit351; ) {
+                        if ($backoffEnabled358) {
+                            if ($doBackoff357) {
+                                if ($backoff356 > 32) {
+                                    while (true) {
+                                        try {
+                                            java.lang.Thread.sleep($backoff356);
+                                            break;
+                                        }
+                                        catch (java.lang.
+                                                 InterruptedException $e353) {
+                                            
+                                        }
+                                    }
+                                }
+                                if ($backoff356 < 5000) $backoff356 *= 2;
+                            }
+                            $doBackoff357 = $backoff356 <= 32 || !$doBackoff357;
+                        }
+                        $commit351 = true;
+                        fabric.worker.transaction.TransactionManager.
+                          getInstance().startTransaction();
+                        try { result = tmp.computeNoise(weakStats); }
+                        catch (final fabric.worker.RetryException $e353) {
+                            $commit351 = false;
+                            continue $label350;
+                        }
+                        catch (final fabric.worker.
+                                 TransactionRestartingException $e353) {
+                            $commit351 = false;
+                            fabric.common.TransactionID $currentTid354 =
+                              $tm355.getCurrentTid();
+                            if ($e353.tid.isDescendantOf($currentTid354))
+                                continue $label350;
+                            if ($currentTid354.parent != null) {
+                                $retry352 = false;
+                                throw $e353;
+                            }
+                            throw new InternalError(
+                                    "Something is broken with " +
+                                        "transaction management. Got a signal to restart a " +
+                                        "different transaction than the one being managed.");
+                        }
+                        catch (final fabric.worker.metrics.
+                                 LockConflictException $e353) {
+                            $commit351 = false;
+                            if ($tm355.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid354 =
+                              $tm355.getCurrentTid();
+                            if ($e353.tid.isDescendantOf($currentTid354)) {
+                                $retry352 = true;
+                            }
+                            else if ($currentTid354.parent != null) {
+                                $retry352 = false;
+                                throw $e353;
+                            }
+                            else {
+                                throw new InternalError(
+                                        "Something is broken with transaction " +
+                                            "management. Got a signal for a lock conflict in a different " +
+                                            "transaction than the one being managed.");
+                            }
+                        }
+                        catch (final Throwable $e353) {
+                            $commit351 = false;
+                            if ($tm355.checkForStaleObjects())
+                                continue $label350;
+                            $retry352 = false;
+                            throw new fabric.worker.AbortException($e353);
+                        }
+                        finally {
+                            if ($commit351) {
+                                try {
+                                    fabric.worker.transaction.TransactionManager.
+                                      getInstance().commitTransaction();
+                                }
+                                catch (final fabric.worker.
+                                         AbortException $e353) {
+                                    $commit351 = false;
+                                }
+                                catch (final fabric.worker.
+                                         TransactionRestartingException $e353) {
+                                    $commit351 = false;
+                                    fabric.common.TransactionID $currentTid354 =
+                                      $tm355.getCurrentTid();
+                                    if ($currentTid354 != null) {
+                                        if ($e353.tid.equals($currentTid354) ||
+                                              !$e353.tid.isDescendantOf(
+                                                           $currentTid354)) {
+                                            throw $e353;
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                fabric.worker.transaction.TransactionManager.
+                                  getInstance().abortTransaction();
+                            }
+                            if (!$commit351 && $retry352) {
+                                { result = result$var349; }
+                                continue $label350;
+                            }
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+        
         public fabric.worker.metrics.ImmutableObserverSet handleDirectUpdates(
           ) {
             throw new fabric.common.exceptions.InternalError(
@@ -2337,7 +2365,7 @@ public interface SampledMetric extends fabric.metrics.Metric {
                                java.util.List interStoreRefs)
               throws java.io.IOException {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
-            $writeInline(out, this.name);
+            out.writeLong(this.key);
             out.writeDouble(this.presetR);
             out.writeDouble(this.presetB);
             out.writeDouble(this.presetV);
@@ -2359,7 +2387,7 @@ public interface SampledMetric extends fabric.metrics.Metric {
             super(store, onum, version, observers, treaties, labelStore,
                   labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
-            this.name = (java.lang.String) in.readObject();
+            this.key = in.readLong();
             this.presetR = in.readDouble();
             this.presetB = in.readDouble();
             this.presetV = in.readDouble();
@@ -2372,7 +2400,7 @@ public interface SampledMetric extends fabric.metrics.Metric {
             super.$copyAppStateFrom(other);
             fabric.metrics.SampledMetric._Impl src =
               (fabric.metrics.SampledMetric._Impl) other;
-            this.name = src.name;
+            this.key = src.key;
             this.presetR = src.presetR;
             this.presetB = src.presetB;
             this.presetV = src.presetV;
@@ -2448,11 +2476,11 @@ public interface SampledMetric extends fabric.metrics.Metric {
         
     }
     
-    public static final byte[] $classHash = new byte[] { 117, -124, -60, 85, 14,
-    100, -78, 48, -5, 113, 88, -27, -30, -67, -57, 53, -16, -126, -50, -91, 95,
-    -49, -104, 12, -81, 27, -49, 126, -42, -72, 86, 16 };
+    public static final byte[] $classHash = new byte[] { -83, -87, -11, -123,
+    86, -26, 24, 45, -5, 59, -17, 6, -17, 120, 110, 41, 32, -9, 69, 0, 48, 25,
+    29, 9, 49, 11, -69, 0, -60, 104, -49, -12 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1528903876000L;
+    public static final long jlc$SourceLastModified$fabil = 1529351482000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }
