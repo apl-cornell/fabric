@@ -12,10 +12,12 @@ public class DelayedExtension implements Delayed {
 
   public final long time;
   public final long onum;
+  public final long treatyId;
 
-  public DelayedExtension(long time, long onum) {
+  public DelayedExtension(long time, long onum, long treatyId) {
     this.time = time;
     this.onum = onum;
+    this.treatyId = treatyId;
   }
 
   @Override
@@ -40,6 +42,7 @@ public class DelayedExtension implements Delayed {
       return false;
     }
     DelayedExtension that = (DelayedExtension) o;
-    return this.time == that.time && this.onum == that.onum;
+    return this.time == that.time && this.onum == that.onum
+        && this.treatyId == that.treatyId;
   }
 }
