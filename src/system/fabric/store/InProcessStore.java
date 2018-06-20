@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -18,7 +17,6 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
-import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
@@ -106,8 +104,8 @@ public class InProcessStore extends RemoteStore {
       final LongKeyMap<Pair<Integer, TreatySet>> reads,
       final Collection<_Impl> writes,
       final Collection<ExpiryExtension> extensions,
-      final LongKeyMap<Set<Oid>> extensionsTriggered,
-      final LongSet delayedExtensions) {
+      final LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
+      final LongKeyMap<LongSet> delayedExtensions) {
     Threading.getPool().submit(new Runnable() {
       @Override
       public void run() {
@@ -202,7 +200,7 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void sendExtensions(LongSet extensions,
+  public void sendExtensions(LongKeyMap<LongSet> extensions,
       Map<RemoteStore, Collection<SerializedObject>> updates) {
     tm.queueExtensions(extensions);
   }

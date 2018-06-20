@@ -14,6 +14,8 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
@@ -27,9 +29,9 @@ public class TreatyExtensionMessage extends AsyncMessage {
   /* message contents */
 
   /**
-   * The extensions to be run (onums)
+   * The extensions to be run (onums -> treaty ids)
    */
-  public final LongSet extensions;
+  public final LongKeyMap<LongSet> extensions;
 
   /**
    * The various updated values that sparked these extensions.
@@ -39,7 +41,7 @@ public class TreatyExtensionMessage extends AsyncMessage {
   /**
    * Used to refresh expiries of treaties.
    */
-  public TreatyExtensionMessage(LongSet extensions,
+  public TreatyExtensionMessage(LongKeyMap<LongSet> extensions,
       Map<RemoteStore, Collection<SerializedObject>> updates) {
     super(MessageType.TREATY_EXTENSION);
     this.extensions = extensions;
@@ -56,8 +58,12 @@ public class TreatyExtensionMessage extends AsyncMessage {
   protected void writeMessage(DataOutput out) throws IOException {
     // Serialize onum.
     out.writeInt(extensions.size());
-    for (LongIterator it = extensions.iterator(); it.hasNext();) {
-      out.writeLong(it.next());
+    for (LongKeyMap.Entry<LongSet> e : extensions.entrySet()) {
+      out.writeLong(e.getKey());
+      out.writeInt(e.getValue().size());
+      for (LongIterator iter = e.getValue().iterator(); iter.hasNext();) {
+        out.writeLong(iter.next());
+      }
     }
 
     out.writeInt(updates.size());
@@ -75,10 +81,15 @@ public class TreatyExtensionMessage extends AsyncMessage {
   protected TreatyExtensionMessage(DataInput in) throws IOException {
     super(MessageType.TREATY_EXTENSION);
     int size = in.readInt();
-    extensions = new LongHashSet(size);
+    extensions = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++) {
       long onum = in.readLong();
-      extensions.add(onum);
+      int size2 = in.readInt();
+      LongSet treaties = new LongHashSet(size2);
+      for (int j = 0; j < size2; j++) {
+        treaties.add(in.readLong());
+      }
+      extensions.put(onum, treaties);
     }
 
     size = in.readInt();

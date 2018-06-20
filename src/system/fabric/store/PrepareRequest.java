@@ -7,7 +7,6 @@ import static fabric.store.db.ObjectDB.UpdateMode.WRITE;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -17,7 +16,6 @@ import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
-import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.security.Principal;
@@ -350,20 +348,21 @@ public final class PrepareRequest {
    * The delayed extensions triggered by this transaction.
    * Maps onums being committed to oids that will be extended.
    */
-  public final LongKeyMap<Set<Oid>> extensionsTriggered;
+  public final LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered;
 
   /**
    * The delayed extensions with no trigger that should run at the store after
    * this commits.
    */
-  public final LongSet delayedExtensions;
+  public final LongKeyMap<LongSet> delayedExtensions;
 
   /** Create a PrepareRequest with the provided fields */
   public PrepareRequest(long tid, Collection<SerializedObject> creates,
       Collection<SerializedObject> writes,
       LongKeyMap<Pair<Integer, TreatySet>> reads,
       Collection<ExpiryExtension> extensions,
-      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions) {
+      LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
+      LongKeyMap<LongSet> delayedExtensions) {
     this.tid = tid;
     this.reads = reads;
     this.extensions = extensions;

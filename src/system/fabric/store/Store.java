@@ -11,7 +11,6 @@ import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
@@ -40,7 +39,6 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
-import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
@@ -414,7 +412,8 @@ class Store extends MessageToStoreHandler {
       Collection<SerializedObject> serializedWrites,
       LongKeyMap<Pair<Integer, TreatySet>> reads,
       Collection<ExpiryExtension> extensions,
-      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions)
+      LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
+      LongKeyMap<LongSet> delayedExtensions)
       throws TransactionPrepareFailedException {
 
     PrepareRequest req =

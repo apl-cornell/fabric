@@ -14,7 +14,6 @@ import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
-import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
@@ -285,9 +284,10 @@ public class TransactionPrepare {
       Collection<_Impl> writes = txnLog.getWritesForStore(store);
       Collection<ExpiryExtension> extensions =
           txnLog.getExtensionsForStore(store);
-      LongKeyMap<Set<Oid>> extensionsTriggered =
+      LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered =
           txnLog.getTriggeredExtensionsForStore(store);
-      LongSet delayedExtensions = txnLog.getDelayedExtensionsForStore(store);
+      LongKeyMap<LongSet> delayedExtensions =
+          txnLog.getDelayedExtensionsForStore(store);
       outstandingStores.put(store, true);
       WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending prepare to {1}",
           new Object[] { txnLog, store });

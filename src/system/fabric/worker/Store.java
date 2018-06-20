@@ -3,14 +3,13 @@ package fabric.worker;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
-import fabric.common.util.Oid;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
@@ -44,8 +43,8 @@ public interface Store extends Serializable {
       long expiryToCheck, Collection<_Impl> toCreate,
       LongKeyMap<Pair<Integer, TreatySet>> reads, Collection<_Impl> writes,
       Collection<ExpiryExtension> extensions,
-      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions)
-      throws UnreachableNodeException;
+      LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
+      LongKeyMap<LongSet> delayedExtensions) throws UnreachableNodeException;
 
   /**
    * Creates a new cache entry for the given _Impl.
@@ -157,7 +156,7 @@ public interface Store extends Serializable {
   /**
    * Send extensions to handle.
    */
-  public void sendExtensions(LongSet extensions,
+  public void sendExtensions(LongKeyMap<LongSet> extensions,
       Map<RemoteStore, Collection<SerializedObject>> updates);
 
   /**

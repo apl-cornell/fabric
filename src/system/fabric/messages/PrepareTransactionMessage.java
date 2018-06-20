@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.ProtocolError;
@@ -17,7 +15,7 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
-import fabric.common.util.Oid;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
@@ -95,12 +93,12 @@ public class PrepareTransactionMessage extends AsyncMessage {
   /**
    * The extensions that will be triggered if the updates commit.
    */
-  public final LongKeyMap<Set<Oid>> extensionsTriggered;
+  public final LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered;
 
   /**
    * Triggerless extensions.
    */
-  public final LongSet delayedExtensions;
+  public final LongKeyMap<LongSet> delayedExtensions;
 
   /**
    * Used to prepare transactions at remote workers.
@@ -116,7 +114,8 @@ public class PrepareTransactionMessage extends AsyncMessage {
       boolean readOnly, long expiryToCheck, Collection<_Impl> toCreate,
       LongKeyMap<Pair<Integer, TreatySet>> reads, Collection<_Impl> writes,
       Collection<ExpiryExtension> extensions,
-      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions) {
+      LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
+      LongKeyMap<LongSet> delayedExtensions) {
     super(MessageType.PREPARE_TRANSACTION);
 
     this.tid = tid;
@@ -208,12 +207,21 @@ public class PrepareTransactionMessage extends AsyncMessage {
       out.writeInt(0);
     } else {
       out.writeInt(extensionsTriggered.size());
-      for (LongKeyMap.Entry<Set<Oid>> e : extensionsTriggered.entrySet()) {
+      for (LongKeyMap.Entry<OidKeyHashMap<LongSet>> e : extensionsTriggered
+          .entrySet()) {
         out.writeLong(e.getKey());
-        out.writeInt(e.getValue().size());
-        for (Oid o : e.getValue()) {
-          out.writeUTF(o.store.name());
-          out.writeLong(o.onum);
+        out.writeInt(e.getValue().storeSet().size());
+        for (Store s : e.getValue().storeSet()) {
+          out.writeUTF(s.name());
+          out.writeInt(e.getValue().get(s).size());
+          for (LongKeyMap.Entry<LongSet> e2 : e.getValue().get(s).entrySet()) {
+            out.writeLong(e2.getKey());
+            out.writeInt(e2.getValue().size());
+            for (LongIterator iter = e2.getValue().iterator(); iter
+                .hasNext();) {
+              out.writeLong(iter.next());
+            }
+          }
         }
       }
     }
@@ -223,8 +231,12 @@ public class PrepareTransactionMessage extends AsyncMessage {
       out.writeInt(0);
     } else {
       out.writeInt(delayedExtensions.size());
-      for (LongIterator it = delayedExtensions.iterator(); it.hasNext();) {
-        out.writeLong(it.next());
+      for (LongKeyMap.Entry<LongSet> e : delayedExtensions.entrySet()) {
+        out.writeLong(e.getKey());
+        out.writeInt(e.getValue().size());
+        for (LongIterator it = e.getValue().iterator(); it.hasNext();) {
+          out.writeLong(it.next());
+        }
       }
     }
   }
@@ -297,20 +309,34 @@ public class PrepareTransactionMessage extends AsyncMessage {
     for (int i = 0; i < size; i++) {
       long key = in.readLong();
       int size2 = in.readInt();
-      Set<Oid> value = new HashSet<>(size2);
+      OidKeyHashMap<LongSet> value = new OidKeyHashMap<>();
       for (int j = 0; j < size2; j++) {
         Store s = Worker.getWorker().getStore(in.readUTF());
-        long onum = in.readLong();
-        value.add(new Oid(s, onum));
+        int size3 = in.readInt();
+        for (int k = 0; k < size3; k++) {
+          long onum = in.readLong();
+          int size4 = in.readInt();
+          LongSet treaties = new LongHashSet(size4);
+          for (int l = 0; l < size4; l++) {
+            treaties.add(in.readLong());
+          }
+          value.put(s, onum, treaties);
+        }
       }
       extensionsTriggered.put(key, value);
     }
 
     // Read other extensions
     size = in.readInt();
-    this.delayedExtensions = new LongHashSet(size);
+    this.delayedExtensions = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++) {
-      delayedExtensions.add(in.readLong());
+      long onum = in.readLong();
+      int size2 = in.readInt();
+      LongSet treaties = new LongHashSet(size2);
+      for (int j = 0; j < size2; j++) {
+        treaties.add(in.readLong());
+      }
+      this.delayedExtensions.put(onum, treaties);
     }
   }
 }

@@ -1109,7 +1109,7 @@ public final class TransactionManager {
       synchronized (current.extendedTreaties) {
         current.extendedTreaties.remove(obj);
       }
-      current.cancelDelayedExtension(obj);
+      current.cancelDelayedExtensions(obj);
     } finally {
       Timing.TXLOG.end();
     }
@@ -1218,7 +1218,7 @@ public final class TransactionManager {
       synchronized (current.extendedTreaties) {
         clobberedExtension = current.extendedTreaties.remove(obj);
       }
-      current.cancelDelayedExtension(obj);
+      current.cancelDelayedExtensions(obj);
       if (obj.$writer == current
           && obj.writerMapVersion == current.writerMap.version
           && obj.$isOwned) {
@@ -1259,7 +1259,7 @@ public final class TransactionManager {
         synchronized (current.extendedTreaties) {
           clobberedExtension = current.extendedTreaties.remove(obj);
         }
-        current.cancelDelayedExtension(obj);
+        current.cancelDelayedExtensions(obj);
       }
 
       if (obj.$writer == current
@@ -1505,7 +1505,7 @@ public final class TransactionManager {
    * enables this extension.
    */
   public void registerDelayedExtension(fabric.lang.Object toBeExtended,
-      fabric.lang.Object extendingObject) {
+      long treatyId, fabric.lang.Object extendingObject) {
     _Impl obj = (_Impl) toBeExtended.fetch();
     synchronized (obj) {
       synchronized (current.writes) {
@@ -1518,7 +1518,7 @@ public final class TransactionManager {
         if (current.extendedTreaties.containsKey(obj)) return;
       }
       synchronized (current.delayedExtensions) {
-        current.addDelayedExtension(toBeExtended, extendingObject);
+        current.addDelayedExtension(toBeExtended, treatyId, extendingObject);
       }
     }
   }
@@ -1528,7 +1528,8 @@ public final class TransactionManager {
    * expiration.  This will be done by sending an extension message after the
    * transaction completes.
    */
-  public void registerDelayedExtension(fabric.lang.Object toBeExtended) {
+  public void registerDelayedExtension(fabric.lang.Object toBeExtended,
+      long treatyId) {
     _Impl obj = (_Impl) toBeExtended.fetch();
     synchronized (obj) {
       synchronized (current.writes) {
@@ -1541,7 +1542,7 @@ public final class TransactionManager {
         if (current.extendedTreaties.containsKey(obj)) return;
       }
       synchronized (current.delayedExtensions) {
-        current.addDelayedExtension(toBeExtended);
+        current.addDelayedExtension(toBeExtended, treatyId);
       }
     }
   }

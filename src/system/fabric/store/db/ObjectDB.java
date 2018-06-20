@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -25,6 +24,7 @@ import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
@@ -138,10 +138,11 @@ public abstract class ObjectDB {
 
     /**
      * Extensions that this will trigger.
-     * Pair is first onums on the store to be extended, second the onums for
-     * values here that should be shipped with the extension message.
+     * Pair is first onums and associated treaty ids on the store to be
+     * extended, second the onums for values here that should be shipped with
+     * the extension message.
      */
-    private final Map<Store, Pair<LongSet, LongSet>> extensionsTriggered;
+    private final Map<Store, Pair<LongKeyMap<LongSet>, LongSet>> extensionsTriggered;
 
     PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
@@ -201,10 +202,16 @@ public abstract class ObjectDB {
           Store s = Worker.getWorker().getStore(in.readUTF());
           int onumsSize = in.readInt();
           int updatesSize = in.readInt();
-          extensionsTriggered.put(s, new Pair<LongSet, LongSet>(
-              new LongHashSet(onumsSize), new LongHashSet(updatesSize)));
+          extensionsTriggered.put(s, new Pair<LongKeyMap<LongSet>, LongSet>(
+              new LongKeyHashMap<>(onumsSize), new LongHashSet(updatesSize)));
           for (int j = 0; j < onumsSize; j++) {
-            extensionsTriggered.get(s).first.add(in.readLong());
+            long onum = in.readLong();
+            int treatiesSize = in.readInt();
+            LongSet treaties = new LongHashSet(treatiesSize);
+            for (int k = 0; k < treatiesSize; k++) {
+              treaties.add(in.readLong());
+            }
+            extensionsTriggered.get(s).first.put(onum, treaties);
           }
           for (int j = 0; j < updatesSize; j++) {
             extensionsTriggered.get(s).second.add(in.readLong());
@@ -267,11 +274,16 @@ public abstract class ObjectDB {
 
       for (Store s : extensionsTriggered.keySet()) {
         out.writeUTF(s.name());
-        Pair<LongSet, LongSet> sub = extensionsTriggered.get(s);
+        Pair<LongKeyMap<LongSet>, LongSet> sub = extensionsTriggered.get(s);
         out.writeInt(sub.first.size());
         out.writeInt(sub.second.size());
-        for (LongIterator it = sub.first.iterator(); it.hasNext();) {
-          out.writeLong(it.next());
+        for (LongKeyMap.Entry<LongSet> subEntry : sub.first.entrySet()) {
+          out.writeLong(subEntry.getKey());
+          out.writeInt(subEntry.getValue().size());
+          for (LongIterator iter = subEntry.getValue().iterator(); iter
+              .hasNext();) {
+            out.writeLong(iter.next());
+          }
         }
         for (LongIterator it = sub.second.iterator(); it.hasNext();) {
           out.writeLong(it.next());
@@ -511,32 +523,35 @@ public abstract class ObjectDB {
     /**
      * Add a triggered extension.
      */
-    public synchronized void addTriggeredExtension(long trigger, Oid triggered)
-        throws TransactionPrepareFailedException {
+    public synchronized void addTriggeredExtension(long trigger, Oid triggered,
+        LongSet treaties) throws TransactionPrepareFailedException {
       if (state == State.ABORTING) throw new TransactionPrepareFailedException(
           "Trying to add an extension for an aborting transaction.");
       // Don't freak out on prepared, this is called to deserialize in BdbDB
       if (!extensionsTriggered.containsKey(triggered.store)) {
         extensionsTriggered.put(triggered.store,
-            new Pair<LongSet, LongSet>(new LongHashSet(), new LongHashSet()));
+            new Pair<LongKeyMap<LongSet>, LongSet>(new LongKeyHashMap<>(),
+                new LongHashSet()));
       }
-      extensionsTriggered.get(triggered.store).first.add(triggered.onum);
+      extensionsTriggered.get(triggered.store).first.put(triggered.onum,
+          treaties);
       extensionsTriggered.get(triggered.store).second.add(trigger);
     }
 
     /**
      * Add a triggerless triggered extension.
      */
-    public synchronized void addTriggeredExtension(long triggered)
-        throws TransactionPrepareFailedException {
+    public synchronized void addTriggeredExtension(long triggered,
+        LongSet treaties) throws TransactionPrepareFailedException {
       if (state == State.ABORTING) throw new TransactionPrepareFailedException(
           "Trying to add an extension for an aborting transaction.");
       Store curStore = Worker.getWorker().getStore(Worker.getWorkerName());
       if (!extensionsTriggered.containsKey(curStore)) {
         extensionsTriggered.put(curStore,
-            new Pair<LongSet, LongSet>(new LongHashSet(), new LongHashSet()));
+            new Pair<LongKeyMap<LongSet>, LongSet>(new LongKeyHashMap<>(),
+                new LongHashSet()));
       }
-      extensionsTriggered.get(curStore).first.add(triggered);
+      extensionsTriggered.get(curStore).first.put(triggered, treaties);
     }
 
     /**
@@ -570,7 +585,7 @@ public abstract class ObjectDB {
     /**
      * @return the extensionsTriggered
      */
-    public Map<Store, Pair<LongSet, LongSet>> getExtensionsTriggered() {
+    public Map<Store, Pair<LongKeyMap<LongSet>, LongSet>> getExtensionsTriggered() {
       return extensionsTriggered;
     }
   }
@@ -846,22 +861,26 @@ public abstract class ObjectDB {
    *          the worker preparing the create/write.
    */
   public final void prepareDelayedExtensions(long tid, Principal worker,
-      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions)
+      LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
+      LongKeyMap<LongSet> delayedExtensions)
       throws TransactionPrepareFailedException {
     // Record the extension triggering object, updating maps of triggered values
     // to updates. Doing so will also register that the transaction has locked
     // the object.
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    for (LongIterator it = extensionsTriggered.keySet().iterator(); it
-        .hasNext();) {
-      long onum = it.next();
-      for (Oid o : extensionsTriggered.get(onum)) {
-        submap.get(worker).addTriggeredExtension(onum, o);
+    for (LongKeyMap.Entry<OidKeyHashMap<LongSet>> e : extensionsTriggered
+        .entrySet()) {
+      long onum = e.getKey();
+      for (Store s : e.getValue().storeSet()) {
+        for (LongKeyMap.Entry<LongSet> e2 : e.getValue().get(s).entrySet()) {
+          submap.get(worker).addTriggeredExtension(onum,
+              new Oid(s, e2.getKey()), e2.getValue());
+        }
       }
     }
     // Add the extensions to trigger on this store with no trigger objects.
-    for (LongIterator it = delayedExtensions.iterator(); it.hasNext();) {
-      submap.get(worker).addTriggeredExtension(it.next());
+    for (LongKeyMap.Entry<LongSet> e : delayedExtensions.entrySet()) {
+      submap.get(worker).addTriggeredExtension(e.getKey(), e.getValue());
     }
   }
 
@@ -1046,10 +1065,10 @@ public abstract class ObjectDB {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     synchronized (submap) {
       for (PendingTransaction p : submap.values()) {
-        for (final Map.Entry<Store, Pair<LongSet, LongSet>> e : p.extensionsTriggered
+        for (final Map.Entry<Store, Pair<LongKeyMap<LongSet>, LongSet>> e : p.extensionsTriggered
             .entrySet()) {
           Store s = e.getKey();
-          LongSet delayedOnums = e.getValue().first;
+          LongKeyMap<LongSet> delayedTreaties = e.getValue().first;
           LongSet updatedOnums = e.getValue().second;
           Map<RemoteStore, Collection<SerializedObject>> updates =
               new HashMap<>();
@@ -1064,7 +1083,7 @@ public abstract class ObjectDB {
             updates.put(Worker.getWorker().getStore(Worker.getWorkerName()),
                 updateVals);
           }
-          s.sendExtensions(delayedOnums, updates);
+          s.sendExtensions(delayedTreaties, updates);
         }
       }
     }
