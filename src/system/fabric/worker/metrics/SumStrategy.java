@@ -6,13 +6,14 @@ import java.util.Arrays;
 import java.util.logging.Level;
 
 import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.analysis.solvers.BrentSolver;
 import org.apache.commons.math3.optim.InitialGuess;
 import org.apache.commons.math3.optim.MaxEval;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 import org.apache.commons.math3.optim.univariate.BrentOptimizer;
 import org.apache.commons.math3.optim.univariate.SearchInterval;
 import org.apache.commons.math3.optim.univariate.UnivariateObjectiveFunction;
+
+import fabric.metrics.Metric;
 
 /**
  * Class for encapsulating all of the optimization math for doing an optimal
@@ -72,15 +73,10 @@ public class SumStrategy {
         @Override
         public double value(double a) {
           double vHat = v1 + v2 - (r1 + r2);
-          return (
-                a * a * (slack + (n * s1 / vHat) - a) *
-                Math.exp((2.0 / n) *
-                  (((s1 + s2) * vHat) / (s1 * s2)) *
-                  (a - ((s1 * slack) / (s1 + s2))))
-              ) - (
-                (a - slack) *
-                (a - slack) * (a + (n * s2 / vHat))
-              );
+          return (a * a * (slack + (n * s1 / vHat) - a)
+              * Math.exp((2.0 / n) * (((s1 + s2) * vHat) / (s1 * s2))
+                  * (a - ((s1 * slack) / (s1 + s2)))))
+              - ((a - slack) * (a - slack) * (a + (n * s2 / vHat)));
         }
       };
     }
@@ -265,14 +261,14 @@ public class SumStrategy {
 
         // Use relative tol of 1e-6 and absolute of 1e-6
         BrentOptimizer optimizer = new BrentOptimizer(1e-6, 1e-6);
-        result[i] = optimizer.optimize(
-            new UnivariateObjectiveFunction(createEquality(v1, r1, s1,
-                totalVelocity, totalRate, totalNoise, slackRemaining)),
-            new MaxEval(Integer.MAX_VALUE), GoalType.MINIMIZE,
-            new SearchInterval(0, slackRemaining),
-            new InitialGuess(
-              new double[] { slackRemaining / itemsLeft }
-              )).getPoint();
+        result[i] = optimizer
+            .optimize(
+                new UnivariateObjectiveFunction(createEquality(v1, r1, s1,
+                    totalVelocity, totalRate, totalNoise, slackRemaining)),
+                new MaxEval(Integer.MAX_VALUE), GoalType.MINIMIZE,
+                new SearchInterval(0, slackRemaining),
+                new InitialGuess(new double[] { slackRemaining / itemsLeft }))
+            .getPoint();
         slackRemaining -= result[i];
         itemsLeft--;
       }
@@ -285,6 +281,21 @@ public class SumStrategy {
               + ", " + slack + " got " + Arrays.toString(result));
     }
     return result;
+  }
+
+  /**
+   * Utility to allow for easier conversion from metrics to a split of slack.
+   */
+  public static double[] getSplit(Metric[] metrics, double slack) {
+    double[] velocities = new double[metrics.length];
+    double[] noises = new double[metrics.length];
+    double[] rates = new double[metrics.length];
+    for (int i = 0; i < metrics.length; i++) {
+      velocities[i] = metrics[i].velocity();
+      noises[i] = metrics[i].noise();
+      rates[i] = 0; // We're assuming nobody's doing a nonzero rate.
+    }
+    return getSplit(velocities, noises, rates, slack);
   }
 
   /**
@@ -352,14 +363,14 @@ public class SumStrategy {
 
         // Use relative tol of 1e-6 and absolute of 1e-6
         BrentOptimizer optimizer = new BrentOptimizer(1e-6, 1e-6);
-        result[i] = optimizer.optimize(
-            new UnivariateObjectiveFunction(createEquality(v1, r1, s1,
-                totalVelocity, totalRate, totalNoise, slackRemaining)),
-            new MaxEval(Integer.MAX_VALUE), GoalType.MINIMIZE,
-            new SearchInterval(0, slackRemaining),
-            new InitialGuess(
-              new double[] { slackRemaining / itemsLeft }
-              )).getPoint();
+        result[i] = optimizer
+            .optimize(
+                new UnivariateObjectiveFunction(createEquality(v1, r1, s1,
+                    totalVelocity, totalRate, totalNoise, slackRemaining)),
+                new MaxEval(Integer.MAX_VALUE), GoalType.MINIMIZE,
+                new SearchInterval(0, slackRemaining),
+                new InitialGuess(new double[] { slackRemaining / itemsLeft }))
+            .getPoint();
         slackRemaining -= result[i];
         itemsLeft--;
       }
