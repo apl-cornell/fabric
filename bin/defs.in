@@ -153,6 +153,7 @@ FABIL_BOOTCP="${TOP}/rt-classes"
 FABIL_BOOTCP="${FABIL_BOOTCP}:${TOP}/lib/fabric-rt.jar"
 FABIL_BOOTCP="${FABIL_BOOTCP}:${TOP}/classes"
 FABIL_BOOTCP="${FABIL_BOOTCP}:${TOP}/lib/fabric.jar"
+FABIL_BOOTCP="${FABIL_BOOTCP}:${COMMON_FABRIC_CP}"
 
 # JVM classpath for running a Fabric worker.
 # Jar files should always appear *after* their corresponding class directories.
