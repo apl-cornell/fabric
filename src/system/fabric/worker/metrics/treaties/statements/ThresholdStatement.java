@@ -3,7 +3,9 @@ package fabric.worker.metrics.treaties.statements;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.metrics.Metric;
 import fabric.worker.Store;
 import fabric.worker.metrics.StatsMap;
@@ -91,6 +93,9 @@ public class ThresholdStatement extends TreatyStatement {
         hedgedResult = Math.min(min, hedgedResult);
         // Fast path, a min point will be earlier than an intersect, if
         // it exists and is above the bound.
+        Logging.METRICS_LOGGER.log(Level.FINE,
+            "HEDGED ESTIMATE OF {0} >= {1} * t + {2} Expected: {3} BY {4}",
+            new Object[] { m, rate, base, hedgedResult, "minima" });
         return hedgedResult;
       }
     }
@@ -124,6 +129,9 @@ public class ThresholdStatement extends TreatyStatement {
       hedgedResult = Math.min(hedgedResult, ((long) (mb * mb / n)));
     }
 
+    Logging.METRICS_LOGGER.log(Level.FINE,
+        "HEDGED ESTIMATE OF {0} >= {1} * t + {2} Expected: {3} BY {4}",
+        new Object[] { m, rate, base, hedgedResult, "intersect" });
     return hedgedResult;
   }
 
@@ -214,7 +222,7 @@ public class ThresholdStatement extends TreatyStatement {
     } else if (rate <= 0) {
       return Long.MAX_VALUE;
     } else {
-      return (long) Math.floor((value - curBound) / rate);
+      return time + (long) Math.floor((value - curBound) / rate);
     }
   }
 
