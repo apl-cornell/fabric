@@ -1109,7 +1109,6 @@ public final class TransactionManager {
       synchronized (current.extendedTreaties) {
         current.extendedTreaties.remove(obj);
       }
-      current.cancelDelayedExtensions(obj);
     } finally {
       Timing.TXLOG.end();
     }
@@ -1218,7 +1217,6 @@ public final class TransactionManager {
       synchronized (current.extendedTreaties) {
         clobberedExtension = current.extendedTreaties.remove(obj);
       }
-      current.cancelDelayedExtensions(obj);
       if (obj.$writer == current
           && obj.writerMapVersion == current.writerMap.version
           && obj.$isOwned) {
@@ -1259,7 +1257,6 @@ public final class TransactionManager {
         synchronized (current.extendedTreaties) {
           clobberedExtension = current.extendedTreaties.remove(obj);
         }
-        current.cancelDelayedExtensions(obj);
       }
 
       if (obj.$writer == current
@@ -1545,6 +1542,27 @@ public final class TransactionManager {
         current.addDelayedExtension(toBeExtended, treatyId);
       }
     }
+  }
+
+  /**
+   * Register a treaty as being created.
+   */
+  public void registerTreatyCreation(fabric.lang.Object owner, long treatyId) {
+    if (current != null) current.markTreatyCreation(owner, treatyId);
+  }
+
+  /**
+   * Register a treaty as being retracted.
+   */
+  public void registerTreatyRetraction(fabric.lang.Object owner, long treatyId) {
+    if (current != null) current.markTreatyRetraction(owner, treatyId);
+  }
+
+  /**
+   * Register a treaty as being extended.
+   */
+  public void registerTreatyExtension(fabric.lang.Object owner, long treatyId) {
+    if (current != null) current.markTreatyExtension(owner, treatyId);
   }
 
   /**

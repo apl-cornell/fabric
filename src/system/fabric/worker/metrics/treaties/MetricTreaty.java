@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
+import fabric.common.util.Triple;
 import fabric.metrics.DerivedMetric;
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
@@ -69,6 +72,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = ImmutableObserverSet.emptySet();
     this.policy = NoPolicy.singleton;
     this.expiry = policy.calculateExpiry(this, StatsMap.emptyStats());
+    TransactionManager.getInstance().registerTreatyCreation(metric, id);
     Logging.METRICS_LOGGER.log(Level.FINEST, "CREATED TREATY {0} FOR {1}",
         new Object[] { this, getMetric() });
   }
@@ -264,21 +268,28 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
                   }
                 });
     MetricTreaty curTreaty = usingCur.first;
+    Pair<MetricTreaty, ImmutableObserverSet> result = null;
     switch (usingCur.second) {
     case NO_POLICY:
     case POLICY_BAD:
       if (!asyncExtension) {
-        return curTreaty.updateToNewPolicy(asyncExtension, weakStats);
+        result = curTreaty.updateToNewPolicy(asyncExtension, weakStats);
+        break;
       }
       // $FALL-THROUGH$
     case POLICY_GOOD:
-      return new Pair<>(curTreaty, ImmutableObserverSet.emptySet());
+      result = new Pair<>(curTreaty, ImmutableObserverSet.emptySet());
+      break;
     case POLICY_RETRACTED:
-      return new Pair<>(curTreaty, curTreaty.observers);
+      result = new Pair<>(curTreaty, curTreaty.observers);
+      break;
     }
-    // This shouldn't be possible
-    throw new InternalError(
-        "Bad result updating with the current policy for " + this);
+    if (result.first.expiry > expiry) {
+      result.first.markExtension();
+    } else if (result.first.expiry < expiry) {
+      result.first.markRetraction();
+    }
+    return result;
   }
 
   /* Return values for running update with current policy. */
@@ -300,8 +311,18 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     if (updatedCurExpiry < System.currentTimeMillis())
       return new Pair<>(this, CurPolicyResult.POLICY_BAD);
 
+    MetricTreaty updatedTreaty = this;
+    if ((updatedCurExpiry > this.expiry
+        && (this.expiry - System.currentTimeMillis() <= UPDATE_THRESHOLD))
+        || updatedCurExpiry < this.expiry) {
+      updatedTreaty = new MetricTreaty(this, updatedCurExpiry);
+    } else {
+      // It's an extension but too early, just mark this to be extended later.
+      TransactionManager.getInstance().registerDelayedExtension(getMetric(),
+          id);
+    }
+
     // Policy's still good, update and indicate if this was a retraction or not.
-    MetricTreaty updatedTreaty = new MetricTreaty(this, updatedCurExpiry);
     return new Pair<>(updatedTreaty,
         this.expiry > updatedTreaty.expiry ? CurPolicyResult.POLICY_RETRACTED
             : CurPolicyResult.POLICY_GOOD);
@@ -348,19 +369,38 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     // Check if the new policy works. Otherwise, this is dead.
     if (newExpiry >= System.currentTimeMillis()) {
       MetricTreaty updatedTreaty = new MetricTreaty(this, newPolicy, newExpiry);
-      return new Pair<>(updatedTreaty,
-          this.expiry > updatedTreaty.expiry ? updatedTreaty.observers
-              : ImmutableObserverSet.emptySet());
+      if (this.expiry > updatedTreaty.expiry) {
+        return new Pair<>(updatedTreaty, updatedTreaty.observers);
+      } else {
+        return new Pair<>(updatedTreaty, ImmutableObserverSet.emptySet());
+      }
     } else {
       // Run unapply to clean up the policy.
       newPolicy.unapply(this);
 
       MetricTreaty updatedTreaty =
           new MetricTreaty(this, NoPolicy.singleton, 0);
-      return new Pair<>(updatedTreaty,
-          this.expiry > updatedTreaty.expiry ? updatedTreaty.observers
-              : ImmutableObserverSet.emptySet());
+      if (this.expiry > updatedTreaty.expiry) {
+        return new Pair<>(updatedTreaty, updatedTreaty.observers);
+      } else {
+        return new Pair<>(updatedTreaty, ImmutableObserverSet.emptySet());
+      }
     }
+  }
+
+  private void markExtension() {
+    TransactionManager tm = TransactionManager.getInstance();
+    tm.registerTreatyExtension(getMetric(), id);
+    for (Triple<Observer._Proxy, Boolean, LongSet> obsGroup : observers) {
+      for (LongIterator iter = obsGroup.third.iterator(); iter.hasNext();) {
+        tm.registerDelayedExtension(obsGroup.first, iter.next(), getMetric());
+      }
+    }
+  }
+
+  private void markRetraction() {
+    TransactionManager tm = TransactionManager.getInstance();
+    tm.registerTreatyRetraction(getMetric(), id);
   }
 
   @Override

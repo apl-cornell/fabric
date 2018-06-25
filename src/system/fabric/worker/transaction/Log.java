@@ -159,6 +159,16 @@ public final class Log {
   protected final OidKeyHashMap<ExpiryExtension> extendedTreaties;
 
   /**
+   * Mapping of individal treaties which were modified (by mapping oid and then
+   * id), to the kind of modification being made to that treaty.
+   */
+  protected final OidKeyHashMap<LongKeyMap<TreatyUpdate>> treatyUpdates;
+
+  private static enum TreatyUpdate {
+    CREATE, EXTENSION, RETRACTION
+  }
+
+  /**
    * A collection of {@link Oid}s that have treaties that should be extended
    * after this transaction, mapping to the objects that trigger this possible
    * extension.
@@ -299,6 +309,7 @@ public final class Log {
     this.writes = new OidKeyHashMap<>();
     this.unobservedSamples = new OidKeyHashMap<>();
     this.extendedTreaties = new OidKeyHashMap<>();
+    this.treatyUpdates = new OidKeyHashMap<>();
     this.delayedExtensions = new OidKeyHashMap<>();
     this.extensionTriggers = new OidKeyHashMap<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
@@ -667,6 +678,7 @@ public final class Log {
       writes.clear();
       unobservedSamples.clear();
       extendedTreaties.clear();
+      treatyUpdates.clear();
       delayedExtensions.clear();
       extensionTriggers.clear();
       localStoreWrites.clear();
@@ -767,10 +779,6 @@ public final class Log {
     // Do this before writes and creates!
     for (Store s : extendedTreaties.storeSet()) {
       for (ExpiryExtension obs : extendedTreaties.get(s).values()) {
-        synchronized (parent.delayedExtensions) {
-          if (parent.markedForDelayedExtension(new Oid(s, obs.onum)))
-            parent.cancelDelayedExtensions(new Oid(s, obs.onum));
-        }
         // Check if the parent already plans to extend the treaties, if so,
         // update the mapping.
         synchronized (parent.extendedTreaties) {
@@ -820,6 +828,30 @@ public final class Log {
                 parent.addDelayedExtension(new Oid(s, onum), treatyId, trigger);
               }
             }
+          }
+        }
+      }
+    }
+
+    // Merge treaty updates.
+    for (Store s : treatyUpdates.storeSet()) {
+      for (LongKeyMap.Entry<LongKeyMap<TreatyUpdate>> e : treatyUpdates.get(s)
+          .entrySet()) {
+        long onum = e.getKey();
+        Oid oid = new Oid(s, onum);
+        LongKeyMap<TreatyUpdate> treatyMap = e.getValue();
+        for (LongKeyMap.Entry<TreatyUpdate> e2 : treatyMap.entrySet()) {
+          long treatyId = e.getKey();
+          TreatyUpdate update = e2.getValue();
+          switch (update) {
+          case CREATE:
+            parent.markTreatyCreation(oid, treatyId);
+            break;
+          case RETRACTION:
+            parent.markTreatyRetraction(oid, treatyId);
+            break;
+          case EXTENSION:
+            parent.markTreatyExtension(oid, treatyId);
           }
         }
       }
@@ -1262,6 +1294,11 @@ public final class Log {
   public void addDelayedExtension(Oid toBeExtended, long treatyId,
       Oid trigger) {
     synchronized (delayedExtensions) {
+      // Don't add if this is being updated otherwise in this transaction.
+      if (treatyUpdates.containsKey(toBeExtended)
+          && treatyUpdates.get(toBeExtended).containsKey(treatyId))
+        return;
+
       // Forward
       if (!delayedExtensions.containsKey(toBeExtended)) {
         delayedExtensions.put(toBeExtended, new LongKeyHashMap<>());
@@ -1308,6 +1345,11 @@ public final class Log {
    */
   public void addDelayedExtension(Oid toBeExtended, long treatyId) {
     synchronized (delayedExtensions) {
+      // Don't add if we're updating this treaty.
+      if (treatyUpdates.containsKey(toBeExtended)
+          && treatyUpdates.get(toBeExtended).containsKey(treatyId))
+        return;
+
       // Forward
       if (!delayedExtensions.containsKey(toBeExtended)) {
         delayedExtensions.put(toBeExtended, new LongKeyHashMap<>());
@@ -1327,16 +1369,6 @@ public final class Log {
       }
       extensionTriggers.get((fabric.lang.Object) null).get(toBeExtended)
           .add(treatyId);
-    }
-  }
-
-  /**
-   * @return true iff the transaction is going to trigger delayed extensions for
-   * the given object's treaties after committing.
-   */
-  public boolean markedForDelayedExtension(fabric.lang.Object obj) {
-    synchronized (delayedExtensions) {
-      return delayedExtensions.containsKey(obj);
     }
   }
 
@@ -1376,42 +1408,96 @@ public final class Log {
   /**
    * Cancel delayed extensions for treaties associated with the given object.
    */
-  public void cancelDelayedExtensions(fabric.lang.Object obj) {
-    cancelDelayedExtensions(new Oid(obj));
-  }
-
-  /**
-   * Cancel delayed extensions for treaties associated with the given object.
-   */
-  public void cancelDelayedExtensions(Oid obj) {
+  public void cancelDelayedExtension(Oid obj, long treatyId) {
     synchronized (delayedExtensions) {
-      // Forward
-      LongKeyMap<Set<Oid>> removed = delayedExtensions.remove(obj);
+      LongKeyMap<Set<Oid>> submap = delayedExtensions.get(obj);
 
-      // Backward
-      if (removed != null) {
-        // Those with triggers
-        for (Set<Oid> triggerGroup : removed.values()) {
-          for (Oid trigger : triggerGroup) {
-            if (extensionTriggers.containsKey(trigger)) {
-              extensionTriggers.get(trigger).remove(obj);
-              if (extensionTriggers.get(trigger).isEmpty()) {
-                extensionTriggers.remove(trigger);
+      if (submap != null) {
+        // Forward
+        Set<Oid> removed = submap.remove(treatyId);
+        if (submap.isEmpty()) {
+          delayedExtensions.remove(obj);
+        }
+
+        // Backward
+        if (removed != null) {
+          if (removed.isEmpty()) {
+            // No triggers
+            OidKeyHashMap<LongSet> nullGroup =
+                extensionTriggers.get((fabric.lang.Object) null);
+            nullGroup.get(obj).remove(treatyId);
+            if (nullGroup.get(obj).isEmpty()) {
+              nullGroup.remove(obj);
+              if (nullGroup.isEmpty()) {
+                extensionTriggers.remove((fabric.lang.Object) null);
+              }
+            }
+          } else {
+            // Triggers
+            for (Oid trigger : removed) {
+              extensionTriggers.get(trigger).get(obj).remove(treatyId);
+              if (extensionTriggers.get(trigger).get(obj).isEmpty()) {
+                extensionTriggers.get(trigger).remove(obj);
+                if (extensionTriggers.get(trigger).isEmpty()) {
+                  extensionTriggers.remove(trigger);
+                }
               }
             }
           }
         }
-
-        // Those without triggers
-        OidKeyHashMap<LongSet> nullGroup =
-            extensionTriggers.get((fabric.lang.Object) null);
-        if (nullGroup != null) {
-          nullGroup.remove(obj);
-          if (nullGroup.isEmpty()) {
-            extensionTriggers.remove((fabric.lang.Object) null);
-          }
-        }
       }
+    }
+  }
+
+  public void markTreatyCreation(fabric.lang.Object obj, long treatyId) {
+    markTreatyCreation(new Oid(obj), treatyId);
+  }
+
+  public void markTreatyCreation(Oid obj, long treatyId) {
+    LongKeyMap<TreatyUpdate> submap = treatyUpdates.get(obj);
+    if (submap == null) {
+      submap = new LongKeyHashMap<>();
+      treatyUpdates.put(obj, submap);
+    }
+
+    // TODO: Check if the treaty update state existed already and, if so, error.
+    submap.put(treatyId, TreatyUpdate.CREATE);
+  }
+
+  public void markTreatyRetraction(fabric.lang.Object obj, long treatyId) {
+    markTreatyRetraction(new Oid(obj), treatyId);
+  }
+
+  public void markTreatyRetraction(Oid obj, long treatyId) {
+    LongKeyMap<TreatyUpdate> submap = treatyUpdates.get(obj);
+    if (submap == null) {
+      submap = new LongKeyHashMap<>();
+      treatyUpdates.put(obj, submap);
+    }
+
+    // mark as extended if there wasn't an update otherwise.
+    if (!submap.containsKey(treatyId)
+        || submap.get(treatyId) == TreatyUpdate.EXTENSION) {
+      submap.put(treatyId, TreatyUpdate.RETRACTION);
+      cancelDelayedExtension(obj, treatyId);
+    }
+  }
+
+  public void markTreatyExtension(fabric.lang.Object obj, long treatyId) {
+    markTreatyExtension(new Oid(obj), treatyId);
+  }
+
+  public void markTreatyExtension(Oid obj, long treatyId) {
+    LongKeyMap<TreatyUpdate> submap = treatyUpdates.get(obj);
+    if (submap == null) {
+      submap = new LongKeyHashMap<>();
+      treatyUpdates.put(obj, submap);
+    }
+
+    // mark as extended if there wasn't an update otherwise.
+    if (!submap.containsKey(treatyId)) {
+      submap.put(treatyId, TreatyUpdate.EXTENSION);
+      cancelDelayedExtension(obj, treatyId);
     }
   }
 

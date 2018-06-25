@@ -34,20 +34,14 @@ public class DirectPolicy extends EnforcementPolicy {
       // We can't actually enforce it.
       return 0;
     }
-    if (oldTreaty.expiry > trueTime
-        || oldTreaty.expiry - currentTime <= MetricTreaty.UPDATE_THRESHOLD) {
-      // We're either in need of a corrected value or we're close enough to the
-      // expiry that it's worth updating if we've got something better now.
-      long hedgedTime = calculateExpiry(oldTreaty, weakStats);
-      if (oldTreaty.expiry <= trueTime) {
-        // If the currently advertised time is still good, move to new
-        // hedgedTime if it's larger.
-        return Math.max(oldTreaty.expiry, hedgedTime);
-      }
-      // Otherwise, just move to new expiry.
-      return hedgedTime;
+    long hedgedTime = calculateExpiry(oldTreaty, weakStats);
+    if (oldTreaty.expiry <= trueTime) {
+      // If the currently advertised time is still good, move to new
+      // hedgedTime if it's larger.
+      return Math.max(oldTreaty.expiry, hedgedTime);
     }
-    return oldTreaty.expiry;
+    // Otherwise, just move to new expiry.
+    return hedgedTime;
   }
 
   @Override
