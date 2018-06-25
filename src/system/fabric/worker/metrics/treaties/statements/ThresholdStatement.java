@@ -227,7 +227,7 @@ public class ThresholdStatement extends TreatyStatement {
     } else if (rate <= 0) {
       return Long.MAX_VALUE;
     } else {
-      return (long) Math.floor((value - curBound) / rate);
+      return time + (long) Math.floor((value - curBound) / rate);
     }
   }
 
