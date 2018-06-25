@@ -93,9 +93,6 @@ public class ThresholdStatement extends TreatyStatement {
         hedgedResult = Math.min(min, hedgedResult);
         // Fast path, a min point will be earlier than an intersect, if
         // it exists and is above the bound.
-        Logging.METRICS_LOGGER.log(Level.FINE,
-            "HEDGED ESTIMATE OF {0} >= {1} * t + {2} Expected: {3} BY {4}",
-            new Object[] { m, rate, base, hedgedResult, "minima" });
         return hedgedResult;
       }
     }
@@ -129,9 +126,6 @@ public class ThresholdStatement extends TreatyStatement {
       hedgedResult = Math.min(hedgedResult, ((long) (mb * mb / n)));
     }
 
-    Logging.METRICS_LOGGER.log(Level.FINE,
-        "HEDGED ESTIMATE OF {0} >= {1} * t + {2} Expected: {3} BY {4}",
-        new Object[] { m, rate, base, hedgedResult, "intersect" });
     return hedgedResult;
   }
 
