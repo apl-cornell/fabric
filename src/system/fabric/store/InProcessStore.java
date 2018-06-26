@@ -5,7 +5,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
@@ -202,7 +204,12 @@ public class InProcessStore extends RemoteStore {
   @Override
   public void sendExtensions(LongKeyMap<LongSet> extensions,
       Map<RemoteStore, Collection<SerializedObject>> updates) {
-    tm.queueExtensions(extensions);
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        tm.queueExtensions(extensions);
+      }
+    });
   }
 
   @Override
