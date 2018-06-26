@@ -313,10 +313,11 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
     MetricTreaty updatedTreaty = this;
     if ((updatedCurExpiry > this.expiry
-        && (this.expiry - System.currentTimeMillis() <= UPDATE_THRESHOLD))
+        && (this.expiry - System.currentTimeMillis() <= UPDATE_THRESHOLD
+            || asyncExtension))
         || updatedCurExpiry < this.expiry) {
       updatedTreaty = new MetricTreaty(this, updatedCurExpiry);
-    } else {
+    } else if (updatedCurExpiry > this.expiry) {
       // It's an extension but too early, just mark this to be extended later.
       TransactionManager.getInstance().registerDelayedExtension(getMetric(),
           id);
