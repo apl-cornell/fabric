@@ -1505,15 +1505,6 @@ public final class TransactionManager {
       long treatyId, fabric.lang.Object extendingObject) {
     _Impl obj = (_Impl) toBeExtended.fetch();
     synchronized (obj) {
-      synchronized (current.writes) {
-        if (current.writes.containsKey(obj)) return;
-      }
-      synchronized (current.creates) {
-        if (current.creates.containsKey(obj)) return;
-      }
-      synchronized (current.extendedTreaties) {
-        if (current.extendedTreaties.containsKey(obj)) return;
-      }
       synchronized (current.delayedExtensions) {
         current.addDelayedExtension(toBeExtended, treatyId, extendingObject);
       }
@@ -1529,15 +1520,6 @@ public final class TransactionManager {
       long treatyId) {
     _Impl obj = (_Impl) toBeExtended.fetch();
     synchronized (obj) {
-      synchronized (current.writes) {
-        if (current.writes.containsKey(obj)) return;
-      }
-      synchronized (current.creates) {
-        if (current.creates.containsKey(obj)) return;
-      }
-      synchronized (current.extendedTreaties) {
-        if (current.extendedTreaties.containsKey(obj)) return;
-      }
       synchronized (current.delayedExtensions) {
         current.addDelayedExtension(toBeExtended, treatyId);
       }
@@ -1554,7 +1536,8 @@ public final class TransactionManager {
   /**
    * Register a treaty as being retracted.
    */
-  public void registerTreatyRetraction(fabric.lang.Object owner, long treatyId) {
+  public void registerTreatyRetraction(fabric.lang.Object owner,
+      long treatyId) {
     if (current != null) current.markTreatyRetraction(owner, treatyId);
   }
 
