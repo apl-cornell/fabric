@@ -2,29 +2,39 @@ package fabric.store;
 
 import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 
 import fabric.common.AuthorizationUtil;
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
+import fabric.common.util.Triple;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
+import fabric.metrics.Metric;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
+import fabric.worker.AbortException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -32,6 +42,8 @@ import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.worker.metrics.LockConflictException;
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
@@ -52,8 +64,7 @@ public class TransactionManager {
   public TransactionManager(ObjectDB database) {
     this.database = database;
     this.sm = new SubscriptionManager(database.getName(), this);
-    // TODO
-    //Threading.getPool().submit(extensionsRunner);
+    Threading.getPool().submit(extensionsRunner);
   }
 
   /**
@@ -403,33 +414,42 @@ public class TransactionManager {
    * added to the queue, and the onum-request mapping is updated.
    */
   public void queueExtensions(LongKeyMap<LongSet> extensions) {
-    /*
-     * TODO
-    for (LongIterator it = extensions.iterator(); it.hasNext();) {
-      long onum = it.next();
-      queueExtension(onum);
+    for (LongKeyMap.Entry<LongSet> e : extensions.entrySet()) {
+      long onum = e.getKey();
+      for (LongIterator iter = e.getValue().iterator(); iter.hasNext();) {
+        queueExtension(onum, iter.next());
+      }
     }
-    */
   }
 
-  public void queueExtension(long onum) {
-    /* TODO
+  public void queueExtension(long onum, long treatyId) {
     long expiry = 0;
     try {
-      expiry = database.getExpiry(onum);
+      MetricTreaty treaty = database.getTreaties(onum).get(treatyId);
+      if (treaty != null) {
+        expiry = treaty.expiry;
+      } else {
+        return; // Nothing to do, we've never heard of this treaty.
+      }
     } catch (AccessException e) {
       // This shouldn't happen.
       throw new InternalError("Tried to extend a nonexistent onum!");
     }
-    DelayedExtension de = new DelayedExtension(expiry - EXTENSION_WINDOW, onum);
+    DelayedExtension de =
+        new DelayedExtension(expiry - EXTENSION_WINDOW, onum, treatyId);
     synchronized (de) {
       // Keep trying until we're sure we've consistently updated the extension
       // for this onum.
       while (true) {
+        unresolvedExtensions.putIfAbsent(de.onum,
+            new ConcurrentLongKeyHashMap<>());
         DelayedExtension existing =
-            unresolvedExtensions.putIfAbsent(de.onum, de);
+            unresolvedExtensions.get(de.onum).putIfAbsent(de.treatyId, de);
         if (existing == null) {
           waitingExtensions.add(de);
+          //Logging.METRICS_LOGGER.log(Level.INFO,
+          //    "QUEUED EXTENSION OF {0}/{1} FOR {2}",
+          //    new Object[] { onum, treatyId, de.time });
           break;
         } else {
           synchronized (existing) {
@@ -440,16 +460,19 @@ public class TransactionManager {
             }
             // Update to this event.  This would mean the old extension was
             // using an outdated expiration time.
-            if (unresolvedExtensions.replace(de.onum, existing, de)) {
+            if (unresolvedExtensions.get(de.onum).replace(de.treatyId, existing,
+                de)) {
               waitingExtensions.remove(existing);
               waitingExtensions.add(de);
+              //Logging.METRICS_LOGGER.log(Level.INFO,
+              //    "QUEUED EXTENSION OF {0}/{1} FOR {2}",
+              //    new Object[] { onum, treatyId, de.time });
               break;
             }
           }
         }
       }
     }
-    */
   }
 
   /**
@@ -457,19 +480,16 @@ public class TransactionManager {
    * replace the request with a new (to be handled earlier) request, if
    * necessary.
    */
-  // TODO
-  //private final ConcurrentLongKeyMap<DelayedExtension> unresolvedExtensions =
-  //    new ConcurrentLongKeyHashMap<>();
+  private final ConcurrentLongKeyMap<ConcurrentLongKeyMap<DelayedExtension>> unresolvedExtensions =
+      new ConcurrentLongKeyHashMap<>();
 
   /**
    * The extensions waiting to run.
    */
-  // TODO
-  //private final DelayQueue<DelayedExtension> waitingExtensions =
-  //    new DelayQueue<>();
+  private final DelayQueue<DelayedExtension> waitingExtensions =
+      new DelayQueue<>();
 
-  // TODO
-  //private final int EXTENSION_WINDOW = 1500;
+  private final int EXTENSION_WINDOW = 1500;
 
   /**
    * A thread that goes through the extensions queue, waiting until the next
@@ -478,7 +498,6 @@ public class TransactionManager {
    * {@code DelayedExtension}'s time, handles the extension in a transaction,
    * then dequeues the extension.
    */
-  /* TODO
   private final Threading.NamedRunnable extensionsRunner =
       new Threading.NamedRunnable("Extensions runner") {
         @Override
@@ -499,11 +518,22 @@ public class TransactionManager {
               // have been sufficient and that second request is unlikely to be
               // very expensive to process.
               final DelayedExtension extension = waitingExtensions.take();
+              //Logging.METRICS_LOGGER.log(Level.INFO,
+              //    "DEQUEUED EXTENSION OF {0}", extension.onum);
               long curTime = System.currentTimeMillis();
               long exp = extension.time + EXTENSION_WINDOW;
               try {
                 // Change to the actual expiry
-                exp = database.getExpiry(extension.onum);
+                MetricTreaty treaty = database.getTreaties(extension.onum)
+                    .get(extension.treatyId);
+                if (treaty != null) {
+                  exp = treaty.expiry;
+                } else {
+                  synchronized (extension) {
+                    unresolvedExtensions.remove(extension.onum, extension);
+                  }
+                  continue; // Nothing to do, treaty's dead.
+                }
               } catch (AccessException ae) {
                 // If this happens, it suggests we're trying to extend a
                 // nonexistent value.
@@ -539,12 +569,24 @@ public class TransactionManager {
                             public Triple<String, Long, Long> run() {
                               Store store = Worker.getWorker()
                                   .getStore(database.getName());
-                              final Contract._Proxy target =
-                                  new Contract._Proxy(store, extension.onum);
-                              long oldExpiry = target.get$$expiry();
-                              target.attemptExtension();
-                              return new Triple<>(target.toString(), oldExpiry,
-                                  target.get$$expiry());
+                              final Metric._Proxy target =
+                                  new Metric._Proxy(store, extension.onum);
+                              MetricTreaty orig = target.get$$treaties()
+                                  .get(extension.treatyId);
+                              if (orig != null) {
+                                long oldExpiry = target.get$$treaties()
+                                    .get(extension.treatyId).expiry;
+                                target.refreshTreaty(true, extension.treatyId,
+                                    StatsMap.emptyStats());
+                                return new Triple<>(
+                                    target.toString() + ": "
+                                        + target.get$$treaties()
+                                            .get(extension.treatyId).toString(),
+                                    oldExpiry, target.get$$treaties()
+                                        .get(extension.treatyId).expiry);
+                              }
+                              // Treaty was removed.
+                              return new Triple<>(target.toString(), 0l, 0l);
                             }
                           }, true);
                     } catch (AbortException e) {
@@ -552,33 +594,48 @@ public class TransactionManager {
                       // Clear out any leftover locking state
                       fabric.worker.transaction.TransactionManager.getInstance()
                           .clearLockObjectState();
+                      StringWriter sw = new StringWriter();
+                      PrintWriter pw = new PrintWriter(sw);
+                      e.printStackTrace(pw);
+                      Logging.METRICS_LOGGER.log(Level.INFO,
+                          "FAILED EXTENSION OF {0} WITH {1}\n{2}",
+                          new Object[] { Long.valueOf(extension.onum), e,
+                              sw, });
                     } catch (LockConflictException e) {
                       success = false;
                       // Clear out any leftover locking state
                       fabric.worker.transaction.TransactionManager.getInstance()
                           .clearLockObjectState();
+                      StringWriter sw = new StringWriter();
+                      PrintWriter pw = new PrintWriter(sw);
+                      e.printStackTrace(pw);
+                      Logging.METRICS_LOGGER.log(Level.INFO,
+                          "FAILED EXTENSION OF {0} WITH {1}\n{2}",
+                          new Object[] { Long.valueOf(extension.onum), e,
+                              sw, });
                     }
                     synchronized (extension) {
                       unresolvedExtensions.remove(extension.onum, extension);
                     }
                     if (nameAndNewExpiry != null) {
                       Logging.METRICS_LOGGER.log(Level.INFO,
-                          "FINISHED EXTENSION OF {0} IN {1}ms from {4} to {5} {6} (success {2}) STATS: {3}",
+                          "FINISHED EXTENSION OF {0} IN {1}ms by {4} (in {6}) {5} (success {2}) STATS: {3}",
                           new Object[] { Long.valueOf(extension.onum),
                               Long.valueOf(System.currentTimeMillis() - start),
                               success,
                               fabric.worker.transaction.TransactionManager
                                   .getInstance().stats,
-                              nameAndNewExpiry.second, nameAndNewExpiry.third,
-                              nameAndNewExpiry.first });
+                              nameAndNewExpiry.third - nameAndNewExpiry.second,
+                              nameAndNewExpiry.first, nameAndNewExpiry.third
+                                  - System.currentTimeMillis(), });
                     } else {
-                      Logging.METRICS_LOGGER.log(Level.INFO,
-                          "FINISHED EXTENSION OF {0} IN {1}ms (success {2}) STATS: {3}",
-                          new Object[] { Long.valueOf(extension.onum),
-                              Long.valueOf(System.currentTimeMillis() - start),
-                              success,
-                              fabric.worker.transaction.TransactionManager
-                                  .getInstance().stats, });
+                      //Logging.METRICS_LOGGER.log(Level.INFO,
+                      //    "FINISHED EXTENSION OF {0} IN {1}ms (success {2}) STATS: {3}",
+                      //    new Object[] { Long.valueOf(extension.onum),
+                      //        Long.valueOf(System.currentTimeMillis() - start),
+                      //        success,
+                      //        fabric.worker.transaction.TransactionManager
+                      //            .getInstance().stats, });
                     }
                   }
                 });
@@ -588,7 +645,7 @@ public class TransactionManager {
                 }
                 // If too early, requeue it.
                 if (exp > curTime)
-                  queueExtension(extension.onum);
+                  queueExtension(extension.onum, extension.treatyId);
                 else Logging.METRICS_LOGGER.log(Level.INFO,
                     "SKIPPED EXTENSION OF {0}", Long.valueOf(extension.onum));
               }
@@ -600,7 +657,6 @@ public class TransactionManager {
           }
         }
       };
-   */
 
   /**
    * Wait for an update to occur to push the version for the given onum past the
