@@ -1281,11 +1281,9 @@ public final class TransactionManager {
 
       try {
         Timing.TXLOG.begin();
-        if (extending)
-          ensureReadLock(obj);
-        else ensureWriteLock(obj);
+        ensureWriteLock(obj);
         ensureObjectUpToDate(obj);
-        if (!extending) ensureOwnership(obj);
+        ensureOwnership(obj);
       } finally {
         Timing.TXLOG.end();
       }
