@@ -388,7 +388,11 @@ public class SumMetric extends DerivedMetric {
         // Size should be the same for either option.
         MetricTreaty native[] finalWitnesses = new MetricTreaty native[staticWitnesses.size()];
 
-        if (hasSlackProducer) {
+        // It's only worth using an adaptive strategy if we have a term that
+        // will generate slack and either this is multi-store (and therefore
+        // should avoid coordination at all costs) or is already required to run
+        // extensions (rate > 0).
+        if (hasSlackProducer && (!isSingleStore() || rate > 0)) {
           // If there's a slack producer, see if the dynamic strategy is better.
           double native [] adaptiveSlacks = SumStrategy.getSplitEqualVelocity(velocities, noises, adaptiveRates, (totalValue - baseNow));
 
@@ -416,7 +420,7 @@ public class SumMetric extends DerivedMetric {
             adaptiveTimeout = Math.min(adaptiveTimeout, ThresholdStatement.hedgedEstimate(m, normalized[0], normalized[1], currentTime, weakStats));
           }
 
-          if (adaptiveTimeout > staticTimeout && adaptiveTimeout - System.currentTimeMillis() > MIN_ADAPTIVE_EXPIRY) {
+          if (adaptiveTimeout >= staticTimeout) {
             int i = 0;
             for (java.util.Iterator iter = adaptiveWitnesses.values().iterator(); iter.hasNext();) {
               finalWitnesses[i++] = (MetricTreaty) iter.next();
