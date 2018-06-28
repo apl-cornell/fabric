@@ -3,9 +3,7 @@ package fabric.worker.metrics.treaties.statements;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.logging.Level;
 
-import fabric.common.Logging;
 import fabric.metrics.Metric;
 import fabric.worker.Store;
 import fabric.worker.metrics.StatsMap;
@@ -18,7 +16,7 @@ import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 public class ThresholdStatement extends TreatyStatement {
 
   // Number of standard deviations to consider for hedging.
-  private static final double HEDGE_FACTOR = 3;
+  private static final double HEDGE_FACTOR = 3.0;
 
   private final double rate;
   private final double base;
@@ -58,13 +56,19 @@ public class ThresholdStatement extends TreatyStatement {
     return value >= curBound(time);
   }
 
-  public static long hedgedEstimate(Metric m, double rate, double base,
-      long time, StatsMap weakStats) {
-    double b = rate * time + base;
+  /**
+   * Hedged expiry time that will be used, avoiding retractions due to expected
+   * updates.
+   *
+   * Essentially a static version of {@link #directExpiry(Metric,StatsMap)}
+   */
+  public static long hedgedExpiry(Metric m, double rate, double base, long time,
+      StatsMap weakStats) {
     // Use weak stats because this is just an estimate.
     double x = m.value(weakStats);
     double v = m.velocity(weakStats);
     double n = m.noise(weakStats);
+    double b = rate * time + base;
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
@@ -74,11 +78,11 @@ public class ThresholdStatement extends TreatyStatement {
     // Account for the desired number of standard deviations and scale based
     // on how long trueExpiry is from here.
     n *= (HEDGE_FACTOR * HEDGE_FACTOR);
-    if (hedgedResult < Long.MAX_VALUE) {
-      // Use enough standard deviations that we actually might cross the
-      // boundary, if the set amount wasn't enough.
-      n = Math.max(n, 4 * (v - rate) * (x - b));
-    }
+    //if (hedgedResult < Long.MAX_VALUE) {
+    //  // Use enough standard deviations that we actually might cross the
+    //  // boundary, if the set amount wasn't enough.
+    //  n = Math.max(n, 4 * (v - rate) * (x - b));
+    //}
 
     // Solving for extremal point
     double minYs = 0.0;
@@ -108,8 +112,8 @@ public class ThresholdStatement extends TreatyStatement {
       double discriminant = Math.sqrt(n) * Math.sqrt(n - 4.0 * mb * vr);
 
       if (!Double.isNaN(discriminant)) {
-        double first = factor * (constant + discriminant) + time;
-        double second = factor * (constant - discriminant) + time;
+        double first = factor * (constant + discriminant);
+        double second = factor * (constant - discriminant);
         if (first > 0 || second > 0) {
           if (first < 0) {
             intersect = (long) second;
@@ -118,26 +122,101 @@ public class ThresholdStatement extends TreatyStatement {
           } else {
             intersect = (long) Math.min(first, second);
           }
-          hedgedResult = Math.min(intersect, hedgedResult);
+          hedgedResult = Math.min(time + intersect, hedgedResult);
         }
       }
     } else if (n > 0) {
       // Intersection found in notes.
-      hedgedResult = Math.min(hedgedResult, ((long) (mb * mb / n)));
+      hedgedResult = Math.min(hedgedResult, (time + (long) (mb * mb / n)));
     }
 
     return hedgedResult;
   }
 
+  /**
+   * Estimated time the treaty will last, given current trends.
+   */
+  public static long hedgedEstimate(Metric m, double rate, double base,
+      long time, StatsMap weakStats) {
+    // Use weak stats because this is just an estimate.
+    double x = m.value(weakStats);
+    double v = m.velocity(weakStats);
+    double n = m.noise(weakStats);
+    double b = rate * time + base;
+
+    // If the threshold already is above the value, it's dead.
+    if (x < b) return 0;
+    if (x == b) return time;
+
+    // Use max long in the absence of any intersects.
+    long hedgedResult = Long.MAX_VALUE;
+
+    // Account for the desired number of standard deviations
+    n *= (HEDGE_FACTOR * HEDGE_FACTOR);
+
+    // Unlike real expiry, don't bother with inflating the noise.
+    // Unlike real expiry, don't bother with min, that's just to hedge better.
+
+    // Solving intersection by using rotated parametric formula
+    double mb = x - b;
+    double vr = v - rate;
+    long intersect = -1;
+    if (vr != 0) {
+      // Intersection calculation found in notes.
+      double factor = 1.0 / (2.0 * vr * vr);
+      double constant = n - 2 * mb * vr;
+      double discriminant = Math.sqrt(n) * Math.sqrt(n - 4.0 * mb * vr);
+
+      if (!Double.isNaN(discriminant)) {
+        double first = factor * (constant + discriminant);
+        double second = factor * (constant - discriminant);
+        if (first > 0 || second > 0) {
+          if (first < 0) {
+            intersect = (long) second;
+          } else if (second < 0) {
+            intersect = (long) first;
+          } else {
+            intersect = (long) Math.min(first, second);
+          }
+          hedgedResult = Math.min(time + intersect, hedgedResult);
+        }
+      }
+    } else if (n > 0) {
+      // Intersection found in notes.
+      hedgedResult = Math.min(hedgedResult, (time + (long) (mb * mb / n)));
+    }
+
+    return hedgedResult;
+  }
+
+  /**
+   * The hedged expiry set to avoid expected updates triggering a retraction.
+   *
+   * The trajectory curve mentioned below is the curve which describes the
+   * metric's velocity, starting from the current value, and subtracting
+   * HEDGE_FACTOR standard deviations, as determined by the noise.
+   *
+   * This uses the following logic:
+   * <ol>
+   *    <li>If the metric is already below the threshold, return 0.</li>
+   *    <li>If there's a local minima on the curve for the metric's trajectory,
+   *    return the time at which this threshold would pass that value.</li>
+   *    <li>If there's an intersection between the trajectory curve, return that
+   *    time.</li>
+   *    <li>If the threshold has positive rate, return the time at which this
+   *    threshold would pass the current value</li>
+   *    <li>Otherwise, return Long.MAX_VALUE.</li>
+   * </ol>
+   */
   @Override
   public long directExpiry(Metric m, StatsMap weakStats) {
     long time = System.currentTimeMillis();
-    double b = rate * time + base;
     // Always use *correct* value for value
     double x = m.value();
     // Use weak v and n, x is the only part that needs to be exact.
     double v = m.velocity(weakStats);
     double n = m.noise(weakStats);
+    double b = rate * time + base;
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
@@ -153,11 +232,11 @@ public class ThresholdStatement extends TreatyStatement {
     // Account for the desired number of standard deviations and scale based
     // on how long trueExpiry is from here.
     n *= (HEDGE_FACTOR * HEDGE_FACTOR);
-    if (hedgedResult < Long.MAX_VALUE) {
-      // Use enough standard deviations that we actually might cross the
-      // boundary, if the set amount wasn't enough.
-      n = Math.max(n, 4 * (v - rate) * (x - b));
-    }
+    //if (hedgedResult < Long.MAX_VALUE) {
+    //  // Use enough standard deviations that we actually might cross the
+    //  // boundary, if the set amount wasn't enough.
+    //  n = Math.max(n, 4 * (v - rate) * (x - b));
+    //}
 
     // Solving for extremal point
     double minYs = 0.0;
@@ -187,8 +266,8 @@ public class ThresholdStatement extends TreatyStatement {
       double discriminant = Math.sqrt(n) * Math.sqrt(n - 4.0 * mb * vr);
 
       if (!Double.isNaN(discriminant)) {
-        double first = factor * (constant + discriminant) + time;
-        double second = factor * (constant - discriminant) + time;
+        double first = factor * (constant + discriminant);
+        double second = factor * (constant - discriminant);
         if (first > 0 || second > 0) {
           if (first < 0) {
             intersect = (long) second;
@@ -197,17 +276,20 @@ public class ThresholdStatement extends TreatyStatement {
           } else {
             intersect = (long) Math.min(first, second);
           }
-          hedgedResult = Math.min(intersect, hedgedResult);
+          hedgedResult = Math.min(time + intersect, hedgedResult);
         }
       }
     } else if (n > 0) {
       // Intersection found in notes.
-      hedgedResult = Math.min(hedgedResult, ((long) (mb * mb / n)));
+      hedgedResult = Math.min(hedgedResult, (time + (long) (mb * mb / n)));
     }
 
     return hedgedResult;
   }
 
+  /**
+   * The expiry if there are no further updates.
+   */
   public static long trueExpiry(double rate, double base, double value,
       long time) {
     double curBound = rate * time + base;
@@ -220,6 +302,9 @@ public class ThresholdStatement extends TreatyStatement {
     }
   }
 
+  /**
+   * The expiry if there are no further updates.
+   */
   public long trueExpiry(double value, long time) {
     double curBound = rate * time + base;
     if (value < curBound) {
@@ -231,6 +316,9 @@ public class ThresholdStatement extends TreatyStatement {
     }
   }
 
+  /**
+   * The expiry if there are no further updates.
+   */
   @Override
   public long trueExpiry(Metric m, StatsMap weakStats) {
     return trueExpiry(m.value(), System.currentTimeMillis());
