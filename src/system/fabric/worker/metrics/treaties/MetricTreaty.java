@@ -72,7 +72,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = ImmutableObserverSet.emptySet();
     this.policy = NoPolicy.singleton;
     this.expiry = policy.calculateExpiry(this, StatsMap.emptyStats());
-    TransactionManager.getInstance().registerTreatyCreation(metric, id);
+    TransactionManager.getInstance().registerTreatyUpdate(metric, id);
     Logging.METRICS_LOGGER.log(Level.FINEST, "CREATED TREATY {0} FOR {1}",
         new Object[] { this, getMetric() });
   }
@@ -118,6 +118,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = observers;
     this.policy = original.policy;
     this.expiry = original.expiry;
+    TransactionManager.getInstance().registerTreatyUpdate(getMetric(), id);
 
     // Update containing treaty set.
     if (this.activated && this.policy instanceof NoPolicy) {
@@ -150,6 +151,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = observers;
     this.policy = policy;
     this.expiry = expiry;
+    TransactionManager.getInstance().registerTreatyUpdate(getMetric(), id);
 
     if (!original.policy.equals(policy)) {
       // Stop observing the old policy.
@@ -189,6 +191,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = original.observers;
     this.policy = original.policy;
     this.expiry = newExpiry;
+    TransactionManager.getInstance().registerTreatyUpdate(getMetric(), id);
 
     // Update containing treaty set.
     if (this.activated && this.policy instanceof NoPolicy) {
@@ -225,6 +228,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = original.observers;
     this.policy = policy;
     this.expiry = newExpiry;
+    TransactionManager.getInstance().registerTreatyUpdate(getMetric(), id);
 
     if (!original.policy.equals(policy)) {
       // Stop observing the old policy.
@@ -286,8 +290,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     }
     if (result.first.expiry > expiry) {
       result.first.markExtension();
-    } else if (result.first.expiry < expiry) {
-      result.first.markRetraction();
     }
     return result;
   }
@@ -391,17 +393,11 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
   private void markExtension() {
     TransactionManager tm = TransactionManager.getInstance();
-    tm.registerTreatyExtension(getMetric(), id);
     for (Triple<Observer._Proxy, Boolean, LongSet> obsGroup : observers) {
       for (LongIterator iter = obsGroup.third.iterator(); iter.hasNext();) {
         tm.registerDelayedExtension(obsGroup.first, iter.next(), getMetric());
       }
     }
-  }
-
-  private void markRetraction() {
-    TransactionManager tm = TransactionManager.getInstance();
-    tm.registerTreatyRetraction(getMetric(), id);
   }
 
   @Override

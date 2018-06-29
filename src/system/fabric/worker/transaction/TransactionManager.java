@@ -1527,23 +1527,8 @@ public final class TransactionManager {
   /**
    * Register a treaty as being created.
    */
-  public void registerTreatyCreation(fabric.lang.Object owner, long treatyId) {
-    if (current != null) current.markTreatyCreation(owner, treatyId);
-  }
-
-  /**
-   * Register a treaty as being retracted.
-   */
-  public void registerTreatyRetraction(fabric.lang.Object owner,
-      long treatyId) {
-    if (current != null) current.markTreatyRetraction(owner, treatyId);
-  }
-
-  /**
-   * Register a treaty as being extended.
-   */
-  public void registerTreatyExtension(fabric.lang.Object owner, long treatyId) {
-    if (current != null) current.markTreatyExtension(owner, treatyId);
+  public void registerTreatyUpdate(fabric.lang.Object owner, long treatyId) {
+    if (current != null) current.markTreatyUpdate(owner, treatyId);
   }
 
   /**
