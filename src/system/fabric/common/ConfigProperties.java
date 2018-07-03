@@ -61,6 +61,8 @@ public class ConfigProperties {
    */
   // Flag to indicate if the strategy should be a preset (instead of the
   // default)
+  public final boolean usePresetStrategy;
+  // Flag to indicate if the stats should be a preset (instead of the measured)
   public final boolean usePreset;
   // How many updates between logging a sampled metric's stats.
   public final int metricStatsLogInterval;
@@ -76,6 +78,8 @@ public class ConfigProperties {
   public final TreeMap<Long, PresetMetricStatistics> presets;
   // Whether to use estimation for metrics
   public final boolean useEstimation;
+  // Whether to use dynamic policies for metrics
+  public final boolean useDynamic;
   // Statistics estimation parameters
   // exponential weight for updates
   public final double alpha;
@@ -164,6 +168,10 @@ public class ConfigProperties {
     }
 
     /************************** Treaty Properties ***************************/
+    this.usePresetStrategy = Boolean
+        .parseBoolean(removeProperty(p, "fabric.metrics.usePresetStrategy",
+              "false"));
+
     this.usePreset = Boolean
         .parseBoolean(removeProperty(p, "fabric.metrics.usePreset", "false"));
 
@@ -235,6 +243,9 @@ public class ConfigProperties {
 
     this.useEstimation = Boolean.parseBoolean(
         removeProperty(p, "fabric.metrics.useEstimation", "true"));
+
+    this.useDynamic = Boolean.parseBoolean(
+        removeProperty(p, "fabric.metrics.useDynamic", "true"));
 
     this.alpha =
         Double.parseDouble(removeProperty(p, "fabric.metrics.alpha", "0.001"));

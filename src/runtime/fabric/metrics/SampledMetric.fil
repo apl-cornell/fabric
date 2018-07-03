@@ -55,23 +55,15 @@ public class SampledMetric extends Metric {
       String presetKey = "" + key + "@" + s.name();
       // XXX Ugh, a hack but to avoid needing to specify all elements for a
       // static-equal run, let's just default for keys that don't exist.
-      //if (!config.rates.containsKey(key))
-      //  throw new InternalError("Unspecified preset rate for " + key);
       this.presetR = config.rates.containsKey(presetKey) ?
         ((Double) config.rates.get(presetKey)).doubleValue() :
         0.0;
-      //if (!config.bounds.containsKey(presetKey))
-      //  throw new InternalError("Unspecified preset bound for " + presetKey);
       this.presetB = config.bounds.containsKey(presetKey) ?
         ((Double) config.bounds.get(presetKey)).doubleValue() :
         1.0;
-      //if (!config.velocities.containsKey(presetKey))
-      //  throw new InternalError("Unspecified preset velocity for " + presetKey);
       this.presetV = config.velocities.containsKey(presetKey) ?
         ((Double) config.velocities.get(presetKey)).doubleValue() :
         0.0;
-      //if (!config.noises.containsKey(presetKey))
-      //  throw new InternalError("Unspecified preset noise for " + presetKey);
       this.presetN = config.noises.containsKey(presetKey) ?
         ((Double) config.noises.get(presetKey)).doubleValue() :
         0.0;
@@ -175,23 +167,15 @@ public class SampledMetric extends Metric {
 
   private static long static_computeSamples(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.getUsePreset()) {
-        return 0;
-      } else {
-        RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
-        if (preloaded != tmp.stats) tmp.stats = preloaded;
-        return tmp.stats.getSamples();
-      }
+      RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
+      if (preloaded != tmp.stats) tmp.stats = preloaded;
+      return tmp.stats.getSamples();
     } else {
       long rtn = 0;
       atomic {
-        if (tmp.getUsePreset()) {
-          rtn = 0;
-        } else {
-          RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
-          if (preloaded != tmp.stats) tmp.stats = preloaded;
-          rtn = tmp.stats.getSamples();
-        }
+        RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
+        if (preloaded != tmp.stats) tmp.stats = preloaded;
+        rtn = tmp.stats.getSamples();
       }
       return rtn;
     }
@@ -204,23 +188,15 @@ public class SampledMetric extends Metric {
 
   private static long static_computeLastUpdate(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.getUsePreset()) {
-        return 0;
-      } else {
-        RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
-        if (preloaded != tmp.stats) tmp.stats = preloaded;
-        return tmp.stats.getLastUpdate();
-      }
+      RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
+      if (preloaded != tmp.stats) tmp.stats = preloaded;
+      return tmp.stats.getLastUpdate();
     } else {
       long rtn = 0;
       atomic {
-        if (tmp.getUsePreset()) {
-          rtn = 0;
-        } else {
-          RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
-          if (preloaded != tmp.stats) tmp.stats = preloaded;
-          rtn = tmp.stats.getLastUpdate();
-        }
+        RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
+        if (preloaded != tmp.stats) tmp.stats = preloaded;
+        rtn = tmp.stats.getLastUpdate();
       }
       return rtn;
     }
@@ -233,23 +209,15 @@ public class SampledMetric extends Metric {
 
   private static double static_computeUpdateInterval(SampledMetric tmp, StatsMap weakStats) {
     if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.getUsePreset()) {
-        return 0;
-      } else {
-        RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
-        if (preloaded != tmp.stats) tmp.stats = preloaded;
-        return tmp.stats.getIntervalEstimate();
-      }
+      RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
+      if (preloaded != tmp.stats) tmp.stats = preloaded;
+      return tmp.stats.getIntervalEstimate();
     } else {
       double rtn = 0;
       atomic {
-        if (tmp.getUsePreset()) {
-          rtn = 0;
-        } else {
-          RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
-          if (preloaded != tmp.stats) tmp.stats = preloaded;
-          rtn = tmp.stats.getIntervalEstimate();
-        }
+        RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
+        if (preloaded != tmp.stats) tmp.stats = preloaded;
+        rtn = tmp.stats.getIntervalEstimate();
       }
       return rtn;
     }
@@ -428,7 +396,7 @@ public class SampledMetric extends Metric {
   }
 
   private static double static_velocity(SampledMetric tmp, StatsMap weakStats) {
-    if (weakStats.containsKey(tmp)) return weakStats.getVelocity(tmp);
+    if (!tmp.getUsePreset() && weakStats.containsKey(tmp)) return weakStats.getVelocity(tmp);
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
       result = tmp.computeVelocity(weakStats);
@@ -446,7 +414,7 @@ public class SampledMetric extends Metric {
   }
 
   private static double static_noise(SampledMetric tmp, StatsMap weakStats) {
-    if (weakStats.containsKey(tmp)) return weakStats.getNoise(tmp);
+    if (!tmp.getUsePreset() && weakStats.containsKey(tmp)) return weakStats.getNoise(tmp);
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
       result = tmp.computeNoise(weakStats);
