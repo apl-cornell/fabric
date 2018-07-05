@@ -24,65 +24,6 @@ import fabric.metrics.Metric;
 public class SumStrategy {
 
   /**
-   * Return a function to minimize in the event that average velocity is
-   * negative or to find the zero of if the average velocity is positive.
-   *
-   * This function assumes the rates are set so that the effective velocities
-   * are equal across the nodes.
-   */
-  private static UnivariateFunction createEqualityVAverage(final double v1,
-      final double r1, final double s1, final double v2, final double r2,
-      final double s2, final double slack, final double n) {
-
-    // XXX TODO: This is currently incorrect. XXX
-
-    if ((v1 - r1) <= 0) {
-      // Function to minimize
-      return new UnivariateFunction() {
-
-        // E[1/T] for node 1
-        private double term1(double a) {
-          // Effective boundary for node 2
-          double a1 = a;
-          // Heading towards the boundary.
-          return (s1 / (a1 * a1)) - ((v1 - r1) / a1);
-        }
-
-        // Full E[1/T] for node 2
-        private double term2(double a) {
-          // Effective boundary for node 2
-          double a2 = slack - a;
-          // Heading towards the boundary.
-          return (s2 / (a2 * a2)) - ((v2 - r2) / a2);
-        }
-
-        @Override
-        public double value(double a) {
-          // Full E[1/T] for node 1
-          double term1 = term1(a);
-
-          // Full E[1/T] for node 2
-          double term2 = term2(a);
-
-          // Difference between the two
-          return term1 - term2;
-        }
-      };
-    } else {
-      return new UnivariateFunction() {
-        @Override
-        public double value(double a) {
-          double vHat = v1 + v2 - (r1 + r2);
-          return (a * a * (slack + (n * s1 / vHat) - a)
-              * Math.exp((2.0 / n) * (((s1 + s2) * vHat) / (s1 * s2))
-                  * (a - ((s1 * slack) / (s1 + s2)))))
-              - ((a - slack) * (a - slack) * (a + (n * s2 / vHat)));
-        }
-      };
-    }
-  }
-
-  /**
    * Return a function to minimize with respect to starting slack.
    *
    * This function assumes nothing about rates given.
