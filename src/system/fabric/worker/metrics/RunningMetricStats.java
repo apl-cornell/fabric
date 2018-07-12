@@ -89,21 +89,20 @@ public class RunningMetricStats implements Serializable {
         velocityEst = dx / dt;
         noiseEst = 0.0;
       } else {
-        // No need to worry about 0, we're now averaging and guaranteeing first
-        // value is nonzero.
-        double dt = curTime - old.lastUpdate;
         double alpha = old.getCurAlpha();
+
+        double dt = curTime - old.lastUpdate;
         intervalEst = (1.0 - alpha) * old.intervalEst + alpha * dt;
-        //double newV = dx / Math.max(Math.min(intervalEst, 0.5), dt);
-        double newV = dx / intervalEst;
-        double oldVelocity = old.velocityEst;
-        velocityEst = (1.0 - alpha) * old.velocityEst + alpha * newV;
+
+        double oldDx = old.velocityEst * old.intervalEst;
+        velocityEst = ((1.0 - alpha) * oldDx + alpha * dx)/intervalEst;
+
         // Noise is estimated population variance of dx / dt, so update as if
         // you're doing variance of dx (so difference between expected and
         // observed update based on time since last update) / estimate of dt
         noiseEst = (1.0 - alpha) * old.noiseEst
             + (alpha *
-                (dx - velocityEst * dt) * (dx - oldVelocity * dt)
+                (dx - velocityEst * dt) * (dx - old.velocityEst * dt)
                 / intervalEst);
       }
       lastUpdate = curTime;
