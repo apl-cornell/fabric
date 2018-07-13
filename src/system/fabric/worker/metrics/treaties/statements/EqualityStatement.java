@@ -77,4 +77,13 @@ public class EqualityStatement extends TreatyStatement {
   public MetricTreaty getProxy(Metric m, Store s) {
     return m.getProxy(s).getEqualityTreaty(value);
   }
+
+  @Override
+  public long trueExpiry(double v) {
+    if (v < value) {
+      return 0;
+    } else {
+      return Long.MAX_VALUE;
+    }
+  }
 }

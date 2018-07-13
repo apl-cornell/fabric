@@ -359,4 +359,9 @@ public class ThresholdStatement extends TreatyStatement {
   public MetricTreaty getProxy(Metric m, Store s) {
     return m.getProxy(s).getThresholdTreaty(rate, base);
   }
+
+  @Override
+  public long trueExpiry(double v) {
+    return trueExpiry(v, System.currentTimeMillis());
+  }
 }

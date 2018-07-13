@@ -84,4 +84,13 @@ public class ProxyMetric extends DerivedMetric {
   public String toString() {
     return "Proxy at " + $getStore().toString() + " for " + term(0).toString();
   }
+
+  /*@Override*/
+  protected void createAndActivateThresholdTreaty(double rate, double base, long time, boolean proactive) {
+    if (proactive) {
+      term(0).createAndActivateThresholdTreaty(rate, base, time, proactive);
+    } else {
+      createThresholdTreaty(rate, base, time).update(false, StatsMap.emptyStats());
+    }
+  }
 }

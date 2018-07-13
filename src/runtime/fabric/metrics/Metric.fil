@@ -15,6 +15,7 @@ import fabric.worker.transaction.TransactionManager;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.RunningMetricStats;
+import fabric.worker.metrics.MetricUpdate;
 import fabric.worker.metrics.proxies.ProxyMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatySet;
@@ -731,4 +732,89 @@ public abstract class Metric extends AbstractSubject
    * Handle an update where the metric itself is observing.
    */
   public abstract ImmutableObserverSet handleDirectUpdates();
+
+  /**
+   * Given a treaty bound that must hold as a post condition, apply the given
+   * update if the bound will still hold on this metric afterwards.
+   *
+   * TODO Bound is static for now, in the future maybe we can support dynamic
+   * bounds.
+   *
+   * TODO: Might be worth allowing multiple bounds to apply relative to the
+   * updates in a static method.
+   */
+  // TODO: Make it configurable if we proactively update proxies?
+  public boolean updateWithPostcondition(double bound, MetricUpdate native[] updates) {
+    // First check if there's an existing treaty for the post condition.
+    MetricTreaty existingTreaty = $treaties.get(
+        new ThresholdStatement(0, bound, 0));
+    if (existingTreaty != null && existingTreaty.valid()) {
+      // Treaty exists, now check if any of the updates would violate existing
+      // treaties.
+      // TODO: Not all coordination is equal, perhaps we continue unless treaty
+      // violated would require as much (or more) coordination than the
+      // direct check?
+      boolean success = true;
+      for (int i = 0; i < updates.length; i++) {
+        if (updates[i].violatesExistingTreaties()) {
+          success = false;
+          break;
+        }
+      }
+      if (success) {
+        // We can succeed without violating any treaties, go ahead and then
+        // return.
+        for (int i = 0; i < updates.length; i++) {
+          updates[i].applyUpdate();
+        }
+        return true;
+      }
+    }
+    // We couldn't manage with an existing treaty.  See if this will work with a
+    // direct check.
+
+    // Construct substitution so we can check without applying update.
+    StatsMap substituted = StatsMap.emptyStats();
+    for (int i = 0; i < updates.length; i++) {
+      // Only value that matters is the value itself, other statistics are dummy
+      // values for now.
+      substituted = substituted.put(updates[i].m, updates[i].newVal, 0, 0, 1, 0,
+          1);
+    }
+    // Check if the value, once updates are applied, would satisfy the post
+    // condition.
+    if (value(substituted) > bound) {
+      // Apply updates
+      for (int i = 0; i < updates.length; i++) {
+        updates[i].applyUpdate();
+      }
+      // Now create the post condition as a treaty, if possible, to support
+      // future checks.
+      TransactionManager.getInstance().resolveObservations();
+      // Go through all proxies, being proactive.
+      createAndActivateThresholdTreaty(0, bound, 0, true);
+      return true;
+    }
+
+    // Can't do it, return false and don't apply updates
+    return false;
+  }
+
+  /**
+   * Create and activate a threshold treaty (purely for
+   * updateWithPostcondition), possibly across all proxies of this metric.
+   *
+   * @param proactive
+   *        flag indicating if the treaty should also be proactively established
+   *        across all proxies of the metric.
+   */
+  protected void createAndActivateThresholdTreaty(double rate, double base, long time, boolean proactive) {
+    createThresholdTreaty(rate, base, time).update(false, StatsMap.emptyStats());
+    if (proactive) {
+      for (java.util.Iterator/*<Store, Metric>*/ iter = proxies.entrySet().iterator(); iter.hasNext();) {
+        java.util.Map.Entry/*<Store, Metric>*/ entry = (java.util.Map.Entry) iter.next();
+        ((Metric) entry.getValue()).createThresholdTreaty(rate, base, time).update(false, StatsMap.emptyStats());
+      }
+    }
+  }
 }

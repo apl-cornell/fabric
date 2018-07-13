@@ -60,6 +60,13 @@ public abstract class TreatyStatement implements FastSerializable {
   public abstract long trueExpiry(Metric m, StatsMap weakStats);
 
   /**
+   * @param v the value we want a true expiry relative to.
+   * @return the "true" expiry at which the statement will become false relative
+   * to v.
+   */
+  public abstract long trueExpiry(double v);
+
+  /**
    * Write out the specifics of the statement type.
    */
   public abstract void writeStatementData(DataOutput out) throws IOException;

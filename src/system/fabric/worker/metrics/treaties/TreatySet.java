@@ -96,7 +96,7 @@ public abstract class TreatySet
   public abstract MetricTreaty get(long id);
 
   /**
-   * @return a treaty for the statement, creating one if necessary.
+   * @return treaty for the statement, if it already exists
    */
   public abstract MetricTreaty get(TreatyStatement stmt);
 
