@@ -9,8 +9,8 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 
 import fabric.common.FastSerializable;
-import fabric.common.util.Oid;
 import fabric.metrics.Metric;
+import fabric.metrics.util.TreatiesBox;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -19,23 +19,23 @@ import fabric.worker.Worker;
  * intended to help with inlineable structures like TreatySet.
  */
 @SuppressWarnings("serial")
-public final class MetricRef implements FastSerializable, Serializable {
+public final class TreatiesBoxRef implements FastSerializable, Serializable {
 
   public String objStoreName;
   public long objOnum;
 
-  private transient Metric cached;
+  private transient TreatiesBox cached;
 
-  public MetricRef(String objStoreName, long objOnum) {
+  public TreatiesBoxRef(String objStoreName, long objOnum) {
     this.objStoreName = objStoreName;
     this.objOnum = objOnum;
   }
 
-  public MetricRef(Store objStore, long objOnum) {
+  public TreatiesBoxRef(Store objStore, long objOnum) {
     this(objStore.name(), objOnum);
   }
 
-  public MetricRef(Metric obj) {
+  public TreatiesBoxRef(TreatiesBox obj) {
     this(obj.$getStore(), obj.$getOnum());
   }
 
@@ -55,7 +55,7 @@ public final class MetricRef implements FastSerializable, Serializable {
     // Do nothing?
   }
 
-  public MetricRef(DataInput in) throws IOException {
+  public TreatiesBoxRef(DataInput in) throws IOException {
     this.objStoreName = in.readUTF();
     this.objOnum = in.readLong();
   }
@@ -67,16 +67,17 @@ public final class MetricRef implements FastSerializable, Serializable {
   }
 
   public Metric get() {
-    if (cached == null) cached =
-        new Metric._Proxy(Worker.getWorker().getStore(objStoreName), objOnum);
-    return cached;
+    if (cached == null)
+      cached = new TreatiesBox._Proxy(Worker.getWorker().getStore(objStoreName),
+          objOnum);
+    return cached.get$owner();
   }
 
   @Override
   public boolean equals(Object obj) {
-    return obj == this || (obj instanceof MetricRef
-        && objStoreName.equals(((MetricRef) obj).objStoreName)
-        && objOnum == ((MetricRef) obj).objOnum);
+    return obj == this || (obj instanceof TreatiesBoxRef
+        && objStoreName.equals(((TreatiesBoxRef) obj).objStoreName)
+        && objOnum == ((TreatiesBoxRef) obj).objOnum);
   }
 
   @Override

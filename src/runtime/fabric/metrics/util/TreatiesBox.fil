@@ -1,0 +1,21 @@
+package fabric.metrics.util;
+
+import fabric.metrics.Metric;
+
+//import java.util.logging.Level;
+//import fabric.common.Logging;
+
+
+/**
+ * Utility to make treaties exist outside of metrics for locking.
+ */
+public class TreatiesBox {
+
+  public final Metric owner;
+
+  public TreatiesBox fabric$metrics$util$TreatiesBox$(Metric m) {
+    this.owner = m;
+    fabric$lang$Object$();
+    return this;
+  }
+}

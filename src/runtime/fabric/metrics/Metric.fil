@@ -7,6 +7,7 @@ import fabric.util.Set;
 
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
+import fabric.metrics.util.TreatiesBox;
 
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -22,6 +23,7 @@ import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.statements.EqualityStatement;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
 import fabric.worker.metrics.treaties.statements.ThresholdStatement;
 import fabric.lang.security.LabelUtil;
 
@@ -359,6 +361,7 @@ public abstract class Metric extends AbstractSubject
    *            the Store that holds this {@link Metric}
    */
   protected Metric fabric$metrics$Metric$() {
+    this.treatiesBox = new TreatiesBox().fabric$metrics$util$TreatiesBox$(this);
     fabric$metrics$util$AbstractSubject$();
     this.proxies = ProxyMap.emptyMap();
     return this;
@@ -641,6 +644,8 @@ public abstract class Metric extends AbstractSubject
    */
   public abstract boolean isSingleStore();
 
+  public final TreatiesBox treatiesBox;
+
   /**
    * @param bound
    *        the bound that the treaty will enforce on this
@@ -649,7 +654,7 @@ public abstract class Metric extends AbstractSubject
    *       given bound.
    */
   protected MetricTreaty createThresholdTreaty(double rate, double base, long time) {
-    return $treaties.create(new ThresholdStatement(rate, base, time));
+    return treatiesBox.$treaties.create(new ThresholdStatement(rate, base, time));
   }
 
   /**
@@ -660,7 +665,7 @@ public abstract class Metric extends AbstractSubject
    *       given bound.
    */
   protected MetricTreaty createEqualityTreaty(double value) {
-    return $treaties.create(new EqualityStatement(value));
+    return treatiesBox.$treaties.create(new EqualityStatement(value));
   }
 
   /*@Override*/
@@ -689,10 +694,10 @@ public abstract class Metric extends AbstractSubject
     // call.
     MetricTreaty t = null;
     if (TransactionManager.getInstance().inTxn()) {
-      t = tmp.$treaties.get(treatyId);
+      t = tmp.treatiesBox.$treaties.get(treatyId);
     } else {
       atomic {
-        t = tmp.$treaties.get(treatyId);
+        t = tmp.treatiesBox.$treaties.get(treatyId);
       }
     }
     t.update(asyncExtension, weakStats);
@@ -700,6 +705,68 @@ public abstract class Metric extends AbstractSubject
 
   public void refreshTreaty(boolean asyncExtension, long treatyId, StatsMap weakStats) {
     refreshTreaty_static(this, asyncExtension, treatyId, weakStats);
+  }
+
+  // Variant for creating by statement if not already existing
+  public void refreshEqualityTreaty_remote(fabric.lang.security.Principal p, boolean asyncExtension, double value, StatsMap weakStats) {
+    this.refreshEqualityTreaty(asyncExtension, value, weakStats);
+  }
+
+  // Variant for creating by statement if not already existing
+  private static void refreshEqualityTreaty_static(Metric tmp, boolean asyncExtension, double value, StatsMap weakStats) {
+    // ugh need to make sure treaty is present when run through an async remote
+    // call.
+    MetricTreaty t = null;
+    TreatyStatement treatyStatement = new EqualityStatement(value);
+    if (TransactionManager.getInstance().inTxn()) {
+      t = tmp.treatiesBox.$treaties.get(treatyStatement);
+      if (t == null) {
+        t = tmp.treatiesBox.$treaties.create(treatyStatement);
+      }
+    } else {
+      atomic {
+        t = tmp.treatiesBox.$treaties.get(treatyStatement);
+        if (t == null) {
+          t = tmp.treatiesBox.$treaties.create(treatyStatement);
+        }
+      }
+    }
+    t.update(asyncExtension, weakStats);
+  }
+
+  public void refreshEqualityTreaty(boolean asyncExtension, double value, StatsMap weakStats) {
+    refreshEqualityTreaty_static(this, asyncExtension, value, weakStats);
+  }
+
+  // Variant for creating by statement if not already existing
+  public void refreshThresholdTreaty_remote(fabric.lang.security.Principal p, boolean asyncExtension, double rate, double base, StatsMap weakStats) {
+    this.refreshThresholdTreaty(asyncExtension, rate, base, weakStats);
+  }
+
+  // Variant for creating by statement if not already existing
+  private static void refreshThresholdTreaty_static(Metric tmp, boolean asyncExtension, double rate, double base, StatsMap weakStats) {
+    // ugh need to make sure treaty is present when run through an async remote
+    // call.
+    MetricTreaty t = null;
+    TreatyStatement treatyStatement = new ThresholdStatement(rate, base);
+    if (TransactionManager.getInstance().inTxn()) {
+      t = tmp.treatiesBox.$treaties.get(treatyStatement);
+      if (t == null) {
+        t = tmp.treatiesBox.$treaties.create(treatyStatement);
+      }
+    } else {
+      atomic {
+        t = tmp.treatiesBox.$treaties.get(treatyStatement);
+        if (t == null) {
+          t = tmp.treatiesBox.$treaties.create(treatyStatement);
+        }
+      }
+    }
+    t.update(asyncExtension, weakStats);
+  }
+
+  public void refreshThresholdTreaty(boolean asyncExtension, double rate, double base, StatsMap weakStats) {
+    refreshThresholdTreaty_static(this, asyncExtension, rate, base, weakStats);
   }
 
   /*@Override*/
@@ -714,7 +781,7 @@ public abstract class Metric extends AbstractSubject
     }
     for (LongIterator iter = treatiesToProcess.iterator(); iter.hasNext();) {
       long treatyId = iter.next();
-      MetricTreaty treaty = $treaties.get(treatyId);
+      MetricTreaty treaty = treatiesBox.$treaties.get(treatyId);
       // Do the update
       Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
         treaty.update(false, StatsMap.emptyStats());
@@ -746,7 +813,7 @@ public abstract class Metric extends AbstractSubject
   // TODO: Make it configurable if we proactively update proxies?
   public boolean updateWithPostcondition(double bound, MetricUpdate native[] updates) {
     // First check if there's an existing treaty for the post condition.
-    MetricTreaty existingTreaty = $treaties.get(
+    MetricTreaty existingTreaty = treatiesBox.$treaties.get(
         new ThresholdStatement(0, bound, 0));
     if (existingTreaty != null && existingTreaty.valid()) {
       // Treaty exists, now check if any of the updates would violate existing

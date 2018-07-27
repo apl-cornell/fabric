@@ -21,12 +21,17 @@ import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
+import fabric.worker.metrics.treaties.statements.EqualityStatement;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
+import fabric.worker.metrics.treaties.statements.ThresholdStatement;
 import fabric.worker.transaction.TransactionManager;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.HashMultimap;
 
 import java.util.logging.Level;
 import fabric.common.Logging;
@@ -530,11 +535,11 @@ public abstract class DerivedMetric extends Metric implements Observer {
     if (isSingleStore() || value != value()) {
       return DirectPolicy.singleton;
     } else {
-      MetricTreaty native[] witnesses = new MetricTreaty native[terms.length()];
+      Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
       // Defend all rows against the bound individually, using the strictest
       // bounds across the rows for each term in this sum.
       for (int i = 0; i < terms.length(); i++) {
-        witnesses[i] = term(i).getEqualityTreaty(term(i).value());
+        witnesses.put(term(i), new EqualityStatement(term(i).value()));
       }
       return new WitnessPolicy(witnesses);
     }

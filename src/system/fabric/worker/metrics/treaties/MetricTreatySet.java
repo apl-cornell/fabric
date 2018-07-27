@@ -11,7 +11,7 @@ import java.util.logging.Level;
 import fabric.common.Logging;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.metrics.Metric;
+import fabric.metrics.util.TreatiesBox;
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
@@ -22,14 +22,14 @@ import fabric.worker.transaction.TransactionManager;
  */
 public class MetricTreatySet extends TreatySet {
 
-  private MetricRef owner;
+  private TreatiesBoxRef owner;
   private LongKeyMap<MetricTreaty> items;
   private long nextId;
   private Map<TreatyStatement, MetricTreaty> statementMap;
 
-  public MetricTreatySet(Metric owner) {
+  public MetricTreatySet(TreatiesBox owner) {
     super(TreatySet.Kind.METRIC);
-    this.owner = new MetricRef(owner);
+    this.owner = new TreatiesBoxRef(owner);
     this.items = new LongKeyHashMap<>();
     this.statementMap = new HashMap<>();
     this.nextId = 0;
@@ -55,7 +55,7 @@ public class MetricTreatySet extends TreatySet {
   }
 
   /** @return a value to use for an empty vector */
-  public static TreatySet emptySet(Metric owner) {
+  public static TreatySet emptySet(TreatiesBox owner) {
     return new MetricTreatySet(owner);
   }
 
@@ -73,7 +73,7 @@ public class MetricTreatySet extends TreatySet {
 
   public MetricTreatySet(DataInput in) throws IOException {
     super(TreatySet.Kind.METRIC);
-    this.owner = new MetricRef(in);
+    this.owner = new TreatiesBoxRef(in);
     this.nextId = in.readLong();
     int size = in.readInt();
     this.items = new LongKeyHashMap<>(size);
@@ -119,7 +119,7 @@ public class MetricTreatySet extends TreatySet {
             new Object[] { old,
                 TransactionManager.getInstance().getCurrentTid(),
                 Thread.currentThread(), treaty });
-    owner.get().set$$treaties(updated);
+    owner.get().get$treatiesBox().set$$treaties(updated);
   }
 
   @Override
@@ -134,7 +134,7 @@ public class MetricTreatySet extends TreatySet {
     MetricTreatySet updated = new MetricTreatySet(this);
     MetricTreaty val = updated.items.remove(treaty.getId());
     updated.statementMap.remove(treaty.statement, val);
-    owner.get().set$$treaties(updated);
+    owner.get().get$treatiesBox().set$$treaties(updated);
   }
 
   @Override
@@ -156,7 +156,7 @@ public class MetricTreatySet extends TreatySet {
         new MetricTreaty(updated.owner.get(), updated.nextId++, stmt);
     updated.items.put(newTreaty.getId(), newTreaty);
     updated.statementMap.put(newTreaty.statement, newTreaty);
-    owner.get().set$$treaties(updated);
+    owner.get().get$treatiesBox().set$$treaties(updated);
     return newTreaty;
   }
 

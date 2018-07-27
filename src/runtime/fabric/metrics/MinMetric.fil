@@ -18,7 +18,13 @@ import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
+import fabric.worker.metrics.treaties.statements.EqualityStatement;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
+import fabric.worker.metrics.treaties.statements.ThresholdStatement;
 import fabric.worker.transaction.TransactionManager;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.HashMultimap;
 
 /**
  * A {@link DerivedMetric} for the minimum of a group of other {@link Metric}s.
@@ -281,11 +287,11 @@ public class MinMetric extends DerivedMetric {
         // operations on different metrics in a derived metric...
         //if (isSingleStore())
         //    return DirectPolicy.singleton;
-        MetricTreaty native[] witnesses = new MetricTreaty native[terms.length()];
+        Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
         for (int i = 0; i < terms.length(); i++) {
-            witnesses[i] = term(i).getThresholdTreaty(rate, base);
+            witnesses.put(term(i), new ThresholdStatement(rate, base));
         }
         return new WitnessPolicy(witnesses);
     }

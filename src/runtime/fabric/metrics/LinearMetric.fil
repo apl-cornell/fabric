@@ -20,6 +20,12 @@ import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
+import fabric.worker.metrics.treaties.statements.EqualityStatement;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
+import fabric.worker.metrics.treaties.statements.ThresholdStatement;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.HashMultimap;
 
 //import java.util.logging.Level;
 //import fabric.common.Logging;
@@ -473,7 +479,7 @@ public class LinearMetric extends DerivedMetric {
   public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store str) {
     if (isSingleStore())
       return DirectPolicy.singleton;
-    Map/*<Metric, MetricTreaty>*/ witnesses = new LinkedHashMap/*<>*/();
+    Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
 
     long currentTime = System.currentTimeMillis();
     double baseNow = Bound.value(rate, base, currentTime);
@@ -511,19 +517,21 @@ public class LinearMetric extends DerivedMetric {
           b = -b;
           r = -r;
         }
-        double native[] normalized = Bound.createBound(r, b, currentTime);
-        if (!witnesses.containsKey(m)
-            || !((MetricTreaty) witnesses.get(m)).implies(m, normalized[0], normalized[1])) {
-          witnesses.put(m, m.getThresholdTreaty(r, b, currentTime));
+        TreatyStatement newStmt = new ThresholdStatement(r, b, currentTime);
+        boolean implied = false;
+        for (Iterator/*<TreatyStatement>*/ iter = witnesses.get(m).iterator(); iter.hasNext();) {
+          TreatyStatement stmt = (TreatyStatement) iter.next();
+          if (stmt.implies(newStmt)) {
+            implied = true;
+            break;
+          }
+        }
+        if (!implied) {
+          witnesses.put(m, newStmt);
         }
       }
     }
-    MetricTreaty native[] finalWitnesses = new MetricTreaty native[witnesses.size()];
-    int i = 0;
-    for (Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
-      finalWitnesses[i++] = (MetricTreaty) iter.next();
-    }
-    return new WitnessPolicy(finalWitnesses);
+    return new WitnessPolicy(witnesses);
   }
 
   /*@Override*/

@@ -16,6 +16,12 @@ import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
+import fabric.worker.metrics.treaties.statements.EqualityStatement;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
+import fabric.worker.metrics.treaties.statements.ThresholdStatement;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.HashMultimap;
 
 /**
  * A {@link DerivedMetric} for the scaled value of a given metric.
@@ -193,8 +199,9 @@ public class ScaledMetric extends DerivedMetric {
             baseNow = -baseNow;
             rate = -rate;
         }
-        witness = m.getThresholdTreaty(rate, baseNow, currentTime);
-        return new WitnessPolicy(new MetricTreaty native[] { witness });
+        Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
+        witnesses.put(m, new ThresholdStatement(rate, baseNow, currentTime));
+        return new WitnessPolicy(witnesses);
     }
 
     /*@Override*/

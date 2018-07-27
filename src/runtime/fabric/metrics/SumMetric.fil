@@ -3,7 +3,7 @@ package fabric.metrics;
 import java.util.Arrays;
 import fabric.util.LinkedHashMap;
 import fabric.util.Map;
-import fabric.util.Iterator;
+import java.util.Iterator;
 
 import fabric.common.ConfigProperties;
 import fabric.metrics.contracts.Bound;
@@ -19,7 +19,12 @@ import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
+import fabric.worker.metrics.treaties.statements.EqualityStatement;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
 import fabric.worker.metrics.treaties.statements.ThresholdStatement;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.HashMultimap;
 
 import java.util.logging.Level;
 import fabric.common.Logging;
@@ -293,7 +298,7 @@ public class SumMetric extends DerivedMetric {
 
       if (config.usePresetStrategy) {
 
-        java.util.Map/*<Metric, MetricTreaty>*/ witnesses = new java.util.HashMap/*<>*/();
+        Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
 
         // For each term, update the associated bounds to be the tightest
         // bound set across the rows
@@ -311,19 +316,21 @@ public class SumMetric extends DerivedMetric {
           // updated much less frequently than the other values in the sum.
           double b = scaledX - ((m.getPresetB() / getPresetB()) * (totalValue - baseNow));
 
-          double native[] normalized = Bound.createBound(r, b, currentTime);
-          if (!witnesses.containsKey(m) || !((MetricTreaty) witnesses.get(m)).implies(m, normalized[0], normalized[1])) {
-            witnesses.put(m, m.getThresholdTreaty(r, b, currentTime));
+          TreatyStatement newStmt = new ThresholdStatement(r, b, currentTime);
+          boolean implied = false;
+          for (Iterator/*<TreatyStatement>*/ iter = witnesses.get(m).iterator(); iter.hasNext();) {
+            TreatyStatement stmt = (TreatyStatement) iter.next();
+            if (stmt.implies(newStmt)) {
+              implied = true;
+              break;
+            }
+          }
+          if (!implied) {
+            witnesses.put(m, newStmt);
           }
         }
 
-        MetricTreaty native[] finalWitnesses = new MetricTreaty native[witnesses.size()];
-        int i = 0;
-        for (java.util.Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
-          finalWitnesses[i++] = (MetricTreaty) iter.next();
-        }
-
-        return new WitnessPolicy(finalWitnesses);
+        return new WitnessPolicy(witnesses);
       } else {
         // TODO: Make the samples cutoff configurable.
         //double baseFactor = totalSamples > 10 ? 0.0 / Math.sqrt(totalSamples) : 1.0;
@@ -363,7 +370,7 @@ public class SumMetric extends DerivedMetric {
         double native [] staticSlacks = SumStrategy.getSplit(velocities, noises, staticRates, (totalValue - baseNow));
         // For each term, update the associated bounds to be the tightest
         // bound set across the rows
-        java.util.Map/*<Metric, MetricTreaty>*/ staticWitnesses = new java.util.HashMap/*<>*/();
+        Multimap/*<Metric, TreatyStatement>*/ staticWitnesses = HashMultimap/*<>*/.create();
         long staticTimeout = Long.MAX_VALUE;
         for (int j = 0; j < numTerms; j++) {
           Metric m = term(j);
@@ -377,16 +384,24 @@ public class SumMetric extends DerivedMetric {
           // updated much less frequently than the other values in the sum.
           double b = scaledX - staticSlacks[j];
 
-          double native[] normalized = Bound.createBound(r, b, currentTime);
-          if (!staticWitnesses.containsKey(m) || !((MetricTreaty) staticWitnesses.get(m)).implies(m, normalized[0], normalized[1])) {
-            staticWitnesses.put(m, m.getThresholdTreaty(r, b, currentTime));
+          ThresholdStatement newStmt = new ThresholdStatement(r, b, currentTime);
+          boolean implied = false;
+          for (Iterator/*<TreatyStatement>*/ iter = staticWitnesses.get(m).iterator(); iter.hasNext();) {
+            TreatyStatement stmt = (TreatyStatement) iter.next();
+            if (stmt.implies(newStmt)) {
+              implied = true;
+              break;
+            }
           }
-          // Update the timeout estimate.
-          staticTimeout = Math.min(staticTimeout, ThresholdStatement.hedgedEstimate(m, normalized[0], normalized[1], currentTime, weakStats));
+          if (!implied) {
+            staticWitnesses.put(m, newStmt);
+            // Update the timeout estimate.
+            staticTimeout = Math.min(staticTimeout, ThresholdStatement.hedgedEstimate(m, newStmt.rate, newStmt.base, currentTime, weakStats));
+          }
         }
 
         // Size should be the same for either option.
-        MetricTreaty native[] finalWitnesses = new MetricTreaty native[staticWitnesses.size()];
+        Multimap/*<Metric, TreatyStatement>*/ finalWitnesses = staticWitnesses;
 
         // It's only worth using an adaptive strategy if we have a term that
         // will generate slack and either this is multi-store (and therefore
@@ -396,7 +411,7 @@ public class SumMetric extends DerivedMetric {
           // If there's a slack producer, see if the dynamic strategy is better.
           double native [] adaptiveSlacks = SumStrategy.getSplitEqualVelocity(velocities, noises, adaptiveRates, (totalValue - baseNow));
 
-          java.util.Map/*<Metric, MetricTreaty>*/ adaptiveWitnesses = new java.util.HashMap/*<>*/();
+          Multimap/*<Metric, TreatyStatement>*/ adaptiveWitnesses = HashMultimap/*<>*/.create();
           long adaptiveTimeout = Long.MAX_VALUE;
           for (int j = 0; j < numTerms; j++) {
             Metric m = term(j);
@@ -412,30 +427,24 @@ public class SumMetric extends DerivedMetric {
             // updated much less frequently than the other values in the sum.
             double b = scaledX - adaptiveSlacks[j];
 
-            double native[] normalized = Bound.createBound(r, b, currentTime);
-            if (!adaptiveWitnesses.containsKey(m) || !((MetricTreaty) adaptiveWitnesses.get(m)).implies(m, normalized[0], normalized[1])) {
-              adaptiveWitnesses.put(m, m.getThresholdTreaty(r, b, currentTime));
+            ThresholdStatement newStmt = new ThresholdStatement(r, b, currentTime);
+            boolean implied = false;
+            for (Iterator/*<TreatyStatement>*/ iter = adaptiveWitnesses.get(m).iterator(); iter.hasNext();) {
+              TreatyStatement stmt = (TreatyStatement) iter.next();
+              if (stmt.implies(newStmt)) {
+                implied = true;
+                break;
+              }
             }
-            // Update the timeout estimate.
-            adaptiveTimeout = Math.min(adaptiveTimeout, ThresholdStatement.hedgedEstimate(m, normalized[0], normalized[1], currentTime, weakStats));
+            if (!implied) {
+              adaptiveWitnesses.put(m, newStmt);
+              // Update the timeout estimate.
+              adaptiveTimeout = Math.min(adaptiveTimeout, ThresholdStatement.hedgedEstimate(m, newStmt.rate, newStmt.base, currentTime, weakStats));
+            }
           }
 
           if (adaptiveTimeout >= staticTimeout) {
-            int i = 0;
-            for (java.util.Iterator iter = adaptiveWitnesses.values().iterator(); iter.hasNext();) {
-              finalWitnesses[i++] = (MetricTreaty) iter.next();
-            }
-          } else {
-            int i = 0;
-            for (java.util.Iterator iter = staticWitnesses.values().iterator(); iter.hasNext();) {
-              finalWitnesses[i++] = (MetricTreaty) iter.next();
-            }
-          }
-        } else {
-          // Otherwise, just go with the static solution.
-          int i = 0;
-          for (java.util.Iterator iter = staticWitnesses.values().iterator(); iter.hasNext();) {
-            finalWitnesses[i++] = (MetricTreaty) iter.next();
+            finalWitnesses = adaptiveWitnesses;
           }
         }
 

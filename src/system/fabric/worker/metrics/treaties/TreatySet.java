@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.FastSerializable;
-import fabric.metrics.Metric;
+import fabric.metrics.util.TreatiesBox;
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
@@ -32,7 +32,8 @@ public abstract class TreatySet
 
   /** @return a value to use for an empty vector */
   public static TreatySet emptySet(fabric.lang.Object owner) {
-    if (owner instanceof Metric) return new MetricTreatySet((Metric) owner);
+    if (owner instanceof TreatiesBox)
+      return new MetricTreatySet((TreatiesBox) owner);
     return DummyTreatySet.singleton;
   }
 

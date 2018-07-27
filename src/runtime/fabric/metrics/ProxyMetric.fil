@@ -6,6 +6,12 @@ import fabric.worker.metrics.proxies.ProxyMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
+import fabric.worker.metrics.treaties.statements.EqualityStatement;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
+import fabric.worker.metrics.treaties.statements.ThresholdStatement;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.HashMultimap;
 
 import fabric.common.exceptions.InternalError;
 
@@ -71,13 +77,17 @@ public class ProxyMetric extends DerivedMetric {
   /*@Override*/
   public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
     // TODO: Is this right?
-    return new WitnessPolicy(new MetricTreaty native [] { term(0).getEqualityTreaty(value) });
+    Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
+    witnesses.put(term(0), new EqualityStatement(value));
+    return new WitnessPolicy(witnesses);
   }
 
   /*@Override*/
   public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
     // TODO: Is this right?
-    return new WitnessPolicy(new MetricTreaty native [] { term(0).getThresholdTreaty(rate, base) });
+    Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
+    witnesses.put(term(0), new ThresholdStatement(rate, base));
+    return new WitnessPolicy(witnesses);
   }
 
   /*@Override*/

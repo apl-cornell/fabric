@@ -33,7 +33,7 @@ import fabric.worker.transaction.TransactionManager;
 public class MetricTreaty implements Treaty<MetricTreaty> {
 
   /** The metric this treaty is over. */
-  public final MetricRef metric;
+  public final TreatiesBoxRef metric;
 
   /**
    * The id of this treaty within the metric.  Used to reference treaties
@@ -65,16 +65,17 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
   public final long expiry;
 
   public MetricTreaty(Metric metric, long id, TreatyStatement statement) {
-    this.metric = new MetricRef(metric);
+    this.metric = new TreatiesBoxRef(metric.get$treatiesBox());
     this.id = id;
     this.activated = false;
     this.statement = statement;
     this.observers = ImmutableObserverSet.emptySet();
     this.policy = NoPolicy.singleton;
     this.expiry = policy.calculateExpiry(this, StatsMap.emptyStats());
-    TransactionManager.getInstance().registerTreatyUpdate(metric, id);
-    Logging.METRICS_LOGGER.log(Level.FINEST, "CREATED TREATY {0} FOR {1}",
-        new Object[] { this, getMetric() });
+    TransactionManager.getInstance()
+        .registerTreatyUpdate(metric.get$treatiesBox(), id);
+    Logging.METRICS_LOGGER.log(Level.FINE, "CREATED TREATY {0}",
+        new Object[] { this });
   }
 
   /**
@@ -83,7 +84,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
    * Metric is provided on the side to avoid unnecessary repeated references in
    * serialized TreatySet.
    */
-  public MetricTreaty(MetricRef m, DataInput in) throws IOException {
+  public MetricTreaty(TreatiesBoxRef m, DataInput in) throws IOException {
     this.metric = m;
     this.id = in.readLong();
     this.activated = in.readBoolean();
@@ -118,16 +119,17 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = observers;
     this.policy = original.policy;
     this.expiry = original.expiry;
-    TransactionManager.getInstance().registerTreatyUpdate(getMetric(), id);
+    TransactionManager.getInstance()
+        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     // Update containing treaty set.
     if (this.activated && this.policy instanceof NoPolicy) {
       // Garbage collect if this is no longer enforced and has been activated
       // previously.
-      this.getMetric().get$$treaties().remove(original);
+      this.getMetric().get$treatiesBox().get$$treaties().remove(original);
     } else {
       // Otherwise, make sure the updated value is in the set.
-      this.getMetric().get$$treaties().add(this);
+      this.getMetric().get$treatiesBox().get$$treaties().add(this);
     }
 
     Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
@@ -151,11 +153,14 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = observers;
     this.policy = policy;
     this.expiry = expiry;
-    TransactionManager.getInstance().registerTreatyUpdate(getMetric(), id);
+    TransactionManager.getInstance()
+        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     if (!original.policy.equals(policy)) {
       // Stop observing the old policy.
       original.policy.unapply(this);
+
+      // TODO: Make sure that we don't unapply overlapping witnesses.
 
       // Start observing the new policy.
       policy.apply(this);
@@ -165,10 +170,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     if (this.activated && this.policy instanceof NoPolicy) {
       // Garbage collect if this is no longer enforced and has been activated
       // previously.
-      this.getMetric().get$$treaties().remove(original);
+      this.getMetric().get$treatiesBox().get$$treaties().remove(original);
     } else {
       // Otherwise, make sure the updated value is in the set.
-      this.getMetric().get$$treaties().add(this);
+      this.getMetric().get$treatiesBox().get$$treaties().add(this);
     }
 
     Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
@@ -191,7 +196,8 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = original.observers;
     this.policy = original.policy;
     this.expiry = newExpiry;
-    TransactionManager.getInstance().registerTreatyUpdate(getMetric(), id);
+    TransactionManager.getInstance()
+        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     // Update containing treaty set.
     if (this.activated && this.policy instanceof NoPolicy) {
@@ -201,10 +207,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
           new Object[] { original,
               TransactionManager.getInstance().getCurrentTid(),
               Thread.currentThread() });
-      this.getMetric().get$$treaties().remove(original);
+      this.getMetric().get$treatiesBox().get$$treaties().remove(original);
     } else {
       // Otherwise, make sure the updated value is in the set.
-      this.getMetric().get$$treaties().add(this);
+      this.getMetric().get$treatiesBox().get$$treaties().add(this);
     }
 
     Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
@@ -228,7 +234,8 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = original.observers;
     this.policy = policy;
     this.expiry = newExpiry;
-    TransactionManager.getInstance().registerTreatyUpdate(getMetric(), id);
+    TransactionManager.getInstance()
+        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     if (!original.policy.equals(policy)) {
       // Stop observing the old policy.
@@ -246,10 +253,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
           new Object[] { original,
               TransactionManager.getInstance().getCurrentTid(),
               Thread.currentThread() });
-      this.getMetric().get$$treaties().remove(original);
+      this.getMetric().get$treatiesBox().get$$treaties().remove(original);
     } else {
       // Otherwise, make sure the updated value is in the set.
-      this.getMetric().get$$treaties().add(this);
+      this.getMetric().get$treatiesBox().get$$treaties().add(this);
     }
 
     Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
@@ -337,28 +344,22 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
   private Pair<MetricTreaty, ImmutableObserverSet> updateToNewPolicy(
       boolean asyncExtension, StatsMap weakStats) {
     // Get a policy
-    EnforcementPolicy newPolicy = TransactionManager.getInstance().inTxn()
-        ? statement.getNewPolicy(getMetric(), weakStats)
-        : Worker.runInSubTransaction(new Code<EnforcementPolicy>() {
-          @Override
-          public EnforcementPolicy run() {
-            return statement.getNewPolicy(getMetric(), weakStats);
-          }
-        });
+    //EnforcementPolicy newPolicy = TransactionManager.getInstance().inTxn()
+    //    ? statement.getNewPolicy(getMetric(), weakStats)
+    //    : Worker.runInSubTransaction(new Code<EnforcementPolicy>() {
+    //      @Override
+    //      public EnforcementPolicy run() {
+    //        return statement.getNewPolicy(getMetric(), weakStats);
+    //      }
+    //    });
+    EnforcementPolicy newPolicy =
+        statement.getNewPolicy(getMetric(), weakStats);
 
     // Activate children
     newPolicy.activate(weakStats);
 
     // Activate this.
-    return TransactionManager.getInstance().inTxn()
-        ? switchToNewPolicy(newPolicy, asyncExtension, weakStats)
-        : Worker.runInSubTransaction(
-            new Code<Pair<MetricTreaty, ImmutableObserverSet>>() {
-              @Override
-              public Pair<MetricTreaty, ImmutableObserverSet> run() {
-                return switchToNewPolicy(newPolicy, asyncExtension, weakStats);
-              }
-            });
+    return switchToNewPolicy(newPolicy, asyncExtension, weakStats);
   }
 
   /**
@@ -367,22 +368,47 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
    */
   private Pair<MetricTreaty, ImmutableObserverSet> switchToNewPolicy(
       EnforcementPolicy newPolicy, boolean asyncExtension, StatsMap weakStats) {
+    Logging.METRICS_LOGGER.log(Level.FINE, "SWITCHING {0} TO POLICY {1} IN {2}",
+        new Object[] { this, newPolicy,
+            TransactionManager.getInstance().getCurrentTid() });
     long newExpiry = newPolicy.calculateExpiry(this, weakStats);
 
     // Check if the new policy works. Otherwise, this is dead.
     if (newExpiry >= System.currentTimeMillis()) {
-      MetricTreaty updatedTreaty = new MetricTreaty(this, newPolicy, newExpiry);
+      final MetricTreaty orig = this;
+      MetricTreaty updatedTreaty = TransactionManager.getInstance().inTxn()
+          ? new MetricTreaty(orig, newPolicy, newExpiry)
+          : Worker.runInSubTransaction(new Code<MetricTreaty>() {
+            @Override
+            public MetricTreaty run() {
+              return new MetricTreaty(orig, newPolicy, newExpiry);
+            }
+          });
       if (this.expiry > updatedTreaty.expiry) {
         return new Pair<>(updatedTreaty, updatedTreaty.observers);
       } else {
         return new Pair<>(updatedTreaty, ImmutableObserverSet.emptySet());
       }
     } else {
+      final MetricTreaty orig = this;
+      MetricTreaty updatedTreaty = null;
       // Run unapply to clean up the policy.
-      newPolicy.unapply(this);
+      if (TransactionManager.getInstance().inTxn()) {
+        // TODO: Run this asynchronously.
+        newPolicy.unapply(orig);
+        updatedTreaty = new MetricTreaty(orig, NoPolicy.singleton, 0);
+      } else {
+        updatedTreaty = Worker.runInSubTransaction(new Code<MetricTreaty>() {
+          @Override
+          public MetricTreaty run() {
+            // TODO: this should be run in a series of smaller transactions
+            // after this transaction to avoid contention and latency.
+            newPolicy.unapply(orig);
+            return new MetricTreaty(orig, NoPolicy.singleton, 0);
+          }
+        });
+      }
 
-      MetricTreaty updatedTreaty =
-          new MetricTreaty(this, NoPolicy.singleton, 0);
       if (this.expiry > updatedTreaty.expiry) {
         return new Pair<>(updatedTreaty, updatedTreaty.observers);
       } else {

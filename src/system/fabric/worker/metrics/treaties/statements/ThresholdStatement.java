@@ -18,8 +18,8 @@ public class ThresholdStatement extends TreatyStatement {
   // Number of standard deviations to consider for hedging.
   private static final double HEDGE_FACTOR = 3.0;
 
-  private final double rate;
-  private final double base;
+  public final double rate;
+  public final double base;
 
   public ThresholdStatement(double rate, double base) {
     super(TreatyStatement.Kind.THRESHOLD);

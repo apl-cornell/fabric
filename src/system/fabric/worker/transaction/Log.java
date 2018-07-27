@@ -4,6 +4,8 @@ import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.WORKER_DEADLOCK_LOGGER;
 import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -564,8 +566,11 @@ public final class Log {
   public void checkRetrySignal() throws TransactionRestartingException {
     if (this.retrySignal != null) {
       synchronized (this) {
-        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got retry signal",
-            this);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        this.retryCause.printStackTrace(pw);
+        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got retry signal {1}\n{2}",
+            new Object[] { this, this.retryCause, sw });
 
         throw new TransactionRestartingException(this.retrySignal,
             this.retryCause);

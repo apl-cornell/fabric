@@ -19,14 +19,14 @@ import fabric.worker.Store;
 @SuppressWarnings("serial")
 public final class TreatyRef implements FastSerializable, Serializable {
 
-  public MetricRef objRef;
+  public TreatiesBoxRef objRef;
   public long treatyId;
 
   public static TreatyRef createRef(MetricTreaty treaty) {
     return new TreatyRef(treaty);
   }
 
-  public TreatyRef(MetricRef objRef, long treatyId) {
+  public TreatyRef(TreatiesBoxRef objRef, long treatyId) {
     this.objRef = objRef;
     this.treatyId = treatyId;
   }
@@ -39,7 +39,7 @@ public final class TreatyRef implements FastSerializable, Serializable {
 
   private void readObject(ObjectInputStream in)
       throws IOException, ClassNotFoundException {
-    this.objRef = new MetricRef(in);
+    this.objRef = new TreatiesBoxRef(in);
     this.treatyId = in.readLong();
   }
 
@@ -48,7 +48,7 @@ public final class TreatyRef implements FastSerializable, Serializable {
   }
 
   public TreatyRef(DataInput in) throws IOException {
-    this.objRef = new MetricRef(in);
+    this.objRef = new TreatiesBoxRef(in);
     this.treatyId = in.readLong();
   }
 
@@ -59,7 +59,7 @@ public final class TreatyRef implements FastSerializable, Serializable {
   }
 
   public TreatyRef(String objStoreName, long objOnum, long treatyId) {
-    this.objRef = new MetricRef(objStoreName, objOnum);
+    this.objRef = new TreatiesBoxRef(objStoreName, objOnum);
     this.treatyId = treatyId;
   }
 
@@ -68,7 +68,7 @@ public final class TreatyRef implements FastSerializable, Serializable {
   }
 
   public TreatyRef(Metric obj, long treatyId) {
-    this(new MetricRef(obj), treatyId);
+    this(new TreatiesBoxRef(obj.get$treatiesBox()), treatyId);
   }
 
   public TreatyRef(MetricTreaty treaty) {
@@ -76,7 +76,7 @@ public final class TreatyRef implements FastSerializable, Serializable {
   }
 
   public MetricTreaty get() {
-    return objRef.get().get$$treaties().get(treatyId);
+    return objRef.get().get$treatiesBox().get$$treaties().get(treatyId);
   }
 
   @Override

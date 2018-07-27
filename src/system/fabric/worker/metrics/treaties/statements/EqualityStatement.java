@@ -14,7 +14,7 @@ import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
  * {@link TreatyStatement} for equality bounds.
  */
 public class EqualityStatement extends TreatyStatement {
-  private final double value;
+  public final double value;
 
   public EqualityStatement(double value) {
     super(TreatyStatement.Kind.EQUALITY);

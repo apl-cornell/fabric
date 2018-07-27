@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import fabric.common.exceptions.NotImplementedException;
-import fabric.metrics.Metric;
+import fabric.metrics.util.TreatiesBox;
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
@@ -48,7 +48,7 @@ public class DummyTreatySet extends TreatySet {
   }
 
   /** @return a value to use for an empty vector */
-  public static TreatySet emptySet(Metric owner) {
+  public static TreatySet emptySet(TreatiesBox owner) {
     return new MetricTreatySet(owner);
   }
 

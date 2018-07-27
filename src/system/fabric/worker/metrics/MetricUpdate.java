@@ -20,7 +20,7 @@ public class MetricUpdate {
    * Check if the update would violate any local treaties.
    */
   public boolean violatesExistingTreaties() {
-    for (MetricTreaty treaty : m.get$$treaties()) {
+    for (MetricTreaty treaty : m.get$treatiesBox().get$$treaties()) {
       // Update would require a retraction, so it "violates" an existing treaty.
       if (treaty.statement.trueExpiry(newVal) < treaty.expiry) return true;
     }

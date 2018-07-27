@@ -571,18 +571,18 @@ public class TransactionManager {
                                   .getStore(database.getName());
                               final Metric._Proxy target =
                                   new Metric._Proxy(store, extension.onum);
-                              MetricTreaty orig = target.get$$treaties()
+                              MetricTreaty orig = target.get$treatiesBox().get$$treaties()
                                   .get(extension.treatyId);
                               if (orig != null) {
-                                long oldExpiry = target.get$$treaties()
+                                long oldExpiry = target.get$treatiesBox().get$$treaties()
                                     .get(extension.treatyId).expiry;
                                 target.refreshTreaty(true, extension.treatyId,
                                     StatsMap.emptyStats());
                                 return new Triple<>(
                                     target.toString() + ": "
-                                        + target.get$$treaties()
+                                        + target.get$treatiesBox().get$$treaties()
                                             .get(extension.treatyId).toString(),
-                                    oldExpiry, target.get$$treaties()
+                                    oldExpiry, target.get$treatiesBox().get$$treaties()
                                         .get(extension.treatyId).expiry);
                               }
                               // Treaty was removed.
