@@ -1342,7 +1342,9 @@ public final class TransactionManager {
                         obj.getClass(), lock, System.identityHashCode(obj),
                         Thread.currentThread());
                   }
-                  waitsFor.add(lock);
+                  // Don't wait for readers, either they'll abort later on or
+                  // finish their 2PC
+                  //waitsFor.add(lock);
                   lock.flagRetry("writer " + current.tid + " wants to write "
                       + obj.$getStore() + "/" + obj.$getOnum());
                 }
