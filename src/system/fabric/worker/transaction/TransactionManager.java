@@ -990,6 +990,20 @@ public final class TransactionManager {
   }
 
   /**
+   * If there's a transaction currently, enqueue a runnable to run if the
+   * transaction successfully runs 2PC.
+   *
+   * @param r the runnable to run on successful 2PC.
+   */
+  public void registerCommitHook(Runnable r) {
+    if (current != null) {
+      synchronized (current.commitHooks) {
+        current.commitHooks.add(r);
+      }
+    }
+  }
+
+  /**
    * Starts a new transaction. The sub-transaction runs in the same thread as
    * the caller.
    */
