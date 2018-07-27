@@ -196,6 +196,11 @@ public final class Log {
   public final List<RemoteWorker> workersCalled;
 
   /**
+   * Set of runnables to run if this transaction commits.
+   */
+  public final List<Runnable> commitHooks;
+
+  /**
    * Indicates the state of commit for the top-level transaction.
    */
   public final CommitState commitState;
@@ -313,6 +318,7 @@ public final class Log {
     this.extensionTriggers = new OidKeyHashMap<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
+    this.commitHooks = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
     this.waitsFor = new HashSet<>();
     this.waitsOn = null;
@@ -689,6 +695,7 @@ public final class Log {
       acquires.clear();
       pendingReleases.clear();
       locksCreated.clear();
+      commitHooks.clear();
 
       if (parent != null) {
         writerMap = new WriterMap(parent.writerMap);
@@ -933,6 +940,11 @@ public final class Log {
       parent.locksCreated.putAll(locksCreated);
     }
 
+    // Merge hooks.
+    synchronized (parent.commitHooks) {
+      parent.commitHooks.addAll(commitHooks);
+    }
+
     // Update the expiry time and drop this child.
     synchronized (parent) {
       parent.expiryToCheck = Math.min(expiryToCheck, parent.expiryToCheck);
@@ -1061,6 +1073,11 @@ public final class Log {
 
     // Merge the security cache into the top-level label cache.
     securityCache.mergeWithTopLevel();
+
+    // Run commit hooks.
+    for (Runnable hook : commitHooks) {
+      hook.run();
+    }
   }
 
   /**
