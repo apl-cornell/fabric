@@ -298,12 +298,15 @@ public class TransactionPrepare {
    * Initiate an abort due to some problem on the coordinator side.
    */
   public synchronized void abort() {
-    if (currentStatus != Status.ABORTING) {
+    // Don't run an abort if this is a transaction that commits in a single
+    // round trip or is already committing/committed.
+    if (currentStatus != Status.ABORTING && currentStatus != Status.COMMITTING
+        && currentStatus != Status.COMMITTED && !singleStore && !readOnly) {
       WORKER_TRANSACTION_LOGGER.log(Level.FINE,
           "{0} aborted during prepare by external actor", txnLog);
       runAbort();
+      cleanUp();
     }
-    cleanUp();
   }
 
   /**
