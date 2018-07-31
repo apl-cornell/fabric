@@ -20,6 +20,7 @@ import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
+import fabric.worker.metrics.treaties.enforcement.NoPolicy;
 import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
 import fabric.worker.metrics.treaties.statements.EqualityStatement;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
@@ -532,16 +533,27 @@ public abstract class DerivedMetric extends Metric implements Observer {
   /*@Override*/
   public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
     // TODO: There's a better policy to override this with in MinMetric.
-    if (isSingleStore() || value != value()) {
-      return DirectPolicy.singleton;
-    } else {
-      Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
-      // Defend all rows against the bound individually, using the strictest
-      // bounds across the rows for each term in this sum.
-      for (int i = 0; i < terms.length(); i++) {
-        witnesses.put(term(i), new EqualityStatement(term(i).value()));
+    // The value will be checked consistently later if we're using weak stats
+    // right now.
+    if (value == value(weakStats)) {
+      // XXX: There's an assumption here that the weakStats are "consistently"
+      // computed and aren't estimated for derived metrics in a way that's
+      // inconsistent with the estimates of the individual terms.
+      // TODO: We could sanity check this...
+      if (!isSingleStore()) {
+        Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
+        // Defend each term against the current value that supposedly make this
+        // derived metric equal the given value.
+        for (int i = 0; i < terms.length(); i++) {
+          witnesses.put(term(i), new EqualityStatement(term(i).value(weakStats)));
+        }
+        return new WitnessPolicy(witnesses);
+      } else {
+        return DirectPolicy.singleton;
       }
-      return new WitnessPolicy(witnesses);
+    } else {
+      // If we don't think it holds, don't bother.
+      return NoPolicy.singleton;
     }
   }
 }
