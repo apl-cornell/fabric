@@ -790,6 +790,8 @@ public final class Worker {
           throw e;
         } catch (TransactionRestartingException e) {
           throw e;
+        } catch (LockConflictException e) {
+          throw e;
         } catch (Throwable e) {
           // First check whether we just missed an abort flag.
           tm.getCurrentLog().checkRetrySignal();

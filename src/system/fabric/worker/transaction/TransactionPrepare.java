@@ -380,12 +380,13 @@ public class TransactionPrepare {
    * Initiate an abort due to treaty timeout.
    */
   public synchronized void abortForTimeout() {
-    if (currentStatus != Status.ABORTING) {
+    if (currentStatus != Status.ABORTING && currentStatus != Status.COMMITTING
+        && currentStatus != Status.COMMITTED) {
       WORKER_TRANSACTION_LOGGER.log(Level.FINE,
           "{0} aborted during prepare due to expiries expiring", txnLog);
       runAbort();
     }
-    cleanUp();
+    if (currentStatus == Status.ABORTING) cleanUp();
   }
 
   /**
