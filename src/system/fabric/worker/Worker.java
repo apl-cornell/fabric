@@ -783,7 +783,18 @@ public final class Worker {
       tm.startTransaction();
 
       try {
-        return code.run();
+        try {
+          return code.run();
+        } catch (RetryException e) {
+          throw e;
+        } catch (TransactionRestartingException e) {
+          throw e;
+        } catch (Throwable e) {
+          // First check whether we just missed an abort flag.
+          tm.getCurrentLog().checkRetrySignal();
+          // If retry signal didn't fire, then continue.
+          throw e;
+        }
       } catch (RetryException e) {
         success = false;
         continue;
