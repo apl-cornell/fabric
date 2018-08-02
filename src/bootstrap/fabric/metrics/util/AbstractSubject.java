@@ -174,8 +174,26 @@ public interface AbstractSubject
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            if (!tmp.get$$observers().contains(o))
-                                tmp.set$$observers(tmp.get$$observers().add(o));
+                            try {
+                                if (!tmp.get$$observers().contains(o))
+                                    tmp.set$$observers(
+                                          tmp.get$$observers().add(o));
+                            }
+                            catch (final fabric.worker.RetryException $e462) {
+                                throw $e462;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e462) {
+                                throw $e462;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e462) {
+                                throw $e462;
+                            }
+                            catch (final Throwable $e462) {
+                                $tm464.getCurrentLog().checkRetrySignal();
+                                throw $e462;
+                            }
                         }
                         catch (final fabric.worker.RetryException $e462) {
                             $commit460 = false;
@@ -309,9 +327,26 @@ public interface AbstractSubject
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            if (!tmp.get$$observers().contains(o, id))
-                                tmp.set$$observers(
-                                      tmp.get$$observers().add(o, id));
+                            try {
+                                if (!tmp.get$$observers().contains(o, id))
+                                    tmp.set$$observers(
+                                          tmp.get$$observers().add(o, id));
+                            }
+                            catch (final fabric.worker.RetryException $e471) {
+                                throw $e471;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e471) {
+                                throw $e471;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e471) {
+                                throw $e471;
+                            }
+                            catch (final Throwable $e471) {
+                                $tm473.getCurrentLog().checkRetrySignal();
+                                throw $e471;
+                            }
                         }
                         catch (final fabric.worker.RetryException $e471) {
                             $commit469 = false;
@@ -445,9 +480,26 @@ public interface AbstractSubject
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            if (tmp.get$$observers().contains(o))
-                                tmp.set$$observers(
-                                      tmp.get$$observers().remove(o));
+                            try {
+                                if (tmp.get$$observers().contains(o))
+                                    tmp.set$$observers(
+                                          tmp.get$$observers().remove(o));
+                            }
+                            catch (final fabric.worker.RetryException $e480) {
+                                throw $e480;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e480) {
+                                throw $e480;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e480) {
+                                throw $e480;
+                            }
+                            catch (final Throwable $e480) {
+                                $tm482.getCurrentLog().checkRetrySignal();
+                                throw $e480;
+                            }
                         }
                         catch (final fabric.worker.RetryException $e480) {
                             $commit478 = false;
@@ -581,9 +633,26 @@ public interface AbstractSubject
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            if (tmp.get$$observers().contains(o, id))
-                                tmp.set$$observers(
-                                      tmp.get$$observers().remove(o, id));
+                            try {
+                                if (tmp.get$$observers().contains(o, id))
+                                    tmp.set$$observers(
+                                          tmp.get$$observers().remove(o, id));
+                            }
+                            catch (final fabric.worker.RetryException $e489) {
+                                throw $e489;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e489) {
+                                throw $e489;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e489) {
+                                throw $e489;
+                            }
+                            catch (final Throwable $e489) {
+                                $tm491.getCurrentLog().checkRetrySignal();
+                                throw $e489;
+                            }
                         }
                         catch (final fabric.worker.RetryException $e489) {
                             $commit487 = false;
@@ -883,7 +952,7 @@ public interface AbstractSubject
     -22, 115, 117, 80, -70, -103, -49, -122, -98, -21, 96, 40, -3, 109, -108,
     76, -6, 40, 36, -107, 3, 112, -43, 5, 96, 61, -30, -118 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1529598589000L;
+    public static final long jlc$SourceLastModified$fabil = 1533241119000L;
     public static final java.lang.String jlc$ClassType$fabil =
       "H4sIAAAAAAAAALUYbWwUx3XufP7EcMYEEmwwjrlQcOBO9EtKDBH4BOHKUVs++FHTYuZ25+yN93Y3u3P2mZSWtEqhtCX9MBQqxapaVw0JSaRGKFJbKtRULZSoVfqdSm1oJRQax1JJ1aaqmqbvzc7dntfnw1elJ817ezPvvXlv3sd8XJgltY5NujI0relRPmExJ7qbphPJfmo7TI3r1HH2Q++QsiSUOHPz22pHkASTpFmhhmloCtWHDIeTZcmH6BiNGYzHDgwkeg6SRgUZ91BnhJPgwd68TTotU58Y1k0uJ5kn//S9scmvHmr5Tg0JD5KwZqQ45ZoSNw3O8nyQNGdZNs1sZ6eqMnWQLDcYU1PM1qiuHQFC0xgkrY42bFCes5kzwBxTH0PCVidnMVvMWehE9U1Q284p3LRB/RZX/RzX9FhSc3hPktRlNKarzsPkEySUJLUZnQ4D4apkwYqYkBjbjf1A3qSBmnaGKqzAEhrVDJWTdX6OosWRvUAArPVZxkfM4lQhg0IHaXVV0qkxHEtxWzOGgbTWzMEsnLQtKBSIGiyqjNJhNsTJXX66fncIqBrFsiALJyv9ZEIS+KzN57MSb81+eNupR4w9RpAEQGeVKTrq3wBMHT6mAZZhNjMU5jI2dyfP0FWXTgQJAeKVPmKX5oWP39qxuePyFZemvQxNX/ohpvAhZTq97OU18U331aAaDZbpaBgKcywXXu2XIz15C6J9VVEiDkYLg5cHfvyRY0+xmSBpSpA6xdRzWYiq5YqZtTSd2Q8yg9mUMzVBGpmhxsV4gtTDd1IzmNvbl8k4jCdISBdddab4D0uUARG4RPXwrRkZs/BtUT4ivvMWIaQFGglAu0ZIO5hP2gkJfpGTgdiImWWxtJ5j4xDeMWiM2spIDPLW1pSYYysxO2dwDYhkF0QRIMe1f2cawp0qPJUTCxcFbaz/i9Q82tIyHgjAMq9TTJWlqQM+k/HT269DiuwxdZXZQ4p+6lKCrLh0TsRQI8a9A7ErVikAfl/jrxilvJO53l23nh265sYf8spF5GS9q2pUqur62KcqaNeMCRaFkhWFknUhkI/GpxJPiziqc0TCFQU2g8D7LZ3yjGln8yQQENbdIfiFcHD/KJQVqBzNm1If+9DhE101ELnWeAidCaQRfx551ScBXxSSY0gJH7/5j+fOHDW9jOIkMi/R53Nionb5l8o2FaZCIfTEd3fSi0OXjkaCWGQaof5xChEKxaTDP8echO0pFD9cjdokWYJrQHUcKlSsJj5im+NejwiBZQha3WjAxfIpKOrm9pT1xO9+9pf3iR2lUGLDJbU4xXhPSVqjsLBI4OXe2u+3GQO6P5zt/8rp2eMHxcIDxfpyE0YQxiGdKeSxaT925eFXXv3j9K+CnrM4qbNyaV1T8sKW5e/ALwDtP9gwN7EDMVTouKwLncXCYOHMGzzdoEToEGyguhM5YGRNVctoNK0zjJR/h+/ZevGNUy2uu3XocRfPJptvL8DrX91Ljl079FaHEBNQcIvy1s8jc+veCk/yTtumE6hH/tFfrD33E/oERD5ULUc7wkQhImI9iHDge8VabBFwq2/s/Qi63NVaI/vFn/UCbkCwSfQH8bObkwYqU1EuMZG/sKx2j0t8DEdXWAjvKBEfEN8rOWkvl+YyvZGkLQ8Wr11oBxO77/SnJqfUvm9tdfeZ1rm7wi4jl33mN2+/FD17/WqZKtPITWuLzsaYXqLcMpjy7nlHqX1ig/dS8frM2vviozeG3WnX+VT0U5/fd+HqgxuULwdJTbEuzDtVzGXqKVUWEtRmcCgy0GzsaRKO6yyufiOu/mpoHYTUBF0cfLNk9WUWl/VqQHjVcyXykwYp5JbEM35Xlo+lvRXG9iHYBdEzzHgKcpcVwmCFDINx0x5ldtQbW+0v3KK3t6hpM8ruhdYFZqsSRxdrNgSAZZscYo2pPuuXSFlbJI4szvrBCmMfRZCC/cA1NiJjPoKBGvFtbRFP7d65Pr4H2iZCQiEX19xcwFgEe+Z7FFlek/hPC9sUmJuma8qlaV/aYfYYs908RahUsF7sxIc4WUJVtcDpzD9o9ttaFvaJMXnQZCcmT74TPTXp5q57Gl8/70BcyuOeyMWUSxHcixXk7kqzCI7drz139HtPHj0elOo+wElozNRUnwtEoUtAg7gIjUn8wCLjLchJvWVrY7DLcDyf4NXIF3YtUuR2iWMLuyjoFeQWBKqYeryCCyYQmLDpuVMPlXgCR0bLhVsU2jZC6g5K/MHqwg1ZPiDx4mxxV1yTrkMEpTKkm8awmO5YBfseQ/DI3BArZ5hw4gC0HaDV7yU+t1gn4qfo5GV8h5LOSnxyYXtrhKgaz3cIHhXTfqGCgY8jOF6dAzdC6wNnXJX4qeociCznJf7mbeuFF4dnKphxFsGXOFlms6w5xiqZIK5Se6GlwJwdEtdW46rucq4KS0khFze8VW2afb2Ced9A8DW4kUsv3d5K4SgUk4aNJyZxfXWOQpY6icniMs0LuvMVzHkawfTivbUfWgaUeF5i813xFkoyJKb/U2I9X8HGiwieqdpl74GWI2TpkxKfXMDUBVyGLJ+V+NNV5Nb3K1jyAwQvcNJkusqrvRPlCmp92jR1Ro1yVq2FdgSOwcTFS9+ozipkmZH4xsJWlSp9pcLYTxG8CAZpjvSH8OnlcppvhvZJ0Dwjcbw6zZGlV+Jti9P85Qpjv0TwEhxg4bRbPPEUTlTdc0+8hYNVIpvNcbwcFhjgVryog7BIvfuhfQ7yZVbiF9+V1ENJP5T44m3DtGBg2ZeVgimNaIpuKlTPC71erbCMIoZegfpj4XuI46Ro1tLd28FonpOw7+SMV+T2Mm9W8j1Vif+ITd/Yu3nlAu9Vd8174ZZ8z06FG+6cOvBb8fRSfCttTJKGTE7XSy5qpZe2OstmGU2Y0ei+qFgCve5deUqP1HDQQSRsu+lSzoLhcym5eGzGr1K6v8KJ0qXDf7eEh9o8UPBKq5SFT9JR9/21fHgJoW05Gx/+L/ztzn/WNey/Lp5YwC2db/69//OvO7n+7577+WemZg5vfDs7mfzXxsjpGuvXtYe3//nkfwH21QETkBgAAA==";
 }

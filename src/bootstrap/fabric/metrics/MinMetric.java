@@ -256,11 +256,28 @@ public interface MinMetric extends fabric.metrics.DerivedMetric {
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            val =
-                              ((fabric.metrics.MinMetric)
-                                 new fabric.metrics.MinMetric._Impl(s).
-                                 $getProxy()).fabric$metrics$MinMetric$(
-                                                newTerms);
+                            try {
+                                val =
+                                  ((fabric.metrics.MinMetric)
+                                     new fabric.metrics.MinMetric._Impl(s).
+                                     $getProxy()).fabric$metrics$MinMetric$(
+                                                    newTerms);
+                            }
+                            catch (final fabric.worker.RetryException $e222) {
+                                throw $e222;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e222) {
+                                throw $e222;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e222) {
+                                throw $e222;
+                            }
+                            catch (final Throwable $e222) {
+                                $tm224.getCurrentLog().checkRetrySignal();
+                                throw $e222;
+                            }
                         }
                         catch (final fabric.worker.RetryException $e222) {
                             $commit220 = false;
@@ -411,11 +428,28 @@ public interface MinMetric extends fabric.metrics.DerivedMetric {
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            val =
-                              ((fabric.metrics.MinMetric)
-                                 new fabric.metrics.MinMetric._Impl(s).
-                                 $getProxy()).fabric$metrics$MinMetric$(
-                                                newTerms);
+                            try {
+                                val =
+                                  ((fabric.metrics.MinMetric)
+                                     new fabric.metrics.MinMetric._Impl(s).
+                                     $getProxy()).fabric$metrics$MinMetric$(
+                                                    newTerms);
+                            }
+                            catch (final fabric.worker.RetryException $e232) {
+                                throw $e232;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e232) {
+                                throw $e232;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e232) {
+                                throw $e232;
+                            }
+                            catch (final Throwable $e232) {
+                                $tm234.getCurrentLog().checkRetrySignal();
+                                throw $e232;
+                            }
                         }
                         catch (final fabric.worker.RetryException $e232) {
                             $commit230 = false;
@@ -603,11 +637,29 @@ public interface MinMetric extends fabric.metrics.DerivedMetric {
                             fabric.worker.transaction.TransactionManager.
                               getInstance().startTransaction();
                             try {
-                                val =
-                                  ((fabric.metrics.MinMetric)
-                                     new fabric.metrics.MinMetric._Impl(s).
-                                     $getProxy()).fabric$metrics$MinMetric$(
-                                                    newTerms);
+                                try {
+                                    val =
+                                      ((fabric.metrics.MinMetric)
+                                         new fabric.metrics.MinMetric._Impl(s).
+                                         $getProxy()).fabric$metrics$MinMetric$(
+                                                        newTerms);
+                                }
+                                catch (final fabric.worker.
+                                         RetryException $e243) {
+                                    throw $e243;
+                                }
+                                catch (final fabric.worker.
+                                         TransactionRestartingException $e243) {
+                                    throw $e243;
+                                }
+                                catch (final fabric.worker.metrics.
+                                         LockConflictException $e243) {
+                                    throw $e243;
+                                }
+                                catch (final Throwable $e243) {
+                                    $tm245.getCurrentLog().checkRetrySignal();
+                                    throw $e243;
+                                }
                             }
                             catch (final fabric.worker.RetryException $e243) {
                                 $commit241 = false;
@@ -753,11 +805,28 @@ public interface MinMetric extends fabric.metrics.DerivedMetric {
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            val =
-                              ((fabric.metrics.MinMetric)
-                                 new fabric.metrics.MinMetric._Impl(s).
-                                 $getProxy()).fabric$metrics$MinMetric$(
-                                                newTerms);
+                            try {
+                                val =
+                                  ((fabric.metrics.MinMetric)
+                                     new fabric.metrics.MinMetric._Impl(s).
+                                     $getProxy()).fabric$metrics$MinMetric$(
+                                                    newTerms);
+                            }
+                            catch (final fabric.worker.RetryException $e253) {
+                                throw $e253;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e253) {
+                                throw $e253;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e253) {
+                                throw $e253;
+                            }
+                            catch (final Throwable $e253) {
+                                $tm255.getCurrentLog().checkRetrySignal();
+                                throw $e253;
+                            }
                         }
                         catch (final fabric.worker.RetryException $e253) {
                             $commit251 = false;
@@ -981,11 +1050,11 @@ public interface MinMetric extends fabric.metrics.DerivedMetric {
         
     }
     
-    public static final byte[] $classHash = new byte[] { -38, 10, -124, -13, 37,
-    -1, 14, -45, 58, 20, -112, 82, 92, -53, 52, -90, -127, 43, 46, -31, -76, 16,
-    -35, 57, -111, -67, -74, 51, -3, -26, -54, 113 };
+    public static final byte[] $classHash = new byte[] { -44, 15, 54, 117, 81,
+    -126, -70, 56, -15, -20, 50, 44, 74, -62, 5, 63, 42, -105, 17, 67, -57, 2,
+    -114, 42, 92, -56, 30, -14, -39, -70, 24, -42 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1532368893000L;
+    public static final long jlc$SourceLastModified$fabil = 1533241119000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "H4sIAAAAAAAAAK0ZC3BUV/XusvkS8uNXQhJCCLT8doeWqpBqS7Z8QpYQE2CmgRJf3t7NPvL2veW9u2EDTYdaEHQsUzGlZWoZR1ArpjBqq46asdqqUJwOpR1LHdtSZ+hHZCrDqB2nFc+57+7v7e5r1oHh3fNy7z3nnv859+3YVVJkGqQ5JPUrqpcNR6npXSP1twe6JMOkQb8qmeYmmO2TJ3vaj7z//WCjm7gDpEKWNF1TZEnt00xGKgM7pCHJp1Hm29zd3rqVlMmIuE4yw4y4t7bFDdIU1dXhAVVn4pAs+o8t9o0+vr36x5NIVS+pUrQeJjFF9usao3HWSyoiNNJPDXNVMEiDvaRGozTYQw1FUpXdsFHXekmtqQxoEosZ1Oympq4O4cZaMxalBj8zMYns68C2EZOZbgD71Rb7MaaovoBistYAKQ4pVA2aO8mDxBMgRSFVGoCNMwIJKXycom8NzsP2cgXYNEKSTBMonkFFCzIyx46RlLilAzYAakmEsrCePMqjSTBBai2WVEkb8PUwQ9EGYGuRHoNTGKnLSxQ2lUYleVAaoH2M3GLf12Utwa4yrhZEYWS6fRunBDars9kszVpXO+86tEdbp7mJC3gOUllF/ksBqdGG1E1D1KCaTC3EikWBI9KM8YNuQmDzdNtma8/PHrh2z5LG589Ye2bn2LOxfweVWZ98or/ylXr/whWTkI3SqG4q6AoZknOrdomV1ngUvH1GkiIuehOLz3f//r69J+kVNylvJ8WyrsYi4FU1sh6JKio11lKNGhKjwXZSRrWgn6+3kxJ4DygatWY3hkImZe3Eo/KpYp3/DSoKAQlUUQm8K1pIT7xHJRbm7/EoIaQEHuKC/ysIWbgb3psI8WxjZK0vrEeor1+N0V3g3j54qGTIYR/EraHIPtOQfUZMYwpsElPgRQBM3wZF28BfvcBC9OaRiiPX1btcLlDoHFkP0n7JBOsIT2nrUiEY1ulqkBp9snpovJ1MHT/KvaUMPdwEL+X6cIGF6+25IR13NNa2+tqpvnOWpyGuUBdY2eLPK/jzJvkDliowfryQkbyQkcZcca//WPsPuZsUmzyeklQqgMrKqCqxkG5E4sTl4iJN4/jcP8C6g5A1IDFULOy5f/2XDjZPAseM7vKgrWBriz1MUsmlHd4k8P0+uerA+/86fWRETwUMIy1ZcZyNiXHYbNePocs0CHkuRX5Rk/Rc3/hIixtzSBmkNyaBA0KuaLSfkRGPrYnchtooCpDJqANJxaVEQipnYUPflZrhdq/EodZyAVSWjUGeFj/fE33q4ssf3MELRiKDVqWl2h7KWtOiFolV8fisSel+k0Ep7Hvzia5vPnb1wFaueNgxL9eBLTj6IVolCFPd2H9m5xtvv3XiNXfKWIwUR2P9qiLHuSw1N+CfC57/4oOhhxMIIQH7Rdg3JeM+iicvSPEGGUCFLASsmy2btYgeVEKK1K9S9JSPq+Yve+7vh6otc6swYynPIEs+nUBqflYb2Xtu+78bORmXjBUopb/UNiutTU1RXmUY0jDyEX/oQsPRP0hPgedDUjKV3ZTnGcL1QbgBb+e6WMrHZba15Tg0W9qqF/P8j3l8XIDDQku3+LpI6JWIf8Uig20VcDOuTo3iOC2TpkEa8hUbXihPfHn0WHDjd5dZJaE2M4Gv1mKRZ/70yR+9T1w6myNNlDE9ulSlQ1RNO7MWjpyb1fVs4LU4FVaXrjSs8A9eHrCOnWNj0b77BxvGzq5dIB92k0nJGM9qADKRWtOZhWAzKPQvGoqNM+XcCE1JpU5GZa2G5zZCivYIuCpNqSIiuYVw+GwSleu5XKDcI+BKuz1SXuBKprfZ6VpaDy7Gncuq1NshVM8Pf3jE0o+9X0jb+I+xt69cmNJwiucnD5YKLp+90cruozLaIy5eRVKmO1GmVni6QTXVApYz0vH/l7h7oaWEFjGjYt5MclaATIemy167OMTFuhw2sDdVa1BpKcfr9Y19q87/hStWfU1mf6QzN0d93SKlFabbT0b+6W4u/p2blPSSat4YSxrbIoG0kHh7wSSmX0wGyJSM9cw21erJWpOeX2/3/LRj7XUnPQY8LMP7eanpiLsId9PNubOPm2cfBkQVTbJak8WQ7FWqDbBwDv11GUoEis6QaErpwdGv3fAeGrWSh9W5z8tqntNxrO6dHzSFn4YpbK7TKRxjzXunR3759MgBt8ivrYxMApfH1/XxpN3dlkwJV7HyOuoYkqKuUSwRfG0W5DZsXlQdLmJJz7I6F0X3Jq9H/VbrKcezPAv/vttSMOchLXNwqRxKw6DDWgQHuPoVychvgrHqlByWr1hMcYy1DtS4H7cxMssKmRYRMi3Jdq8llfXuzsyVzfB8BtrqJwXcV1iuRJSHBRzJnyvTmR12WNuDA4PrMl4p4CrXhZmEdfO9vcKLENwPrhvUYwkz55DpbkJKRwUcKUwmRHlAwKGJybTfYe0ADnvtMrXh7Eg+7tcRUvaIgEOFcY8oMQH1iXF/yGHtURy+aud+iyP3XwROviKgXhj3iKIJGJ4Y9487rB3F4bCd+85c3FcSUS97QZLDAg7m4T6rt4M8EzV0BiFLg/FMsaYIWjsElPKLlZ50IB00igq4SzcGqZEshPjdx9wgRRMZLvN6xtn8joNOnsbhSYafeLhOeKHKq5HPwSMTUnFcwGEHex7LFhxR4gI6eKMr1SEf51RPOwjwIxxOwk0pIQCF9K6wYUerqsDPswI+UpgMiPJ1AR8uQIafO8jwCxx+kjJCp66YOY3Ag6oeHojpyiMC7i8sqBBln4APTiyofuOw9gIOv2KklOnWh7cc5SttIctDc0m4FB6oI1XvCvhiYRIiygsCjk/IRCOc6ssOYp7H4SyUaGxbzYSM9bauNKN/xT11NvGmIsEOeKAa1dZZsOavE8wrbkZKonAAXK4ZfpbBD7629FIrSL4j4Kv5xXenOsHqlA7+4qCDt3B4DQxoHd3HVYFzF3IZcTE8zxAyXRdwY2FGRJROAddNyIidnOplBwHew+ESI56oGsvJODdPOzy/JmTmZQFPT9Q8+HoRhzdyWAUpnRLw2xO3iiXUhw5CXcPhA0YmC6vkk40bZR48FwmZ7RNwZmFGQZQZAlYXYJSPHPj/Dw7XobGPKPybVmcum6yC52+ENBwUsPem2AQp3SdgR4E2cbnzy+Ty4OTHjJQLm+QRjZtEAU01EDLfZ8GWVwoyCUc5L+BL+WXwcO44XyPJ4Xgij03N7C16mG4kr0zZDYVrsoPoNTgUQz1mYaAR1tVgl64q8nDiqLtytzHMoKApuARSDc6RaYRqzLs69W4RQRpyLiXOAg0sIeTW1wU8W5gSEeWMgL/Nr8R0Oesc1upxAFlLw5IZ9utBXsu35eL7VjgUsG8bELCjML4RZb2A935qPCZMUCtMkHa1dDD2PAdBF+LQCMWI7oxJqlUWbTezkn5dV6mkxaEpTt5A8fPr7Bw/goif4mT/i/TE5Y4l0/P8AHJL1o+jAu/UsarSmcc2v259Nkv8zFYWIKWhmKqmfzRJey+OGjSkcG2XWZ9Qoly4ZXBTyKzvjH9ewzeUzuWz9i0H+a19+Ned3AJ1yeECJ1kXM/CH3bHrMz8qLt10iX9jByU2/bl83/X5NypfXTnt0e5t55Z/76HF3neerX5zxTfGf3rHJ+++tPN/f2gvsXAeAAA=";
+      "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";
 }

@@ -782,6 +782,10 @@ public abstract class Metric extends AbstractSubject
     for (LongIterator iter = treatiesToProcess.iterator(); iter.hasNext();) {
       long treatyId = iter.next();
       MetricTreaty treaty = treatiesBox.$treaties.get(treatyId);
+
+      // Skip if the treaty doesn't exist.
+      if (treaty == null) continue;
+
       // Do the update
       Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
         treaty.update(false, StatsMap.emptyStats());
@@ -883,5 +887,42 @@ public abstract class Metric extends AbstractSubject
         ((Metric) entry.getValue()).createThresholdTreaty(rate, base, time).update(false, StatsMap.emptyStats());
       }
     }
+  }
+
+  // Overriding implementation for subject behavior to forward handling of
+  // observers to the TreatiesBox
+  /*@Override*/
+  public void addObserver(Observer o) {
+    treatiesBox.addObserver(o);
+  }
+
+  /*@Override*/
+  public void addObserver(Observer o, long id) {
+    treatiesBox.addObserver(o, id);
+  }
+
+  /*@Override*/
+  public void removeObserver(Observer o) {
+    treatiesBox.removeObserver(o);
+  }
+
+  /*@Override*/
+  public void removeObserver(Observer o, long id) {
+    treatiesBox.removeObserver(o, id);
+  }
+
+  /*@Override*/
+  public boolean observedBy(Observer o) {
+    return treatiesBox.observedBy(o);
+  }
+
+  /*@Override*/
+  public boolean isObserved() {
+    return treatiesBox.isObserved();
+  }
+
+  /*@Override*/
+  public ImmutableObserverSet getObservers() {
+    return treatiesBox.getObservers();
   }
 }

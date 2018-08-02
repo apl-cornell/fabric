@@ -1,21 +1,34 @@
 package fabric.metrics.util;
 
 import fabric.metrics.Metric;
-
-//import java.util.logging.Level;
-//import fabric.common.Logging;
-
+import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.common.util.LongSet;
 
 /**
- * Utility to make treaties exist outside of metrics for locking.
+ * Utility to make treaties and observers exist outside of metrics for the
+ * purposes of managing contention and conflicts between transactions.
+ *
+ * This acts as a proxy for the Metric's treaties and observers.
  */
-public class TreatiesBox {
+public class TreatiesBox extends AbstractSubject implements Observer {
 
   public final Metric owner;
 
   public TreatiesBox fabric$metrics$util$TreatiesBox$(Metric m) {
     this.owner = m;
-    fabric$lang$Object$();
+    fabric$metrics$util$AbstractSubject$();
     return this;
+  }
+
+  // Forward observer behavior back to metric.
+  /*@Override*/
+  public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties) {
+    return owner.handleUpdates(includesObserver, treaties);
+  }
+
+  /*@Override*/
+  public ImmutableMetricsVector/*<SampledMetric>*/ getLeafSubjects() {
+    return owner.getLeafSubjects();
   }
 }

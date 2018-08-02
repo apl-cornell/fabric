@@ -389,7 +389,7 @@ public interface WarrantyComp
         -54, 79, -17, -119, -40, -122, -112, -53, 122, -89, 65, -25, -8 };
         public static final java.lang.String jlc$CompilerVersion$fabil =
           "0.3.0";
-        public static final long jlc$SourceLastModified$fabil = 1529598589000L;
+        public static final long jlc$SourceLastModified$fabil = 1533241119000L;
         public static final java.lang.String jlc$ClassType$fabil =
           "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";
     }
@@ -821,9 +821,26 @@ public interface WarrantyComp
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            rtn =
-                              ((fabric.metrics.contracts.warranties.WarrantyComp.
-                                 _Impl) tmp.fetch()).dropOldValue();
+                            try {
+                                rtn =
+                                  ((fabric.metrics.contracts.warranties.WarrantyComp.
+                                     _Impl) tmp.fetch()).dropOldValue();
+                            }
+                            catch (final fabric.worker.RetryException $e434) {
+                                throw $e434;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e434) {
+                                throw $e434;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e434) {
+                                throw $e434;
+                            }
+                            catch (final Throwable $e434) {
+                                $tm436.getCurrentLog().checkRetrySignal();
+                                throw $e434;
+                            }
                         }
                         catch (final fabric.worker.RetryException $e434) {
                             $commit432 = false;
@@ -974,9 +991,26 @@ public interface WarrantyComp
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            ((fabric.metrics.contracts.warranties.WarrantyComp.
-                               _Impl) tmp.fetch()).setNewValue(newVal,
-                                                               newTreaty);
+                            try {
+                                ((fabric.metrics.contracts.warranties.WarrantyComp.
+                                   _Impl) tmp.fetch()).setNewValue(newVal,
+                                                                   newTreaty);
+                            }
+                            catch (final fabric.worker.RetryException $e443) {
+                                throw $e443;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e443) {
+                                throw $e443;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e443) {
+                                throw $e443;
+                            }
+                            catch (final Throwable $e443) {
+                                $tm445.getCurrentLog().checkRetrySignal();
+                                throw $e443;
+                            }
                         }
                         catch (final fabric.worker.RetryException $e443) {
                             $commit441 = false;
@@ -1211,49 +1245,72 @@ public interface WarrantyComp
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            if (tmp.$getStore().equals(proxyStore)) {
-                                rtn = tmp;
-                            }
-                            else {
-                                rtn =
-                                  (fabric.metrics.contracts.warranties.WarrantyComp)
-                                    fabric.lang.Object._Proxy.
-                                    $getProxy(
-                                      tmp.get$proxies().get(proxyStore));
-                                if (fabric.lang.Object._Proxy.idEquals(rtn,
-                                                                       null)) {
-                                    rtn =
-                                      ((ProxyComp)
-                                         new fabric.metrics.contracts.
-                                           warranties.WarrantyComp.ProxyComp.
-                                           _Impl(proxyStore).
-                                         $getProxy()).
-                                        fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(
-                                          tmp);
-                                    for (java.util.Iterator iter =
-                                           tmp.get$proxies().values().iterator(
-                                                                        );
-                                         iter.hasNext();
-                                         ) {
-                                        fabric.metrics.contracts.warranties.WarrantyComp
-                                          proxy =
-                                          (fabric.metrics.contracts.warranties.WarrantyComp)
-                                            fabric.lang.Object._Proxy.
-                                            $getProxy(
-                                              fabric.lang.WrappedJavaInlineable.
-                                                  $wrap(iter.next()));
-                                        proxy.set$proxies(
-                                                proxy.get$proxies(
-                                                        ).put(rtn.$getStore(),
-                                                              rtn));
-                                    }
-                                    rtn.set$proxies(
-                                          tmp.get$proxies().put(tmp.$getStore(),
-                                                                tmp));
-                                    tmp.set$proxies(
-                                          tmp.get$proxies().put(rtn.$getStore(),
-                                                                rtn));
+                            try {
+                                if (tmp.$getStore().equals(proxyStore)) {
+                                    rtn = tmp;
                                 }
+                                else {
+                                    rtn =
+                                      (fabric.metrics.contracts.warranties.WarrantyComp)
+                                        fabric.lang.Object._Proxy.
+                                        $getProxy(
+                                          tmp.get$proxies().get(proxyStore));
+                                    if (fabric.lang.Object._Proxy.idEquals(
+                                                                    rtn,
+                                                                    null)) {
+                                        rtn =
+                                          ((ProxyComp)
+                                             new fabric.metrics.contracts.
+                                               warranties.WarrantyComp.
+                                               ProxyComp._Impl(proxyStore).
+                                             $getProxy()).
+                                            fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(
+                                              tmp);
+                                        for (java.util.Iterator iter =
+                                               tmp.get$proxies().values().
+                                               iterator();
+                                             iter.hasNext();
+                                             ) {
+                                            fabric.metrics.contracts.warranties.WarrantyComp
+                                              proxy =
+                                              (fabric.metrics.contracts.warranties.WarrantyComp)
+                                                fabric.lang.Object._Proxy.
+                                                $getProxy(
+                                                  fabric.lang.WrappedJavaInlineable.
+                                                      $wrap(iter.next()));
+                                            proxy.set$proxies(
+                                                    proxy.get$proxies(
+                                                            ).put(
+                                                                rtn.$getStore(),
+                                                                rtn));
+                                        }
+                                        rtn.set$proxies(
+                                              tmp.get$proxies().put(
+                                                                  tmp.$getStore(
+                                                                        ),
+                                                                  tmp));
+                                        tmp.set$proxies(
+                                              tmp.get$proxies().put(
+                                                                  rtn.$getStore(
+                                                                        ),
+                                                                  rtn));
+                                    }
+                                }
+                            }
+                            catch (final fabric.worker.RetryException $e453) {
+                                throw $e453;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e453) {
+                                throw $e453;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e453) {
+                                throw $e453;
+                            }
+                            catch (final Throwable $e453) {
+                                $tm455.getCurrentLog().checkRetrySignal();
+                                throw $e453;
                             }
                         }
                         catch (final fabric.worker.RetryException $e453) {
@@ -1508,7 +1565,7 @@ public interface WarrantyComp
     95, -14, -30, -28, -44, 125, -15, 31, -78, -103, -64, -19, 61, -82, -53,
     -71, -23, 110, -72, -85, -14, -35, -89, 52, -124, -92, 44 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1529598589000L;
+    public static final long jlc$SourceLastModified$fabil = 1533241119000L;
     public static final java.lang.String jlc$ClassType$fabil =
       "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";
 }

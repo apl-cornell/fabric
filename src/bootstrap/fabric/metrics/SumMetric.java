@@ -231,11 +231,28 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            val =
-                              ((fabric.metrics.SumMetric)
-                                 new fabric.metrics.SumMetric._Impl(s).
-                                 $getProxy()).fabric$metrics$SumMetric$(
-                                                newTerms);
+                            try {
+                                val =
+                                  ((fabric.metrics.SumMetric)
+                                     new fabric.metrics.SumMetric._Impl(s).
+                                     $getProxy()).fabric$metrics$SumMetric$(
+                                                    newTerms);
+                            }
+                            catch (final fabric.worker.RetryException $e403) {
+                                throw $e403;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e403) {
+                                throw $e403;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e403) {
+                                throw $e403;
+                            }
+                            catch (final Throwable $e403) {
+                                $tm405.getCurrentLog().checkRetrySignal();
+                                throw $e403;
+                            }
                         }
                         catch (final fabric.worker.RetryException $e403) {
                             $commit401 = false;
@@ -506,11 +523,28 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
-                            val =
-                              ((fabric.metrics.SumMetric)
-                                 new fabric.metrics.SumMetric._Impl(s).
-                                 $getProxy()).fabric$metrics$SumMetric$(
-                                                newTerms);
+                            try {
+                                val =
+                                  ((fabric.metrics.SumMetric)
+                                     new fabric.metrics.SumMetric._Impl(s).
+                                     $getProxy()).fabric$metrics$SumMetric$(
+                                                    newTerms);
+                            }
+                            catch (final fabric.worker.RetryException $e415) {
+                                throw $e415;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e415) {
+                                throw $e415;
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e415) {
+                                throw $e415;
+                            }
+                            catch (final Throwable $e415) {
+                                $tm417.getCurrentLog().checkRetrySignal();
+                                throw $e415;
+                            }
                         }
                         catch (final fabric.worker.RetryException $e415) {
                             $commit413 = false;
@@ -1020,9 +1054,27 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                             fabric.worker.transaction.TransactionManager.
                               getInstance().startTransaction();
                             try {
-                                fabric.metrics.SumMetric._Static._Proxy.
-                                  $instance.
-                                  set$MIN_ADAPTIVE_EXPIRY((long) 1000);
+                                try {
+                                    fabric.metrics.SumMetric._Static._Proxy.
+                                      $instance.
+                                      set$MIN_ADAPTIVE_EXPIRY((long) 1000);
+                                }
+                                catch (final fabric.worker.
+                                         RetryException $e424) {
+                                    throw $e424;
+                                }
+                                catch (final fabric.worker.
+                                         TransactionRestartingException $e424) {
+                                    throw $e424;
+                                }
+                                catch (final fabric.worker.metrics.
+                                         LockConflictException $e424) {
+                                    throw $e424;
+                                }
+                                catch (final Throwable $e424) {
+                                    $tm426.getCurrentLog().checkRetrySignal();
+                                    throw $e424;
+                                }
                             }
                             catch (final fabric.worker.RetryException $e424) {
                                 $commit422 = false;
@@ -1113,11 +1165,11 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
         
     }
     
-    public static final byte[] $classHash = new byte[] { -34, 82, 4, 94, -51,
-    15, 70, 96, 74, -25, 22, -41, -56, 22, 51, 22, 67, -128, 45, 76, 127, -52,
-    -75, 123, -56, 40, 15, -29, 108, -21, 0, 57 };
+    public static final byte[] $classHash = new byte[] { -27, -81, -114, 77, 89,
+    43, -128, -45, 125, 98, 99, 112, 82, 124, -123, -72, -57, -26, -99, -22,
+    -117, 101, -27, -86, -122, 34, -55, 81, 75, -102, -112, -118 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1532375616000L;
+    public static final long jlc$SourceLastModified$fabil = 1533241119000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

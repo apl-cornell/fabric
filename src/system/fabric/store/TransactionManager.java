@@ -31,7 +31,7 @@ import fabric.common.util.Triple;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
-import fabric.metrics.Metric;
+import fabric.metrics.util.TreatiesBox;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.worker.AbortException;
@@ -569,21 +569,20 @@ public class TransactionManager {
                             public Triple<String, Long, Long> run() {
                               Store store = Worker.getWorker()
                                   .getStore(database.getName());
-                              final Metric._Proxy target =
-                                  new Metric._Proxy(store, extension.onum);
-                              MetricTreaty orig = target.get$treatiesBox().get$$treaties()
+                              final TreatiesBox._Proxy target =
+                                  (TreatiesBox._Proxy) new TreatiesBox._Proxy(
+                                      store, extension.onum).fetch()
+                                          .$getProxy();
+                              MetricTreaty orig = target.get$$treaties()
                                   .get(extension.treatyId);
                               if (orig != null) {
-                                long oldExpiry = target.get$treatiesBox().get$$treaties()
-                                    .get(extension.treatyId).expiry;
-                                target.refreshTreaty(true, extension.treatyId,
-                                    StatsMap.emptyStats());
+                                long oldExpiry = orig.expiry;
+                                orig.update(true, StatsMap.emptyStats());
+                                MetricTreaty updated = target.get$$treaties()
+                                    .get(extension.treatyId);
                                 return new Triple<>(
-                                    target.toString() + ": "
-                                        + target.get$treatiesBox().get$$treaties()
-                                            .get(extension.treatyId).toString(),
-                                    oldExpiry, target.get$treatiesBox().get$$treaties()
-                                        .get(extension.treatyId).expiry);
+                                    target.toString() + ": " + orig, oldExpiry,
+                                    updated == null ? 0 : updated.expiry);
                               }
                               // Treaty was removed.
                               return new Triple<>(target.toString(), 0l, 0l);
@@ -628,14 +627,6 @@ public class TransactionManager {
                               nameAndNewExpiry.third - nameAndNewExpiry.second,
                               nameAndNewExpiry.first, nameAndNewExpiry.third
                                   - System.currentTimeMillis(), });
-                    } else {
-                      //Logging.METRICS_LOGGER.log(Level.INFO,
-                      //    "FINISHED EXTENSION OF {0} IN {1}ms (success {2}) STATS: {3}",
-                      //    new Object[] { Long.valueOf(extension.onum),
-                      //        Long.valueOf(System.currentTimeMillis() - start),
-                      //        success,
-                      //        fabric.worker.transaction.TransactionManager
-                      //            .getInstance().stats, });
                     }
                   }
                 });

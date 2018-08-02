@@ -14,6 +14,7 @@ import fabric.metrics.DerivedMetric;
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Observer;
+import fabric.metrics.util.TreatiesBox;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
@@ -328,8 +329,8 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       updatedTreaty = new MetricTreaty(this, updatedCurExpiry);
     } else if (updatedCurExpiry > this.expiry) {
       // It's an extension but too early, just mark this to be extended later.
-      TransactionManager.getInstance().registerDelayedExtension(getMetric(),
-          id);
+      TransactionManager.getInstance()
+          .registerDelayedExtension(getMetric().get$treatiesBox(), id);
     }
 
     // Policy's still good, update and indicate if this was a retraction or not.
@@ -344,14 +345,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
   private Pair<MetricTreaty, ImmutableObserverSet> updateToNewPolicy(
       boolean asyncExtension, StatsMap weakStats) {
     // Get a policy
-    //EnforcementPolicy newPolicy = TransactionManager.getInstance().inTxn()
-    //    ? statement.getNewPolicy(getMetric(), weakStats)
-    //    : Worker.runInSubTransaction(new Code<EnforcementPolicy>() {
-    //      @Override
-    //      public EnforcementPolicy run() {
-    //        return statement.getNewPolicy(getMetric(), weakStats);
-    //      }
-    //    });
     EnforcementPolicy newPolicy =
         statement.getNewPolicy(getMetric(), weakStats);
 
@@ -359,7 +352,15 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     newPolicy.activate(weakStats);
 
     // Activate this.
-    return switchToNewPolicy(newPolicy, asyncExtension, weakStats);
+    return TransactionManager.getInstance().inTxn()
+        ? switchToNewPolicy(newPolicy, asyncExtension, weakStats)
+        : Worker.runInSubTransaction(
+            new Code<Pair<MetricTreaty, ImmutableObserverSet>>() {
+              @Override
+              public Pair<MetricTreaty, ImmutableObserverSet> run() {
+                return switchToNewPolicy(newPolicy, asyncExtension, weakStats);
+              }
+            });
   }
 
   /**
@@ -374,54 +375,37 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     long newExpiry = newPolicy.calculateExpiry(this, weakStats);
 
     // Check if the new policy works. Otherwise, this is dead.
+    MetricTreaty updatedTreaty = null;
     if (newExpiry >= System.currentTimeMillis()) {
-      final MetricTreaty orig = this;
-      MetricTreaty updatedTreaty = TransactionManager.getInstance().inTxn()
-          ? new MetricTreaty(orig, newPolicy, newExpiry)
-          : Worker.runInSubTransaction(new Code<MetricTreaty>() {
-            @Override
-            public MetricTreaty run() {
-              return new MetricTreaty(orig, newPolicy, newExpiry);
-            }
-          });
-      if (this.expiry > updatedTreaty.expiry) {
-        return new Pair<>(updatedTreaty, updatedTreaty.observers);
-      } else {
-        return new Pair<>(updatedTreaty, ImmutableObserverSet.emptySet());
-      }
+      updatedTreaty = new MetricTreaty(this, newPolicy, newExpiry);
     } else {
-      final MetricTreaty orig = this;
-      MetricTreaty updatedTreaty = null;
       // Run unapply to clean up the policy.
-      if (TransactionManager.getInstance().inTxn()) {
-        // TODO: Run this asynchronously.
-        newPolicy.unapply(orig);
-        updatedTreaty = new MetricTreaty(orig, NoPolicy.singleton, 0);
-      } else {
-        updatedTreaty = Worker.runInSubTransaction(new Code<MetricTreaty>() {
-          @Override
-          public MetricTreaty run() {
-            // TODO: this should be run in a series of smaller transactions
-            // after this transaction to avoid contention and latency.
-            newPolicy.unapply(orig);
-            return new MetricTreaty(orig, NoPolicy.singleton, 0);
-          }
-        });
-      }
+      newPolicy.unapply(this);
 
-      if (this.expiry > updatedTreaty.expiry) {
-        return new Pair<>(updatedTreaty, updatedTreaty.observers);
-      } else {
-        return new Pair<>(updatedTreaty, ImmutableObserverSet.emptySet());
-      }
+      updatedTreaty = new MetricTreaty(this, NoPolicy.singleton, 0);
+    }
+
+    if (this.expiry > updatedTreaty.expiry) {
+      return new Pair<>(updatedTreaty, updatedTreaty.observers);
+    } else {
+      return new Pair<>(updatedTreaty, ImmutableObserverSet.emptySet());
     }
   }
 
   private void markExtension() {
     TransactionManager tm = TransactionManager.getInstance();
     for (Triple<Observer._Proxy, Boolean, LongSet> obsGroup : observers) {
-      for (LongIterator iter = obsGroup.third.iterator(); iter.hasNext();) {
-        tm.registerDelayedExtension(obsGroup.first, iter.next(), getMetric());
+      if (obsGroup.first.fetch() instanceof Metric) {
+        for (LongIterator iter = obsGroup.third.iterator(); iter.hasNext();) {
+          tm.registerDelayedExtension(
+              ((Metric) obsGroup.first.fetch()).get$treatiesBox(), iter.next(),
+              getMetric().get$treatiesBox());
+        }
+      } else if (obsGroup.first.fetch() instanceof TreatiesBox) {
+        for (LongIterator iter = obsGroup.third.iterator(); iter.hasNext();) {
+          tm.registerDelayedExtension(obsGroup.first, iter.next(),
+              getMetric().get$treatiesBox());
+        }
       }
     }
   }
@@ -551,12 +535,13 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
   @Override
   public ImmutableMetricsVector getLeafSubjects() {
-    if (getMetric() instanceof DerivedMetric) {
-      return ((DerivedMetric) getMetric()).getLeafSubjects();
-    } else if (getMetric() instanceof SampledMetric) {
-      return ImmutableMetricsVector.createVector(new Metric[] { getMetric() });
+    Metric m = (Metric) getMetric().fetch().$getProxy();
+    if (m instanceof DerivedMetric) {
+      return ((DerivedMetric) m).getLeafSubjects();
+    } else if (m instanceof SampledMetric) {
+      return ImmutableMetricsVector.createVector(new Metric[] { m });
     }
-    throw new InternalError("Unknown metric type!");
+    throw new InternalError("Unknown metric type: " + m.getClass() + " " + m);
   }
 
   @Override
