@@ -100,7 +100,26 @@ public class AtomicExt_c extends FabILExt_c {
         + "    " + successFlag + " = true;\n"
         + "    %S\n"
         + "    try {\n"
-        + "      %LS\n"
+        + "      try {\n"
+        + "        %LS\n"
+        + "      }\n"
+        + "      catch (final fabric.worker.RetryException " + e + ") {\n"
+        + "        throw " + e + ";\n"
+        + "      }\n"
+        + (atomic.mayAbort()
+            ?
+            "      catch (final fabric.worker.UserAbortException " + e + ") {\n"
+          + "        throw " + e + ";\n"
+          + "      }\n"
+            :
+            "")
+        + "      catch (final fabric.worker.TransactionRestartingException " + e + ") {\n"
+        + "        throw " + e + ";\n"
+        + "      }\n"
+        + "      catch (final Throwable " + e + ") {\n"
+        + "        " + tm + ".getCurrentLog().checkRetrySignal();\n"
+        + "        throw " + e + ";\n"
+        + "      }\n"
         + "    }\n"
         + "    catch (final fabric.worker.RetryException " + e + ") {\n"
         + "      " + successFlag + " = false;\n"
