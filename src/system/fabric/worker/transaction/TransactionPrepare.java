@@ -301,12 +301,12 @@ public class TransactionPrepare {
     // Don't run an abort if this is a transaction that commits in a single
     // round trip or is already committing/committed.
     if (currentStatus != Status.ABORTING && currentStatus != Status.COMMITTING
-        && currentStatus != Status.COMMITTED && !singleStore && !readOnly) {
+        && currentStatus != Status.COMMITTED) {
       WORKER_TRANSACTION_LOGGER.log(Level.FINE,
           "{0} aborted during prepare by external actor", txnLog);
       runAbort();
-      cleanUp();
     }
+    if (currentStatus == Status.ABORTING) cleanUp();
   }
 
   /**
@@ -314,7 +314,8 @@ public class TransactionPrepare {
    * @param cause the failed worker that initiated the abort.
    */
   private synchronized void abort(RemoteWorker cause) {
-    if (currentStatus != Status.ABORTING) {
+    if (currentStatus != Status.ABORTING && currentStatus != Status.COMMITTING
+        && currentStatus != Status.COMMITTED) {
       WORKER_TRANSACTION_LOGGER.log(Level.FINE,
           "{0} aborted during prepare by {1}", new Object[] { txnLog, cause });
       runAbort();
@@ -326,7 +327,8 @@ public class TransactionPrepare {
    * @param cause the failed store that initiated the abort.
    */
   private synchronized void abort(Store cause) {
-    if (currentStatus != Status.ABORTING) {
+    if (currentStatus != Status.ABORTING && currentStatus != Status.COMMITTING
+        && currentStatus != Status.COMMITTED) {
       WORKER_TRANSACTION_LOGGER.log(Level.FINE,
           "{0} aborted during prepare by {1}", new Object[] { txnLog, cause });
       runAbort();
@@ -347,17 +349,22 @@ public class TransactionPrepare {
       if (!outstandingStores.get(s)) outstandingStores.remove(s);
     }
 
-    // Abort the rest.
-    for (RemoteWorker w : SysUtil.chain(outstandingWorkers.keySet(),
-        respondedWorkers)) {
-      WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
-          new Object[] { txnLog, w });
-      w.abortTransaction(txnLog.tid);
-    }
-    for (Store s : SysUtil.chain(outstandingStores.keySet(), respondedStores)) {
-      WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
-          new Object[] { txnLog, s });
-      s.abortTransaction(txnLog.tid);
+    // Only bother with sending messages if this was using more than 1 round of
+    // messages.  If the txn was single store or read only, aborting after
+    // beginning 2PC doesn't require further action by the cohorts.
+    if (!singleStore && !readOnly) {
+      // Abort the rest.
+      for (RemoteWorker w : SysUtil.chain(outstandingWorkers.keySet(),
+          respondedWorkers)) {
+        WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
+            new Object[] { txnLog, w });
+        w.abortTransaction(txnLog.tid);
+      }
+      for (Store s : SysUtil.chain(outstandingStores.keySet(), respondedStores)) {
+        WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
+            new Object[] { txnLog, s });
+        s.abortTransaction(txnLog.tid);
+      }
     }
 
     // Flag that local locks should be released.
