@@ -82,4 +82,10 @@ public abstract class EnforcementPolicy implements FastSerializable {
    * policy.
    */
   public abstract void unapply(MetricTreaty t);
+
+  /**
+   * Shift from this policy to the given policy on the given Treaty.
+   */
+  public abstract void shiftPolicies(MetricTreaty t,
+      EnforcementPolicy newPolicy);
 }

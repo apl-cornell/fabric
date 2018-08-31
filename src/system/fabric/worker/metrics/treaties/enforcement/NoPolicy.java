@@ -61,4 +61,10 @@ public class NoPolicy extends EnforcementPolicy {
   public void unapply(MetricTreaty t) {
     // Do nothing.
   }
+
+  @Override
+  public void shiftPolicies(MetricTreaty t, EnforcementPolicy newPolicy) {
+    // Just apply the new policy.
+    newPolicy.apply(t);
+  }
 }

@@ -158,13 +158,8 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
         .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     if (!original.policy.equals(policy)) {
-      // Stop observing the old policy.
-      original.policy.unapply(this);
-
-      // TODO: Make sure that we don't unapply overlapping witnesses.
-
-      // Start observing the new policy.
-      policy.apply(this);
+      // Stop observing the old policy and start observing the new policy.
+      original.policy.shiftPolicies(this, policy);
     }
 
     // Update containing treaty set.
@@ -239,11 +234,8 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
         .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     if (!original.policy.equals(policy)) {
-      // Stop observing the old policy.
-      original.policy.unapply(this);
-
-      // Start observing the new policy.
-      policy.apply(this);
+      // Stop observing the old policy and start observing the new policy.
+      original.policy.shiftPolicies(this, policy);
     }
 
     // Update containing treaty set.

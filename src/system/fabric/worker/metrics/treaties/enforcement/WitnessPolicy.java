@@ -3,7 +3,9 @@ package fabric.worker.metrics.treaties.enforcement;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
@@ -185,6 +187,41 @@ public class WitnessPolicy extends EnforcementPolicy {
           m.get$treatiesBox().get$$treaties().get(witness.getValue());
       if (w == null) continue;
       w.removeObserver(t.getMetric(), t.getId());
+    }
+  }
+
+  @Override
+  public void shiftPolicies(MetricTreaty t, EnforcementPolicy newPolicy) {
+    if (newPolicy instanceof WitnessPolicy) {
+      WitnessPolicy nextPol = (WitnessPolicy) newPolicy;
+      // Only add and remove nonoverlapping witnesses
+      Set<Map.Entry<TreatiesBoxRef, TreatyStatement>> toBeRemoved =
+          new HashSet<>(witnesses.entries());
+      toBeRemoved.removeAll(nextPol.witnesses.entries());
+      for (Map.Entry<TreatiesBoxRef, TreatyStatement> e : toBeRemoved) {
+        Metric m = e.getKey().get();
+        if (m == null) continue;
+        MetricTreaty w = m.get$treatiesBox().get$$treaties().get(e.getValue());
+        if (w == null) continue;
+        w.removeObserver(t.getMetric(), t.getId());
+      }
+
+      Set<Map.Entry<TreatiesBoxRef, TreatyStatement>> toBeAdded =
+          new HashSet<>(nextPol.witnesses.entries());
+      toBeRemoved.removeAll(witnesses.entries());
+      for (Map.Entry<TreatiesBoxRef, TreatyStatement> e : toBeAdded) {
+        Metric m = e.getKey().get();
+        if (m == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
+            "A witness metric was null applying to {0}", t);
+        MetricTreaty w = m.get$treatiesBox().get$$treaties().get(e.getValue());
+        if (w == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
+            "A witness treaty was null applying to {0}", t);
+        w.addObserver(t.getMetric(), t.getId());
+      }
+    } else {
+      // Do the normal thing.
+      unapply(t);
+      newPolicy.apply(t);
     }
   }
 }

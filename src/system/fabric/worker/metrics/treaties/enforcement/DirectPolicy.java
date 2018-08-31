@@ -80,4 +80,13 @@ public class DirectPolicy extends EnforcementPolicy {
     // Stop observing the metric.
     t.getMetric().removeObserver(t.getMetric(), t.getId());
   }
+
+  @Override
+  public void shiftPolicies(MetricTreaty t, EnforcementPolicy newPolicy) {
+    // If the new policy is also direct, don't do anything.
+    if (!(newPolicy instanceof DirectPolicy)) {
+      unapply(t);
+      newPolicy.apply(t);
+    }
+  }
 }
