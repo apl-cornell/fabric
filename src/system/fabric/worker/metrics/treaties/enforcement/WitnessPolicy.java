@@ -117,6 +117,11 @@ public class WitnessPolicy extends EnforcementPolicy {
           witnessMetric.get().refreshEqualityTreaty(false,
               ((EqualityStatement) witnessStatement).value, weakStats);
         }
+        // Small optimization to give up once we know this policy isn't going
+        // anywhere.
+        MetricTreaty w = witnessMetric.get().get$treatiesBox().get$$treaties()
+            .get(witness.getValue());
+        if (w == null || !w.valid()) break;
       }
     } else {
       Future<?> futures[] = new Future<?>[witnesses.size()];
