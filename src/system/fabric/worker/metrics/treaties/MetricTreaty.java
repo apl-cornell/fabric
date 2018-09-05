@@ -408,6 +408,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
         "CHECKING VALIDITY OF {0} IN {1} {2}",
         new Object[] { this, TransactionManager.getInstance().getCurrentTid(),
             Thread.currentThread() });
+    TransactionManager.getInstance().resolveObservations();
     boolean result = expiry > System.currentTimeMillis();
     if (result) TransactionManager.getInstance().registerExpiryUse(expiry);
     return result;
