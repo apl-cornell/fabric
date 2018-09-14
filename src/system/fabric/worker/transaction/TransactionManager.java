@@ -676,6 +676,8 @@ public final class TransactionManager {
         checkRetrySignal();
       }
     } finally {
+      // Remove this log from the possibly deadlocked set.
+      deadlockDetector.stopRequestDetect(current);
       current.clearWaitsFor();
     }
 
@@ -804,6 +806,8 @@ public final class TransactionManager {
         checkRetrySignal();
       }
     } finally {
+      // Remove this log from the possibly deadlocked set.
+      deadlockDetector.stopRequestDetect(current);
       current.clearWaitsFor();
     }
 
