@@ -653,14 +653,15 @@ public final class Log {
     Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
-        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
-          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-              "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
-              this, write.$getStore(), write.$getOnum(), write.getClass(),
-              System.identityHashCode(write), Thread.currentThread());
+        if (write.$writeLockHolder == this) {
+          if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
+                this, write.$getStore(), write.$getOnum(), write.getClass(),
+                System.identityHashCode(write), Thread.currentThread());
+          }
+          write.$copyStateFrom(write.$history);
         }
-        write.$copyStateFrom(write.$history);
-
         // Signal any waiting readers/writers.
         if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
           write.notifyAll();
@@ -709,10 +710,8 @@ public final class Log {
 
       if (retrySignal != null) {
         synchronized (this) {
-          if (retrySignal.equals(tid)) {
-            retrySignal = null;
-            retryCause = null;
-          }
+          retrySignal = null;
+          retryCause = null;
         }
       }
     }

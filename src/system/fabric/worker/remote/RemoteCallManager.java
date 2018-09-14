@@ -158,7 +158,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
           || cause instanceof InvocationTargetException
           || cause instanceof NoSuchMethodException
           || cause instanceof RuntimeException)
-        throw new RemoteCallException(cause);
+        throw new RemoteCallException(e);
 
       throw e;
     } finally {
@@ -194,7 +194,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
           || cause instanceof InvocationTargetException
           || cause instanceof NoSuchMethodException
           || cause instanceof RuntimeException)
-        throw new RemoteCallException(cause);
+        throw new RemoteCallException(e);
 
       throw e;
     } finally {

@@ -850,6 +850,12 @@ public final class TransactionManager {
           }
         }
         return;
+      } catch (TransactionAbortingException e) {
+        abortTransaction();
+        throw e;
+      } catch (TransactionRestartingException e) {
+        abortTransaction();
+        throw e;
       } finally {
         Timing.SUBTX.end();
       }
@@ -1182,6 +1188,8 @@ public final class TransactionManager {
         checkRetrySignal();
       }
     } finally {
+      // Remove this log from the possibly deadlocked set.
+      deadlockDetector.stopRequestDetect(current);
       current.clearWaitsFor();
     }
 
@@ -1374,6 +1382,8 @@ public final class TransactionManager {
         checkRetrySignal();
       }
     } finally {
+      // Remove this log from the possibly deadlocked set.
+      deadlockDetector.stopRequestDetect(current);
       current.clearWaitsFor();
     }
 

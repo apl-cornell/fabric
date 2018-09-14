@@ -766,7 +766,7 @@ public final class Worker {
           if (backoff > 32) {
             while (true) {
               try {
-                Thread.sleep(backoff);
+                Thread.sleep(Math.round(Math.random() * backoff));
                 break;
               } catch (InterruptedException e) {
                 Logging.logIgnoredInterruptedException(e);

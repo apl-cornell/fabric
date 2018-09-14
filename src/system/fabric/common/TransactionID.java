@@ -30,6 +30,9 @@ public class TransactionID implements FastSerializable, Serializable {
    */
   public final int depth;
 
+  /* Cached computed hashcode. */
+  private final int hashcode;
+
   public TransactionID() {
     this((TransactionID) null);
   }
@@ -69,6 +72,10 @@ public class TransactionID implements FastSerializable, Serializable {
       depth = parent.depth + 1;
       topTid = parent.topTid;
     }
+
+    if (parent != null)
+      this.hashcode = parent.hashcode * 32 + Long.hashCode(tid);
+    else this.hashcode = Long.hashCode(tid);
   }
 
   @Override
@@ -108,6 +115,11 @@ public class TransactionID implements FastSerializable, Serializable {
   public boolean equals(Object o) {
     if (!(o instanceof TransactionID)) return false;
     return equals((TransactionID) o);
+  }
+
+  @Override
+  public int hashCode() {
+    return hashcode;
   }
 
   public boolean equals(TransactionID tid) {
