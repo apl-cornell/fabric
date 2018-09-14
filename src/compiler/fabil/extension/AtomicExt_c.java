@@ -87,7 +87,7 @@ public class AtomicExt_c extends FabILExt_c {
         + "        if (" + backoff + " > 32) {\n"
         + "          while (true) {\n"
         + "            try {\n"
-        + "              java.lang.Thread.sleep(" + backoff + ");\n"
+        + "              java.lang.Thread.sleep(java.lang.Math.round(java.lang.Math.random() * " + backoff + "));\n"
         + "              break;\n"
         + "            } catch (java.lang.InterruptedException " + e + ") {\n"
         + "            }\n"
