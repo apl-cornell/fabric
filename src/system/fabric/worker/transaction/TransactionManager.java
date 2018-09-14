@@ -377,6 +377,12 @@ public final class TransactionManager {
           }
         }
         return;
+      } catch (TransactionAbortingException e) {
+        abortTransaction();
+        throw e;
+      } catch (TransactionRestartingException e) {
+        abortTransaction();
+        throw e;
       } finally {
         Timing.SUBTX.end();
       }
