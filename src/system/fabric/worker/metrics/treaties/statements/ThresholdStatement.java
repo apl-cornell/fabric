@@ -9,6 +9,7 @@ import fabric.worker.Store;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * {@link TreatyStatement} for threshold bounds.
@@ -363,5 +364,15 @@ public class ThresholdStatement extends TreatyStatement {
   @Override
   public long trueExpiry(double v) {
     return trueExpiry(v, System.currentTimeMillis());
+  }
+
+  @Override
+  public boolean check(Metric m) {
+    double value = m.value();
+    boolean result = checkBound(this.rate, this.base, value, System.currentTimeMillis());
+    if (result) {
+      TransactionManager.getInstance().registerExpiryUse(trueExpiry(value));
+    }
+    return result;
   }
 }

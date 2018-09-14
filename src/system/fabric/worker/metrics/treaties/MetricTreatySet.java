@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
 import fabric.metrics.util.TreatiesBox;
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObserverSet;
@@ -23,14 +23,14 @@ import fabric.worker.transaction.TransactionManager;
 public class MetricTreatySet extends TreatySet {
 
   private TreatiesBoxRef owner;
-  private LongKeyMap<MetricTreaty> items;
+  private SortedMap<Long, MetricTreaty> items;
   private long nextId;
   private Map<TreatyStatement, MetricTreaty> statementMap;
 
   public MetricTreatySet(TreatiesBox owner) {
     super(TreatySet.Kind.METRIC);
     this.owner = new TreatiesBoxRef(owner);
-    this.items = new LongKeyHashMap<>();
+    this.items = new TreeMap<>();
     this.statementMap = new HashMap<>();
     this.nextId = 0;
   }
@@ -38,7 +38,7 @@ public class MetricTreatySet extends TreatySet {
   private MetricTreatySet(MetricTreatySet original) {
     super(TreatySet.Kind.METRIC);
     this.owner = original.owner;
-    this.items = new LongKeyHashMap<>(original.items);
+    this.items = new TreeMap<>(original.items);
     this.statementMap = new HashMap<>(original.statementMap);
     this.nextId = original.nextId;
   }
@@ -76,7 +76,7 @@ public class MetricTreatySet extends TreatySet {
     this.owner = new TreatiesBoxRef(in);
     this.nextId = in.readLong();
     int size = in.readInt();
-    this.items = new LongKeyHashMap<>(size);
+    this.items = new TreeMap<>();
     this.statementMap = new HashMap<>(size);
     for (int i = 0; i < size; i++) {
       // Keys aren't serialized separately, it's already in the treaty.
@@ -155,7 +155,12 @@ public class MetricTreatySet extends TreatySet {
     MetricTreaty newTreaty =
         new MetricTreaty(updated.owner.get(), updated.nextId++, stmt);
     updated.items.put(newTreaty.getId(), newTreaty);
-    updated.statementMap.put(newTreaty.statement, newTreaty);
+    MetricTreaty old = updated.statementMap.put(newTreaty.statement, newTreaty);
+    if (old != null && old.getId() != newTreaty.getId()) Logging.METRICS_LOGGER
+        .log(Level.SEVERE, "MASKED TREATY {0} WITH {3} IN {1} {2}",
+            new Object[] { old,
+                TransactionManager.getInstance().getCurrentTid(),
+                Thread.currentThread(), newTreaty });
     owner.get().get$treatiesBox().set$$treaties(updated);
     return newTreaty;
   }

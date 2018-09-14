@@ -98,7 +98,7 @@ public class ProxyMetric extends DerivedMetric {
   /*@Override*/
   protected void createAndActivateThresholdTreaty(double rate, double base, long time, boolean proactive) {
     if (proactive) {
-      term(0).createAndActivateThresholdTreaty(rate, base, time, proactive);
+      term(0).createAndActivateTreaty(new ThresholdStatement(rate, base, time), proactive);
     } else {
       createThresholdTreaty(rate, base, time).update(false, StatsMap.emptyStats());
     }

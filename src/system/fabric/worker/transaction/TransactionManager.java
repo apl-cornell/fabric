@@ -48,6 +48,7 @@ import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecurityCache;
 import fabric.messages.NonAtomicCallMessage;
+import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.ReconfigLock;
 import fabric.net.RemoteNode;
@@ -63,7 +64,10 @@ import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.LockConflictException;
+import fabric.worker.metrics.treaties.MetricTreaty;
+import fabric.worker.metrics.treaties.TreatyRef;
 import fabric.worker.metrics.treaties.TreatySet;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -707,6 +711,53 @@ public final class TransactionManager {
   }
 
   /**
+   * Aborts the transaction, merging reads into the parent.recursing to any workers that were called, and any
+   * stores that were contacted.
+   */
+  public void abortTransactionUpdates() {
+    // First check we aren't told to just straight up abort.
+    try {
+      checkRetrySignal();
+    } catch (TransactionRestartingException e) {
+      // do a real abort if this occurs.
+      abortTransaction();
+      throw e;
+    }
+    if (current.tid.depth == 0) {
+      throw new InternalError("We do not currently support aborting updates "
+          + "of a top level transaction.");
+    }
+
+    // Set the retry flag in all our children, if that hasn't happened already.
+    current.flagRetry("manager triggered abort");
+
+    // Wait for all other threads to finish.
+    current.waitForThreads();
+
+    if (current.prepare != null) current.prepare.abort();
+    current.abortUpdates();
+    WORKER_TRANSACTION_LOGGER.log(Level.INFO, "{0} aborted updates", current);
+
+    synchronized (current.commitState) {
+      // The commit state reflects the state of the top-level transaction, so
+      // only set the flag if a top-level transaction is being aborted.
+      if (current.tid.depth == 0) {
+        current.commitState.value = ABORTED;
+        current.commitState.notifyAll();
+      }
+
+      if (current.tid.parent == null || current.parent != null
+          && current.parent.tid.equals(current.tid.parent)) {
+        // The parent frame represents the parent transaction. Pop the stack.
+        current = current.parent;
+      } else {
+        // Reuse the current frame for the parent transaction.
+        current.tid = current.tid.parent;
+      }
+    }
+  }
+
+  /**
    * Commits the transaction if possible; otherwise, aborts the transaction.
    *
    * @throws AbortException
@@ -740,56 +791,56 @@ public final class TransactionManager {
     // and checking retry signal for the last time.
     // TODO: This should probably be run somewhere else prior to this call,
     // since it's technically not part of commit.
-    if (current.tid.parent == null) {
-      METRICS_LOGGER.log(Level.FINEST,
-          "RESOLVING OBSERVATIONS AT THE END OF {0}", current);
-      try {
-        resolveObservations();
-        if (!acquiringLocks) {
-          // If we're not trying to grab up locks, we are trying to commit after
-          // using those locks.  Release them in the same transaction.
-          METRICS_LOGGER.log(Level.FINEST, "RELEASING LOCKS AT THE END OF {0}",
-              current);
-          if (METRICS_LOGGER.isLoggable(Level.FINEST)) {
-            for (Store s : treatyLocksHeld.storeSet()) {
-              for (LongIterator it =
-                  treatyLocksHeld.get(s).keySet().iterator(); it.hasNext();) {
-                METRICS_LOGGER.log(Level.FINEST,
-                    "\t" + s.name() + "://" + it.next());
-              }
+    METRICS_LOGGER.log(Level.FINEST,
+        "RESOLVING OBSERVATIONS AT THE END OF {0}", current);
+    try {
+      current.runFinalResolution();
+      if (!acquiringLocks) {
+        // If we're not trying to grab up locks, we are trying to commit after
+        // using those locks.  Release them in the same transaction.
+        METRICS_LOGGER.log(Level.FINEST, "RELEASING LOCKS AT THE END OF {0}",
+            current);
+        if (METRICS_LOGGER.isLoggable(Level.FINEST)) {
+          for (Store s : treatyLocksHeld.storeSet()) {
+            for (LongIterator it =
+                treatyLocksHeld.get(s).keySet().iterator(); it.hasNext();) {
+              METRICS_LOGGER.log(Level.FINEST,
+                  "\t" + s.name() + "://" + it.next());
             }
           }
-          releaseTreatyLocks();
         }
-      } catch (LockConflictException e) {
-        TransactionID tid = current.tid;
-        abortTransaction();
-        throw new TransactionRestartingException(tid);
-      } catch (TransactionAbortingException e) {
-        abortTransaction();
-        throw new AbortException();
-      } catch (TransactionRestartingException e) {
-        abortTransaction();
-        throw e;
-      } catch (Throwable e) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        e.printStackTrace(pw);
-        if (checkForStaleObjects()) {
-          // Ugh. Need to restart.
-          TransactionID tid = current.tid;
-          METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS " + current
-              + " RESTARTING WITH " + e + "\n" + sw);
-          abortTransaction();
-          throw new TransactionRestartingException(tid, e);
-        }
-        METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS " + current
-            + " DIED WITH " + e + "\n" + sw);
-        throw e;
+        releaseTreatyLocks();
       }
-      METRICS_LOGGER.log(Level.FINEST,
-          "RESOLVED OBSERVATIONS AT THE END OF {0}", current);
+    } catch (LockConflictException e) {
+      TransactionID tid = current.tid;
+      abortTransaction();
+      throw new TransactionRestartingException(tid);
+    } catch (TransactionAbortingException e) {
+      if (e.keepReads)
+        abortTransactionUpdates();
+      else abortTransaction();
+      throw e;
+    } catch (TransactionRestartingException e) {
+      abortTransaction();
+      throw e;
+    } catch (Throwable e) {
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      e.printStackTrace(pw);
+      if (checkForStaleObjects()) {
+        // Ugh. Need to restart.
+        TransactionID tid = current.tid;
+        METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS " + current
+            + " RESTARTING WITH " + e + "\n" + sw);
+        abortTransaction();
+        throw new TransactionRestartingException(tid, e);
+      }
+      METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS " + current
+          + " DIED WITH " + e + "\n" + sw);
+      throw e;
     }
+    METRICS_LOGGER.log(Level.FINEST,
+        "RESOLVED OBSERVATIONS AT THE END OF {0}", current);
 
     // Wait for all sub-transactions to finish.
     current.waitForThreads();
@@ -851,7 +902,9 @@ public final class TransactionManager {
         }
         return;
       } catch (TransactionAbortingException e) {
-        abortTransaction();
+        if (e.keepReads)
+          abortTransactionUpdates();
+        else abortTransaction();
         throw e;
       } catch (TransactionRestartingException e) {
         abortTransaction();
@@ -1860,5 +1913,26 @@ public final class TransactionManager {
    */
   public ExpiryExtension getPendingExtension(_Impl obj) {
     return current != null ? current.extendedTreaties.get(obj) : null;
+  }
+
+  /**
+   * Mark a postcondition using a treaty.
+   */
+  public void addTreatiedPostcondition(TreatyRef t) {
+    if (current != null) current.addTreatiedPostcondition(t);
+  }
+
+  /**
+   * Mark a postcondition using a treaty.
+   */
+  public void addTreatiedPostcondition(MetricTreaty t) {
+    if (current != null) current.addTreatiedPostcondition(new TreatyRef(t));
+  }
+
+  /**
+   * Mark a postcondition using a plain statement.
+   */
+  public void addUntreatiedPostcondition(Metric m, TreatyStatement stmt) {
+    if (current != null) current.addUntreatiedPostcondition(m, stmt);
   }
 }

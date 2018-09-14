@@ -9,13 +9,19 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
 
 import fabric.common.Logging;
 import fabric.common.SerializedObject;
@@ -23,6 +29,7 @@ import fabric.common.SysUtil;
 import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
@@ -35,17 +42,23 @@ import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
+import fabric.metrics.Metric;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
+import fabric.worker.TransactionAbortingException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.treaties.MetricTreaty;
+import fabric.worker.metrics.treaties.TreatyRef;
 import fabric.worker.metrics.treaties.TreatySet;
+import fabric.worker.metrics.treaties.statements.EqualityStatement;
+import fabric.worker.metrics.treaties.statements.ThresholdStatement;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -182,6 +195,18 @@ public final class Log {
    * TODO: Maybe specify treaty id in mapping target.
    */
   protected final OidKeyHashMap<OidKeyHashMap<LongSet>> extensionTriggers;
+
+  /**
+   * Collection of checks that aren't currently treatied and should be checked
+   * before the transaction finishes (aborting writes if they fail).
+   */
+  protected final Multimap<Metric, TreatyStatement> untreatiedUpdateChecks;
+
+  /**
+   * Collection of checks that aren't currently treatied and should be checked
+   * before the transaction finishes (aborting writes if they fail).
+   */
+  protected final Set<TreatyRef> treatiedUpdateChecks;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -322,6 +347,47 @@ public final class Log {
     this.startTime = System.currentTimeMillis();
     this.waitsFor = new HashSet<>();
     this.waitsOn = null;
+    this.untreatiedUpdateChecks = TreeMultimap.create(new Comparator<Metric>() {
+      @Override
+      public int compare(Metric a, Metric b) {
+        int storeComp = a.$getStore().name().compareTo(b.$getStore().name());
+        if (storeComp != 0) return storeComp;
+        return Long.compare(a.$getOnum(), b.$getOnum());
+      }
+    }, new Comparator<TreatyStatement>() {
+      @Override
+      public int compare(TreatyStatement a, TreatyStatement b) {
+        if (a instanceof ThresholdStatement) {
+          if (b instanceof ThresholdStatement) {
+            ThresholdStatement aT = (ThresholdStatement) a;
+            ThresholdStatement bT = (ThresholdStatement) b;
+            int rateComp = Double.compare(aT.rate, bT.rate);
+            if (rateComp != 0) return rateComp;
+            return Double.compare(aT.base, bT.base);
+          } else {
+            return 1;
+          }
+        } else {
+          if (b instanceof ThresholdStatement) {
+            EqualityStatement aT = (EqualityStatement) a;
+            EqualityStatement bT = (EqualityStatement) b;
+            return Double.compare(aT.value, bT.value);
+          } else {
+            return -1;
+          }
+        }
+      }
+    });
+    this.treatiedUpdateChecks = new TreeSet<>(new Comparator<TreatyRef>() {
+      @Override
+      public int compare(TreatyRef a, TreatyRef b) {
+        int storeComp = a.objRef.objStoreName.compareTo(b.objRef.objStoreName);
+        if (storeComp != 0) return storeComp;
+        int objComp = Long.compare(a.objRef.objOnum, b.objRef.objOnum);
+        if (objComp != 0) return objComp;
+        return Long.compare(a.treatyId, b.treatyId);
+      }
+    });
 
     if (parent != null) {
       this.unobservedSamples.putAll(parent.unobservedSamples);
@@ -575,8 +641,9 @@ public final class Log {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         this.retryCause.printStackTrace(pw);
-        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got retry signal {1}\n{2}",
-            new Object[] { this, this.retryCause, sw });
+        WORKER_TRANSACTION_LOGGER.log(Level.INFO,
+            "{0} got retry signal up to {1} for {2}\n{3}",
+            new Object[] { this, this.retrySignal, this.retryCause, sw });
 
         throw new TransactionRestartingException(this.retrySignal,
             this.retryCause);
@@ -592,6 +659,11 @@ public final class Log {
     toFlag.add(this);
     while (!toFlag.isEmpty()) {
       Log log = toFlag.remove();
+      if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINE)) {
+        Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINE,
+            "Flagging retry for {0} on {1} in {2}", reason, log,
+            Thread.currentThread());
+      }
       synchronized (log) {
         if (log.child != null) toFlag.add(log.child);
         if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid)) {
@@ -697,6 +769,8 @@ public final class Log {
       pendingReleases.clear();
       locksCreated.clear();
       commitHooks.clear();
+      untreatiedUpdateChecks.clear();
+      treatiedUpdateChecks.clear();
 
       if (parent != null) {
         writerMap = new WriterMap(parent.writerMap);
@@ -714,6 +788,67 @@ public final class Log {
           retryCause = null;
         }
       }
+    }
+  }
+
+  /**
+   * Updates logs and data structures in <code>_Impl</code>s to abort this
+   * transaction's updates, while merging the reads into the parent transaction.
+   * All write locks held by this transaction are released.
+   */
+  void abortUpdates() {
+    if (parent != null && parent.tid.equals(tid.parent)) {
+      Store localStore = Worker.getWorker().getLocalStore();
+      Set<Store> stores = storesToContact();
+      // Note what we were trying to do before we aborted.
+      Logging.log(HOTOS_LOGGER, Level.FINE,
+          "aborted writes of tid {0} ({1} stores, {2} extensions, {3} delayed extensions)",
+          tid, stores.size() - (stores.contains(localStore) ? 1 : 0),
+          extendedTreaties.size(), delayedExtensions.size());
+      // Release read locks.
+      for (LongKeyMap<ReadMap.Entry> submap : reads) {
+        for (ReadMap.Entry entry : submap.values()) {
+          parent.transferReadLock(this, entry);
+        }
+      }
+
+      for (ReadMap.Entry entry : readsReadByParent)
+        entry.releaseLock(this);
+
+      // Roll back writes and release write locks.
+      Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
+      for (_Impl write : chain) {
+        synchronized (write) {
+          if (write.$writeLockHolder == this) {
+            if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+              Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                  "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
+                  this, write.$getStore(), write.$getOnum(), write.getClass(),
+                  System.identityHashCode(write), Thread.currentThread());
+            }
+            write.$copyStateFrom(write.$history);
+          }
+          // Signal any waiting readers/writers.
+          if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
+            write.notifyAll();
+        }
+      }
+      // Update the expiry time and drop this child, this acts like a read.
+      synchronized (parent) {
+        parent.expiryToCheck = Math.min(expiryToCheck, parent.expiryToCheck);
+        parent.child = null;
+      }
+
+      prepare = null;
+
+      // The parent frame represents the parent transaction. Null out its child.
+      synchronized (parent) {
+        parent.child = null;
+      }
+    } else {
+      // XXX TODO XXX TODO Not sure what to do here? Do we allow committing the
+      // reads at the stores?
+      throw new NotImplementedException();
     }
   }
 
@@ -737,6 +872,74 @@ public final class Log {
       } finally {
         resolving = false;
       }
+    }
+  }
+
+  public void addUntreatiedPostcondition(Metric m, TreatyStatement stmt) {
+    untreatiedUpdateChecks.put(m, stmt);
+  }
+
+  public void addTreatiedPostcondition(TreatyRef t) {
+    treatiedUpdateChecks.add(t);
+  }
+
+  private boolean finalResolve = false;
+
+  /**
+   * Check if a treaty deactivation violates a treaty update check, throwing an
+   * TransactionAbortingException if it does.
+   */
+  public void checkTreatyDeactivation(MetricTreaty t) {
+    if (finalResolve) {
+      if (treatiedUpdateChecks.contains(new TreatyRef(t))) {
+        Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
+            + Thread.currentThread() + ":" + tid);
+        throw new TransactionAbortingException(tid, true);
+      }
+    }
+  }
+
+  /**
+   * Run the final observation resolution along with checks for postconditions.
+   */
+  public void runFinalResolution() {
+    finalResolve = true;
+    try {
+      // Check untreatied checks.
+      Logging.METRICS_LOGGER.fine("CHECKING UNTREATIED POSTCONDITIONS IN "
+          + Thread.currentThread() + ":" + tid);
+      for (Map.Entry<Metric, TreatyStatement> entry : untreatiedUpdateChecks
+          .entries()) {
+        if (!entry.getValue().check(entry.getKey())) {
+          Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
+              + Thread.currentThread() + ":" + tid);
+          throw new TransactionAbortingException(tid, true);
+        }
+      }
+      // resolve observations and, in the process, check treaties.
+      resolveObservations();
+      // Check treaties still exist.
+      Logging.METRICS_LOGGER.fine("CHECKING TREATIED POSTCONDITIONS IN "
+          + Thread.currentThread() + ":" + tid);
+      for (TreatyRef t : treatiedUpdateChecks) {
+        if (t.get() == null) {
+          Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
+              + Thread.currentThread() + ":" + tid);
+          throw new TransactionAbortingException(tid, true);
+        }
+      }
+      // Make treaties for those that didn't exist
+      Logging.METRICS_LOGGER.fine("CREATING UNTREATIED POSTCONDITIONS IN "
+          + Thread.currentThread() + ":" + tid);
+      for (Map.Entry<Metric, TreatyStatement> entry : untreatiedUpdateChecks
+          .entries()) {
+        entry.getKey().createAndActivateTreaty(entry.getValue(), true);
+      }
+      // Clear out the checks, just in case...
+      untreatiedUpdateChecks.clear();
+      treatiedUpdateChecks.clear();
+    } finally {
+      finalResolve = false;
     }
   }
 

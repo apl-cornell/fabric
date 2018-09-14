@@ -100,4 +100,8 @@ public abstract class TreatyStatement implements FastSerializable {
     writeStatementData(out);
   }
 
+  /**
+   * Check if the statement is true of the given metric.
+   */
+  public abstract boolean check(Metric m);
 }

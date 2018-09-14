@@ -29,12 +29,10 @@ import fabric.lang.security.LabelUtil;
 
 import java.util.logging.Level;
 import java.util.Iterator;
-import fabric.common.util.LongHashSet;
-import fabric.common.util.LongIterator;
-import fabric.common.util.LongSet;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import fabric.common.Logging;
 import fabric.common.util.Pair;
-import fabric.common.util.LongSet;
 
 /**
  * Abstract class with base implementation of some {@link Metric} methods.
@@ -770,23 +768,24 @@ public abstract class Metric extends AbstractSubject
   }
 
   /*@Override*/
-  public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties) {
+  public ImmutableObserverSet handleUpdates(boolean includesObserver, SortedSet treaties) {
     //Logging.METRICS_LOGGER.log(Level.FINER,
     //    "CHECKING FOR UPDATE ON METRIC");
-    LongSet treatiesToProcess = new LongHashSet(treaties);
+    SortedSet/*<Long>*/ treatiesToProcess = new TreeSet/*<>*/(treaties);
     ImmutableObserverSet affected = ImmutableObserverSet.emptySet();
     if (includesObserver) {
       affected = affected.addAll(handleDirectUpdates());
       treatiesToProcess.addAll(affected.getTreaties(this));
     }
-    for (LongIterator iter = treatiesToProcess.iterator(); iter.hasNext();) {
-      long treatyId = iter.next();
+    for (Iterator iter = treatiesToProcess.iterator(); iter.hasNext();) {
+      long treatyId = ((Long) iter.next()).longValue();
       MetricTreaty treaty = treatiesBox.$treaties.get(treatyId);
 
       // Skip if the treaty doesn't exist.
       if (treaty == null) continue;
 
       // Do the update
+      Logging.METRICS_LOGGER.log(Level.FINER, "HANDLING TREATY {0} IN {1}", new java.lang.Object native[] {treaty, TransactionManager.getInstance().getCurrentTid()});
       Pair/*<MetricTreaty, ImmutableObserverSet>*/ treatyUpdate =
         treaty.update(false, StatsMap.emptyStats());
 
@@ -863,7 +862,7 @@ public abstract class Metric extends AbstractSubject
       // future checks.
       TransactionManager.getInstance().resolveObservations();
       // Go through all proxies, being proactive.
-      createAndActivateThresholdTreaty(0, bound, 0, true);
+      createAndActivateTreaty(new ThresholdStatement(0, bound, 0), true);
       return true;
     }
 
@@ -879,13 +878,35 @@ public abstract class Metric extends AbstractSubject
    *        flag indicating if the treaty should also be proactively established
    *        across all proxies of the metric.
    */
-  protected void createAndActivateThresholdTreaty(double rate, double base, long time, boolean proactive) {
-    createThresholdTreaty(rate, base, time).update(false, StatsMap.emptyStats());
-    if (proactive) {
-      for (java.util.Iterator/*<Store, Metric>*/ iter = proxies.entrySet().iterator(); iter.hasNext();) {
-        java.util.Map.Entry/*<Store, Metric>*/ entry = (java.util.Map.Entry) iter.next();
-        ((Metric) entry.getValue()).createThresholdTreaty(rate, base, time).update(false, StatsMap.emptyStats());
+  public void createAndActivateTreaty(TreatyStatement stmt, boolean proactive) {
+    if (stmt instanceof ThresholdStatement) {
+      double rate = ((ThresholdStatement) stmt).rate;
+      double base = ((ThresholdStatement) stmt).base;
+      createThresholdTreaty(rate, base, 0).update(false, StatsMap.emptyStats());
+      if (proactive) {
+        for (java.util.Iterator/*<Store, Metric>*/ iter = proxies.entrySet().iterator(); iter.hasNext();) {
+          java.util.Map.Entry/*<Store, Metric>*/ entry = (java.util.Map.Entry) iter.next();
+          ((Metric) entry.getValue()).createThresholdTreaty(rate, base, 0).update(false, StatsMap.emptyStats());
+        }
       }
+    } else if (stmt instanceof EqualityStatement) {
+      double value = ((EqualityStatement) stmt).value;
+      createEqualityTreaty(value).update(false, StatsMap.emptyStats());
+      if (proactive) {
+        for (java.util.Iterator/*<Store, Metric>*/ iter = proxies.entrySet().iterator(); iter.hasNext();) {
+          java.util.Map.Entry/*<Store, Metric>*/ entry = (java.util.Map.Entry) iter.next();
+          ((Metric) entry.getValue()).createEqualityTreaty(value).update(false, StatsMap.emptyStats());
+        }
+      }
+    }
+  }
+
+  public void assertPostcondition(TreatyStatement stmt) {
+    MetricTreaty existing = treatiesBox.$treaties.get(stmt);
+    if (existing != null) {
+      TransactionManager.getInstance().addTreatiedPostcondition(existing);
+    } else {
+      TransactionManager.getInstance().addUntreatiedPostcondition(this, stmt);
     }
   }
 

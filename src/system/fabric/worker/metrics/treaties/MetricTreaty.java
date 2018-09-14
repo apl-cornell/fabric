@@ -3,11 +3,10 @@ package fabric.worker.metrics.treaties;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.SortedSet;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
-import fabric.common.util.LongIterator;
-import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.common.util.Triple;
 import fabric.metrics.DerivedMetric;
@@ -154,6 +153,9 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = observers;
     this.policy = policy;
     this.expiry = expiry;
+    // Check if this violates some postcondition.
+    if (this.policy instanceof NoPolicy) TransactionManager.getInstance()
+        .getCurrentLog().checkTreatyDeactivation(this);
     TransactionManager.getInstance()
         .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
@@ -192,6 +194,9 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = original.observers;
     this.policy = original.policy;
     this.expiry = newExpiry;
+    // Check if this violates some postcondition.
+    if (this.policy instanceof NoPolicy) TransactionManager.getInstance()
+        .getCurrentLog().checkTreatyDeactivation(this);
     TransactionManager.getInstance()
         .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
@@ -230,6 +235,9 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = original.observers;
     this.policy = policy;
     this.expiry = newExpiry;
+    // Check if this violates some postcondition.
+    if (this.policy instanceof NoPolicy) TransactionManager.getInstance()
+        .getCurrentLog().checkTreatyDeactivation(this);
     TransactionManager.getInstance()
         .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
@@ -386,16 +394,16 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
 
   private void markExtension() {
     TransactionManager tm = TransactionManager.getInstance();
-    for (Triple<Observer._Proxy, Boolean, LongSet> obsGroup : observers) {
+    for (Triple<Observer._Proxy, Boolean, SortedSet<Long>> obsGroup : observers) {
       if (obsGroup.first.fetch() instanceof Metric) {
-        for (LongIterator iter = obsGroup.third.iterator(); iter.hasNext();) {
+        for (long treatyId : obsGroup.third) {
           tm.registerDelayedExtension(
-              ((Metric) obsGroup.first.fetch()).get$treatiesBox(), iter.next(),
+              ((Metric) obsGroup.first.fetch()).get$treatiesBox(), treatyId,
               getMetric().get$treatiesBox());
         }
       } else if (obsGroup.first.fetch() instanceof TreatiesBox) {
-        for (LongIterator iter = obsGroup.third.iterator(); iter.hasNext();) {
-          tm.registerDelayedExtension(obsGroup.first, iter.next(),
+        for (long treatyId : obsGroup.third) {
+          tm.registerDelayedExtension(obsGroup.first, treatyId,
               getMetric().get$treatiesBox());
         }
       }
@@ -412,6 +420,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     boolean result = expiry > System.currentTimeMillis();
     if (result) TransactionManager.getInstance().registerExpiryUse(expiry);
     return result;
+  }
+
+  public boolean invalid() {
+    return expiry <= System.currentTimeMillis();
   }
 
   @Override

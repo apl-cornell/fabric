@@ -275,7 +275,7 @@ public class SumMetric extends DerivedMetric {
         return val;
     }
 
-    public static final long MIN_ADAPTIVE_EXPIRY = 1000;
+    //public static final long MIN_ADAPTIVE_EXPIRY = 60000;
 
     /*@Override*/
     public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
@@ -413,6 +413,7 @@ public class SumMetric extends DerivedMetric {
 
           Multimap/*<Metric, TreatyStatement>*/ adaptiveWitnesses = HashMultimap/*<>*/.create();
           long adaptiveTimeout = Long.MAX_VALUE;
+          long adaptiveRealTimeout = Long.MAX_VALUE;
           for (int j = 0; j < numTerms; j++) {
             Metric m = term(j);
             double scaledX = m.value(weakStats);
@@ -440,10 +441,23 @@ public class SumMetric extends DerivedMetric {
               adaptiveWitnesses.put(m, newStmt);
               // Update the timeout estimate.
               adaptiveTimeout = Math.min(adaptiveTimeout, ThresholdStatement.hedgedEstimate(m, newStmt.rate, newStmt.base, currentTime, weakStats));
+              adaptiveRealTimeout = Math.min(adaptiveRealTimeout, ThresholdStatement.hedgedExpiry(m, newStmt.rate, newStmt.base, currentTime, weakStats));
             }
           }
 
-          if (adaptiveTimeout >= staticTimeout) {
+          // TODO: there should be some dynamic growth of MIN_ADAPTIVE_EXPIRY to
+          // account for absurdly long transaction times.
+          //if (adaptiveTimeout > staticTimeout && adaptiveRealTimeout >= System.currentTimeMillis() + MIN_ADAPTIVE_EXPIRY) {
+          if (adaptiveTimeout > staticTimeout && adaptiveRealTimeout >= System.currentTimeMillis() + 60000) {
+            if (adaptiveTimeout != Long.MAX_VALUE)
+              Logging.METRICS_LOGGER.log(Level.FINE,
+                  "Using adaptive strategy for {0} with adaptive {1} vs static {2} and expected {3}",
+                  new java.lang.Object native[] {
+                    this,
+                    Long.valueOf(adaptiveTimeout),
+                    Long.valueOf(staticTimeout),
+                    Long.valueOf(adaptiveRealTimeout),
+                  });
             finalWitnesses = adaptiveWitnesses;
           }
         }

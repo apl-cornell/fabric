@@ -3,6 +3,7 @@ package fabric.worker.metrics.treaties.enforcement;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -10,8 +11,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
 
 import fabric.common.Logging;
 import fabric.common.Threading;
@@ -30,11 +31,41 @@ import fabric.worker.transaction.TransactionManager;
  */
 public class WitnessPolicy extends EnforcementPolicy {
 
-  private final Multimap<TreatiesBoxRef, TreatyStatement> witnesses;
+  private final TreeMultimap<TreatiesBoxRef, TreatyStatement> witnesses;
 
   public WitnessPolicy(Multimap<Metric, TreatyStatement> witnesses) {
     super(EnforcementPolicy.Kind.WITNESS);
-    this.witnesses = HashMultimap.create();
+    this.witnesses = TreeMultimap.create(new Comparator<TreatiesBoxRef>() {
+      @Override
+      public int compare(TreatiesBoxRef a, TreatiesBoxRef b) {
+        int storeComp = a.objStoreName.compareTo(b.objStoreName);
+        if (storeComp != 0) return storeComp;
+        return Long.compare(a.objOnum, b.objOnum);
+      }
+    }, new Comparator<TreatyStatement>() {
+      @Override
+      public int compare(TreatyStatement a, TreatyStatement b) {
+        if (a instanceof ThresholdStatement) {
+          if (b instanceof ThresholdStatement) {
+            ThresholdStatement aT = (ThresholdStatement) a;
+            ThresholdStatement bT = (ThresholdStatement) b;
+            int rateComp = Double.compare(aT.rate, bT.rate);
+            if (rateComp != 0) return rateComp;
+            return Double.compare(aT.base, bT.base);
+          } else {
+            return 1;
+          }
+        } else {
+          if (b instanceof ThresholdStatement) {
+            EqualityStatement aT = (EqualityStatement) a;
+            EqualityStatement bT = (EqualityStatement) b;
+            return Double.compare(aT.value, bT.value);
+          } else {
+            return -1;
+          }
+        }
+      }
+    });
     for (Map.Entry<Metric, TreatyStatement> witness : witnesses.entries()) {
       this.witnesses.put(new TreatiesBoxRef(witness.getKey().get$treatiesBox()),
           witness.getValue());
@@ -43,7 +74,37 @@ public class WitnessPolicy extends EnforcementPolicy {
 
   public WitnessPolicy(DataInput in) throws IOException {
     super(EnforcementPolicy.Kind.WITNESS);
-    this.witnesses = HashMultimap.create();
+    this.witnesses = TreeMultimap.create(new Comparator<TreatiesBoxRef>() {
+      @Override
+      public int compare(TreatiesBoxRef a, TreatiesBoxRef b) {
+        int storeComp = a.objStoreName.compareTo(b.objStoreName);
+        if (storeComp != 0) return storeComp;
+        return Long.compare(a.objOnum, b.objOnum);
+      }
+    }, new Comparator<TreatyStatement>() {
+      @Override
+      public int compare(TreatyStatement a, TreatyStatement b) {
+        if (a instanceof ThresholdStatement) {
+          if (b instanceof ThresholdStatement) {
+            ThresholdStatement aT = (ThresholdStatement) a;
+            ThresholdStatement bT = (ThresholdStatement) b;
+            int rateComp = Double.compare(aT.rate, bT.rate);
+            if (rateComp != 0) return rateComp;
+            return Double.compare(aT.base, bT.base);
+          } else {
+            return 1;
+          }
+        } else {
+          if (b instanceof ThresholdStatement) {
+            EqualityStatement aT = (EqualityStatement) a;
+            EqualityStatement bT = (EqualityStatement) b;
+            return Double.compare(aT.value, bT.value);
+          } else {
+            return -1;
+          }
+        }
+      }
+    });
     int count = in.readInt();
     for (int i = 0; i < count; i++) {
       this.witnesses.put(new TreatiesBoxRef(in), TreatyStatement.read(in));

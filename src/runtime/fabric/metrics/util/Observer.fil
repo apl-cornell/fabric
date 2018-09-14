@@ -1,12 +1,13 @@
 package fabric.metrics.util;
 
+import java.util.SortedSet;
+
 import fabric.util.Set;
 
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
-import fabric.common.util.LongSet;
 
 /**
  * Abstraction for tracking trees of observers/subjects. Unifies tracking
@@ -30,7 +31,7 @@ public interface Observer {
    * @return the set of observers that should handle updates based on the
    * results of this update processing.
    */
-  public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties);
+  public ImmutableObserverSet handleUpdates(boolean includesObserver, SortedSet/*<Long>*/ treaties);
 
   /**
    * Used by {@link AbstractSubject#processSamples} to determine if all

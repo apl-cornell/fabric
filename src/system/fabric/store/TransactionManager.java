@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 
@@ -248,10 +249,9 @@ public class TransactionManager {
     // Go through observers
     ImmutableObserverSet set = obj.getObservers();
     if (set != null) {
-      LongSet subSet = set.onumsForStore(store);
+      Set<Long> subSet = set.onumsForStore(store);
       if (subSet != null) {
-        for (LongIterator iter = subSet.iterator(); iter.hasNext();) {
-          long associate = iter.next();
+        for (long associate : subSet) {
           if (explored.contains(associate)) continue;
           explored.add(associate);
           getAssociatedOnums(associate, explored);
@@ -264,10 +264,9 @@ public class TransactionManager {
       for (MetricTreaty t : set3) {
         ImmutableObserverSet treatyObservers = t.getObservers();
         if (treatyObservers != null) {
-          LongSet subSet = treatyObservers.onumsForStore(store);
+          Set<Long> subSet = treatyObservers.onumsForStore(store);
           if (subSet != null) {
-            for (LongIterator iter = subSet.iterator(); iter.hasNext();) {
-              long associate = iter.next();
+            for (long associate : subSet) {
               if (explored.contains(associate)) continue;
               explored.add(associate);
               getAssociatedOnums(associate, explored);
@@ -581,7 +580,9 @@ public class TransactionManager {
                                 MetricTreaty updated = target.get$$treaties()
                                     .get(extension.treatyId);
                                 return new Triple<>(
-                                    target.toString() + ": " + orig, oldExpiry,
+                                    target.toString() + ": " + orig + " => "
+                                        + updated,
+                                    oldExpiry,
                                     updated == null ? 0 : updated.expiry);
                               }
                               // Treaty was removed.

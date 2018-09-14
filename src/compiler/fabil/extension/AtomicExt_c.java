@@ -32,6 +32,8 @@ public class AtomicExt_c extends FabILExt_c {
         nf.Call(CG, ar.transactionManager(), nf.Id(CG, "commitTransaction")));
     Stmt abort = nf.Eval(CG,
         nf.Call(CG, ar.transactionManager(), nf.Id(CG, "abortTransaction")));
+    Stmt abortWrites = nf.Eval(CG,
+        nf.Call(CG, ar.transactionManager(), nf.Id(CG, "abortTransactionUpdates")));
 
     FabILTypeSystem ts = ar.typeSystem();
 
@@ -65,6 +67,7 @@ public class AtomicExt_c extends FabILExt_c {
     String label = "$label" + (freshTid++);
     String successFlag = "$commit" + (freshTid++);
     String retryFlag = "$retry" + (freshTid++);
+    String keepReadsFlag = "$keepReads" + (freshTid++);
     String e = "$e" + (freshTid++);
     String currentTid = "$currentTid" + (freshTid++);
     String tm = "$tm" + (freshTid++);
@@ -81,6 +84,7 @@ public class AtomicExt_c extends FabILExt_c {
         + "  int " + backoff + " = 1;\n"
         + "  boolean " + doBackoff + " = true;\n"
         + "  boolean " + retryFlag + " = true;\n"
+        + "  boolean " + keepReadsFlag + " = false;\n"
         + "  " + label + ": for (boolean " + successFlag + " = false; !" + successFlag + "; ) {\n"
         + "    if (" + backoffEnabled +") {\n"
         + "      if (" + doBackoff + ") {"
@@ -113,6 +117,9 @@ public class AtomicExt_c extends FabILExt_c {
           + "      }\n"
             :
             "")
+        + "      catch (final fabric.worker.TransactionAbortingException " + e + ") {\n"
+        + "        throw " + e + ";\n"
+        + "      }\n"
         + "      catch (final fabric.worker.TransactionRestartingException " + e + ") {\n"
         + "        throw " + e + ";\n"
         + "      }\n"
@@ -136,6 +143,21 @@ public class AtomicExt_c extends FabILExt_c {
           + "    }\n"
             :
             "")
+        + "    catch (fabric.worker.TransactionAbortingException " + e + ") {\n"
+        + "      " + successFlag + " = false;\n"
+        + "      " + retryFlag + " = false;\n"
+        + "      " + keepReadsFlag + " = " + e + ".keepReads;\n"
+        + "      if (" + tm + ".checkForStaleObjects()) {\n"
+        + "        " + retryFlag + " = true;\n"
+        + "        " + keepReadsFlag + " = false;\n"
+        + "        continue " + label + ";\n"
+        + "      }\n"
+        + "      fabric.common.TransactionID " + currentTid + " = " + tm + ".getCurrentTid();\n"
+        + "      if (" + e + ".tid == null || !" + e + ".tid.isDescendantOf(" + currentTid + ")) {\n"
+        + "        throw " + e + ";\n"
+        + "      }\n"
+        + "      throw new fabric.worker.UserAbortException();\n"
+        + "    }\n"
         + "    catch (final fabric.worker.TransactionRestartingException " + e + ") {\n"
         + "      " + successFlag + " = false;\n"
         + "      fabric.common.TransactionID " + currentTid + " = \n"
@@ -152,7 +174,7 @@ public class AtomicExt_c extends FabILExt_c {
         + "    }\n"
         + "    catch (final fabric.worker.metrics.LockConflictException " + e + ") {\n"
         + "      " + successFlag + " = false;\n"
-        + "      if (" + tm + ".checkForStaleObjects()) continue;\n"
+        + "      if (" + tm + ".checkForStaleObjects()) continue " + label + ";\n"
         + "      fabric.common.TransactionID " + currentTid + " = " + tm + ".getCurrentTid();\n"
         + "      if (" + e + ".tid.isDescendantOf(" + currentTid + ")) {\n"
         + "        " + retryFlag + " = true;\n"
@@ -173,15 +195,29 @@ public class AtomicExt_c extends FabILExt_c {
         + "    }\n"
         + "    finally {\n"
         + "      if (" + successFlag + ") {\n"
+        + "        fabric.common.TransactionID " + currentTid + " = \n"
+        + "          " + tm + ".getCurrentTid();\n"
         + "        try {\n"
         + "          %S\n"
         + "        }\n"
         + "        catch (final fabric.worker.AbortException " + e + ") {\n"
         + "          " + successFlag + " = false;\n"
+        + "        } catch (final fabric.worker.TransactionAbortingException " + e + ") {\n"
+        + "          " + successFlag + " = false;\n"
+        + "          " + retryFlag + " = false;\n"
+        + "          " + keepReadsFlag + " = " + e + ".keepReads;\n"
+        + "          if (" + tm + ".checkForStaleObjects()) {\n"
+        + "            " + retryFlag + " = true;\n"
+        + "            " + keepReadsFlag + " = false;\n"
+        + "            continue " + label + ";\n"
+        + "          }\n"
+        + "          if (" + e + ".tid == null || !" + e + ".tid.isDescendantOf(" + currentTid + "))\n"
+        + "            throw " + e + ";\n"
+        + "          throw new fabric.worker.UserAbortException();\n"
         + "        }\n"
         + "        catch (final fabric.worker.TransactionRestartingException " + e + ") {\n"
         + "          " + successFlag + " = false;\n"
-        + "          fabric.common.TransactionID " + currentTid + " = \n"
+        + "          " + currentTid + " = \n"
         + "            " + tm + ".getCurrentTid();\n"
         + "          if (" + currentTid + " != null) {\n"
         + "            if (" + e + ".tid.equals(" + currentTid + ")\n"
@@ -190,6 +226,8 @@ public class AtomicExt_c extends FabILExt_c {
         + "            }\n"
         + "          }\n"
         + "        }\n"
+        + "      } else if (" + keepReadsFlag + ") {\n"
+        + "        %S\n"
         + "      }\n"
         + "      else {\n"
         + "        %S\n"
@@ -206,7 +244,7 @@ public class AtomicExt_c extends FabILExt_c {
     // @formatter:on
 
     return ar.qq().parseStmt(block, lds, begin, atomic.statements(), commit,
-        abort, restores);
+        abortWrites, abort, restores);
   }
 
   private static int freshTid = 0;

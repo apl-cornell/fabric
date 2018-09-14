@@ -27,7 +27,7 @@ public class ImmutableMetricsVector implements Serializable {
   public ImmutableMetricsVector(Metric[] items) {
     this.items = new Metric._Proxy[items.length];
     for (int i = 0; i < items.length; i++) {
-      this.items[i] = (Metric._Proxy) items[i].$getProxy();
+      this.items[i] = (Metric._Proxy) items[i].fetch().$getProxy();
     }
   }
 

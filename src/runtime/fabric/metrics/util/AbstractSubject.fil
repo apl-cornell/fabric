@@ -2,11 +2,12 @@ package fabric.metrics.util;
 
 import fabric.util.Collection;
 import fabric.util.Collections;
-import java.util.LinkedList;
 import fabric.util.Set;
 import fabric.util.ArrayList;
 import fabric.util.List;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.SortedSet;
 
 import fabric.metrics.SampledMetric;
 
@@ -14,11 +15,10 @@ import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.Store;
-import fabric.common.util.LongSet;
 import fabric.common.util.Triple;
 
-//import java.util.logging.Level;
-//import fabric.common.Logging;
+import java.util.logging.Level;
+import fabric.common.Logging;
 
 
 /**
@@ -137,10 +137,10 @@ public abstract class AbstractSubject implements Subject {
    *            effects for.
    */
   public static void processSamples(LinkedList unobserved) {
-    LinkedList/*<Triple<Observer, Boolean, LongSet>>*/ queue = new LinkedList/*<>*/();
+    LinkedList/*<Triple<Observer, Boolean, SortedSet<Long>>>*/ queue = new LinkedList/*<>*/();
     // Items that should be handled and need to be checked again later after
     // other children are processed.
-    LinkedList/*<Triple<Observer, Boolean, LongSet>>*/ delayed = new LinkedList/*<>*/();
+    LinkedList/*<Triple<Observer, Boolean, SortedSet<Long>>>*/ delayed = new LinkedList/*<>*/();
     while (!unobserved.isEmpty()) {
       SampledMetric sm = (SampledMetric) unobserved.poll();
       //Logging.METRICS_LOGGER.log(Level.FINER, "HANDLING OBSERVATION OF " + sm);
@@ -150,7 +150,7 @@ public abstract class AbstractSubject implements Subject {
       }
 
       while (!queue.isEmpty()) {
-        Triple/*<Observer, Boolean, LongSet>*/ unhandled = (Triple/*<Observer, Boolean, LongSet>*/) queue.poll();
+        Triple/*<Observer, Boolean, SortedSet<Long>>*/ unhandled = (Triple/*<Observer, Boolean, SortedSet<Long>>*/) queue.poll();
         // We're handling a delayed item, mark it as not delayed for
         // now. We'll delay it again if it's still not ready.
         delayed.remove(unhandled);
@@ -165,16 +165,14 @@ public abstract class AbstractSubject implements Subject {
         }
         // If this has no other pending sampled events, process it.
         if (!needToWait) {
-          //Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVER {0}",
-          //    unhandled);
-          ImmutableObserverSet parentsToCheck = ((Observer) unhandled.first).handleUpdates(((Boolean) unhandled.second).booleanValue(), ((LongSet) unhandled.third));
+          Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVER {0} IN {1}", new java.lang.Object native [] {unhandled, TransactionManager.getInstance().getCurrentTid()});
+          ImmutableObserverSet parentsToCheck = ((Observer) unhandled.first).handleUpdates(((Boolean) unhandled.second).booleanValue(), ((SortedSet/*<Long>*/) unhandled.third));
           for (Iterator iter = parentsToCheck.iterator(); iter.hasNext();) {
             queue.add(iter.next());
           }
         } else {
           // mark as delayed for later processing
-          //Logging.METRICS_LOGGER.log(Level.FINER, "DELAYING OBSERVER " +
-          //    unhandled);
+          Logging.METRICS_LOGGER.log(Level.FINE, "DELAYED HANDLING OBSERVER {0} IN {1}", new java.lang.Object native [] {unhandled, TransactionManager.getInstance().getCurrentTid()});
           delayed.add(unhandled);
         }
         // If there's nothing more, let's get back to delayed items that
@@ -182,7 +180,7 @@ public abstract class AbstractSubject implements Subject {
         if (queue.isEmpty()) {
           Iterator delayedIter = delayed.iterator();
           while (delayedIter.hasNext()) {
-            Triple/*<Observer, Boolean, LongSet>*/ withheld = (Triple/*<Observer, Boolean, LongSet>*/) delayedIter.next();
+            Triple/*<Observer, Boolean, SortedSet<Long>>*/ withheld = (Triple/*<Observer, Boolean, SortedSet<Long>>*/) delayedIter.next();
 
             boolean doneWaiting = true;
             ImmutableMetricsVector/*<SampledMetric>*/ withheldLeaves = ((Observer) withheld.first).getLeafSubjects();

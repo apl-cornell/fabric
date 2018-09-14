@@ -755,6 +755,8 @@ public final class Worker {
     boolean success = false;
     // Indicating whether to retry if unsuccessful. Retry in nearly all cases.
     boolean retry = true;
+    // Indicating if reads should be kept on abort.
+    boolean keepReads = false;
 
     // Flag for triggering backoff on alternate retries.
     boolean doBackoff = true;
@@ -788,6 +790,8 @@ public final class Worker {
           return code.run();
         } catch (RetryException e) {
           throw e;
+        } catch (TransactionAbortingException e) {
+          throw e;
         } catch (TransactionRestartingException e) {
           throw e;
         } catch (LockConflictException e) {
@@ -801,6 +805,26 @@ public final class Worker {
       } catch (RetryException e) {
         success = false;
         continue;
+      } catch (TransactionAbortingException e) {
+        success = false;
+        // explicit abort, don't retry
+        retry = false;
+        // mark if this subtransaction's reads should be kept.
+        keepReads = e.keepReads;
+
+        // Retry if the exception was a result of stale objects.
+        if (tm.checkForStaleObjects()) {
+          retry = true;
+          keepReads = false;
+          continue;
+        }
+
+        TransactionID currentTid = tm.getCurrentTid();
+        if (e.tid == null || !e.tid.isDescendantOf(currentTid)) {
+          // kicking up to a parent this transaction.
+          throw e;
+        }
+        throw new UserAbortException();
       } catch (TransactionRestartingException e) {
         success = false;
 
@@ -856,10 +880,26 @@ public final class Worker {
         throw new AbortException(e);
       } finally {
         if (success) {
+          TransactionID tid = tm.getCurrentTid();
           try {
             tm.commitTransaction();
           } catch (AbortException e) {
             success = false;
+          } catch (TransactionAbortingException e) {
+            success = false;
+            retry = false;
+            keepReads = e.keepReads;
+
+            // Retry if the exception was a result of stale objects.
+            if (tm.checkForStaleObjects()) {
+              retry = true;
+              keepReads = false;
+              continue;
+            }
+
+            if (e.tid == null || !e.tid.isDescendantOf(tid))
+              throw e;
+            throw new UserAbortException();
           } catch (TransactionRestartingException e) {
             success = false;
 
@@ -885,6 +925,8 @@ public final class Worker {
 
             // The transaction just we tried to commit will be restarted.
           }
+        } else if (keepReads) {
+          tm.abortTransactionUpdates();
         } else {
           tm.abortTransaction();
         }

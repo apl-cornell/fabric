@@ -86,4 +86,9 @@ public class EqualityStatement extends TreatyStatement {
       return Long.MAX_VALUE;
     }
   }
+
+  @Override
+  public boolean check(Metric m) {
+    return m.value() == value;
+  }
 }

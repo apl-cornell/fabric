@@ -15,10 +15,11 @@ import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatyRef;
 import fabric.worker.transaction.TransactionManager;
 
+import java.util.Iterator;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import fabric.common.Logging;
-import fabric.common.util.LongSet;
-import fabric.common.util.LongIterator;
 import fabric.common.util.Pair;
 
 /**
@@ -216,7 +217,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   }
 
   /*@Override*/
-  public ImmutableObserverSet handleUpdates(boolean includesObserver, LongSet treaties) {
+  public ImmutableObserverSet handleUpdates(boolean includesObserver, SortedSet/*<Long>*/ treaties) {
     ImmutableObserverSet affected = ImmutableObserverSet.emptySet();
     if (includesObserver) {
       if (this.dropOldValue()) {

@@ -7,17 +7,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import fabric.common.FastSerializable;
 import fabric.common.exceptions.AccessException;
-import fabric.common.util.LongHashSet;
-import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
 import fabric.common.util.Triple;
 import fabric.metrics.util.Observer;
 import fabric.worker.Store;
@@ -28,20 +27,20 @@ import fabric.worker.Worker;
  */
 @SuppressWarnings("serial")
 public class ImmutableObserverSet implements FastSerializable, Serializable,
-    Iterable<Triple<Observer._Proxy, Boolean, LongSet>> {
+    Iterable<Triple<Observer._Proxy, Boolean, SortedSet<Long>>> {
 
   public static class ObserverGroup implements FastSerializable {
     public final boolean includesOwner;
-    public final LongSet treaties;
+    public final SortedSet<Long> treaties;
 
     public static final ObserverGroup EMPTY =
-        new ObserverGroup(false, new LongHashSet());
+        new ObserverGroup(false, new TreeSet<>());
 
     /**
      * @param includesOwner
      * @param treaties
      */
-    public ObserverGroup(boolean includesOwner, LongSet treaties) {
+    public ObserverGroup(boolean includesOwner, SortedSet<Long> treaties) {
       this.includesOwner = includesOwner;
       this.treaties = treaties;
     }
@@ -53,7 +52,7 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     public ObserverGroup(DataInput in) throws IOException {
       this.includesOwner = in.readBoolean();
       int size = in.readInt();
-      this.treaties = new LongHashSet(size);
+      this.treaties = new TreeSet<>();
       for (int i = 0; i < size; i++) {
         this.treaties.add(in.readLong());
       }
@@ -68,13 +67,13 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     }
 
     public ObserverGroup addTreaty(long id) {
-      LongSet updated = new LongHashSet(treaties);
+      SortedSet<Long> updated = new TreeSet<>(treaties);
       updated.add(id);
       return new ObserverGroup(includesOwner, updated);
     }
 
     public ObserverGroup removeTreaty(long id) {
-      LongSet updated = new LongHashSet(treaties);
+      SortedSet<Long> updated = new TreeSet<>(treaties);
       updated.remove(id);
       return new ObserverGroup(includesOwner, updated);
     }
@@ -92,8 +91,8 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     public void write(DataOutput out) throws IOException {
       out.writeBoolean(includesOwner);
       out.writeInt(treaties.size());
-      for (LongIterator iter = treaties.iterator(); iter.hasNext();) {
-        out.writeLong(iter.next());
+      for (long l : treaties) {
+        out.writeLong(l);
       }
     }
 
@@ -116,23 +115,24 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   }
 
   // 2 level map, store name -> onum -> ObserverGroup
-  private Map<String, LongKeyMap<ObserverGroup>> map;
+  private SortedMap<String, SortedMap<Long, ObserverGroup>> map;
 
   private ImmutableObserverSet() {
-    this.map = new HashMap<>();
+    this.map = new TreeMap<>();
   }
 
   private ImmutableObserverSet(ImmutableObserverSet orig) {
-    this.map = new HashMap<>(orig.map.size());
-    for (Map.Entry<String, LongKeyMap<ObserverGroup>> e : orig.map.entrySet()) {
-      this.map.put(e.getKey(), new LongKeyHashMap<>(e.getValue()));
+    this.map = new TreeMap<>();
+    for (Map.Entry<String, SortedMap<Long, ObserverGroup>> e : orig.map
+        .entrySet()) {
+      this.map.put(e.getKey(), new TreeMap<>(e.getValue()));
     }
   }
 
   /** @return the length. */
   public int size() {
     int total = 0;
-    for (LongKeyMap<ObserverGroup> val : map.values()) {
+    for (SortedMap<Long, ObserverGroup> val : map.values()) {
       total += val.size();
     }
     return total;
@@ -145,9 +145,10 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     ImmutableObserverSet updated = new ImmutableObserverSet(this);
 
     // Get or Add First Level
-    LongKeyMap<ObserverGroup> submap = updated.map.get(obs.$getStore().name());
+    SortedMap<Long, ObserverGroup> submap =
+        updated.map.get(obs.$getStore().name());
     if (submap == null) {
-      submap = new LongKeyHashMap<>();
+      submap = new TreeMap<>();
       updated.map.put(obs.$getStore().name(), submap);
     }
 
@@ -167,9 +168,10 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     ImmutableObserverSet updated = new ImmutableObserverSet(this);
 
     // Get or Add First Level
-    LongKeyMap<ObserverGroup> submap = updated.map.get(obs.$getStore().name());
+    SortedMap<Long, ObserverGroup> submap =
+        updated.map.get(obs.$getStore().name());
     if (submap == null) {
-      submap = new LongKeyHashMap<>();
+      submap = new TreeMap<>();
       updated.map.put(obs.$getStore().name(), submap);
     }
 
@@ -188,10 +190,10 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
    */
   public ImmutableObserverSet addAll(ImmutableObserverSet other) {
     ImmutableObserverSet result = this;
-    for (Triple<Observer._Proxy, Boolean, LongSet> item : other) {
+    for (Triple<Observer._Proxy, Boolean, SortedSet<Long>> item : other) {
       if (item.second) result = result.add(item.first);
-      for (LongIterator iter = item.third.iterator(); iter.hasNext();) {
-        result = result.add(item.first, iter.next());
+      for (long treatyId : item.third) {
+        result = result.add(item.first, treatyId);
       }
     }
     return result;
@@ -204,7 +206,8 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     ImmutableObserverSet updated = new ImmutableObserverSet(this);
 
     // Get First Level
-    LongKeyMap<ObserverGroup> submap = updated.map.get(obs.$getStore().name());
+    SortedMap<Long, ObserverGroup> submap =
+        updated.map.get(obs.$getStore().name());
 
     // Get Second Level
     ObserverGroup orig = submap.get(obs.$getOnum());
@@ -232,7 +235,8 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     ImmutableObserverSet updated = new ImmutableObserverSet(this);
 
     // Get First Level
-    LongKeyMap<ObserverGroup> submap = updated.map.get(obs.$getStore().name());
+    SortedMap<Long, ObserverGroup> submap =
+        updated.map.get(obs.$getStore().name());
 
     // Get Second Level
     ObserverGroup orig = submap.get(obs.$getOnum());
@@ -259,10 +263,10 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
    */
   public ImmutableObserverSet removeAll(ImmutableObserverSet other) {
     ImmutableObserverSet result = this;
-    for (Triple<Observer._Proxy, Boolean, LongSet> item : other) {
+    for (Triple<Observer._Proxy, Boolean, SortedSet<Long>> item : other) {
       if (item.second) result = result.remove(item.first);
-      for (LongIterator iter = item.third.iterator(); iter.hasNext();) {
-        result = result.remove(item.first, iter.next());
+      for (long treatyId : item.third) {
+        result = result.remove(item.first, treatyId);
       }
     }
     return result;
@@ -284,23 +288,23 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   }
 
   /** @return the treaties for a given obs */
-  public LongSet getTreaties(Observer obs) {
+  public SortedSet<Long> getTreaties(Observer obs) {
     if (map.containsKey(obs.$getStore().name())
         && map.get(obs.$getStore().name()).containsKey(obs.$getOnum()))
       return map.get(obs.$getStore().name()).get(obs.$getOnum()).treaties;
-    return new LongHashSet();
+    return new TreeSet<>();
   }
 
   /** @return true iff the given set is fully contained in this set */
   public boolean containsAll(ImmutableObserverSet other) {
     // Superset of stores
     if (!map.keySet().containsAll(other.map.keySet())) return false;
-    for (Map.Entry<String, LongKeyMap<ObserverGroup>> e : other.map
+    for (Map.Entry<String, SortedMap<Long, ObserverGroup>> e : other.map
         .entrySet()) {
       // Superset of onums for store
       if (!map.get(e.getKey()).keySet().containsAll(e.getValue().keySet()))
         return false;
-      for (LongKeyMap.Entry<ObserverGroup> e2 : e.getValue().entrySet()) {
+      for (Map.Entry<Long, ObserverGroup> e2 : e.getValue().entrySet()) {
         // Superset of observer group
         if (!map.get(e.getKey()).get(e2.getKey()).containsAll(e2.getValue()))
           return false;
@@ -315,12 +319,12 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   }
 
   @Override
-  public Iterator<Triple<Observer._Proxy, Boolean, LongSet>> iterator() {
-    return new Iterator<Triple<Observer._Proxy, Boolean, LongSet>>() {
-      Iterator<Map.Entry<String, LongKeyMap<ObserverGroup>>> topIter =
+  public Iterator<Triple<Observer._Proxy, Boolean, SortedSet<Long>>> iterator() {
+    return new Iterator<Triple<Observer._Proxy, Boolean, SortedSet<Long>>>() {
+      Iterator<Map.Entry<String, SortedMap<Long, ObserverGroup>>> topIter =
           map.entrySet().iterator();
       Store curStore = null;
-      Iterator<LongKeyMap.Entry<ObserverGroup>> subIter = null;
+      Iterator<Map.Entry<Long, ObserverGroup>> subIter = null;
 
       @Override
       public boolean hasNext() {
@@ -328,14 +332,14 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
       }
 
       @Override
-      public Triple<Observer._Proxy, Boolean, LongSet> next() {
+      public Triple<Observer._Proxy, Boolean, SortedSet<Long>> next() {
         if (subIter == null || !subIter.hasNext()) {
-          Map.Entry<String, LongKeyMap<ObserverGroup>> nextBunch =
+          Map.Entry<String, SortedMap<Long, ObserverGroup>> nextBunch =
               topIter.next();
           curStore = Worker.getWorker().getStore(nextBunch.getKey());
           subIter = nextBunch.getValue().entrySet().iterator();
         }
-        LongKeyMap.Entry<ObserverGroup> nextItem = subIter.next();
+        Map.Entry<Long, ObserverGroup> nextItem = subIter.next();
         return new Triple<>(new Observer._Proxy(curStore, nextItem.getKey()),
             nextItem.getValue().includesOwner, nextItem.getValue().treaties);
       }
@@ -353,11 +357,11 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
 
   public ImmutableObserverSet(DataInput in) throws IOException {
     int size1 = in.readInt();
-    this.map = new HashMap<>(size1);
+    this.map = new TreeMap<>();
     for (int i = 0; i < size1; i++) {
       String storeName = in.readUTF();
       int size2 = in.readInt();
-      LongKeyMap<ObserverGroup> submap = new LongKeyHashMap<>(size2);
+      SortedMap<Long, ObserverGroup> submap = new TreeMap<>();
       for (int j = 0; j < size2; j++) {
         long onum = in.readLong();
         submap.put(onum, new ObserverGroup(in));
@@ -373,11 +377,11 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   private void readObject(ObjectInputStream in)
       throws IOException, ClassNotFoundException {
     int size1 = in.readInt();
-    this.map = new HashMap<>(size1);
+    this.map = new TreeMap<>();
     for (int i = 0; i < size1; i++) {
       String storeName = in.readUTF();
       int size2 = in.readInt();
-      LongKeyMap<ObserverGroup> submap = new LongKeyHashMap<>(size2);
+      SortedMap<Long, ObserverGroup> submap = new TreeMap<>();
       for (int j = 0; j < size2; j++) {
         long onum = in.readLong();
         submap.put(onum, new ObserverGroup(in));
@@ -387,7 +391,7 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   }
 
   private void readObjectNoData() throws ObjectStreamException {
-    map = new HashMap<>();
+    map = new TreeMap<>();
   }
 
   @Override
@@ -404,10 +408,10 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(map.size());
-    for (Map.Entry<String, LongKeyMap<ObserverGroup>> e : map.entrySet()) {
+    for (Map.Entry<String, SortedMap<Long, ObserverGroup>> e : map.entrySet()) {
       out.writeUTF(e.getKey());
       out.writeInt(e.getValue().size());
-      for (LongKeyMap.Entry<ObserverGroup> e2 : e.getValue().entrySet()) {
+      for (Map.Entry<Long, ObserverGroup> e2 : e.getValue().entrySet()) {
         out.writeLong(e2.getKey());
         e2.getValue().write(out);
       }
@@ -419,11 +423,11 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     return map.toString();
   }
 
-  public LongSet onumsForStore(Store s) {
+  public Set<Long> onumsForStore(Store s) {
     return onumsForStore(s.name());
   }
 
-  public LongSet onumsForStore(String s) {
+  public Set<Long> onumsForStore(String s) {
     return map.get(s) == null ? null : map.get(s).keySet();
   }
 
@@ -432,13 +436,11 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
    */
   public void prefetch(Store triggeringStore) {
     // Hack to prefetch observers into cache.
-    for (final Map.Entry<String, LongKeyMap<ObserverGroup>> e : map
+    for (final Map.Entry<String, SortedMap<Long, ObserverGroup>> e : map
         .entrySet()) {
       if (e.getKey().equals(triggeringStore.name())) continue;
       Store s = Worker.getWorker().getStore(e.getKey());
-      for (LongIterator iter = e.getValue().keySet().iterator(); iter
-          .hasNext();) {
-        long onum = iter.next();
+      for (long onum : e.getValue().keySet()) {
         try {
           s.readObjectNoWait(onum);
         } catch (AccessException ex) {
