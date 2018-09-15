@@ -12,7 +12,9 @@ public class TxnStats {
   private long tid = 0;
   private boolean coordinated = false;
   private int fetches = 0;
+  private int fetchWaits = 0;
   private List<String> msgs = new ArrayList<>();
+  private List<String> fetched = new ArrayList<>();
   private List<String> versionConflicts = new ArrayList<>();
 
   public TxnStats() {
@@ -23,7 +25,9 @@ public class TxnStats {
     tid = 0;
     coordinated = false;
     fetches = 0;
+    fetchWaits = 0;
     msgs.clear();
+    fetched.clear();
     versionConflicts.clear();
   }
 
@@ -56,6 +60,13 @@ public class TxnStats {
   }
 
   /**
+   * @return the fetch waits (possibly being performed by another transaction)
+   */
+  public int getFetchWaits() {
+    return fetchWaits;
+  }
+
+  /**
    * Mark the final attempt as a coordination.
    */
   public void markCoordination() {
@@ -84,6 +95,21 @@ public class TxnStats {
   }
 
   /**
+   * Record a fetch wait (possibly waiting for another doing the fetching).
+   */
+  public void markFetchWait() {
+    fetchWaits++;
+  }
+
+  /**
+   * Record the object being waited for by a txn.
+   */
+  public void markFetched(fabric.lang.Object._Proxy p) {
+    if (p != null)
+      fetched.add("" + p.getClass() + "#" + p.$getOnum() + "@" + p.$getStore());
+  }
+
+  /**
    * Add a custom message.
    */
   public void addMsg(String msg) {
@@ -107,7 +133,8 @@ public class TxnStats {
   @Override
   public String toString() {
     return "[COORDINATED: " + coordinated + " WITH " + txnAttempts
-        + " TXN ATTEMPTS" + " USING " + fetches + " FETCHES" + " MSGS: " + msgs
+        + " TXN ATTEMPTS" + " USING " + fetches + " FETCHES " + fetchWaits
+        + " WAITS FOR FETCHES" + " MSGS: " + msgs + " FETCHED: " + fetched
         + " CONFLICTS: " + versionConflicts + " IN " + Long.toHexString(tid)
         + "]";
   }
