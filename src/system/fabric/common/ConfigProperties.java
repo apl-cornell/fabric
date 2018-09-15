@@ -96,6 +96,11 @@ public class ConfigProperties {
    */
   public final boolean useSubscriptions;
 
+  /**
+   * Whether to record what is being fetched in the txn stats.
+   */
+  public final boolean recordFetched;
+
   static {
     //
     // load the default properties files
@@ -150,6 +155,9 @@ public class ConfigProperties {
 
     this.useSubscriptions = Boolean.parseBoolean(
         removeProperty(p, "fabric.node.useSubscriptions", "false"));
+
+    this.recordFetched = Boolean.parseBoolean(
+        removeProperty(p, "fabric.node.recordFetched", "false"));
 
     // Collect network-delay properties.
     Map<String, Short> inDelays = new HashMap<>();

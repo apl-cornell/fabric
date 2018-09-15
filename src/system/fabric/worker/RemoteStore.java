@@ -174,8 +174,11 @@ public class RemoteStore extends RemoteNode<RemoteStore>
 
     final FetchLock lock = fetchLock;
 
+    boolean waited = false;
+    TransactionManager tm = TransactionManager.getInstance();
     synchronized (lock) {
       if (needToFetch) {
+        if (tm != null) tm.stats.markFetch();
         // We are responsible for initiating the fetch of the object.
         Threading.getPool().submit(new Threading.NamedRunnable(
             "Fetch of " + this.name() + "/" + onum) {
@@ -214,6 +217,8 @@ public class RemoteStore extends RemoteNode<RemoteStore>
                 curLog.setWaitsFor(lock);
               }
               lock.wait();
+              if (tm != null && !waited) tm.stats.markFetchWait();
+              waited = true;
             } catch (InterruptedException e) {
               Logging.logIgnoredInterruptedException(e);
             }
@@ -226,6 +231,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
       }
 
       if (lock.error != null) throw lock.error;
+      if (waited) tm.stats.markFetched(lock.object.getProxy());
       return lock.object;
     }
   }
@@ -248,8 +254,6 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    */
   private void fetchObject(boolean useDissem, long onum)
       throws AccessException {
-    TransactionManager tm = TransactionManager.getInstance();
-    if (tm != null) tm.stats.markFetch();
     Collection<ObjectGroup> g;
     if (useDissem) {
       ObjectGroup grp = Worker.getWorker().fetchManager().fetch(this, onum);
