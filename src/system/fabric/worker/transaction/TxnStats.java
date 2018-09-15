@@ -3,6 +3,8 @@ package fabric.worker.transaction;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabric.worker.Worker;
+
 /**
  * Class for easily tracking stats about app level transactions (as opposed to
  * individual attempts).
@@ -105,7 +107,7 @@ public class TxnStats {
    * Record the object being waited for by a txn.
    */
   public void markFetched(fabric.lang.Object._Proxy p) {
-    if (p != null)
+    if (p != null && Worker.getWorker().config.recordFetched)
       fetched.add("" + p.getClass() + "#" + p.$getOnum() + "@" + p.$getStore());
   }
 
