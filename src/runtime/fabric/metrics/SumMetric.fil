@@ -448,7 +448,7 @@ public class SumMetric extends DerivedMetric {
           // TODO: there should be some dynamic growth of MIN_ADAPTIVE_EXPIRY to
           // account for absurdly long transaction times.
           //if (adaptiveTimeout > staticTimeout && adaptiveRealTimeout >= System.currentTimeMillis() + MIN_ADAPTIVE_EXPIRY) {
-          if (adaptiveTimeout > staticTimeout && adaptiveRealTimeout >= System.currentTimeMillis() + 60000) {
+          if (adaptiveTimeout > staticTimeout && adaptiveRealTimeout >= System.currentTimeMillis() + 1000) {
             if (adaptiveTimeout != Long.MAX_VALUE)
               Logging.METRICS_LOGGER.log(Level.FINE,
                   "Using adaptive strategy for {0} with adaptive {1} vs static {2} and expected {3}",
