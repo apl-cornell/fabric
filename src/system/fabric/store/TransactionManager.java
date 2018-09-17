@@ -217,11 +217,15 @@ public class TransactionManager {
   /**
    * Returns the set of onums that observe the given onum that are on this
    * store.
+   *
+   * @param worker worker these additional onums will be sent to.  Used to
+   * identify onums that should already be on the worker due to subscription.
    */
-  LongSet getAssociatedOnums(long onum) throws AccessException {
+  LongSet getAssociatedOnums(long onum, RemoteWorker worker)
+      throws AccessException {
     LongSet result = new LongHashSet();
     result.add(onum);
-    getAssociatedOnums(onum, result);
+    getAssociatedOnums(onum, result, worker);
     result.remove(onum);
     return result;
   }
@@ -229,20 +233,23 @@ public class TransactionManager {
   /**
    * Returns the set of onums that observe the given onum that are on this
    * store.  Does not include graph reached past the given set.
+   *
+   * @param worker worker these additional onums will be sent to.  Used to
+   * identify onums that should already be on the worker due to subscription.
    */
-  LongSet getAssociatedOnumsExcluded(long onum, LongSet excluded)
-      throws AccessException {
+  LongSet getAssociatedOnumsExcluded(long onum, LongSet excluded,
+      RemoteWorker worker) throws AccessException {
     LongSet result = new LongHashSet();
     result.add(onum);
     result.addAll(excluded);
-    getAssociatedOnums(onum, result);
+    getAssociatedOnums(onum, result, worker);
     result.removeAll(excluded);
     result.remove(onum);
     return result;
   }
 
-  private void getAssociatedOnums(long onum, LongSet explored)
-      throws AccessException {
+  private void getAssociatedOnums(long onum, LongSet explored,
+      RemoteWorker worker) throws AccessException {
     SerializedObject obj = database.read(onum);
     if (obj == null) throw new AccessException(database.getName(), onum);
 
@@ -253,9 +260,10 @@ public class TransactionManager {
       Set<Long> subSet = associateSet.onumsForStore(store);
       if (subSet != null) {
         for (long associate : subSet) {
-          if (explored.contains(associate)) continue;
+          if (explored.contains(associate) || sm.subscribed(associate, worker))
+            continue;
           explored.add(associate);
-          getAssociatedOnums(associate, explored);
+          getAssociatedOnums(associate, explored, worker);
         }
       }
     }
@@ -265,9 +273,10 @@ public class TransactionManager {
       Set<Long> subSet = observerSet.onumsForStore(store);
       if (subSet != null) {
         for (long associate : subSet) {
-          if (explored.contains(associate)) continue;
+          if (explored.contains(associate) || sm.subscribed(associate, worker))
+            continue;
           explored.add(associate);
-          getAssociatedOnums(associate, explored);
+          getAssociatedOnums(associate, explored, worker);
         }
       }
     }
@@ -280,9 +289,11 @@ public class TransactionManager {
           Set<Long> subSet = treatyObservers.onumsForStore(store);
           if (subSet != null) {
             for (long associate : subSet) {
-              if (explored.contains(associate)) continue;
+              if (explored.contains(associate)
+                  || sm.subscribed(associate, worker))
+                continue;
               explored.add(associate);
-              getAssociatedOnums(associate, explored);
+              getAssociatedOnums(associate, explored, worker);
             }
           }
         }

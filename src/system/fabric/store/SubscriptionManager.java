@@ -188,7 +188,7 @@ public class SubscriptionManager {
           }
           groupContainer = tm.getGroupContainer(onum);
           LongSet curAssociatedOnums =
-              tm.getAssociatedOnumsExcluded(onum, onums);
+              tm.getAssociatedOnumsExcluded(onum, onums, worker);
           if (isDissem) {
             ObjectGlob glob = groupContainer.getGlob();
             if (!globs.containsKey(glob)) {

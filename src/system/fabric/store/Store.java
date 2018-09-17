@@ -11,6 +11,8 @@ import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
@@ -35,6 +37,7 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -275,11 +278,38 @@ class Store extends MessageToStoreHandler {
         msg.onum);
 
     HashSet<ObjectGroup> groups = new HashSet<>();
-    groups.add(tm.getGroup(client.principal, client.node, msg.onum));
-    for (LongIterator iter = tm.getAssociatedOnums(msg.onum).iterator(); iter
+    ObjectGroup startGroup =
+        tm.getGroup(client.principal, client.node, msg.onum);
+    groups.add(startGroup);
+
+    LongSet includedOnums = new LongHashSet(startGroup.objects().keySet());
+    Queue<Long> unfollowed = new LinkedList<>();
+    for (LongIterator iter = startGroup.objects().keySet().iterator(); iter
         .hasNext();) {
-      long relatedOnum = iter.next();
-      groups.add(tm.getGroup(client.principal, client.node, relatedOnum));
+      unfollowed.add(iter.next());
+    }
+
+    // Make sure all associates of all objects in all groups are included.
+    while (!unfollowed.isEmpty()) {
+      long startOnum = unfollowed.poll();
+      for (LongIterator iter =
+          tm.getAssociatedOnumsExcluded(startOnum, includedOnums, client.node)
+              .iterator(); iter.hasNext();) {
+        long relatedOnum = iter.next();
+        ObjectGroup relatedGroup =
+            tm.getGroup(client.principal, client.node, relatedOnum);
+        groups.add(relatedGroup);
+
+        for (LongIterator iter2 =
+            relatedGroup.objects().keySet().iterator(); iter2.hasNext();) {
+          long grpOnum = iter2.next();
+          // Add any new starting points to the queue.
+          if (!includedOnums.contains(grpOnum)) {
+            unfollowed.add(grpOnum);
+            includedOnums.add(grpOnum);
+          }
+        }
+      }
     }
     return new ReadMessage.Response(groups);
   }
@@ -296,8 +326,9 @@ class Store extends MessageToStoreHandler {
 
     LongKeyMap<ObjectGlob> result = new LongKeyHashMap<>();
     result.put(msg.onum, tm.getGlob(msg.onum, client.node));
-    for (LongIterator iter = tm.getAssociatedOnums(msg.onum).iterator(); iter
-        .hasNext();) {
+    for (LongIterator iter =
+        tm.getAssociatedOnums(msg.onum, client.node).iterator(); iter
+            .hasNext();) {
       long relatedOnum = iter.next();
       ObjectGlob relatedGlob = tm.getGlob(relatedOnum, client.node);
       // Only add it if it's distinct from other globs we're already sending
