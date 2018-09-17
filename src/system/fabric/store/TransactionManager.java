@@ -42,6 +42,7 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.LockConflictException;
 import fabric.worker.metrics.StatsMap;
@@ -246,10 +247,22 @@ public class TransactionManager {
     if (obj == null) throw new AccessException(database.getName(), onum);
 
     Store store = Worker.getWorker().getStore(database.getName());
+    // Go through associates
+    ImmutableObjectSet associateSet = obj.getAssociates();
+    if (associateSet != null) {
+      Set<Long> subSet = associateSet.onumsForStore(store);
+      if (subSet != null) {
+        for (long associate : subSet) {
+          if (explored.contains(associate)) continue;
+          explored.add(associate);
+          getAssociatedOnums(associate, explored);
+        }
+      }
+    }
     // Go through observers
-    ImmutableObserverSet set = obj.getObservers();
-    if (set != null) {
-      Set<Long> subSet = set.onumsForStore(store);
+    ImmutableObserverSet observerSet = obj.getObservers();
+    if (observerSet != null) {
+      Set<Long> subSet = observerSet.onumsForStore(store);
       if (subSet != null) {
         for (long associate : subSet) {
           if (explored.contains(associate)) continue;

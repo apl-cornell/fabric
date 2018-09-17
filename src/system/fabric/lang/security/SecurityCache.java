@@ -463,7 +463,8 @@ public final class SecurityCache extends AbstractSecurityCache {
     return truePolicyRelabels.get(pair);
   }
 
-  void putTruePolicyRelabels(Pair<Policy, Policy> pair, Set<DelegationPair> deps) {
+  void putTruePolicyRelabels(Pair<Policy, Policy> pair,
+      Set<DelegationPair> deps) {
     truePolicyRelabels.put(pair, deps);
 
     // Update the inverse map too.

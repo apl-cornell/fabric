@@ -538,49 +538,52 @@ public final class ObjectCache {
   Entry update(SerializedObject update, boolean replaceOnly) {
     long onum = update.getOnum();
 
-    Entry curEntry = null;
-    Entry newEntry = new Entry(update);
-    do {
-      curEntry = entries.get(onum);
+    try {
+      Entry curEntry = null;
+      Entry newEntry = new Entry(update);
+      do {
+        curEntry = entries.get(onum);
 
-      if (curEntry == null) {
-        if (!replaceOnly) {
-          return putIfAbsent(update, true);
-        }
-        return null;
-      }
-
-      synchronized (curEntry) {
-        if (replaceOnly && curEntry.isEvicted()) return null;
-
-        if (!curEntry.isEvicted()) {
-          // Check if object in current entry is an older version.
-          if (curEntry.getVersion() > update.getVersion()
-              || (curEntry.getVersion() == update.getVersion() && curEntry
-                  .getTreaties().isExtensionOf(update.getTreaties())))
-            return curEntry;
-
-          if (curEntry.getVersion() == update.getVersion() && update
-              .getTreaties().isStrictExtensionOf(curEntry.getTreaties())) {
-            curEntry.extendTreaties(update.getTreaties());
-            return curEntry;
+        if (curEntry == null) {
+          if (!replaceOnly) {
+            return putIfAbsent(update, true);
           }
-
-          curEntry.evict();
+          return null;
         }
-      }
 
-      // abort pre-existing readers.
-      TransactionManager.abortReaders(store, update.getOnum(),
-          "cache update of " + store + "/" + update.getOnum());
+        synchronized (curEntry) {
+          if (replaceOnly && curEntry.isEvicted()) return null;
 
-      // Keep retrying until we know we succeeded.
-    } while (!entries.replace(onum, curEntry, newEntry));
+          if (!curEntry.isEvicted()) {
+            // Check if object in current entry is an older version.
+            if (curEntry.getVersion() > update.getVersion()
+                || (curEntry.getVersion() == update.getVersion() && curEntry
+                    .getTreaties().isExtensionOf(update.getTreaties())))
+              return curEntry;
 
-    if (update.getObservers() != null) update.getObservers().prefetch(store);
-    if (update.getTreaties() != null) update.getTreaties().prefetch(store);
+            if (curEntry.getVersion() == update.getVersion() && update
+                .getTreaties().isStrictExtensionOf(curEntry.getTreaties())) {
+              curEntry.extendTreaties(update.getTreaties());
+              return curEntry;
+            }
 
-    return newEntry;
+            curEntry.evict();
+          }
+        }
+
+        // abort pre-existing readers.
+        TransactionManager.abortReaders(store, update.getOnum(),
+            "cache update of " + store + "/" + update.getOnum());
+
+        // Keep retrying until we know we succeeded.
+      } while (!entries.replace(onum, curEntry, newEntry));
+
+      return newEntry;
+    } finally {
+      if (update.getAssociates() != null) update.getAssociates().prefetch(store);
+      if (update.getObservers() != null) update.getObservers().prefetch(store);
+      if (update.getTreaties() != null) update.getTreaties().prefetch(store);
+    }
   }
 
   /**

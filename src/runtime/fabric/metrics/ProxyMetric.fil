@@ -27,6 +27,7 @@ public class ProxyMetric extends DerivedMetric {
     }
     fabric$metrics$DerivedMetric$(new Metric native[] { primary });
     initialize();
+    this.$associates = this.$associates.add(primary);
     return this;
   }
 

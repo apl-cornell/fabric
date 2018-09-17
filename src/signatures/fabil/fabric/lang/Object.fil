@@ -1,5 +1,6 @@
 package fabric.lang;
 
+import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.TreatySet;
 
@@ -8,6 +9,11 @@ public class Object extends java.lang.Object {
    * The label that protects the object at run time.
    */
   protected final Label $updateLabel;
+
+  /**
+   * The associates for this object
+   */
+  protected ImmutableObjectSet $associates;
 
   /**
    * The observers for treaties and metrics

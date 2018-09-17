@@ -8,6 +8,7 @@ import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.TreatySet;
 
@@ -68,15 +69,15 @@ public interface DelegatingPrincipal extends Principal {
     }
 
     public _Impl(Store store, long onum, int version,
-        ImmutableObserverSet observers, TreatySet treaties, Store labelStore,
-        long labelOnum, Store accessPolicyStore, long accessPolicyOnum,
-        ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs,
+        ImmutableObjectSet associates, ImmutableObserverSet observers,
+        TreatySet treaties, Store labelStore, long labelOnum,
+        Store accessPolicyStore, long accessPolicyOnum, ObjectInput in,
+        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws IOException, ClassNotFoundException {
-      super(store, onum, version, observers, treaties, labelStore, labelOnum,
-          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
-          interStoreRefs);
+      super(store, onum, version, associates, observers, treaties, labelStore,
+          labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
+          intraStoreRefs, interStoreRefs);
     }
 
     public static DelegatingPrincipal $addDefaultDelegates(

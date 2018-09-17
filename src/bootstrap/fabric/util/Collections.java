@@ -262,14 +262,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
       }
@@ -372,7 +372,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -380,7 +380,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -667,14 +667,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
       }
@@ -777,7 +777,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -785,7 +785,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -1012,14 +1012,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
       }
@@ -1122,7 +1122,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -1130,7 +1130,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -1431,14 +1431,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.n = in.readInt();
@@ -1554,7 +1554,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -1562,7 +1562,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -1660,14 +1660,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
       }
@@ -1771,7 +1771,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -1779,7 +1779,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -2000,14 +2000,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.element =
@@ -2121,7 +2121,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -2129,7 +2129,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -2421,14 +2421,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.element =
@@ -2543,7 +2543,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -2551,7 +2551,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -2889,14 +2889,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.k = (fabric.lang.Object) $readRef(fabric.lang.Object._Proxy.class,
@@ -3014,7 +3014,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -3022,7 +3022,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -3552,14 +3552,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.c = (fabric.util.Collection) $readRef(
@@ -3675,7 +3675,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -3683,7 +3683,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -3869,14 +3869,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.i =
@@ -3930,7 +3930,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -3938,7 +3938,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
         }
@@ -4415,14 +4415,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.list = (fabric.util.List) $readRef(fabric.util.List._Proxy.class,
@@ -4536,7 +4536,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -4544,7 +4544,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -4633,14 +4633,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
       }
@@ -4745,7 +4745,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -4753,7 +4753,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -5020,14 +5020,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.li = (fabric.util.ListIterator) $readRef(
@@ -5081,7 +5081,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -5089,7 +5089,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
         }
@@ -5385,7 +5385,7 @@ public interface Collections extends fabric.lang.Object {
           }
 
           public _Impl(fabric.worker.Store store, long onum, int version,
-              fabric.worker.metrics.ImmutableObserverSet observers,
+              fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
               fabric.worker.metrics.treaties.TreatySet treaties,
               fabric.worker.Store labelStore, long labelOnum,
               fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -5393,7 +5393,7 @@ public interface Collections extends fabric.lang.Object {
               java.util.Iterator intraStoreRefs,
               java.util.Iterator interStoreRefs)
               throws java.io.IOException, java.lang.ClassNotFoundException {
-            super(store, onum, version, observers, treaties, labelStore,
+            super(store, onum, version, associates, observers, treaties, labelStore,
                 labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
                 intraStoreRefs, interStoreRefs);
             this.e = (fabric.util.Map.Entry) $readRef(
@@ -5447,7 +5447,7 @@ public interface Collections extends fabric.lang.Object {
             }
 
             public _Impl(fabric.worker.Store store, long onum, int version,
-                fabric.worker.metrics.ImmutableObserverSet observers,
+                fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
                 fabric.worker.metrics.treaties.TreatySet treaties,
                 fabric.worker.Store labelStore, long labelOnum,
                 fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -5455,7 +5455,7 @@ public interface Collections extends fabric.lang.Object {
                 java.util.Iterator intraStoreRefs,
                 java.util.Iterator interStoreRefs)
                 throws java.io.IOException, java.lang.ClassNotFoundException {
-              super(store, onum, version, observers, treaties, labelStore,
+              super(store, onum, version, associates, observers, treaties, labelStore,
                   labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             }
@@ -5545,7 +5545,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -5553,7 +5553,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
         }
@@ -5658,7 +5658,7 @@ public interface Collections extends fabric.lang.Object {
           }
 
           public _Impl(fabric.worker.Store store, long onum, int version,
-              fabric.worker.metrics.ImmutableObserverSet observers,
+              fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
               fabric.worker.metrics.treaties.TreatySet treaties,
               fabric.worker.Store labelStore, long labelOnum,
               fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -5666,7 +5666,7 @@ public interface Collections extends fabric.lang.Object {
               java.util.Iterator intraStoreRefs,
               java.util.Iterator interStoreRefs)
               throws java.io.IOException, java.lang.ClassNotFoundException {
-            super(store, onum, version, observers, treaties, labelStore,
+            super(store, onum, version, associates, observers, treaties, labelStore,
                 labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
                 intraStoreRefs, interStoreRefs);
             this.serialVersionUID = in.readLong();
@@ -6171,14 +6171,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.m = (fabric.util.Map) $readRef(fabric.util.Map._Proxy.class,
@@ -6295,7 +6295,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -6303,7 +6303,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -6422,14 +6422,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
       }
@@ -6533,7 +6533,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -6541,7 +6541,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -6896,14 +6896,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.sm =
@@ -7019,7 +7019,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -7027,7 +7027,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -7404,14 +7404,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.ss =
@@ -7527,7 +7527,7 @@ public interface Collections extends fabric.lang.Object {
         }
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            fabric.worker.metrics.ImmutableObserverSet observers,
+            fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
             fabric.worker.metrics.treaties.TreatySet treaties,
             fabric.worker.Store labelStore, long labelOnum,
             fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
@@ -7535,7 +7535,7 @@ public interface Collections extends fabric.lang.Object {
             java.util.Iterator intraStoreRefs,
             java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, observers, treaties, labelStore,
+          super(store, onum, version, associates, observers, treaties, labelStore,
               labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
               intraStoreRefs, interStoreRefs);
           this.serialVersionUID = in.readLong();
@@ -8254,14 +8254,14 @@ public interface Collections extends fabric.lang.Object {
     }
 
     public _Impl(fabric.worker.Store store, long onum, int version,
-        fabric.worker.metrics.ImmutableObserverSet observers,
+        fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
         fabric.worker.metrics.treaties.TreatySet treaties,
         fabric.worker.Store labelStore, long labelOnum,
         fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
         java.io.ObjectInput in, java.util.Iterator refTypes,
         java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
         throws java.io.IOException, java.lang.ClassNotFoundException {
-      super(store, onum, version, observers, treaties, labelStore, labelOnum,
+      super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
           accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
           interStoreRefs);
     }
@@ -8590,14 +8590,14 @@ public interface Collections extends fabric.lang.Object {
       }
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          fabric.worker.metrics.ImmutableObserverSet observers,
+          fabric.worker.metrics.ImmutableObjectSet associates, fabric.worker.metrics.ImmutableObserverSet observers,
           fabric.worker.metrics.treaties.TreatySet treaties,
           fabric.worker.Store labelStore, long labelOnum,
           fabric.worker.Store accessPolicyStore, long accessPolicyOnum,
           java.io.ObjectInput in, java.util.Iterator refTypes,
           java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, observers, treaties, labelStore, labelOnum,
+        super(store, onum, version, associates, observers, treaties, labelStore, labelOnum,
             accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
             interStoreRefs);
         this.LOCAL_STORE = (fabric.worker.Store) in.readObject();

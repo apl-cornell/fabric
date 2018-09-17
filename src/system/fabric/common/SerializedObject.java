@@ -32,6 +32,7 @@ import fabric.lang.security.Label;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.TreatySet;
 
@@ -88,6 +89,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
   private static class Header implements FastSerializable, Serializable {
     private long onum;
     private int version;
+    private ImmutableObjectSet associates;
     private ImmutableObserverSet observers;
     private TreatySet treaties;
 
@@ -97,6 +99,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     public Header(long onum) {
       this.onum = onum;
       this.version = 0;
+      this.associates = null;
       this.observers = null;
       this.treaties = null;
     }
@@ -107,6 +110,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     public Header(_Impl obj) {
       this.onum = obj.$getOnum();
       this.version = obj.$version;
+      this.associates = obj.$associates;
       this.observers = obj.$observers;
       this.treaties = obj.$treaties;
     }
@@ -118,6 +122,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
       try {
         this.onum = in.readLong();
         this.version = in.readInt();
+        if (in.readBoolean()) {
+          this.associates = new ImmutableObjectSet(in);
+        }
         if (in.readBoolean()) {
           this.observers = new ImmutableObserverSet(in);
         }
@@ -134,6 +141,12 @@ public final class SerializedObject implements FastSerializable, Serializable {
       try {
         out.writeLong(onum);
         out.writeInt(version);
+        if (associates != null) {
+          out.writeBoolean(true);
+          associates.write(out);
+        } else {
+          out.writeBoolean(false);
+        }
         if (observers != null) {
           out.writeBoolean(true);
           observers.write(out);
@@ -187,6 +200,20 @@ public final class SerializedObject implements FastSerializable, Serializable {
     }
 
     /**
+     * @return the associates
+     */
+    public ImmutableObjectSet getAssociates() {
+      return associates;
+    }
+
+    /**
+     * @param associates the associates to set
+     */
+    public void setAssociates(ImmutableObjectSet associates) {
+      this.associates = associates;
+    }
+
+    /**
      * @return the observers
      */
     public ImmutableObserverSet getObservers() {
@@ -208,6 +235,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
         throws IOException, ClassNotFoundException {
       this.onum = in.readLong();
       this.version = in.readInt();
+      if (in.readBoolean()) {
+        this.associates = new ImmutableObjectSet(in);
+      }
       if (in.readBoolean()) {
         this.observers = new ImmutableObserverSet(in);
       }
@@ -404,6 +434,22 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public void setVersion(final int version) {
     header.setVersion(version);
+  }
+
+  /**
+   * @return the serialized object's associates
+   */
+  public ImmutableObjectSet getAssociates() {
+    return header.getAssociates();
+  }
+
+  /**
+   * Modifies the serialized object's associates
+   *
+   * @param associates
+   */
+  public void setAssociates(ImmutableObjectSet associates) {
+    header.setAssociates(associates);
   }
 
   /**
@@ -898,7 +944,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   @Override
   public String toString() {
-    return getOnum() + "v" + getVersion();
+    return getClassName() + "#" + getOnum() + "v" + getVersion();
   }
 
   /**
@@ -1281,9 +1327,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       if (constructor == null) {
         constructor = implClass.getConstructor(Store.class, long.class,
-            int.class, ImmutableObserverSet.class, TreatySet.class, Store.class,
-            long.class, Store.class, long.class, ObjectInput.class,
-            Iterator.class, Iterator.class, Iterator.class);
+            int.class, ImmutableObjectSet.class, ImmutableObserverSet.class,
+            TreatySet.class, Store.class, long.class, Store.class, long.class,
+            ObjectInput.class, Iterator.class, Iterator.class, Iterator.class);
         constructorTable.put(implClass, constructor);
       }
 
@@ -1310,9 +1356,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
       }
 
       _Impl result = (_Impl) constructor.newInstance(store, getOnum(),
-          getVersion(), getObservers(), getTreaties(), updateLabelStore,
-          updateLabelOnum, accessPolicyStore, accessPolicyOnum,
-          new ObjectInputStream(getSerializedDataStream()),
+          getVersion(), getAssociates(), getObservers(), getTreaties(),
+          updateLabelStore, updateLabelOnum, accessPolicyStore,
+          accessPolicyOnum, new ObjectInputStream(getSerializedDataStream()),
           getRefTypeIterator(), getIntraStoreRefIterator(),
           getInterStoreRefIterator());
 

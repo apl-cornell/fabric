@@ -1,0 +1,46 @@
+package fabric.worker.metrics;
+
+import java.util.Iterator;
+import java.util.SortedSet;
+
+/**
+ * Utility class to easily express an immutable vector of items.
+ */
+public class ImmutableObjectSet implements JavaInlineable, Iterable/*<Object>*/ {
+
+  /** @return the length. */
+  public native int size();
+
+  /** @return a new set with the given item added. */
+  public native ImmutableObjectSet add(Object obs);
+
+  /**
+   * Add all items in the given ImmutableObjectSet.
+   * @return the updated observer set.
+   */
+  public native ImmutableObjectSet addAll(ImmutableObjectSet other);
+
+  /** @return a new set with the given item removed. */
+  public native ImmutableObjectSet remove(Object obs);
+
+  /**
+   * Remove all items in the given ImmutableObjectSet.
+   * @return the updated observer set.
+   */
+  public native ImmutableObjectSet removeAll(ImmutableObjectSet other);
+
+  /** @return true iff the given observer is in the set */
+  public native boolean contains(Object obs);
+
+  /** @return true iff the given set is fully contained in this set */
+  public native boolean containsAll(ImmutableObjectSet other);
+
+  /** @return true iff the set is empty */
+  public native boolean isEmpty();
+
+  /** @return a value to use for an empty vector */
+  public static native ImmutableObjectSet emptySet();
+
+  /*@Override*/
+  public native Iterator/*<Object>*/ iterator();
+}

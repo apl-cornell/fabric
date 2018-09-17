@@ -32,6 +32,7 @@ import fabric.worker.ObjectCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
+import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
@@ -68,6 +69,11 @@ public interface Object {
   ImmutableObserverSet get$$observers();
 
   ImmutableObserverSet set$$observers(ImmutableObserverSet observers);
+
+  /** The associates of this object. */
+  ImmutableObjectSet get$$associates();
+
+  ImmutableObjectSet set$$associates(ImmutableObjectSet associates);
 
   /**
    * The object's access policy, specifying the program contexts in which it is
@@ -313,6 +319,17 @@ public interface Object {
     }
 
     @Override
+    public final ImmutableObjectSet get$$associates() {
+      return fetch().get$$associates();
+    }
+
+    @Override
+    public final ImmutableObjectSet set$$associates(
+        ImmutableObjectSet associates) {
+      return fetch().set$$associates(associates);
+    }
+
+    @Override
     public final ConfPolicy get$$accessPolicy() {
       // If the object hasn't been deserialized yet, avoid deserialization by
       // obtaining a reference to the object's access label directly from the
@@ -545,10 +562,17 @@ public interface Object {
     public ImmutableObserverSet $observers;
 
     /**
+     * The associates field, to be used to mark objects that should be
+     * prefetched when this object is fetched.
+     */
+    public ImmutableObjectSet $associates;
+
+    /**
      * A private constructor for initializing transaction-management state.
      */
     private _Impl(Store store, long onum, int version,
-        ImmutableObserverSet observers, TreatySet treaties) {
+        ImmutableObjectSet associates, ImmutableObserverSet observers,
+        TreatySet treaties) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
@@ -567,6 +591,7 @@ public interface Object {
       this.$isOwned = false;
       this.writerMapVersion = -1;
       this.$observers = observers;
+      this.$associates = associates;
 
       if (TRACE_OBJECTS)
         this.$stackTrace = Thread.currentThread().getStackTrace();
@@ -587,7 +612,7 @@ public interface Object {
      *          the location for the object
      */
     public _Impl(Store store) throws UnreachableNodeException {
-      this(store, store.createOnum(), 0, null, null);
+      this(store, store.createOnum(), 0, null, null, null);
       store.cache(this);
 
       // Register the new object with the transaction manager.
@@ -704,6 +729,7 @@ public interface Object {
       $isOwned = other.$isOwned;
       writerMapVersion = other.writerMapVersion;
       $copyAppStateFrom(other);
+      $associates = other.$associates;
       $observers = other.$observers;
       $treaties = other.$treaties;
     }
@@ -776,6 +802,22 @@ public interface Object {
       this.$observers = observers;
       if (transactionCreated) tm.commitTransaction();
       return $observers;
+    }
+
+    @Override
+    public final ImmutableObjectSet get$$associates() {
+      TransactionManager.getInstance().registerRead(this);
+      return $associates;
+    }
+
+    @Override
+    public final ImmutableObjectSet set$$associates(
+        ImmutableObjectSet associates) {
+      TransactionManager tm = TransactionManager.getInstance();
+      boolean transactionCreated = tm.registerWrite(this);
+      this.$associates = associates;
+      if (transactionCreated) tm.commitTransaction();
+      return $associates;
     }
 
     @Override
@@ -887,13 +929,14 @@ public interface Object {
      * @throws ClassNotFoundException
      */
     public _Impl(Store store, long onum, int version,
-        ImmutableObserverSet observers, TreatySet treaties,
-        Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
-        long accessPolicyOnum, ObjectInput serializedInput,
-        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+        ImmutableObjectSet associates, ImmutableObserverSet observers,
+        TreatySet treaties, Store updateLabelStore, long updateLabelOnum,
+        Store accessPolicyStore, long accessPolicyOnum,
+        ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws IOException, ClassNotFoundException {
-      this(store, onum, version, observers, treaties);
+      this(store, onum, version, associates, observers, treaties);
       this.$updateLabel = new Label._Proxy(updateLabelStore, updateLabelOnum);
       this.$accessPolicy =
           new ConfPolicy._Proxy(accessPolicyStore, accessPolicyOnum);
@@ -1155,15 +1198,17 @@ public interface Object {
       }
 
       public _Impl(Store store, long onum, int version,
-          ImmutableObserverSet observers, TreatySet treaties,
-          Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
-          long accessPolicyOnum, ObjectInput serializedInput,
-          Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+          ImmutableObjectSet associates, ImmutableObserverSet observers,
+          TreatySet treaties, Store updateLabelStore, long updateLabelOnum,
+          Store accessPolicyStore, long accessPolicyOnum,
+          ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
+          Iterator<Long> intraStoreRefs,
           Iterator<Pair<String, Long>> interStoreRefs)
           throws IOException, ClassNotFoundException {
-        super(store, onum, version, observers, treaties, updateLabelStore,
-            updateLabelOnum, accessPolicyStore, accessPolicyOnum,
-            serializedInput, refTypes, intraStoreRefs, interStoreRefs);
+        super(store, onum, version, associates, observers, treaties,
+            updateLabelStore, updateLabelOnum, accessPolicyStore,
+            accessPolicyOnum, serializedInput, refTypes, intraStoreRefs,
+            interStoreRefs);
       }
 
       @Override

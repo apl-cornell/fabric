@@ -16,6 +16,7 @@ import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.ThreadRewriter;
+
 import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
@@ -559,6 +560,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     ClassMember deserialize = qq.parseMember(
         "public _Impl(fabric.worker.Store store, long onum, int version, "
+            + "fabric.worker.metrics.ImmutableObjectSet associates, "
             + "fabric.worker.metrics.ImmutableObserverSet observers, "
             + "fabric.worker.metrics.treaties.TreatySet treaties, "
             + "fabric.worker.Store labelStore, long labelOnum, "
@@ -567,9 +569,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             + "java.util.Iterator intraStoreRefs, "
             + "java.util.Iterator interStoreRefs) "
             + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-            + "super(store, onum, version, observers, treaties, labelStore, "
-            + "labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes, "
-            + "intraStoreRefs, interStoreRefs);" + in + " }",
+            + "super(store, onum, version, associates, observers, treaties, "
+            + "labelStore, labelOnum, accessPolicyStore, accessPolicyOnum, in, "
+            + "refTypes, intraStoreRefs, interStoreRefs);" + in + " }",
         inSubst.toArray());
     result.add(deserialize);
 

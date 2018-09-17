@@ -216,11 +216,13 @@ public class LabelCache {
     }
   }
 
-  public ConfPolicy getReaderPolicy(Triple<Principal, Principal, Store> triple) {
+  public ConfPolicy getReaderPolicy(
+      Triple<Principal, Principal, Store> triple) {
     return readerPolicyCache.get(triple);
   }
 
-  public IntegPolicy getWriterPolicy(Triple<Principal, Principal, Store> triple) {
+  public IntegPolicy getWriterPolicy(
+      Triple<Principal, Principal, Store> triple) {
     return writerPolicyCache.get(triple);
   }
 

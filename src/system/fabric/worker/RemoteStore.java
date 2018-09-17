@@ -229,11 +229,11 @@ public class RemoteStore extends RemoteNode<RemoteStore>
       } else {
         return null;
       }
-
-      if (lock.error != null) throw lock.error;
-      if (waited) tm.stats.markFetched(lock.object.getProxy());
-      return lock.object;
     }
+
+    if (lock.error != null) throw lock.error;
+    if (waited) tm.stats.markFetched(lock.object.getProxy());
+    return lock.object;
   }
 
   @Override

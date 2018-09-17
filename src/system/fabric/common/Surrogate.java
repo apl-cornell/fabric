@@ -11,6 +11,7 @@ import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.TreatySet;
 
@@ -29,15 +30,16 @@ public final class Surrogate extends _Impl {
   public final long onum;
 
   public Surrogate(Store store, long onum, int version,
-      ImmutableObserverSet observers, TreatySet treaties, Store labelStore,
-      long labelOnum, Store accessPolicyStore, long accessPolicyOnum,
+      ImmutableObjectSet associates, ImmutableObserverSet observers,
+      TreatySet treaties, Store labelStore, long labelOnum,
+      Store accessPolicyStore, long accessPolicyOnum,
       ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
       Iterator<Long> intraStoreRefs,
       Iterator<Pair<String, Long>> interStoreRefs)
       throws IOException, ClassNotFoundException {
-    super(store, onum, version, observers, treaties, labelStore, labelOnum,
-        accessPolicyStore, accessPolicyOnum, serializedInput, refTypes,
-        intraStoreRefs, interStoreRefs);
+    super(store, onum, version, associates, observers, treaties, labelStore,
+        labelOnum, accessPolicyStore, accessPolicyOnum, serializedInput,
+        refTypes, intraStoreRefs, interStoreRefs);
     String storeName = serializedInput.readUTF();
     this.store = Worker.getWorker().getStore(storeName);
     this.onum = serializedInput.readLong();

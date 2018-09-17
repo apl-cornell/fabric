@@ -13,6 +13,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TransactionManager;
+import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.RunningMetricStats;
@@ -362,6 +363,7 @@ public abstract class Metric extends AbstractSubject
     this.treatiesBox = new TreatiesBox().fabric$metrics$util$TreatiesBox$(this);
     fabric$metrics$util$AbstractSubject$();
     this.proxies = ProxyMap.emptyMap();
+    this.$associates = ImmutableObjectSet.emptySet().add(this.treatiesBox);
     return this;
   }
 
@@ -375,6 +377,7 @@ public abstract class Metric extends AbstractSubject
       return (Metric) this.proxies.get(s);
     Metric result = new ProxyMetric@s().fabric$metrics$ProxyMetric$(this);
     proxies = proxies.put(s, result);
+    this.$associates = this.$associates.add(result);
     return result;
   }
 
