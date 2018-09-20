@@ -1,17 +1,5 @@
 package fabric.worker.transaction;
 
-import static fabric.common.Logging.HOTOS_LOGGER;
-import static fabric.common.Logging.METRICS_LOGGER;
-import static fabric.common.Logging.WORKER_DEADLOCK_LOGGER;
-import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
-import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
-import static fabric.worker.transaction.Log.CommitState.Values.ABORTING;
-import static fabric.worker.transaction.Log.CommitState.Values.COMMITTED;
-import static fabric.worker.transaction.Log.CommitState.Values.COMMITTING;
-import static fabric.worker.transaction.Log.CommitState.Values.PREPARED;
-import static fabric.worker.transaction.Log.CommitState.Values.PREPARE_FAILED;
-import static fabric.worker.transaction.Log.CommitState.Values.PREPARING;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -791,8 +779,8 @@ public final class TransactionManager {
     // and checking retry signal for the last time.
     // TODO: This should probably be run somewhere else prior to this call,
     // since it's technically not part of commit.
-    METRICS_LOGGER.log(Level.FINEST,
-        "RESOLVING OBSERVATIONS AT THE END OF {0}", current);
+    METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS AT THE END OF {0}",
+        current);
     try {
       current.runFinalResolution();
       if (!acquiringLocks) {
@@ -835,12 +823,12 @@ public final class TransactionManager {
         abortTransaction();
         throw new TransactionRestartingException(tid, e);
       }
-      METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS " + current
-          + " DIED WITH " + e + "\n" + sw);
+      METRICS_LOGGER.log(Level.FINEST,
+          "RESOLVING OBSERVATIONS " + current + " DIED WITH " + e + "\n" + sw);
       throw e;
     }
-    METRICS_LOGGER.log(Level.FINEST,
-        "RESOLVED OBSERVATIONS AT THE END OF {0}", current);
+    METRICS_LOGGER.log(Level.FINEST, "RESOLVED OBSERVATIONS AT THE END OF {0}",
+        current);
 
     // Wait for all sub-transactions to finish.
     current.waitForThreads();
@@ -1649,12 +1637,12 @@ public final class TransactionManager {
     // Go through each store and send check messages in parallel.
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
+      final LongKeyMap<Pair<Integer, TreatySet>> reads =
+          checkingLog.getReadsForStore(store, true);
       NamedRunnable runnable =
           new NamedRunnable("worker freshness check to " + store.name()) {
             @Override
             public void runImpl() {
-              LongKeyMap<Pair<Integer, TreatySet>> reads =
-                  checkingLog.getReadsForStore(store, true);
               if (store.checkForStaleObjects(reads))
                 nodesWithStaleObjects.add((RemoteNode<?>) store);
               synchronized (outstandingChecks) {
