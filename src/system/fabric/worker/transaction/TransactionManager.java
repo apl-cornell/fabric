@@ -965,12 +965,12 @@ public final class TransactionManager {
     // Go through each store and send check messages in parallel.
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
+      final LongKeyMap<Integer> reads =
+          checkingLog.getReadsForStore(store, true);
       NamedRunnable runnable =
           new NamedRunnable("worker freshness check to " + store.name()) {
             @Override
             public void runImpl() {
-              LongKeyMap<Integer> reads =
-                  checkingLog.getReadsForStore(store, true);
               if (store.checkForStaleObjects(reads))
                 nodesWithStaleObjects.add((RemoteNode<?>) store);
               synchronized (outstandingChecks) {
