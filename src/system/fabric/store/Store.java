@@ -326,14 +326,17 @@ class Store extends MessageToStoreHandler {
 
     LongKeyMap<ObjectGlob> result = new LongKeyHashMap<>();
     result.put(msg.onum, tm.getGlob(msg.onum, client.node));
-    for (LongIterator iter =
-        tm.getAssociatedOnums(msg.onum, client.node).iterator(); iter
-            .hasNext();) {
-      long relatedOnum = iter.next();
-      ObjectGlob relatedGlob = tm.getGlob(relatedOnum, client.node);
-      // Only add it if it's distinct from other globs we're already sending
-      if (!result.values().contains(relatedGlob))
-        result.put(relatedOnum, relatedGlob);
+    ConfigProperties config = Worker.getWorker().config;
+    if (config.usePrefetching || config.useSubscriptions) {
+      for (LongIterator iter =
+          tm.getAssociatedOnums(msg.onum, client.node).iterator(); iter
+              .hasNext();) {
+        long relatedOnum = iter.next();
+        ObjectGlob relatedGlob = tm.getGlob(relatedOnum, client.node);
+        // Only add it if it's distinct from other globs we're already sending
+        if (!result.values().contains(relatedGlob))
+          result.put(relatedOnum, relatedGlob);
+      }
     }
     return new DissemReadMessage.Response(result);
   }

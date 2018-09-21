@@ -580,9 +580,14 @@ public final class ObjectCache {
 
       return newEntry;
     } finally {
-      if (update.getAssociates() != null) update.getAssociates().prefetch(store);
-      if (update.getObservers() != null) update.getObservers().prefetch(store);
-      if (update.getTreaties() != null) update.getTreaties().prefetch(store);
+      if (Worker.getWorker().config.usePrefetching
+          || Worker.getWorker().config.useSubscriptions) {
+        if (update.getAssociates() != null)
+          update.getAssociates().prefetch(store);
+        if (update.getObservers() != null)
+          update.getObservers().prefetch(store);
+        if (update.getTreaties() != null) update.getTreaties().prefetch(store);
+      }
     }
   }
 

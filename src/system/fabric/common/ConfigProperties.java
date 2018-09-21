@@ -85,6 +85,9 @@ public class ConfigProperties {
   public final double alpha;
   // Window for binning observations for estimating poisson events.
   public final long window;
+  // Whether to proactively prefetch associates (when subscription is not
+  // running.)
+  public final boolean usePrefetching;
 
   /**
    * Whether to exponentially back off when retrying transactions.
@@ -260,6 +263,9 @@ public class ConfigProperties {
 
     this.window =
         Long.parseLong(removeProperty(p, "fabric.metrics.window", "1000"));
+
+    this.usePrefetching = Boolean.parseBoolean(
+        removeProperty(p, "fabric.metrics.usePrefetching", "false"));
 
     /************************** Worker Properties *****************************/
     this.workerPort =
