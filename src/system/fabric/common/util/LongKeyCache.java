@@ -2,7 +2,6 @@ package fabric.common.util;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
-import java.util.logging.Level;
 
 import fabric.common.Logging;
 
@@ -197,8 +196,6 @@ public class LongKeyCache<V> {
       while (true) {
         try {
           ValueSoftRef<?> ref = (ValueSoftRef<?>) queue.remove();
-          Logging.METRICS_LOGGER.log(Level.INFO, "COLLECTING {0}",
-              new Object[] { ref.key });
           ref.cache.map.remove(ref.key, ref);
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
