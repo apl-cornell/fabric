@@ -282,31 +282,34 @@ class Store extends MessageToStoreHandler {
         tm.getGroup(client.principal, client.node, msg.onum);
     groups.add(startGroup);
 
-    LongSet includedOnums = new LongHashSet(startGroup.objects().keySet());
-    Queue<Long> unfollowed = new LinkedList<>();
-    for (LongIterator iter = startGroup.objects().keySet().iterator(); iter
-        .hasNext();) {
-      unfollowed.add(iter.next());
-    }
+    ConfigProperties config = Worker.getWorker().config;
+    if (config.usePrefetching || config.useSubscriptions) {
+      LongSet includedOnums = new LongHashSet(startGroup.objects().keySet());
+      Queue<Long> unfollowed = new LinkedList<>();
+      for (LongIterator iter = startGroup.objects().keySet().iterator(); iter
+          .hasNext();) {
+        unfollowed.add(iter.next());
+      }
 
-    // Make sure all associates of all objects in all groups are included.
-    while (!unfollowed.isEmpty()) {
-      long startOnum = unfollowed.poll();
-      for (LongIterator iter =
-          tm.getAssociatedOnumsExcluded(startOnum, includedOnums, client.node)
-              .iterator(); iter.hasNext();) {
-        long relatedOnum = iter.next();
-        ObjectGroup relatedGroup =
-            tm.getGroup(client.principal, client.node, relatedOnum);
-        groups.add(relatedGroup);
+      // Make sure all associates of all objects in all groups are included.
+      while (!unfollowed.isEmpty()) {
+        long startOnum = unfollowed.poll();
+        for (LongIterator iter =
+            tm.getAssociatedOnumsExcluded(startOnum, includedOnums, client.node)
+                .iterator(); iter.hasNext();) {
+          long relatedOnum = iter.next();
+          ObjectGroup relatedGroup =
+              tm.getGroup(client.principal, client.node, relatedOnum);
+          groups.add(relatedGroup);
 
-        for (LongIterator iter2 =
-            relatedGroup.objects().keySet().iterator(); iter2.hasNext();) {
-          long grpOnum = iter2.next();
-          // Add any new starting points to the queue.
-          if (!includedOnums.contains(grpOnum)) {
-            unfollowed.add(grpOnum);
-            includedOnums.add(grpOnum);
+          for (LongIterator iter2 =
+              relatedGroup.objects().keySet().iterator(); iter2.hasNext();) {
+            long grpOnum = iter2.next();
+            // Add any new starting points to the queue.
+            if (!includedOnums.contains(grpOnum)) {
+              unfollowed.add(grpOnum);
+              includedOnums.add(grpOnum);
+            }
           }
         }
       }

@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import fabric.common.ConfigProperties;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
@@ -161,13 +162,16 @@ public class InProcessStore extends RemoteStore {
     SerializedObject obj = tm.read(onum);
     if (obj == null) throw new AccessException(this, onum);
     map.put(onum, obj);
-    for (LongIterator iter =
-        tm.getAssociatedOnums(onum, getLocalWorkerIdentity().node)
-            .iterator(); iter.hasNext();) {
-      long relatedOnum = iter.next();
-      SerializedObject related = tm.read(relatedOnum);
-      if (related == null) throw new AccessException(this, relatedOnum);
-      map.put(relatedOnum, related);
+    ConfigProperties config = Worker.getWorker().config;
+    if (config.usePrefetching || config.useSubscriptions) {
+      for (LongIterator iter =
+          tm.getAssociatedOnums(onum, getLocalWorkerIdentity().node)
+              .iterator(); iter.hasNext();) {
+        long relatedOnum = iter.next();
+        SerializedObject related = tm.read(relatedOnum);
+        if (related == null) throw new AccessException(this, relatedOnum);
+        map.put(relatedOnum, related);
+      }
     }
     return Collections.singletonList(new ObjectGroup(map));
   }
@@ -177,12 +181,15 @@ public class InProcessStore extends RemoteStore {
       throws AccessException {
     LongKeyMap<ObjectGlob> result = new LongKeyHashMap<>();
     result.put(onum, tm.getGlob(onum, getLocalWorkerIdentity().node));
-    for (LongIterator iter =
-        tm.getAssociatedOnums(onum, getLocalWorkerIdentity().node)
-            .iterator(); iter.hasNext();) {
-      long relatedOnum = iter.next();
-      result.put(relatedOnum,
-          tm.getGlob(relatedOnum, getLocalWorkerIdentity().node));
+    ConfigProperties config = Worker.getWorker().config;
+    if (config.usePrefetching || config.useSubscriptions) {
+      for (LongIterator iter =
+          tm.getAssociatedOnums(onum, getLocalWorkerIdentity().node)
+              .iterator(); iter.hasNext();) {
+        long relatedOnum = iter.next();
+        result.put(relatedOnum,
+            tm.getGlob(relatedOnum, getLocalWorkerIdentity().node));
+      }
     }
     return result;
   }
