@@ -127,6 +127,11 @@ public final class TransactionManager {
   private Log current;
 
   /**
+   * Current time bound for creating new time-varying treaties.
+   */
+  private long treatyTimeoutBound = 1000;
+
+  /**
    * Per-Thread stats for app-level transactions
    */
   public final TxnStats stats = new TxnStats();
@@ -938,11 +943,11 @@ public final class TransactionManager {
 
     // First check if the commit's already doomed.  If so, abort without talking
     // to stores.
-    if (current.expiry() < System.currentTimeMillis()) {
-      TransactionID tid = current.tid;
-      abortTransaction();
-      throw new TransactionRestartingException(tid);
-    }
+    //if (current.expiry() < System.currentTimeMillis()) {
+    //  TransactionID tid = current.tid;
+    //  abortTransaction();
+    //  throw new TransactionRestartingException(tid);
+    //}
 
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
@@ -1407,7 +1412,8 @@ public final class TransactionManager {
                   // finish their 2PC
                   //waitsFor.add(lock);
                   lock.flagRetry("writer " + current.tid + " wants to write "
-                      + obj.$getStore() + "/" + obj.$getOnum());
+                      + obj.getClass() + ":" + obj.$getStore() + "/"
+                      + obj.$getOnum());
                 }
               }
 
@@ -1829,6 +1835,18 @@ public final class TransactionManager {
    */
   public void associateLog(Log log) {
     current = log;
+  }
+
+  public long getCurrentTreatyTimeout() {
+    return treatyTimeoutBound;
+  }
+
+  public void increaseTreatyTimeout(long amount) {
+    treatyTimeoutBound += amount + 100;
+  }
+
+  public void resetTreatyTimeout() {
+    treatyTimeoutBound = 1000;
   }
 
   public Log getCurrentLog() {

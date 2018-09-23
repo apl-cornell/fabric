@@ -50,12 +50,15 @@ public class TransactionPrepare {
 
   private final RemoteWorker coordinator;
   private final Log txnLog;
+  private final TransactionManager manager;
   private final boolean singleStore;
   private final boolean readOnly;
   // time at which all prepares were finished.
   private long commitTime;
   // All longer treaties to forward to the coordinator.
   private OidKeyHashMap<TreatySet> longerTreaties;
+  // Flag indicating if timeout caused abort, so we can extend the timeout.
+  private boolean abortedForTimeout = false;
 
   public TransactionPrepare(RemoteWorker coordinator, Log txnLog,
       boolean singleStore, boolean readOnly, Collection<Store> stores,
@@ -74,6 +77,7 @@ public class TransactionPrepare {
     }
     this.commitTime = 0;
     this.longerTreaties = new OidKeyHashMap<>();
+    this.manager = TransactionManager.getInstance();
     if (TransactionManager.pendingPrepares.putIfAbsent(txnLog.tid.topTid,
         this) != null) {
       // This shouldn't be possible, somehow we're trying to prepare an already
@@ -130,7 +134,7 @@ public class TransactionPrepare {
     if (currentStatus == Status.PREPARING && outstandingWorkers.isEmpty()
         && outstandingStores.isEmpty()) {
       if (commitTime > txnLog.expiry() && !singleStore) {
-        abortForTimeout();
+        abortForTimeout(commitTime);
       } else {
         currentStatus = Status.PREPARED;
         notifyAll();
@@ -224,7 +228,7 @@ public class TransactionPrepare {
     if (currentStatus == Status.PREPARING && outstandingWorkers.isEmpty()
         && outstandingStores.isEmpty()) {
       if (commitTime > txnLog.expiry() && !singleStore) {
-        abortForTimeout();
+        abortForTimeout(commitTime);
       } else {
         currentStatus = Status.PREPARED;
         notifyAll();
@@ -312,7 +316,13 @@ public class TransactionPrepare {
     }
     if (currentStatus == Status.ABORTING) {
       // Check if we're done due to abort.
+      // Extend the timeout if necessary
+      if (abortedForTimeout) TransactionManager.getInstance()
+          .increaseTreatyTimeout(commitTime - txnLog.expiry());
       txnLog.checkRetrySignal();
+    } else {
+      // Reset the timeout
+      TransactionManager.getInstance().resetTreatyTimeout();
     }
   }
 
@@ -379,11 +389,14 @@ public class TransactionPrepare {
   /**
    * Initiate an abort due to treaty timeout.
    */
-  public synchronized void abortForTimeout() {
+  public synchronized void abortForTimeout(long commitTime) {
     if (currentStatus != Status.ABORTING && currentStatus != Status.COMMITTING
         && currentStatus != Status.COMMITTED) {
       WORKER_TRANSACTION_LOGGER.log(Level.FINE,
-          "{0} aborted during prepare due to expiries expiring", txnLog);
+          "{0} aborted during prepare due to expiries expiring missed by {1} with timeout bound {2}",
+          new Object[] { txnLog, commitTime - txnLog.expiry(),
+              manager.getCurrentTreatyTimeout() });
+      abortedForTimeout = true;
       runAbort();
     }
     if (currentStatus == Status.ABORTING) cleanUp();
@@ -440,7 +453,8 @@ public class TransactionPrepare {
             new Object[] { txnLog, w });
         w.abortTransaction(txnLog.tid);
       }
-      for (Store s : SysUtil.chain(outstandingStores.keySet(), respondedStores)) {
+      for (Store s : SysUtil.chain(outstandingStores.keySet(),
+          respondedStores)) {
         WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
             new Object[] { txnLog, s });
         s.abortTransaction(txnLog.tid);
