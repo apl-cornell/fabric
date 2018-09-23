@@ -182,7 +182,7 @@ public class WitnessPolicy extends EnforcementPolicy {
         // anywhere.
         MetricTreaty w = witnessMetric.get().get$treatiesBox().get$$treaties()
             .get(witness.getValue());
-        if (w == null || !w.valid()) break;
+        if (w == null || w.invalid()) break;
       }
     } else {
       Future<?> futures[] = new Future<?>[witnesses.size()];
