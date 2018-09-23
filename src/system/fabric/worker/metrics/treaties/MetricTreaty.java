@@ -417,7 +417,8 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
         new Object[] { this, TransactionManager.getInstance().getCurrentTid(),
             Thread.currentThread() });
     TransactionManager.getInstance().resolveObservations();
-    boolean result = expiry > System.currentTimeMillis();
+    MetricTreaty updated = metric.get().get$treatiesBox().get$$treaties().get(id);
+    boolean result = updated != null && updated.expiry > System.currentTimeMillis();
     if (result) TransactionManager.getInstance().registerExpiryUse(expiry);
     return result;
   }
