@@ -906,7 +906,7 @@ public abstract class Metric extends AbstractSubject
 
   public void assertPostcondition(TreatyStatement stmt) {
     MetricTreaty existing = treatiesBox.$treaties.get(stmt);
-    if (existing != null) {
+    if (existing != null  && !existing.invalid()) {
       TransactionManager.getInstance().addTreatiedPostcondition(existing);
     } else {
       TransactionManager.getInstance().addUntreatiedPostcondition(this, stmt);
