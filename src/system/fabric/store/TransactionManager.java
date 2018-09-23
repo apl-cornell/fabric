@@ -477,8 +477,9 @@ public class TransactionManager {
         } else {
           synchronized (existing) {
             // Don't do anything if there's an equivalent extension queued
-            // already
-            if (existing.compareTo(de) == 0) {
+            // already or if the extension is currently being handled.
+            if (existing.compareTo(de) == 0
+                || !waitingExtensions.contains(existing)) {
               break;
             }
             // Update to this event.  This would mean the old extension was
@@ -568,7 +569,7 @@ public class TransactionManager {
                 continue;
               }
               if (exp - curTime <= EXTENSION_WINDOW
-                  && exp >= curTime - EXTENSION_WINDOW) {
+              /*&& exp >= curTime - EXTENSION_WINDOW*/) {
                 Threading.getPool().submit(new Threading.NamedRunnable(
                     "Extension of " + extension.onum) {
                   @Override
