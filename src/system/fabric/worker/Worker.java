@@ -824,7 +824,7 @@ public final class Worker {
           // kicking up to a parent this transaction.
           throw e;
         }
-        throw new UserAbortException();
+        throw new UserAbortException(e);
       } catch (TransactionRestartingException e) {
         success = false;
 
@@ -899,7 +899,7 @@ public final class Worker {
 
             if (e.tid == null || !e.tid.isDescendantOf(tid))
               throw e;
-            throw new UserAbortException();
+            throw new UserAbortException(e);
           } catch (TransactionRestartingException e) {
             success = false;
 

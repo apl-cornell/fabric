@@ -7,4 +7,11 @@ package fabric.worker;
  * @author qixin
  */
 public class UserAbortException extends RuntimeException {
+  public UserAbortException() {
+    this(null);
+  }
+
+  public UserAbortException(Throwable e) {
+    super(e);
+  }
 }
