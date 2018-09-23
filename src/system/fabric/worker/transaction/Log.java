@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.logging.Level;
 
 import com.google.common.collect.Multimap;
@@ -200,13 +200,13 @@ public final class Log {
    * Collection of checks that aren't currently treatied and should be checked
    * before the transaction finishes (aborting writes if they fail).
    */
-  protected final Multimap<Metric, TreatyStatement> untreatiedUpdateChecks;
+  protected final Multimap<Metric._Proxy, TreatyStatement> untreatiedUpdateChecks;
 
   /**
    * Collection of checks that aren't currently treatied and should be checked
    * before the transaction finishes (aborting writes if they fail).
    */
-  protected final Set<TreatyRef> treatiedUpdateChecks;
+  protected final Map<TreatyRef, Long> treatiedUpdateChecks;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -347,38 +347,40 @@ public final class Log {
     this.startTime = System.currentTimeMillis();
     this.waitsFor = new HashSet<>();
     this.waitsOn = null;
-    this.untreatiedUpdateChecks = TreeMultimap.create(new Comparator<Metric>() {
-      @Override
-      public int compare(Metric a, Metric b) {
-        int storeComp = a.$getStore().name().compareTo(b.$getStore().name());
-        if (storeComp != 0) return storeComp;
-        return Long.compare(a.$getOnum(), b.$getOnum());
-      }
-    }, new Comparator<TreatyStatement>() {
-      @Override
-      public int compare(TreatyStatement a, TreatyStatement b) {
-        if (a instanceof ThresholdStatement) {
-          if (b instanceof ThresholdStatement) {
-            ThresholdStatement aT = (ThresholdStatement) a;
-            ThresholdStatement bT = (ThresholdStatement) b;
-            int rateComp = Double.compare(aT.rate, bT.rate);
-            if (rateComp != 0) return rateComp;
-            return Double.compare(aT.base, bT.base);
-          } else {
-            return 1;
+    this.untreatiedUpdateChecks =
+        TreeMultimap.create(new Comparator<Metric._Proxy>() {
+          @Override
+          public int compare(Metric._Proxy a, Metric._Proxy b) {
+            int storeComp =
+                a.$getStore().name().compareTo(b.$getStore().name());
+            if (storeComp != 0) return storeComp;
+            return Long.compare(a.$getOnum(), b.$getOnum());
           }
-        } else {
-          if (b instanceof ThresholdStatement) {
-            EqualityStatement aT = (EqualityStatement) a;
-            EqualityStatement bT = (EqualityStatement) b;
-            return Double.compare(aT.value, bT.value);
-          } else {
-            return -1;
+        }, new Comparator<TreatyStatement>() {
+          @Override
+          public int compare(TreatyStatement a, TreatyStatement b) {
+            if (a instanceof ThresholdStatement) {
+              if (b instanceof ThresholdStatement) {
+                ThresholdStatement aT = (ThresholdStatement) a;
+                ThresholdStatement bT = (ThresholdStatement) b;
+                int rateComp = Double.compare(aT.rate, bT.rate);
+                if (rateComp != 0) return rateComp;
+                return Double.compare(aT.base, bT.base);
+              } else {
+                return 1;
+              }
+            } else {
+              if (b instanceof ThresholdStatement) {
+                EqualityStatement aT = (EqualityStatement) a;
+                EqualityStatement bT = (EqualityStatement) b;
+                return Double.compare(aT.value, bT.value);
+              } else {
+                return -1;
+              }
+            }
           }
-        }
-      }
-    });
-    this.treatiedUpdateChecks = new TreeSet<>(new Comparator<TreatyRef>() {
+        });
+    this.treatiedUpdateChecks = new TreeMap<>(new Comparator<TreatyRef>() {
       @Override
       public int compare(TreatyRef a, TreatyRef b) {
         int storeComp = a.objRef.objStoreName.compareTo(b.objRef.objStoreName);
@@ -876,11 +878,11 @@ public final class Log {
   }
 
   public void addUntreatiedPostcondition(Metric m, TreatyStatement stmt) {
-    untreatiedUpdateChecks.put(m, stmt);
+    untreatiedUpdateChecks.put((Metric._Proxy) m.$getProxy(), stmt);
   }
 
   public void addTreatiedPostcondition(TreatyRef t) {
-    treatiedUpdateChecks.add(t);
+    treatiedUpdateChecks.put(t, t.get().expiry);
   }
 
   private boolean finalResolve = false;
@@ -891,10 +893,17 @@ public final class Log {
    */
   public void checkTreatyDeactivation(MetricTreaty t) {
     if (finalResolve) {
-      if (treatiedUpdateChecks.contains(new TreatyRef(t))) {
+      TreatyRef r = new TreatyRef(t);
+      if (treatiedUpdateChecks.containsKey(r)) {
         Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
             + Thread.currentThread() + ":" + tid);
-        throw new TransactionAbortingException(tid, true);
+        if (treatiedUpdateChecks.get(r).longValue() >= System
+            .currentTimeMillis())
+          throw new TransactionAbortingException(tid, true);
+        TransactionManager.getInstance().checkForStaleObjects();
+        checkRetrySignal();
+        // Otherwise, the treaty we wanted to use went stale, so retry.
+        throw new TransactionRestartingException(tid);
       }
     }
   }
@@ -905,10 +914,12 @@ public final class Log {
   public void runFinalResolution() {
     finalResolve = true;
     try {
+      // resolve observations and, in the process, check treaties.
+      resolveObservations();
       // Check untreatied checks.
       Logging.METRICS_LOGGER.fine("CHECKING UNTREATIED POSTCONDITIONS IN "
           + Thread.currentThread() + ":" + tid);
-      for (Map.Entry<Metric, TreatyStatement> entry : untreatiedUpdateChecks
+      for (Map.Entry<Metric._Proxy, TreatyStatement> entry : untreatiedUpdateChecks
           .entries()) {
         if (!entry.getValue().check(entry.getKey())) {
           Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
@@ -916,13 +927,11 @@ public final class Log {
           throw new TransactionAbortingException(tid, true);
         }
       }
-      // resolve observations and, in the process, check treaties.
-      resolveObservations();
       // Check treaties still exist.
       Logging.METRICS_LOGGER.fine("CHECKING TREATIED POSTCONDITIONS IN "
           + Thread.currentThread() + ":" + tid);
-      for (TreatyRef t : treatiedUpdateChecks) {
-        if (t.get() == null) {
+      for (TreatyRef t : treatiedUpdateChecks.keySet()) {
+        if (t.get() == null || !t.get().valid()) {
           Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
               + Thread.currentThread() + ":" + tid);
           throw new TransactionAbortingException(tid, true);
@@ -931,7 +940,7 @@ public final class Log {
       // Make treaties for those that didn't exist
       Logging.METRICS_LOGGER.fine("CREATING UNTREATIED POSTCONDITIONS IN "
           + Thread.currentThread() + ":" + tid);
-      for (Map.Entry<Metric, TreatyStatement> entry : untreatiedUpdateChecks
+      for (Map.Entry<Metric._Proxy, TreatyStatement> entry : untreatiedUpdateChecks
           .entries()) {
         entry.getKey().createAndActivateTreaty(entry.getValue(), true);
       }
