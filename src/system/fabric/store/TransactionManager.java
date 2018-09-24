@@ -478,8 +478,7 @@ public class TransactionManager {
           synchronized (existing) {
             // Don't do anything if there's an equivalent extension queued
             // already or if the extension is currently being handled.
-            if (existing.compareTo(de) == 0
-                || !waitingExtensions.contains(existing)) {
+            if (existing.compareTo(de) == 0) {
               break;
             }
             // Update to this event.  This would mean the old extension was
