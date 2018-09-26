@@ -3,6 +3,10 @@ package fabric.worker.metrics.treaties;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.logging.Level;
 
@@ -417,8 +421,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
         new Object[] { this, TransactionManager.getInstance().getCurrentTid(),
             Thread.currentThread() });
     TransactionManager.getInstance().resolveObservations();
-    MetricTreaty updated = metric.get().get$treatiesBox().get$$treaties().get(id);
-    boolean result = updated != null && updated.expiry > System.currentTimeMillis();
+    MetricTreaty updated =
+        metric.get().get$treatiesBox().get$$treaties().get(id);
+    boolean result =
+        updated != null && updated.expiry > System.currentTimeMillis();
     if (result) TransactionManager.getInstance().registerExpiryUse(expiry);
     return result;
   }
@@ -564,5 +570,53 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     return metric.equals(t.metric) && id == t.id && activated == t.activated
         && statement.equals(t.statement) && observers.equals(t.observers)
         && policy.equals(t.policy) && expiry > t.expiry;
+  }
+
+  /**
+   * Utility for getting the set of stores that the associated metric spans in
+   * its subtree.
+   * This operation may fetch some items but it should not produce any new reads
+   * in the current transaction.
+   */
+  public Set<Store> storesForMetric() {
+    Set<Store> results = new HashSet<>();
+    Queue<Metric> q = new LinkedList<>();
+    q.add(this.getMetric());
+    while (!q.isEmpty()) {
+      Metric m = (Metric) q.poll().fetch();
+      results.add(m.$getStore());
+      if (m instanceof DerivedMetric) {
+        DerivedMetric dm = (DerivedMetric) m;
+        for (Metric sub : dm.get$terms().array()) {
+          q.add(sub);
+        }
+      }
+    }
+    return results;
+  }
+
+  /**
+   * Rebalance the treaty.  Assumption is that a new strategy should generally
+   * work better than the old one, if it changes anything.
+   *
+   * XXX TODO: This is _extremely_ experimental and probably could use some
+   * tweaks to avoid some potential pitfalls in general use.
+   */
+  public void rebalance() {
+    StatsMap weakStats = StatsMap.emptyStats();
+
+    // Get a policy
+    EnforcementPolicy newPolicy =
+        statement.getNewPolicy(getMetric(), weakStats);
+
+    // Activate children
+    newPolicy.activate(weakStats);
+
+    // Let's see if it's actually better.
+    long newExpiry = newPolicy.calculateExpiry(this, weakStats);
+
+    //if (newExpiry >= expiry) {
+      new MetricTreaty(this, newPolicy, newExpiry);
+    //}
   }
 }

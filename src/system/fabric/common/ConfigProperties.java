@@ -66,6 +66,9 @@ public class ConfigProperties {
   public final boolean usePreset;
   // How many updates between logging a sampled metric's stats.
   public final int metricStatsLogInterval;
+  // Should treaties be rebalanced for postconditions when already coordinating
+  // with the associated nodes?
+  public final boolean aggressiveRebalancing;
   // Rates to assign if using presets
   public final Map<String, Double> rates;
   // Bounds to assign if using presets
@@ -159,8 +162,8 @@ public class ConfigProperties {
     this.useSubscriptions = Boolean.parseBoolean(
         removeProperty(p, "fabric.node.useSubscriptions", "false"));
 
-    this.recordFetched = Boolean.parseBoolean(
-        removeProperty(p, "fabric.node.recordFetched", "false"));
+    this.recordFetched = Boolean
+        .parseBoolean(removeProperty(p, "fabric.node.recordFetched", "false"));
 
     // Collect network-delay properties.
     Map<String, Short> inDelays = new HashMap<>();
@@ -179,15 +182,17 @@ public class ConfigProperties {
     }
 
     /************************** Treaty Properties ***************************/
-    this.usePresetStrategy = Boolean
-        .parseBoolean(removeProperty(p, "fabric.metrics.usePresetStrategy",
-              "false"));
+    this.usePresetStrategy = Boolean.parseBoolean(
+        removeProperty(p, "fabric.metrics.usePresetStrategy", "false"));
 
     this.usePreset = Boolean
         .parseBoolean(removeProperty(p, "fabric.metrics.usePreset", "false"));
 
     this.metricStatsLogInterval = Integer
         .parseInt(removeProperty(p, "fabric.metrics.statsLogInterval", "10"));
+
+    this.aggressiveRebalancing = Boolean.parseBoolean(
+        removeProperty(p, "fabric.metrics.aggressiveRebalancing", "false"));
 
     String[] rawRates =
         removeProperty(p, "fabric.metrics.rates", "").split(",");
@@ -255,8 +260,8 @@ public class ConfigProperties {
     this.useEstimation = Boolean.parseBoolean(
         removeProperty(p, "fabric.metrics.useEstimation", "true"));
 
-    this.useDynamic = Boolean.parseBoolean(
-        removeProperty(p, "fabric.metrics.useDynamic", "true"));
+    this.useDynamic = Boolean
+        .parseBoolean(removeProperty(p, "fabric.metrics.useDynamic", "true"));
 
     this.alpha =
         Double.parseDouble(removeProperty(p, "fabric.metrics.alpha", "0.001"));

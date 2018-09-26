@@ -926,7 +926,9 @@ public final class Log {
               + Thread.currentThread() + ":" + tid);
           throw new TransactionAbortingException(tid, true);
         }
+        entry.getKey().createAndActivateTreaty(entry.getValue(), true);
       }
+      Set<Store> storesTouched = storesToContact();
       // Check treaties still exist.
       Logging.METRICS_LOGGER.fine("CHECKING TREATIED POSTCONDITIONS IN "
           + Thread.currentThread() + ":" + tid);
@@ -935,20 +937,17 @@ public final class Log {
           Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
               + Thread.currentThread() + ":" + tid);
           throw new TransactionAbortingException(tid, true);
+        } else if (Worker.getWorker().config.aggressiveRebalancing
+            && storesTouched.containsAll(t.get().storesForMetric())) {
+          // Rebalance if we're touching all of the stores already.
+          t.get().rebalance();
         }
       }
-      // Make treaties for those that didn't exist
-      Logging.METRICS_LOGGER.fine("CREATING UNTREATIED POSTCONDITIONS IN "
-          + Thread.currentThread() + ":" + tid);
-      for (Map.Entry<Metric._Proxy, TreatyStatement> entry : untreatiedUpdateChecks
-          .entries()) {
-        entry.getKey().createAndActivateTreaty(entry.getValue(), true);
-      }
+    } finally {
+      finalResolve = false;
       // Clear out the checks, just in case...
       untreatiedUpdateChecks.clear();
       treatiedUpdateChecks.clear();
-    } finally {
-      finalResolve = false;
     }
   }
 
