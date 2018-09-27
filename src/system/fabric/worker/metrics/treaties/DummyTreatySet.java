@@ -119,4 +119,9 @@ public class DummyTreatySet extends TreatySet {
   public boolean isExtensionOf(TreatySet from) {
     return equals(from);
   }
+
+  @Override
+  public void flattenUpdates() {
+    // Do nothing.
+  }
 }

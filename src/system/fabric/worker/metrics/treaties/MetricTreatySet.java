@@ -11,14 +11,23 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
+import fabric.common.util.DeltaMap;
+import fabric.common.util.SortedDeltaMap;
 import fabric.metrics.util.TreatiesBox;
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
+import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 
 /**
  * Utility class to easily express a set of treaties associated with a Metric.
+ *
+ * XXX: there's an awkward/delicate hack here for avoiding unnecessary
+ * copying/bloat for optimistic updates.  Modifications check if the update can
+ * be done in place on an existing "mask" copy (using DeltaMaps) and provides a
+ * flatten functionality that the Log must use when shedding history that is no
+ * longer needed.
  */
 public class MetricTreatySet extends TreatySet {
 
@@ -38,8 +47,8 @@ public class MetricTreatySet extends TreatySet {
   private MetricTreatySet(MetricTreatySet original) {
     super(TreatySet.Kind.METRIC);
     this.owner = original.owner;
-    this.items = new TreeMap<>(original.items);
-    this.statementMap = new HashMap<>(original.statementMap);
+    this.items = new SortedDeltaMap<>(original.items);
+    this.statementMap = new DeltaMap<>(original.statementMap);
     this.nextId = original.nextId;
   }
 
@@ -111,15 +120,30 @@ public class MetricTreatySet extends TreatySet {
         && items.get(treaty.getId()).equals(treaty))
       return;
 
-    MetricTreatySet updated = new MetricTreatySet(this);
-    updated.items.put(treaty.getId(), treaty);
-    MetricTreaty old = updated.statementMap.put(treaty.statement, treaty);
-    if (old != null && old.getId() != treaty.getId()) Logging.METRICS_LOGGER
-        .log(Level.SEVERE, "MASKED TREATY {0} WITH {3} IN {1} {2}",
+    Log curLog = TransactionManager.getInstance().getCurrentLog();
+    fabric.lang.Object._Impl curBox =
+        ((fabric.lang.Object._Impl) owner.get().get$treatiesBox().fetch());
+    fabric.lang.Object._Impl boxHistory =
+        ((TreatiesBox._Impl) owner.get().get$treatiesBox().fetch()).$history;
+    if (curLog != null && curBox.$writeLockHolder == curLog
+        && boxHistory != null && this != boxHistory.$treaties) {
+      if (boxHistory != null && this == boxHistory.$treaties)
+        throw new IllegalStateException(
+            "Somehow modifying the history's treatyset...??");
+      items.put(treaty.getId(), treaty);
+      statementMap.put(treaty.statement, treaty);
+    } else {
+      MetricTreatySet updated = new MetricTreatySet(this);
+      updated.items.put(treaty.getId(), treaty);
+      MetricTreaty old = updated.statementMap.put(treaty.statement, treaty);
+      if (old != null && old.getId() != treaty.getId())
+        Logging.METRICS_LOGGER.log(Level.SEVERE,
+            "MASKED TREATY {0} WITH {3} IN {1} {2}",
             new Object[] { old,
                 TransactionManager.getInstance().getCurrentTid(),
                 Thread.currentThread(), treaty });
-    owner.get().get$treatiesBox().set$$treaties(updated);
+      owner.get().get$treatiesBox().set$$treaties(updated);
+    }
   }
 
   @Override
@@ -130,11 +154,25 @@ public class MetricTreatySet extends TreatySet {
     Logging.METRICS_LOGGER.log(Level.FINEST, "REMOVING TREATY {0} IN {1} {2}",
         new Object[] { treaty, TransactionManager.getInstance().getCurrentTid(),
             Thread.currentThread() });
-    // TODO check that it's a proper garbage collection?
-    MetricTreatySet updated = new MetricTreatySet(this);
-    MetricTreaty val = updated.items.remove(treaty.getId());
-    updated.statementMap.remove(treaty.statement, val);
-    owner.get().get$treatiesBox().set$$treaties(updated);
+    Log curLog = TransactionManager.getInstance().getCurrentLog();
+    fabric.lang.Object._Impl curBox =
+        ((fabric.lang.Object._Impl) owner.get().get$treatiesBox().fetch());
+    fabric.lang.Object._Impl boxHistory =
+        ((TreatiesBox._Impl) owner.get().get$treatiesBox().fetch()).$history;
+    if (curLog != null && curBox.$writeLockHolder == curLog
+        && boxHistory != null && this != boxHistory.$treaties) {
+      if (boxHistory != null && this == boxHistory.$treaties)
+        throw new IllegalStateException(
+            "Somehow modifying the history's treatyset...");
+      items.remove(treaty.getId());
+      statementMap.remove(treaty.statement);
+    } else {
+      // TODO check that it's a proper garbage collection?
+      MetricTreatySet updated = new MetricTreatySet(this);
+      MetricTreaty val = updated.items.remove(treaty.getId());
+      updated.statementMap.remove(treaty.statement, val);
+      owner.get().get$treatiesBox().set$$treaties(updated);
+    }
   }
 
   @Override
@@ -151,18 +189,36 @@ public class MetricTreatySet extends TreatySet {
   public MetricTreaty create(TreatyStatement stmt) {
     if (statementMap.containsKey(stmt)) return statementMap.get(stmt);
 
-    MetricTreatySet updated = new MetricTreatySet(this);
-    MetricTreaty newTreaty =
-        new MetricTreaty(updated.owner.get(), updated.nextId++, stmt);
-    updated.items.put(newTreaty.getId(), newTreaty);
-    MetricTreaty old = updated.statementMap.put(newTreaty.statement, newTreaty);
-    if (old != null && old.getId() != newTreaty.getId()) Logging.METRICS_LOGGER
-        .log(Level.SEVERE, "MASKED TREATY {0} WITH {3} IN {1} {2}",
+    Log curLog = TransactionManager.getInstance().getCurrentLog();
+    fabric.lang.Object._Impl curBox =
+        ((fabric.lang.Object._Impl) owner.get().get$treatiesBox().fetch());
+    fabric.lang.Object._Impl boxHistory =
+        ((TreatiesBox._Impl) owner.get().get$treatiesBox().fetch()).$history;
+    if (curLog != null && curBox.$writeLockHolder == curLog
+        && boxHistory != null && this != boxHistory.$treaties) {
+      if (boxHistory != null && this == boxHistory.$treaties)
+        throw new IllegalStateException(
+            "Somehow modifying the history's treatyset...");
+      MetricTreaty newTreaty = new MetricTreaty(owner.get(), nextId++, stmt);
+      items.put(newTreaty.getId(), newTreaty);
+      statementMap.put(newTreaty.statement, newTreaty);
+      return newTreaty;
+    } else {
+      MetricTreatySet updated = new MetricTreatySet(this);
+      MetricTreaty newTreaty =
+          new MetricTreaty(updated.owner.get(), updated.nextId++, stmt);
+      updated.items.put(newTreaty.getId(), newTreaty);
+      MetricTreaty old =
+          updated.statementMap.put(newTreaty.statement, newTreaty);
+      if (old != null && old.getId() != newTreaty.getId())
+        Logging.METRICS_LOGGER.log(Level.SEVERE,
+            "MASKED TREATY {0} WITH {3} IN {1} {2}",
             new Object[] { old,
                 TransactionManager.getInstance().getCurrentTid(),
                 Thread.currentThread(), newTreaty });
-    owner.get().get$treatiesBox().set$$treaties(updated);
-    return newTreaty;
+      owner.get().get$treatiesBox().set$$treaties(updated);
+      return newTreaty;
+    }
   }
 
   @Override
@@ -216,6 +272,26 @@ public class MetricTreatySet extends TreatySet {
   public void prefetch(Store triggeringStore) {
     for (MetricTreaty t : this) {
       t.getObservers().prefetch(triggeringStore);
+    }
+  }
+
+  @Override
+  public void flattenUpdates() {
+    fabric.lang.Object._Impl historyObj = ((fabric.lang.Object._Impl) owner
+        .get().get$treatiesBox().fetch()).$history;
+    MetricTreatySet historyMap = historyObj == null ? null
+        : (MetricTreatySet) historyObj.get$$treaties();
+    if (historyMap != null) {
+      // Merge changes to items
+      while (items != historyMap.items && items instanceof SortedDeltaMap
+          && ((SortedDeltaMap<Long, MetricTreaty>) items).backingMap != historyMap.items)
+        items = ((SortedDeltaMap<Long, MetricTreaty>) items).commitChanges();
+      // Merge changes to statementMap
+      while (statementMap != historyMap.statementMap
+          && statementMap instanceof DeltaMap
+          && ((DeltaMap<TreatyStatement, MetricTreaty>) statementMap).backingMap != historyMap.statementMap)
+        statementMap = ((DeltaMap<TreatyStatement, MetricTreaty>) statementMap)
+            .commitChanges();
     }
   }
 }

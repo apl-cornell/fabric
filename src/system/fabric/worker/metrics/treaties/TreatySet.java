@@ -110,4 +110,9 @@ public abstract class TreatySet
    * Run a prefetch for all observers of the treaties in this set.
    */
   public abstract void prefetch(Store triggeringStore);
+
+  /**
+   * Keep flattening updates until the backing maps match the history's maps.
+   */
+  public abstract void flattenUpdates();
 }

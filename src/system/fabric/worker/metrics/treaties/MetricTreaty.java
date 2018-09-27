@@ -123,8 +123,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     this.observers = observers;
     this.policy = original.policy;
     this.expiry = original.expiry;
-    TransactionManager.getInstance()
-        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     // Update containing treaty set.
     if (this.activated && this.policy instanceof NoPolicy) {
@@ -135,6 +133,9 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       // Otherwise, make sure the updated value is in the set.
       this.getMetric().get$treatiesBox().get$$treaties().add(this);
     }
+
+    TransactionManager.getInstance()
+        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
         new Object[] { original, this,
@@ -160,8 +161,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     // Check if this violates some postcondition.
     if (this.policy instanceof NoPolicy) TransactionManager.getInstance()
         .getCurrentLog().checkTreatyDeactivation(this);
-    TransactionManager.getInstance()
-        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     if (!original.policy.equals(policy)) {
       // Stop observing the old policy and start observing the new policy.
@@ -177,6 +176,9 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       // Otherwise, make sure the updated value is in the set.
       this.getMetric().get$treatiesBox().get$$treaties().add(this);
     }
+
+    TransactionManager.getInstance()
+        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
         new Object[] { original, this,
@@ -201,8 +203,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     // Check if this violates some postcondition.
     if (this.policy instanceof NoPolicy) TransactionManager.getInstance()
         .getCurrentLog().checkTreatyDeactivation(this);
-    TransactionManager.getInstance()
-        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     // Update containing treaty set.
     if (this.activated && this.policy instanceof NoPolicy) {
@@ -217,6 +217,9 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       // Otherwise, make sure the updated value is in the set.
       this.getMetric().get$treatiesBox().get$$treaties().add(this);
     }
+
+    TransactionManager.getInstance()
+        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
         new Object[] { original, this,
@@ -242,8 +245,6 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     // Check if this violates some postcondition.
     if (this.policy instanceof NoPolicy) TransactionManager.getInstance()
         .getCurrentLog().checkTreatyDeactivation(this);
-    TransactionManager.getInstance()
-        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     if (!original.policy.equals(policy)) {
       // Stop observing the old policy and start observing the new policy.
@@ -263,6 +264,9 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
       // Otherwise, make sure the updated value is in the set.
       this.getMetric().get$treatiesBox().get$$treaties().add(this);
     }
+
+    TransactionManager.getInstance()
+        .registerTreatyUpdate(getMetric().get$treatiesBox(), id);
 
     Logging.METRICS_LOGGER.log(Level.FINEST, "UPDATING {0} TO {1} IN {2} {3}",
         new Object[] { original, this,

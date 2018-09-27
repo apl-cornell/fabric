@@ -844,8 +844,50 @@ public final class Log {
       prepare = null;
 
       // The parent frame represents the parent transaction. Null out its child.
-      synchronized (parent) {
-        parent.child = null;
+      if (parent != null && parent.tid.equals(tid.parent)) {
+        // The parent frame represents the parent transaction. Null out its child.
+        synchronized (parent) {
+          parent.child = null;
+        }
+      } else {
+        // This frame will be reused to represent the parent transaction. Clear
+        // out the log data structures.
+        reads.clear();
+        readsReadByParent.clear();
+        creates.clear();
+        localStoreCreates.clear();
+        writes.clear();
+        unobservedSamples.clear();
+        extendedTreaties.clear();
+        treatyUpdates.clear();
+        delayedExtensions.clear();
+        extensionTriggers.clear();
+        localStoreWrites.clear();
+        workersCalled.clear();
+        securityCache.reset();
+        acquires.clear();
+        pendingReleases.clear();
+        locksCreated.clear();
+        commitHooks.clear();
+        untreatiedUpdateChecks.clear();
+        treatiedUpdateChecks.clear();
+
+        if (parent != null) {
+          writerMap = new WriterMap(parent.writerMap);
+          unobservedSamples.putAll(parent.unobservedSamples);
+          resolving = parent.resolving;
+          locksCreated.putAll(parent.locksCreated);
+          acquires.putAll(parent.acquires);
+        } else {
+          writerMap = new WriterMap(tid.topTid);
+        }
+
+        if (retrySignal != null) {
+          synchronized (this) {
+            retrySignal = null;
+            retryCause = null;
+          }
+        }
       }
     } else {
       // XXX TODO XXX TODO Not sure what to do here? Do we allow committing the
@@ -1063,6 +1105,7 @@ public final class Log {
           // layer of history. In doing so, we also end up releasing this
           // transaction's write lock.
           obj.$history = obj.$history.$history;
+          obj.$treaties.flattenUpdates();
         } else {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
@@ -1087,6 +1130,7 @@ public final class Log {
           // layer of history. In doing so, we also end up releasing this
           // transaction's write lock.
           obj.$history = obj.$history.$history;
+          obj.$treaties.flattenUpdates();
         } else {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
@@ -1252,6 +1296,7 @@ public final class Log {
 
         // Discard one layer of history.
         obj.$history = obj.$history.$history;
+        obj.$treaties.flattenUpdates();
 
         // Signal any waiting readers/writers.
         if (obj.$numWaiting > 0) obj.notifyAll();
@@ -1673,5 +1718,9 @@ public final class Log {
   public long getCommitTime() {
     if (prepare != null) return prepare.getCommitTime();
     return 0;
+  }
+
+  public boolean treatiesWritten(fabric.lang.Object o) {
+    return treatyUpdates.containsKey(o);
   }
 }
