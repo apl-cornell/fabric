@@ -126,12 +126,13 @@ public class MetricTreatySet extends TreatySet {
     fabric.lang.Object._Impl boxHistory =
         ((TreatiesBox._Impl) owner.get().get$treatiesBox().fetch()).$history;
     if (curLog != null && curBox.$writeLockHolder == curLog
-        && boxHistory != null && this != boxHistory.$treaties) {
-      if (boxHistory != null && this == boxHistory.$treaties)
+        && boxHistory != null && this != boxHistory.get$$treaties()) {
+      if (boxHistory != null && this == boxHistory.get$$treaties())
         throw new IllegalStateException(
             "Somehow modifying the history's treatyset...??");
       items.put(treaty.getId(), treaty);
       statementMap.put(treaty.statement, treaty);
+      owner.get().get$treatiesBox().set$$treaties(this);
     } else {
       MetricTreatySet updated = new MetricTreatySet(this);
       updated.items.put(treaty.getId(), treaty);
@@ -160,12 +161,13 @@ public class MetricTreatySet extends TreatySet {
     fabric.lang.Object._Impl boxHistory =
         ((TreatiesBox._Impl) owner.get().get$treatiesBox().fetch()).$history;
     if (curLog != null && curBox.$writeLockHolder == curLog
-        && boxHistory != null && this != boxHistory.$treaties) {
-      if (boxHistory != null && this == boxHistory.$treaties)
+        && boxHistory != null && this != boxHistory.get$$treaties()) {
+      if (boxHistory != null && this == boxHistory.get$$treaties())
         throw new IllegalStateException(
             "Somehow modifying the history's treatyset...");
       items.remove(treaty.getId());
       statementMap.remove(treaty.statement);
+      owner.get().get$treatiesBox().set$$treaties(this);
     } else {
       // TODO check that it's a proper garbage collection?
       MetricTreatySet updated = new MetricTreatySet(this);
@@ -195,13 +197,14 @@ public class MetricTreatySet extends TreatySet {
     fabric.lang.Object._Impl boxHistory =
         ((TreatiesBox._Impl) owner.get().get$treatiesBox().fetch()).$history;
     if (curLog != null && curBox.$writeLockHolder == curLog
-        && boxHistory != null && this != boxHistory.$treaties) {
-      if (boxHistory != null && this == boxHistory.$treaties)
+        && boxHistory != null && this != boxHistory.get$$treaties()) {
+      if (boxHistory != null && this == boxHistory.get$$treaties())
         throw new IllegalStateException(
             "Somehow modifying the history's treatyset...");
       MetricTreaty newTreaty = new MetricTreaty(owner.get(), nextId++, stmt);
       items.put(newTreaty.getId(), newTreaty);
       statementMap.put(newTreaty.statement, newTreaty);
+      owner.get().get$treatiesBox().set$$treaties(this);
       return newTreaty;
     } else {
       MetricTreatySet updated = new MetricTreatySet(this);

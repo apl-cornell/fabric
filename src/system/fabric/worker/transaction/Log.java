@@ -727,7 +727,7 @@ public final class Log {
     Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
-        if (write.$writeLockHolder == this) {
+        if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
           if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
             Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
                 "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
@@ -821,7 +821,7 @@ public final class Log {
       Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
       for (_Impl write : chain) {
         synchronized (write) {
-          if (write.$writeLockHolder == this) {
+          if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
             if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
               Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
                   "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",

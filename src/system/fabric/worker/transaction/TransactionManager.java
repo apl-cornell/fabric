@@ -1930,7 +1930,7 @@ public final class TransactionManager {
    * Allow for an object to see the current pending extension for itself.
    */
   public ExpiryExtension getPendingExtension(_Impl obj) {
-    return current != null ? current.extendedTreaties.get(obj) : null;
+    return obj.$writeLockHolder != null ? obj.$writeLockHolder.extendedTreaties.get(obj) : null;
   }
 
   /**
