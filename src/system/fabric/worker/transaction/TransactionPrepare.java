@@ -169,15 +169,20 @@ public class TransactionPrepare {
       RemoteStore store = (RemoteStore) s;
       OidKeyHashMap<SerializedObject> versionConflicts = m.conflicts;
       String conflictsString = "";
-      for (SerializedObject obj : versionConflicts.values()) {
-        store.updateCache(obj);
-        if (!conflictsString.equals("")) {
-          conflictsString += " ";
+      if (versionConflicts != null) {
+        for (SerializedObject obj : versionConflicts.values()) {
+          store.updateCache(obj);
+          if (Worker.getWorker().config.recordConflicts) {
+            if (!conflictsString.equals("")) {
+              conflictsString += " ";
+            }
+            conflictsString +=
+                obj.getClassName() + "@" + store.name() + "#" + obj.getOnum();
+          }
         }
-        conflictsString +=
-            obj.getClassName() + "@" + store.name() + "#" + obj.getOnum();
       }
-      txnLog.stats.addConflicts(conflictsString);
+      if (Worker.getWorker().config.recordConflicts)
+        txnLog.stats.addConflicts(conflictsString);
     }
     cleanUp();
   }

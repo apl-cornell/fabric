@@ -161,7 +161,8 @@ public class TxnStats {
    * Mark the version conflicts that occurred.
    */
   public void addConflicts(String conflicts) {
-    versionConflicts.add(conflicts);
+    if (Worker.getWorker().config.recordConflicts)
+      versionConflicts.add(conflicts);
   }
 
   @Override

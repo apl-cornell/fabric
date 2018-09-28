@@ -107,6 +107,11 @@ public class ConfigProperties {
    */
   public final boolean recordFetched;
 
+  /**
+   * Whether to record what was the source of conflicts in 2PC aborts.
+   */
+  public final boolean recordConflicts;
+
   static {
     //
     // load the default properties files
@@ -164,6 +169,9 @@ public class ConfigProperties {
 
     this.recordFetched = Boolean
         .parseBoolean(removeProperty(p, "fabric.node.recordFetched", "false"));
+
+    this.recordConflicts = Boolean.parseBoolean(
+        removeProperty(p, "fabric.node.recordConflicts", "false"));
 
     // Collect network-delay properties.
     Map<String, Short> inDelays = new HashMap<>();
