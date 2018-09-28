@@ -130,7 +130,13 @@ public class MetricTreatySet extends TreatySet {
       if (boxHistory != null && this == boxHistory.get$$treaties())
         throw new IllegalStateException(
             "Somehow modifying the history's treatyset...??");
-      items.put(treaty.getId(), treaty);
+      // Make sure we clobber an extension if this in-place update isn't an
+      // extension.
+      MetricTreaty oldTreaty = items.put(treaty.getId(), treaty);
+      if (oldTreaty != null && !(treaty.equals(oldTreaty)
+          || treaty.isStrictExtensionOf(oldTreaty))) {
+        curLog.clearExtension(curBox);
+      }
       statementMap.put(treaty.statement, treaty);
       owner.get().get$treatiesBox().set$$treaties(this);
     } else {
@@ -165,7 +171,10 @@ public class MetricTreatySet extends TreatySet {
       if (boxHistory != null && this == boxHistory.get$$treaties())
         throw new IllegalStateException(
             "Somehow modifying the history's treatyset...");
+      // Make sure we clobber an extension if this in-place update isn't an
+      // extension.
       items.remove(treaty.getId());
+      curLog.clearExtension(curBox);
       statementMap.remove(treaty.statement);
       owner.get().get$treatiesBox().set$$treaties(this);
     } else {
@@ -202,7 +211,13 @@ public class MetricTreatySet extends TreatySet {
         throw new IllegalStateException(
             "Somehow modifying the history's treatyset...");
       MetricTreaty newTreaty = new MetricTreaty(owner.get(), nextId++, stmt);
-      items.put(newTreaty.getId(), newTreaty);
+      // Make sure we clobber an extension if this in-place update isn't an
+      // extension.
+      MetricTreaty oldTreaty = items.put(newTreaty.getId(), newTreaty);
+      if (oldTreaty != null && !(newTreaty.equals(oldTreaty)
+          || newTreaty.isStrictExtensionOf(oldTreaty))) {
+        curLog.clearExtension(curBox);
+      }
       statementMap.put(newTreaty.statement, newTreaty);
       owner.get().get$treatiesBox().set$$treaties(this);
       return newTreaty;

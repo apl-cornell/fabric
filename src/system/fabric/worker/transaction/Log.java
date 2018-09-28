@@ -1723,4 +1723,14 @@ public final class Log {
   public boolean treatiesWritten(fabric.lang.Object o) {
     return treatyUpdates.containsKey(o);
   }
+
+  /**
+   * Clear an extension in this log and treat it as a full on write of the
+   * treaties.
+   */
+  public void clearExtension(fabric.lang.Object._Impl o) {
+    ExpiryExtension p = extendedTreaties.remove(o);
+    if (p != null)
+      o.$treaties = p.treaties;
+  }
 }
