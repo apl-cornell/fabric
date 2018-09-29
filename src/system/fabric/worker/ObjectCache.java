@@ -270,7 +270,7 @@ public final class ObjectCache {
         // Run through history and update as well.
         while (curImpl != null && curImpl.$version == ver) {
           if (newTreaties.isStrictExtensionOf(curImpl.$treaties))
-            curImpl.$treaties = newTreaties;
+            curImpl.$treaties.mergeExtensions(newTreaties);
           curImpl.$readMapEntry.extendTreaties(newTreaties);
           curImpl = curImpl.$history;
         }

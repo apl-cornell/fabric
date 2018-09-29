@@ -283,6 +283,20 @@ public class MetricTreatySet extends TreatySet {
   }
 
   @Override
+  public void mergeExtensions(TreatySet from) {
+    if (from instanceof MetricTreatySet) {
+      MetricTreatySet other = (MetricTreatySet) from;
+      for (MetricTreaty oldTreaty : other) {
+        MetricTreaty newTreaty = items.get(oldTreaty.getId());
+        if (newTreaty.isStrictExtensionOf(oldTreaty)) {
+          items.put(oldTreaty.getId(), newTreaty);
+          statementMap.put(oldTreaty.statement, newTreaty);
+        }
+      }
+    }
+  }
+
+  @Override
   public boolean isExtensionOf(TreatySet from) {
     if (from instanceof MetricTreatySet) {
       MetricTreatySet other = (MetricTreatySet) from;

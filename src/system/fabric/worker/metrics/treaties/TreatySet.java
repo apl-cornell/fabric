@@ -115,4 +115,9 @@ public abstract class TreatySet
    * Keep flattening updates until the backing maps match the history's maps.
    */
   public abstract void flattenUpdates();
+
+  /**
+   * Merge extensions from another map.
+   */
+  public abstract void mergeExtensions(TreatySet other);
 }

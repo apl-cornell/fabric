@@ -124,4 +124,9 @@ public class DummyTreatySet extends TreatySet {
   public void flattenUpdates() {
     // Do nothing.
   }
+
+  @Override
+  public void mergeExtensions(TreatySet other) {
+    // Do nothing.
+  }
 }
