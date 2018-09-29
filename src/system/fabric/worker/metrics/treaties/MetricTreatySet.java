@@ -37,6 +37,14 @@ public class MetricTreatySet extends TreatySet {
   private long nextId;
   private Map<TreatyStatement, MetricTreaty> statementMap;
 
+  public MetricTreatySet(TreatiesBoxRef owner) {
+    super(TreatySet.Kind.METRIC);
+    this.owner = owner;
+    this.items = new TreeMap<>();
+    this.statementMap = new HashMap<>();
+    this.nextId = 0;
+  }
+
   public MetricTreatySet(TreatiesBox owner) {
     super(TreatySet.Kind.METRIC);
     this.owner = new TreatiesBoxRef(owner);
@@ -286,8 +294,8 @@ public class MetricTreatySet extends TreatySet {
   public void mergeExtensions(TreatySet from) {
     if (from instanceof MetricTreatySet) {
       MetricTreatySet other = (MetricTreatySet) from;
-      for (MetricTreaty oldTreaty : other) {
-        MetricTreaty newTreaty = items.get(oldTreaty.getId());
+      for (MetricTreaty newTreaty : other) {
+        MetricTreaty oldTreaty = items.get(newTreaty.getId());
         if (newTreaty.isStrictExtensionOf(oldTreaty)) {
           items.put(oldTreaty.getId(), newTreaty);
           statementMap.put(oldTreaty.statement, newTreaty);
