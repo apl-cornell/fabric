@@ -561,11 +561,14 @@ public final class ObjectCache {
                     .getTreaties().isExtensionOf(update.getTreaties())))
               return curEntry;
 
+            /*
+            // I'm fairly convinced this doesn't play well with the delta maps
             if (curEntry.getVersion() == update.getVersion() && update
                 .getTreaties().isStrictExtensionOf(curEntry.getTreaties())) {
               curEntry.extendTreaties(update.getTreaties());
               return curEntry;
             }
+            */
 
             curEntry.evict();
           }

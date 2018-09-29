@@ -2,6 +2,7 @@ package fabric.worker.transaction;
 
 import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.METRICS_LOGGER;
+import static fabric.common.Logging.MISC_LOGGER;
 import static fabric.common.Logging.WORKER_DEADLOCK_LOGGER;
 import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
@@ -17,7 +18,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +51,7 @@ import fabric.messages.NonAtomicCallMessage;
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.ReconfigLock;
+import fabric.metrics.util.TreatiesBox;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
@@ -1653,8 +1654,7 @@ public final class TransactionManager {
     }
 
     // Go through each store and send check messages in parallel.
-    for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
-      final Store store = storeIt.next();
+    for (Store store : stores) {
       final LongKeyMap<Pair<Integer, TreatySet>> reads =
           checkingLog.getReadsForStore(store, true);
       NamedRunnable runnable =
@@ -1930,7 +1930,9 @@ public final class TransactionManager {
    * Allow for an object to see the current pending extension for itself.
    */
   public ExpiryExtension getPendingExtension(_Impl obj) {
-    return obj.$writeLockHolder != null ? obj.$writeLockHolder.extendedTreaties.get(obj) : null;
+    return obj.$writeLockHolder != null
+        ? obj.$writeLockHolder.extendedTreaties.get(obj)
+        : null;
   }
 
   /**

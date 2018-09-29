@@ -15,6 +15,7 @@ import fabric.common.util.DeltaMap;
 import fabric.common.util.SortedDeltaMap;
 import fabric.metrics.util.TreatiesBox;
 import fabric.worker.Store;
+import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 import fabric.worker.transaction.Log;
@@ -113,6 +114,19 @@ public class MetricTreatySet extends TreatySet {
     return items.toString();
   }
 
+  // Dumb hack to allow for easy grab of an object's currently associated treaty
+  // set (optimistic possibly) without invoking a read operation.
+  // There's an assumption that this only gets used on things we already hold a
+  // lock for.
+  private static MetricTreatySet getAssociatedTreaties(
+      fabric.lang.Object._Impl impl) {
+    // Check if there's an associated extension.  If so, use that.
+    ExpiryExtension extension =
+        TransactionManager.getInstance().getPendingExtension(impl);
+    return (MetricTreatySet) (extension == null ? impl.$treaties
+        : extension.treaties);
+  }
+
   @Override
   public void add(MetricTreaty treaty) {
     // Don't do anything if there's no actual change.
@@ -126,8 +140,8 @@ public class MetricTreatySet extends TreatySet {
     fabric.lang.Object._Impl boxHistory =
         ((TreatiesBox._Impl) owner.get().get$treatiesBox().fetch()).$history;
     if (curLog != null && curBox.$writeLockHolder == curLog
-        && boxHistory != null && this != boxHistory.get$$treaties()) {
-      if (boxHistory != null && this == boxHistory.get$$treaties())
+        && boxHistory != null && this != getAssociatedTreaties(boxHistory)) {
+      if (boxHistory != null && this == getAssociatedTreaties(boxHistory))
         throw new IllegalStateException(
             "Somehow modifying the history's treatyset...??");
       // Make sure we clobber an extension if this in-place update isn't an
@@ -167,8 +181,8 @@ public class MetricTreatySet extends TreatySet {
     fabric.lang.Object._Impl boxHistory =
         ((TreatiesBox._Impl) owner.get().get$treatiesBox().fetch()).$history;
     if (curLog != null && curBox.$writeLockHolder == curLog
-        && boxHistory != null && this != boxHistory.get$$treaties()) {
-      if (boxHistory != null && this == boxHistory.get$$treaties())
+        && boxHistory != null && this != getAssociatedTreaties(boxHistory)) {
+      if (boxHistory != null && this == getAssociatedTreaties(boxHistory))
         throw new IllegalStateException(
             "Somehow modifying the history's treatyset...");
       // Make sure we clobber an extension if this in-place update isn't an
@@ -206,8 +220,8 @@ public class MetricTreatySet extends TreatySet {
     fabric.lang.Object._Impl boxHistory =
         ((TreatiesBox._Impl) owner.get().get$treatiesBox().fetch()).$history;
     if (curLog != null && curBox.$writeLockHolder == curLog
-        && boxHistory != null && this != boxHistory.get$$treaties()) {
-      if (boxHistory != null && this == boxHistory.get$$treaties())
+        && boxHistory != null && this != getAssociatedTreaties(boxHistory)) {
+      if (boxHistory != null && this == getAssociatedTreaties(boxHistory))
         throw new IllegalStateException(
             "Somehow modifying the history's treatyset...");
       MetricTreaty newTreaty = new MetricTreaty(owner.get(), nextId++, stmt);
@@ -297,9 +311,8 @@ public class MetricTreatySet extends TreatySet {
   public void flattenUpdates() {
     fabric.lang.Object._Impl historyObj = ((fabric.lang.Object._Impl) owner
         .get().get$treatiesBox().fetch()).$history;
-    MetricTreatySet historyMap = historyObj == null ? null
-        : (MetricTreatySet) historyObj.get$$treaties();
-    if (historyMap != null) {
+    if (historyObj != null) {
+      MetricTreatySet historyMap = getAssociatedTreaties(historyObj);
       // Merge changes to items
       while (items != historyMap.items && items instanceof SortedDeltaMap
           && ((SortedDeltaMap<Long, MetricTreaty>) items).backingMap != historyMap.items)
@@ -308,6 +321,14 @@ public class MetricTreatySet extends TreatySet {
       while (statementMap != historyMap.statementMap
           && statementMap instanceof DeltaMap
           && ((DeltaMap<TreatyStatement, MetricTreaty>) statementMap).backingMap != historyMap.statementMap)
+        statementMap = ((DeltaMap<TreatyStatement, MetricTreaty>) statementMap)
+            .commitChanges();
+    } else {
+      // Merge changes to items
+      while (items instanceof SortedDeltaMap)
+        items = ((SortedDeltaMap<Long, MetricTreaty>) items).commitChanges();
+      // Merge changes to statementMap
+      while (statementMap instanceof DeltaMap)
         statementMap = ((DeltaMap<TreatyStatement, MetricTreaty>) statementMap)
             .commitChanges();
     }

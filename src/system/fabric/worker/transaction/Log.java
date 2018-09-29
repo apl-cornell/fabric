@@ -727,15 +727,15 @@ public final class Log {
     Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
-        if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
-          if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
-            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-                "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
-                this, write.$getStore(), write.$getOnum(), write.getClass(),
-                System.identityHashCode(write), Thread.currentThread());
-          }
-          write.$copyStateFrom(write.$history);
+        //if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
+        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+              "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
+              this, write.$getStore(), write.$getOnum(), write.getClass(),
+              System.identityHashCode(write), Thread.currentThread());
         }
+        write.$copyStateFrom(write.$history);
+        //}
         // Signal any waiting readers/writers.
         if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
           write.notifyAll();
@@ -821,15 +821,15 @@ public final class Log {
       Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
       for (_Impl write : chain) {
         synchronized (write) {
-          if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
-            if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
-              Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-                  "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
-                  this, write.$getStore(), write.$getOnum(), write.getClass(),
-                  System.identityHashCode(write), Thread.currentThread());
-            }
-            write.$copyStateFrom(write.$history);
+          //if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
+          if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
+                this, write.$getStore(), write.$getOnum(), write.getClass(),
+                System.identityHashCode(write), Thread.currentThread());
           }
+          write.$copyStateFrom(write.$history);
+          //}
           // Signal any waiting readers/writers.
           if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
             write.notifyAll();
@@ -1105,7 +1105,14 @@ public final class Log {
           // layer of history. In doing so, we also end up releasing this
           // transaction's write lock.
           obj.$history = obj.$history.$history;
-          obj.$treaties.flattenUpdates();
+          if (extendedTreaties.containsKey(obj)) {
+            extendedTreaties.get(obj).treaties.flattenUpdates();
+            // Make sure that we don't lose "subextensions"
+            if (!parent.extendedTreaties.containsKey(obj))
+              obj.$treaties = extendedTreaties.get(obj).treaties;
+          } else {
+            obj.$treaties.flattenUpdates();
+          }
         } else {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
@@ -1117,7 +1124,7 @@ public final class Log {
         obj.$writeLockHolder = parent;
 
         // Signal any readers/writers.
-        //if (obj.$numWaiting > 0) obj.notifyAll();
+        if (obj.$numWaiting > 0) obj.notifyAll();
       }
     }
 
@@ -1130,7 +1137,14 @@ public final class Log {
           // layer of history. In doing so, we also end up releasing this
           // transaction's write lock.
           obj.$history = obj.$history.$history;
-          obj.$treaties.flattenUpdates();
+          if (extendedTreaties.containsKey(obj)) {
+            extendedTreaties.get(obj).treaties.flattenUpdates();
+            // Make sure we don't lose "subextensions"
+            if (!parent.extendedTreaties.containsKey(obj))
+              obj.$treaties = extendedTreaties.get(obj).treaties;
+          } else {
+            obj.$treaties.flattenUpdates();
+          }
         } else {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
@@ -1253,9 +1267,6 @@ public final class Log {
       for (LongKeyMap.Entry<ReadMap.Entry> e : submap.entrySet()) {
         long onum = e.getKey();
         ReadMap.Entry entry = e.getValue();
-        // Extend the expiry if we did so in this transaction.
-        TreatySet extension = getFinalTreaties(entry.getStore(), onum);
-        if (extension != null) entry.extendTreaties(extension);
         entry.releaseLock(this);
       }
     }
@@ -1283,7 +1294,12 @@ public final class Log {
         obj.$writer = null;
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
+        // Discard one layer of history.
+        obj.$history = obj.$history.$history;
+
         TreatySet treaties = getFinalTreaties(obj);
+        treaties.flattenUpdates();
+        obj.$treaties = treaties;
         // Don't increment the version if it's only extending treaties
         if (!extendedTreaties.containsKey(obj)) {
           obj.$version++;
@@ -1291,12 +1307,7 @@ public final class Log {
         } else {
           obj.$readMapEntry.extendTreaties(treaties);
         }
-        obj.$treaties = treaties;
         obj.$isOwned = false;
-
-        // Discard one layer of history.
-        obj.$history = obj.$history.$history;
-        obj.$treaties.flattenUpdates();
 
         // Signal any waiting readers/writers.
         if (obj.$numWaiting > 0) obj.notifyAll();
@@ -1730,7 +1741,6 @@ public final class Log {
    */
   public void clearExtension(fabric.lang.Object._Impl o) {
     ExpiryExtension p = extendedTreaties.remove(o);
-    if (p != null)
-      o.$treaties = p.treaties;
+    if (p != null) o.$treaties = p.treaties;
   }
 }
