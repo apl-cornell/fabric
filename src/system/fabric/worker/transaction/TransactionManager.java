@@ -1373,6 +1373,8 @@ public final class TransactionManager {
     // Make sure we're not supposed to abort/retry.
     checkRetrySignal();
 
+    current.checkWriteClobber(obj);
+
     // Check write condition: wait until writer is in our ancestry and all
     // readers are in our ancestry.
     boolean hadToWait = false;

@@ -727,7 +727,7 @@ public final class Log {
     Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
-        //if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
+        if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
         if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
           Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
               "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
@@ -735,7 +735,7 @@ public final class Log {
               System.identityHashCode(write), Thread.currentThread());
         }
         write.$copyStateFrom(write.$history);
-        //}
+        }
         // Signal any waiting readers/writers.
         if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
           write.notifyAll();
@@ -821,7 +821,7 @@ public final class Log {
       Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
       for (_Impl write : chain) {
         synchronized (write) {
-          //if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
+          if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
           if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
             Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
                 "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
@@ -829,7 +829,7 @@ public final class Log {
                 System.identityHashCode(write), Thread.currentThread());
           }
           write.$copyStateFrom(write.$history);
-          //}
+          }
           // Signal any waiting readers/writers.
           if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
             write.notifyAll();
@@ -1742,5 +1742,28 @@ public final class Log {
   public void clearExtension(fabric.lang.Object._Impl o) {
     ExpiryExtension p = extendedTreaties.remove(o);
     if (p != null) o.$treaties = p.treaties;
+  }
+
+  /**
+   * Dumb hack to check we aren't clobbering an existing write of a different
+   * _Impl copy.  Aborts up to the furthest ancestor with a different _Impl for
+   * the obj.
+   */
+  public void checkWriteClobber(fabric.lang.Object._Impl o) {
+    // Walk from top level down.
+    Log cur = this;
+    while (cur.parent != null)
+      cur = cur.parent;
+    while (cur != null) {
+      if (cur.writes.containsKey(o) && cur.writes.get(o) != o) {
+        Logging.METRICS_LOGGER.log(Level.WARNING,
+            "FOUND DIFFERENT IMPLS FOR {0}/{1}: {2} vs. {3}",
+            new Object[] { o.$getStore(), o.$getOnum(),
+                System.identityHashCode(cur.writes.get(o)),
+                System.identityHashCode(o) });
+        throw new TransactionRestartingException(cur.tid);
+      }
+      cur = cur.child;
+    }
   }
 }
