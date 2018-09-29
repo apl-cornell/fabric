@@ -355,4 +355,13 @@ public class MetricTreatySet extends TreatySet {
             .commitChanges();
     }
   }
+
+  @Override
+  public TreatySet makeCopy() {
+    MetricTreatySet copy = new MetricTreatySet(owner);
+    copy.items.putAll(items);
+    copy.statementMap.putAll(statementMap);
+    copy.nextId = nextId;
+    return copy;
+  }
 }

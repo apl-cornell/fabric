@@ -112,7 +112,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.version = obj.$version;
       this.associates = obj.$associates;
       this.observers = obj.$observers;
-      this.treaties = obj.$treaties;
+      this.treaties = obj.$treaties.makeCopy();
     }
 
     /**
@@ -481,7 +481,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @param treaties
    */
   public void setTreaties(TreatySet treaties) {
-    header.setTreaties(treaties);
+    header.setTreaties(treaties.makeCopy());
   }
 
   /**
@@ -1356,9 +1356,10 @@ public final class SerializedObject implements FastSerializable, Serializable {
       }
 
       _Impl result = (_Impl) constructor.newInstance(store, getOnum(),
-          getVersion(), getAssociates(), getObservers(), getTreaties(),
-          updateLabelStore, updateLabelOnum, accessPolicyStore,
-          accessPolicyOnum, new ObjectInputStream(getSerializedDataStream()),
+          getVersion(), getAssociates(), getObservers(),
+          getTreaties().makeCopy(), updateLabelStore, updateLabelOnum,
+          accessPolicyStore, accessPolicyOnum,
+          new ObjectInputStream(getSerializedDataStream()),
           getRefTypeIterator(), getIntraStoreRefIterator(),
           getInterStoreRefIterator());
 

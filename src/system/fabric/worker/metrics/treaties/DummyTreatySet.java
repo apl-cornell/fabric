@@ -129,4 +129,9 @@ public class DummyTreatySet extends TreatySet {
   public void mergeExtensions(TreatySet other) {
     // Do nothing.
   }
+
+  @Override
+  public TreatySet makeCopy() {
+    return this;
+  }
 }

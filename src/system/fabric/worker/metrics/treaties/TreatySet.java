@@ -120,4 +120,10 @@ public abstract class TreatySet
    * Merge extensions from another map.
    */
   public abstract void mergeExtensions(TreatySet other);
+
+  /**
+   * Ugh make a copy where necessary to avoid issues with serialized objects in
+   * process.
+   */
+  public abstract TreatySet makeCopy();
 }
