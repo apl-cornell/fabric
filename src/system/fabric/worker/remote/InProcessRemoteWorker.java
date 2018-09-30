@@ -322,4 +322,9 @@ public class InProcessRemoteWorker extends RemoteWorker {
   private Object writeReplace() {
     return new SerializationProxy(name);
   }
+
+  @Override
+  public void sendBulkReply(RemoteStore store, Collection<ObjectGroup> groups) {
+    store.putGroupsInCache(groups);
+  }
 }

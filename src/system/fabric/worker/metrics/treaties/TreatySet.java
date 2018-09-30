@@ -3,6 +3,8 @@ package fabric.worker.metrics.treaties;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
 
 import fabric.common.FastSerializable;
 import fabric.metrics.util.TreatiesBox;
@@ -109,7 +111,7 @@ public abstract class TreatySet
   /**
    * Run a prefetch for all observers of the treaties in this set.
    */
-  public abstract void prefetch(Store triggeringStore);
+  public abstract Map<Store, Set<Long>> prefetch(Store triggeringStore);
 
   /**
    * Keep flattening updates until the backing maps match the history's maps.

@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 
 import com.google.common.collect.Multimap;
@@ -293,6 +295,11 @@ public final class Log {
    * The lock, if any, this transaction is waiting on.
    */
   private Object waitsOn;
+
+  /**
+   * The condition and java lock, if any, this transaction is waiting on.
+   */
+  private Pair<Lock, Condition> waitsOnJavaCond;
 
   /**
    * Locks that will be acquired if this transaction commits successfully.
@@ -696,6 +703,30 @@ public final class Log {
               }
             });
           }
+          // Grab the currently marked blocking dependency
+          final Pair<Lock, Condition> curWaitingOnJavaCond =
+              log.waitsOnJavaCond;
+          if (curWaitingOnJavaCond != null) {
+            // Run this in a different thread, we need to avoid any deadlocks in
+            // this step.
+            final Log logCopy = log;
+            Threading.getPool().submit(new Runnable() {
+              @Override
+              public void run() {
+                curWaitingOnJavaCond.first.lock();
+                try {
+                  // If still blocked on the object after synchronizing, wake
+                  // the thread that needs to be aborted so it sees retry
+                  // signal.
+                  if (logCopy.waitsOnJavaCond == curWaitingOnJavaCond) {
+                    logCopy.waitsOnJavaCond.second.signalAll();
+                  }
+                } finally {
+                  curWaitingOnJavaCond.first.unlock();
+                }
+              }
+            });
+          }
         }
       }
     }
@@ -727,14 +758,15 @@ public final class Log {
     Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
-        if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
-        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
-          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-              "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
-              this, write.$getStore(), write.$getOnum(), write.getClass(),
-              System.identityHashCode(write), Thread.currentThread());
-        }
-        write.$copyStateFrom(write.$history);
+        if (write.$writeLockHolder != null
+            && write.$writeLockHolder.isDescendantOf(this)) {
+          if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
+                this, write.$getStore(), write.$getOnum(), write.getClass(),
+                System.identityHashCode(write), Thread.currentThread());
+          }
+          write.$copyStateFrom(write.$history);
         }
         // Signal any waiting readers/writers.
         if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
@@ -821,14 +853,15 @@ public final class Log {
       Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
       for (_Impl write : chain) {
         synchronized (write) {
-          if (write.$writeLockHolder != null && write.$writeLockHolder.isDescendantOf(this)) {
-          if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
-            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-                "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
-                this, write.$getStore(), write.$getOnum(), write.getClass(),
-                System.identityHashCode(write), Thread.currentThread());
-          }
-          write.$copyStateFrom(write.$history);
+          if (write.$writeLockHolder != null
+              && write.$writeLockHolder.isDescendantOf(this)) {
+            if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+              Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                  "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
+                  this, write.$getStore(), write.$getOnum(), write.getClass(),
+                  System.identityHashCode(write), Thread.currentThread());
+            }
+            write.$copyStateFrom(write.$history);
           }
           // Signal any waiting readers/writers.
           if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
@@ -1443,6 +1476,19 @@ public final class Log {
       result = result.parent;
     }
     return result;
+  }
+
+  /**
+   * Changes the waitsFor set to an empty set.  This is for waiting on objects
+   * which are not necessarily held by other worker transactions, such as
+   * waiting for a fetch to complete.
+   */
+  public void setWaitsFor(Lock lock, Condition cond) {
+    synchronized (this.waitsFor) {
+      this.waitsFor.clear();
+      this.waitsOn = null;
+      this.waitsOnJavaCond = new Pair<>(lock, cond);
+    }
   }
 
   /**

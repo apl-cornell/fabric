@@ -7,6 +7,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -16,7 +18,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import fabric.common.FastSerializable;
-import fabric.common.exceptions.AccessException;
 import fabric.common.util.Triple;
 import fabric.metrics.util.Observer;
 import fabric.worker.Store;
@@ -434,19 +435,18 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   /**
    * Allow for prefetching of the observer objects.
    */
-  public void prefetch(Store triggeringStore) {
+  public Map<Store, Set<Long>> prefetch(Store triggeringStore) {
     // Hack to prefetch observers into cache.
+    Map<Store, Set<Long>> result = new HashMap<>();
     for (final Map.Entry<String, SortedMap<Long, ObserverGroup>> e : map
         .entrySet()) {
       if (e.getKey().equals(triggeringStore.name())) continue;
       Store s = Worker.getWorker().getStore(e.getKey());
-      for (long onum : e.getValue().keySet()) {
-        try {
-          s.readObjectNoWait(onum);
-        } catch (AccessException ex) {
-          throw new InternalError(ex);
-        }
-      }
+      //Logging.METRICS_LOGGER.log(Level.INFO,
+      //    "PREFETCHING ASSOCIATES FROM {0}: {1}",
+      //    new Object[] { s, e.getValue() });
+      result.put(s, new HashSet<>(e.getValue().keySet()));
     }
+    return result;
   }
 }

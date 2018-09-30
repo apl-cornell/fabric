@@ -3,7 +3,9 @@ package fabric.worker;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
+import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
@@ -164,4 +166,14 @@ public interface Store extends Serializable {
    */
   public void waitForUpdate(LongKeyMap<Integer> onumsAndVersions)
       throws AccessException;
+
+  /**
+   * Bulk fetch some objects, without waiting.
+   */
+  public void bulkPrefetch(Set<Long> onums);
+
+  /**
+   * Bulk put object groups into the cache.
+   */
+  public void putGroupsInCache(Collection<ObjectGroup> groups);
 }

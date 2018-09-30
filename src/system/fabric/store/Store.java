@@ -11,8 +11,6 @@ import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
@@ -49,6 +47,7 @@ import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
+import fabric.messages.BulkReadMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
@@ -285,36 +284,85 @@ class Store extends MessageToStoreHandler {
     ConfigProperties config = Worker.getWorker().config;
     if (config.usePrefetching || config.useSubscriptions) {
       LongSet includedOnums = new LongHashSet(startGroup.objects().keySet());
-      Queue<Long> unfollowed = new LinkedList<>();
-      for (LongIterator iter = startGroup.objects().keySet().iterator(); iter
-          .hasNext();) {
-        unfollowed.add(iter.next());
+      //Queue<Long> unfollowed = new LinkedList<>();
+      //for (LongIterator iter = startGroup.objects().keySet().iterator(); iter
+      //    .hasNext();) {
+      //  unfollowed.add(iter.next());
+      //}
+      //
+      //// Make sure all associates of all objects in all groups are included.
+      //while (!unfollowed.isEmpty()) {
+      //long startOnum = unfollowed.poll();
+      long startOnum = msg.onum;
+      for (LongIterator iter =
+          tm.getAssociatedOnumsExcluded(startOnum, includedOnums, client.node)
+              .iterator(); iter.hasNext();) {
+        long relatedOnum = iter.next();
+        ObjectGroup relatedGroup =
+            tm.getGroup(client.principal, client.node, relatedOnum);
+        groups.add(relatedGroup);
+
+        for (LongIterator iter2 =
+            relatedGroup.objects().keySet().iterator(); iter2.hasNext();) {
+          long grpOnum = iter2.next();
+          // Add any new starting points to the queue.
+          if (!includedOnums.contains(grpOnum)) {
+            //unfollowed.add(grpOnum);
+            includedOnums.add(grpOnum);
+          }
+        }
       }
+      //}
+    }
+    return new ReadMessage.Response(groups);
+  }
 
-      // Make sure all associates of all objects in all groups are included.
-      while (!unfollowed.isEmpty()) {
-        long startOnum = unfollowed.poll();
-        for (LongIterator iter =
-            tm.getAssociatedOnumsExcluded(startOnum, includedOnums, client.node)
-                .iterator(); iter.hasNext();) {
-          long relatedOnum = iter.next();
-          ObjectGroup relatedGroup =
-              tm.getGroup(client.principal, client.node, relatedOnum);
-          groups.add(relatedGroup);
+  /**
+   * Processes the given read request.
+   */
+  @Override
+  public void handle(RemoteIdentity<RemoteWorker> client, BulkReadMessage msg) {
+    try {
+      Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
+          "Handling Read Message from {0}, onums={1}", nameOf(client.principal),
+          msg.onums);
 
-          for (LongIterator iter2 =
-              relatedGroup.objects().keySet().iterator(); iter2.hasNext();) {
-            long grpOnum = iter2.next();
-            // Add any new starting points to the queue.
-            if (!includedOnums.contains(grpOnum)) {
-              unfollowed.add(grpOnum);
-              includedOnums.add(grpOnum);
+      HashSet<ObjectGroup> groups = new HashSet<>();
+      LongSet includedOnums = new LongHashSet();
+      for (LongIterator requestIter = msg.onums.iterator(); requestIter
+          .hasNext();) {
+        long onum = requestIter.next();
+        ObjectGroup startGroup =
+            tm.getGroup(client.principal, client.node, onum);
+        groups.add(startGroup);
+        includedOnums.addAll(startGroup.objects().keySet());
+
+        ConfigProperties config = Worker.getWorker().config;
+        if (config.usePrefetching || config.useSubscriptions) {
+          for (LongIterator iter =
+              tm.getAssociatedOnumsExcluded(onum, includedOnums, client.node)
+                  .iterator(); iter.hasNext();) {
+            long relatedOnum = iter.next();
+            ObjectGroup relatedGroup =
+                tm.getGroup(client.principal, client.node, relatedOnum);
+            groups.add(relatedGroup);
+
+            for (LongIterator iter2 =
+                relatedGroup.objects().keySet().iterator(); iter2.hasNext();) {
+              long grpOnum = iter2.next();
+              // Add any new starting points to the queue.
+              if (!includedOnums.contains(grpOnum)) {
+                includedOnums.add(grpOnum);
+              }
             }
           }
         }
       }
+      final fabric.worker.RemoteStore store = Worker.getWorker().getStore(name);
+      client.node.sendBulkReply(store, groups);
+    } catch (AccessException e) {
+      throw new InternalError(e);
     }
-    return new ReadMessage.Response(groups);
   }
 
   /**

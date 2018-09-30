@@ -112,6 +112,16 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
   }
 
   @Override
+  public void handle(RemoteIdentity<RemoteWorker> client, BulkReadMessage msg)
+      throws ProtocolError {
+    throw error(msg);
+  }
+
+  @Override
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      BulkReadReply msg);
+
+  @Override
   public fabric.messages.ReadMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, ReadMessage msg)
       throws ProtocolError {

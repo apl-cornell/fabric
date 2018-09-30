@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -323,10 +324,17 @@ public class MetricTreatySet extends TreatySet {
   }
 
   @Override
-  public void prefetch(Store triggeringStore) {
+  public Map<Store, Set<Long>> prefetch(Store triggeringStore) {
+    Map<Store, Set<Long>> result = new HashMap<>();
     for (MetricTreaty t : this) {
-      t.getObservers().prefetch(triggeringStore);
+      for (Map.Entry<Store, Set<Long>> e : t.getObservers()
+          .prefetch(triggeringStore).entrySet()) {
+        if (result.containsKey(e.getKey()))
+          result.get(e.getKey()).addAll(e.getValue());
+        else result.put(e.getKey(), e.getValue());
+      }
     }
+    return result;
   }
 
   @Override

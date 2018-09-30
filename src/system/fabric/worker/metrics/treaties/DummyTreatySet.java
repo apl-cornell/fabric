@@ -2,7 +2,10 @@ package fabric.worker.metrics.treaties;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import fabric.common.exceptions.NotImplementedException;
 import fabric.metrics.util.TreatiesBox;
@@ -111,8 +114,8 @@ public class DummyTreatySet extends TreatySet {
   }
 
   @Override
-  public void prefetch(Store triggeringStore) {
-    // Do nothing.
+  public Map<Store, Set<Long>> prefetch(Store triggeringStore) {
+    return Collections.emptyMap();
   }
 
   @Override

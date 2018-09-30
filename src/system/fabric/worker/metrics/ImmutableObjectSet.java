@@ -7,6 +7,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -14,11 +16,8 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.logging.Level;
 
 import fabric.common.FastSerializable;
-import fabric.common.Logging;
-import fabric.common.exceptions.AccessException;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -247,21 +246,17 @@ public class ImmutableObjectSet implements FastSerializable, Serializable,
   /**
    * Allow for prefetching of the objects.
    */
-  public void prefetch(Store triggeringStore) {
+  public Map<Store, Set<Long>> prefetch(Store triggeringStore) {
     // Hack to prefetch objects into cache.
+    Map<Store, Set<Long>> result = new HashMap<>();
     for (final Map.Entry<String, SortedSet<Long>> e : map.entrySet()) {
       if (e.getKey().equals(triggeringStore.name())) continue;
       Store s = Worker.getWorker().getStore(e.getKey());
       //Logging.METRICS_LOGGER.log(Level.INFO,
       //    "PREFETCHING ASSOCIATES FROM {0}: {1}",
       //    new Object[] { s, e.getValue() });
-      for (long onum : e.getValue()) {
-        try {
-          s.readObjectNoWait(onum);
-        } catch (AccessException ex) {
-          throw new InternalError(ex);
-        }
-      }
+      result.put(s, new HashSet<>(e.getValue()));
     }
+    return result;
   }
 }

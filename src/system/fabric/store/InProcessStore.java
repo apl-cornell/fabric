@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import fabric.common.ConfigProperties;
 import fabric.common.ObjectGroup;
@@ -14,6 +15,7 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -22,6 +24,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
+import fabric.worker.ObjectCache.FetchLock;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -224,5 +227,52 @@ public class InProcessStore extends RemoteStore {
     // Running this in the current thread because it should only be called in
     // the dedicated thread for InProcessRemoteWorker's handling of updates.
     tm.unsubscribe(Worker.getWorker().getLocalWorker(), onums);
+  }
+
+  @Override
+  public void bulkPrefetch(Set<Long> onums) {
+    LongSet request = new LongHashSet();
+    for (long onum : onums) {
+      if (inCache(onum)) continue;
+      // Get/create a mutex for fetching the object.
+      FetchLock fetchLock = new FetchLock();
+      FetchLock existingFetchLock =
+          cache.fetchLocks.putIfAbsent(onum, fetchLock);
+      if (existingFetchLock != null) {
+        continue;
+      }
+      request.add(onum);
+    }
+    if (!request.isEmpty()) {
+      Threading.getPool().submit(() -> {
+        LongKeyMap<SerializedObject> map = new LongKeyHashMap<>();
+        long firstOnum = -1;
+        try {
+          for (LongIterator requestIter = request.iterator(); requestIter
+              .hasNext();) {
+            long onum = requestIter.next();
+            if (firstOnum == -1) firstOnum = onum;
+            SerializedObject obj = tm.read(onum);
+            if (obj == null) throw new AccessException(this, onum);
+            map.put(onum, obj);
+            ConfigProperties config = Worker.getWorker().config;
+            if (config.usePrefetching || config.useSubscriptions) {
+              for (LongIterator iter =
+                  tm.getAssociatedOnums(onum, getLocalWorkerIdentity().node)
+                      .iterator(); iter.hasNext();) {
+                long relatedOnum = iter.next();
+                SerializedObject related = tm.read(relatedOnum);
+                if (related == null)
+                  throw new AccessException(this, relatedOnum);
+                map.put(relatedOnum, related);
+              }
+            }
+          }
+          putGroupsInCache(Collections.singletonList(new ObjectGroup(map)));
+        } catch (AccessException e) {
+          // TODO?
+        }
+      });
+    }
   }
 }

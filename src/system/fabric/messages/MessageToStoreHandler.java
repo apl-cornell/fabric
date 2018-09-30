@@ -60,6 +60,16 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
       RemoteIdentity<RemoteWorker> client, GetCertChainMessage msg);
 
   @Override
+  public abstract void handle(RemoteIdentity<RemoteWorker> client,
+      BulkReadMessage msg);
+
+  @Override
+  public void handle(RemoteIdentity<RemoteWorker> client, BulkReadReply msg)
+      throws ProtocolError {
+    throw error(msg);
+  }
+
+  @Override
   public abstract ReadMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, ReadMessage msg)
       throws AccessException;

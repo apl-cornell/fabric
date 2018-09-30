@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fabric.common.ONumConstants;
+import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.TransactionID;
@@ -479,5 +480,15 @@ public final class LocalStore implements Store, Serializable {
       throws AccessException {
     throw new NotImplementedException(
         "Local stores do not support waiting for an update");
+  }
+
+  @Override
+  public void bulkPrefetch(Set<Long> onums) {
+    // Do nothing.
+  }
+
+  @Override
+  public void putGroupsInCache(Collection<ObjectGroup> groups) {
+    this.cache.put(groups);
   }
 }

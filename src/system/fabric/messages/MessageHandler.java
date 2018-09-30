@@ -60,6 +60,12 @@ public interface MessageHandler {
   public void handle(RemoteIdentity<RemoteWorker> client,
       AbortTransactionMessage msg) throws ProtocolError;
 
+  public void handle(RemoteIdentity<RemoteWorker> client, BulkReadMessage msg)
+      throws ProtocolError;
+
+  public void handle(RemoteIdentity<RemoteWorker> client, BulkReadReply msg)
+      throws ProtocolError;
+
   /////////////////////////////////////////////////////////////////////
   // Synchronous Messages
   /////////////////////////////////////////////////////////////////////

@@ -15,6 +15,7 @@ import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
+import fabric.messages.BulkReadReply;
 import fabric.messages.CallMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DirtyReadMessage;
@@ -424,5 +425,11 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     if (p != null) {
       p.markCommitted(client.node.name(), msg);
     }
+  }
+
+  @Override
+  public void handle(RemoteIdentity<RemoteWorker> client, BulkReadReply msg) {
+    inProcessRemoteWorker.sendBulkReply(
+        Worker.getWorker().getStore(client.node.name()), msg.groups);
   }
 }

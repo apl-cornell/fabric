@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 import fabric.common.Crypto;
 import fabric.common.Logging;
@@ -26,6 +27,7 @@ import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.exceptions.RuntimeFetchException;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
@@ -36,6 +38,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
+import fabric.messages.BulkReadMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
@@ -73,7 +76,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   /**
    * The object table: locally resident objects.
    */
-  private final ObjectCache cache;
+  protected final ObjectCache cache;
 
   /**
    * The store's public SSL key. Used for verifying signatures on object groups.
@@ -558,6 +561,34 @@ public class RemoteStore extends RemoteNode<RemoteStore>
 
   private java.lang.Object writeReplace() {
     return new SerializationProxy(name);
+  }
+
+  @Override
+  public void bulkPrefetch(Set<Long> onums) {
+    LongSet request = new LongHashSet();
+    for (long onum : onums) {
+      if (inCache(onum)) continue;
+      // Get/create a mutex for fetching the object.
+      FetchLock fetchLock = new FetchLock();
+      FetchLock existingFetchLock =
+          cache.fetchLocks.putIfAbsent(onum, fetchLock);
+      if (existingFetchLock != null) {
+        continue;
+      }
+      request.add(onum);
+    }
+    if (!request.isEmpty()) {
+      sendAsync(Worker.getWorker().authToStore, new BulkReadMessage(request));
+    }
+  }
+
+  @Override
+  public void putGroupsInCache(Collection<ObjectGroup> groups) {
+    cache.put(groups);
+  }
+
+  protected boolean inCache(long onum) {
+    return cache.get(onum) != null;
   }
 
   protected static final class SerializationProxy implements Serializable {

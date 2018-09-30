@@ -5,6 +5,8 @@ import static fabric.common.Logging.TIMING_LOGGER;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 import fabric.common.ObjectGroup;
@@ -370,9 +372,9 @@ public final class ObjectCache {
    * The set of fetch locks. Used to prevent threads from concurrently
    * attempting to fetch the same object.
    */
-  final ConcurrentLongKeyMap<FetchLock> fetchLocks;
+  public final ConcurrentLongKeyMap<FetchLock> fetchLocks;
 
-  static class FetchLock {
+  public static class FetchLock {
     volatile ObjectCache.Entry object;
     volatile AccessException error;
   }
@@ -495,6 +497,23 @@ public final class ObjectCache {
    * @param onum the onum of the entry to return. This should be a member of the
    *          given group.
    */
+  void put(Collection<ObjectGroup> groups) {
+    for (ObjectGroup group : groups) {
+      for (SerializedObject obj : group.objects().values()) {
+        update(obj, false);
+      }
+    }
+  }
+
+  /**
+   * Adds the contents of the given object group to the cache. Returns the entry
+   * for the given onum.
+   *
+   * @param store the store from which the group was obtained.
+   * @param group the group to add to the cache.
+   * @param onum the onum of the entry to return. This should be a member of the
+   *          given group.
+   */
   Entry put(Collection<ObjectGroup> groups, long onum) {
     Entry result = null;
     for (ObjectGroup group : groups) {
@@ -585,11 +604,39 @@ public final class ObjectCache {
     } finally {
       if (Worker.getWorker().config.usePrefetching
           || Worker.getWorker().config.useSubscriptions) {
-        if (update.getAssociates() != null)
-          update.getAssociates().prefetch(store);
-        if (update.getObservers() != null)
-          update.getObservers().prefetch(store);
-        if (update.getTreaties() != null) update.getTreaties().prefetch(store);
+        Map<Store, Set<Long>> fetches = null;
+        if (update.getAssociates() != null) {
+          fetches = update.getAssociates().prefetch(store);
+        }
+        if (update.getObservers() != null) {
+          if (fetches == null) {
+            fetches = update.getObservers().prefetch(store);
+          } else {
+            for (Map.Entry<Store, Set<Long>> e : update.getObservers()
+                .prefetch(store).entrySet()) {
+              if (fetches.containsKey(e.getKey()))
+                fetches.get(e.getKey()).addAll(e.getValue());
+              else fetches.put(e.getKey(), e.getValue());
+            }
+          }
+        }
+        if (update.getTreaties() != null) {
+          if (fetches == null) {
+            fetches = update.getTreaties().prefetch(store);
+          } else {
+            for (Map.Entry<Store, Set<Long>> e : update.getTreaties()
+                .prefetch(store).entrySet()) {
+              if (fetches.containsKey(e.getKey()))
+                fetches.get(e.getKey()).addAll(e.getValue());
+              else fetches.put(e.getKey(), e.getValue());
+            }
+          }
+        }
+        if (fetches != null) {
+          for (Map.Entry<Store, Set<Long>> e : fetches.entrySet()) {
+            e.getKey().bulkPrefetch(e.getValue());
+          }
+        }
       }
     }
   }

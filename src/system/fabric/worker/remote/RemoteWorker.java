@@ -25,6 +25,7 @@ import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AsyncMessage;
+import fabric.messages.BulkReadReply;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DirtyReadMessage;
 import fabric.messages.InterWorkerStalenessMessage;
@@ -43,6 +44,7 @@ import fabric.messages.WorkerPrepareFailedMessage;
 import fabric.messages.WorkerPrepareSuccessMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
+import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
@@ -298,5 +300,9 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     java.lang.Object readResolve() {
       return Worker.getWorker().getWorker(workerName);
     }
+  }
+
+  public void sendBulkReply(RemoteStore store, Collection<ObjectGroup> groups) {
+    sendAsync(new BulkReadReply(groups));
   }
 }

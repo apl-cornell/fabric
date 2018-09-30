@@ -104,6 +104,18 @@ public abstract class AsyncMessage {
    * for efficient encoding and decoding of the type of a message.
    */
   protected static enum MessageType {
+    BULK_READ_ONUM {
+      @Override
+      BulkReadMessage parse(DataInput in) throws IOException {
+        return new BulkReadMessage(in);
+      }
+    },
+    BULK_READ_REPLY {
+      @Override
+      BulkReadReply parse(DataInput in) throws IOException {
+        return new BulkReadReply(in);
+      }
+    },
     TREATY_EXTENSION {
       @Override
       TreatyExtensionMessage parse(DataInput in) throws IOException {
