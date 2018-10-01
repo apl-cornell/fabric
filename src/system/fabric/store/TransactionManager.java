@@ -476,9 +476,9 @@ public class TransactionManager {
           break;
         } else {
           synchronized (existing) {
-            // Don't do anything if there's an equivalent extension queued
-            // already or if the extension is currently being handled.
-            if (existing.compareTo(de) == 0) {
+            // Don't do anything if there's an earlier extension queued
+            // already and the extension isn't currently being handled.
+            if (waitingExtensions.contains(de) && existing.compareTo(de) <= 0) {
               break;
             }
             // Update to this event.  This would mean the old extension was
@@ -512,7 +512,7 @@ public class TransactionManager {
   private final DelayQueue<DelayedExtension> waitingExtensions =
       new DelayQueue<>();
 
-  private final int EXTENSION_WINDOW = 1500;
+  private final int EXTENSION_WINDOW = 2500;
 
   /**
    * A thread that goes through the extensions queue, waiting until the next
