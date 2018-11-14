@@ -40,6 +40,7 @@ import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
+import fabric.common.util.Triple;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.LabelCache;
@@ -208,7 +209,7 @@ public final class Log {
    * Collection of checks that aren't currently treatied and should be checked
    * before the transaction finishes (aborting writes if they fail).
    */
-  protected final Map<TreatyRef, Long> treatiedUpdateChecks;
+  protected final Map<TreatyRef, Triple<Metric._Proxy, TreatyStatement, Long>> treatiedUpdateChecks;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -957,7 +958,9 @@ public final class Log {
   }
 
   public void addTreatiedPostcondition(TreatyRef t) {
-    treatiedUpdateChecks.put(t, t.get().expiry);
+    treatiedUpdateChecks.put(t,
+        new Triple<>((Metric._Proxy) t.get().getMetric().$getProxy(),
+            t.get().statement, t.get().expiry));
   }
 
   private boolean finalResolve = false;
@@ -967,20 +970,20 @@ public final class Log {
    * TransactionAbortingException if it does.
    */
   public void checkTreatyDeactivation(MetricTreaty t) {
-    if (finalResolve) {
-      TreatyRef r = new TreatyRef(t);
-      if (treatiedUpdateChecks.containsKey(r)) {
-        Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
-            + Thread.currentThread() + ":" + tid);
-        if (treatiedUpdateChecks.get(r).longValue() >= System
-            .currentTimeMillis())
-          throw new TransactionAbortingException(tid, true);
-        TransactionManager.getInstance().checkForStaleObjects();
-        checkRetrySignal();
-        // Otherwise, the treaty we wanted to use went stale, so retry.
-        throw new TransactionRestartingException(tid);
-      }
-    }
+    //if (finalResolve) {
+    //  TreatyRef r = new TreatyRef(t);
+    //  if (treatiedUpdateChecks.containsKey(r)) {
+    //    Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
+    //        + Thread.currentThread() + ":" + tid);
+    //    if (treatiedUpdateChecks.get(r).third.longValue() >= System
+    //        .currentTimeMillis())
+    //      throw new TransactionAbortingException(tid, true);
+    //    //TransactionManager.getInstance().checkForStaleObjects();
+    //    //checkRetrySignal();
+    //    //// Otherwise, the treaty we wanted to use went stale, so retry.
+    //    //throw new TransactionRestartingException(tid);
+    //  }
+    //}
   }
 
   /**
@@ -1007,11 +1010,18 @@ public final class Log {
       // Check treaties still exist.
       Logging.METRICS_LOGGER.fine("CHECKING TREATIED POSTCONDITIONS IN "
           + Thread.currentThread() + ":" + tid);
-      for (TreatyRef t : treatiedUpdateChecks.keySet()) {
+      for (Map.Entry<TreatyRef, Triple<Metric._Proxy, TreatyStatement, Long>> entry : treatiedUpdateChecks
+          .entrySet()) {
+        TreatyRef t = entry.getKey();
+        Triple<Metric._Proxy, TreatyStatement, Long> trpl = entry.getValue();
         if (t.get() == null || !t.get().valid()) {
-          Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
-              + Thread.currentThread() + ":" + tid);
-          throw new TransactionAbortingException(tid, true);
+          if (trpl.second.check(trpl.first)) {
+            trpl.first.createAndActivateTreaty(trpl.second, true);
+          } else {
+            Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
+                + Thread.currentThread() + ":" + tid);
+            throw new TransactionAbortingException(tid, true);
+          }
         } else if (Worker.getWorker().config.aggressiveRebalancing
             && storesTouched.containsAll(t.get().storesForMetric())) {
           // Rebalance if we're touching all of the stores already.
@@ -1298,7 +1308,6 @@ public final class Log {
     // Release read locks.
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
       for (LongKeyMap.Entry<ReadMap.Entry> e : submap.entrySet()) {
-        long onum = e.getKey();
         ReadMap.Entry entry = e.getValue();
         entry.releaseLock(this);
       }

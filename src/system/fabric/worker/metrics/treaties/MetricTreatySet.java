@@ -196,9 +196,9 @@ public class MetricTreatySet extends TreatySet {
             "Somehow modifying the history's treatyset...");
       // Make sure we clobber an extension if this in-place update isn't an
       // extension.
-      items.remove(treaty.getId());
       curLog.clearExtension(curBox);
-      statementMap.remove(treaty.statement);
+      MetricTreaty val = items.remove(treaty.getId());
+      statementMap.remove(treaty.statement, val);
       owner.get().get$treatiesBox().set$$treaties(this);
     } else {
       // TODO check that it's a proper garbage collection?
