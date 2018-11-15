@@ -361,7 +361,7 @@ public class Arrays
 
     if (null == a1 || null == a2)
       return false;
-    
+
     // If they're the same length, test each element
     if (a1.length == a2.length)
       {
@@ -421,7 +421,7 @@ public class Arrays
 
     if (null == a1 || null == a2)
       return false;
-    
+
     // If they're the same length, test each element
     if (a1.length == a2.length)
       {
@@ -572,7 +572,7 @@ public class Arrays
 
     if (null == a1 || null == a2)
       return false;
-    
+
     // Must use Double.compare to take into account NaN, +-0.
     // If they're the same length, test each element
     if (a1.length == a2.length)
@@ -604,7 +604,7 @@ public class Arrays
 
     if (null == a1 || null == a2)
       return false;
-    
+
     // If they're the same length, test each element
     if (a1.length == a2.length)
       {
@@ -2303,7 +2303,7 @@ public class Arrays
    *
    * @param a the array to return a view of (<code>null</code> not permitted)
    * @return a fixed-size list, changes to which "write through" to the array
-   * 
+   *
    * @throws NullPointerException if <code>a</code> is <code>null</code>.
    * @see Serializable
    * @see RandomAccess
@@ -2314,7 +2314,7 @@ public class Arrays
     return (Arrays.ArrayList) new Arrays.ArrayList().fabric$util$Arrays$ArrayList$(a);
   }
 
-  /** 
+  /**
    * Returns the hashcode of an array of long numbers.  If two arrays
    * are equal, according to <code>equals()</code>, they should have the
    * same hashcode.  The hashcode returned by the method is equal to that
@@ -2325,7 +2325,7 @@ public class Arrays
    * @param v an array of long numbers for which the hash code should be
    *          computed.
    * @return the hash code of the array, or 0 if null was given.
-   * @since 1.5 
+   * @since 1.5
    */
   public static int hashCode(long[] v)
   {
@@ -2340,7 +2340,7 @@ public class Arrays
     return result;
   }
 
-  /** 
+  /**
    * Returns the hashcode of an array of integer numbers.  If two arrays
    * are equal, according to <code>equals()</code>, they should have the
    * same hashcode.  The hashcode returned by the method is equal to that
@@ -2351,7 +2351,7 @@ public class Arrays
    * @param v an array of integer numbers for which the hash code should be
    *          computed.
    * @return the hash code of the array, or 0 if null was given.
-   * @since 1.5 
+   * @since 1.5
    */
   public static int hashCode(int[] v)
   {
@@ -2363,7 +2363,7 @@ public class Arrays
     return result;
   }
 
-  /** 
+  /**
    * Returns the hashcode of an array of short numbers.  If two arrays
    * are equal, according to <code>equals()</code>, they should have the
    * same hashcode.  The hashcode returned by the method is equal to that
@@ -2374,7 +2374,7 @@ public class Arrays
    * @param v an array of short numbers for which the hash code should be
    *          computed.
    * @return the hash code of the array, or 0 if null was given.
-   * @since 1.5 
+   * @since 1.5
    */
   public static int hashCode(short[] v)
   {
@@ -2386,7 +2386,7 @@ public class Arrays
     return result;
   }
 
-  /** 
+  /**
    * Returns the hashcode of an array of characters.  If two arrays
    * are equal, according to <code>equals()</code>, they should have the
    * same hashcode.  The hashcode returned by the method is equal to that
@@ -2397,7 +2397,7 @@ public class Arrays
    * @param v an array of characters for which the hash code should be
    *          computed.
    * @return the hash code of the array, or 0 if null was given.
-   * @since 1.5 
+   * @since 1.5
    */
   public static int hashCode(char[] v)
   {
@@ -2409,7 +2409,7 @@ public class Arrays
     return result;
   }
 
-  /** 
+  /**
    * Returns the hashcode of an array of bytes.  If two arrays
    * are equal, according to <code>equals()</code>, they should have the
    * same hashcode.  The hashcode returned by the method is equal to that
@@ -2420,7 +2420,7 @@ public class Arrays
    * @param v an array of bytes for which the hash code should be
    *          computed.
    * @return the hash code of the array, or 0 if null was given.
-   * @since 1.5 
+   * @since 1.5
    */
   public static int hashCode(byte[] v)
   {
@@ -2432,7 +2432,7 @@ public class Arrays
     return result;
   }
 
-  /** 
+  /**
    * Returns the hashcode of an array of booleans.  If two arrays
    * are equal, according to <code>equals()</code>, they should have the
    * same hashcode.  The hashcode returned by the method is equal to that
@@ -2443,7 +2443,7 @@ public class Arrays
    * @param v an array of booleans for which the hash code should be
    *          computed.
    * @return the hash code of the array, or 0 if null was given.
-   * @since 1.5 
+   * @since 1.5
    */
   public static int hashCode(boolean[] v)
   {
@@ -2455,7 +2455,7 @@ public class Arrays
     return result;
   }
 
-  /** 
+  /**
    * Returns the hashcode of an array of floats.  If two arrays
    * are equal, according to <code>equals()</code>, they should have the
    * same hashcode.  The hashcode returned by the method is equal to that
@@ -2466,7 +2466,7 @@ public class Arrays
    * @param v an array of floats for which the hash code should be
    *          computed.
    * @return the hash code of the array, or 0 if null was given.
-   * @since 1.5 
+   * @since 1.5
    */
   public static int hashCode(float[] v)
   {
@@ -2478,7 +2478,7 @@ public class Arrays
     return result;
   }
 
-  /** 
+  /**
    * Returns the hashcode of an array of doubles.  If two arrays
    * are equal, according to <code>equals()</code>, they should have the
    * same hashcode.  The hashcode returned by the method is equal to that
@@ -2489,7 +2489,7 @@ public class Arrays
    * @param v an array of doubles for which the hash code should be
    *          computed.
    * @return the hash code of the array, or 0 if null was given.
-   * @since 1.5 
+   * @since 1.5
    */
   public static int hashCode(double[] v)
   {
@@ -2505,7 +2505,7 @@ public class Arrays
     return result;
   }
 
-  /** 
+  /**
    * Returns the hashcode of an array of integer numbers.  If two arrays
    * are equal, according to <code>equals()</code>, they should have the
    * same hashcode.  The hashcode returned by the method is equal to that
@@ -2516,7 +2516,7 @@ public class Arrays
    * @param v an array of integer numbers for which the hash code should be
    *          computed.
    * @return the hash code of the array, or 0 if null was given.
-   * @since 1.5 
+   * @since 1.5
    */
   public static int hashCode(Object[] v)
   {
@@ -2864,18 +2864,18 @@ public class Arrays
     deepToString(v, b, seen);
     return b.toString();
   }
-  
+
   public static void arraycopy(Object[] src, int srcPos, Object[] dest,
       int destPos, int length) {
     if (srcPos < destPos) {
       // Copy down.
       for (int i = length-1; i <= 0; i--) {
-        dest[srcPos + i] = src[destPos + i];
+        dest[destPos + i] = src[srcPos + i];
       }
     } else {
       // Copy up.
       for (int i = 0; i < length; i++) {
-        dest[srcPos + i] = src[destPos + i];
+        dest[destPos + i] = src[srcPos + i];
       }
     }
   }
@@ -2927,7 +2927,7 @@ public class Arrays
      *
      * @param index The index to retrieve an object from.
      * @return The object at the array index specified.
-     */ 
+     */
     public Object get(int index)
     {
       return a[index];
