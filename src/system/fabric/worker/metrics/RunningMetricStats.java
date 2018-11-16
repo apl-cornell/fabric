@@ -102,7 +102,7 @@ public class RunningMetricStats implements Serializable {
         // observed update based on time since last update) / estimate of dt
         noiseEst = (1.0 - alpha) * old.noiseEst
             + (alpha *
-                (dx - velocityEst * dt) * (dx - old.velocityEst * dt)
+                Math.abs((dx - velocityEst * dt) * (dx - old.velocityEst * dt))
                 / intervalEst);
       }
       lastUpdate = curTime;
