@@ -63,11 +63,14 @@ public class TransactionPrepare {
     for (RemoteWorker worker : workers) {
       this.outstandingWorkers.put(worker, false);
     }
-    if (TransactionManager.pendingPrepares.putIfAbsent(txnLog.tid.topTid,
-        this) != null) {
-      // This shouldn't be possible, somehow we're trying to prepare an already
-      // preparing transaction id.
-      throw new InternalError("Preparing an already preparing tid!");
+    // Only register it if we're going to be waiting for some replies.
+    if (!(this.outstandingStores.isEmpty() && this.outstandingWorkers.isEmpty())) {
+      if (TransactionManager.pendingPrepares.putIfAbsent(txnLog.tid.topTid,
+          this) != null) {
+        // This shouldn't be possible, somehow we're trying to prepare an already
+        // preparing transaction id.
+        throw new InternalError("Preparing an already preparing tid!");
+      }
     }
   }
 
@@ -323,6 +326,7 @@ public class TransactionPrepare {
           "{0} aborted during prepare by {1}", new Object[] { txnLog, cause });
       runAbort();
     }
+    if (currentStatus == Status.ABORTING) cleanUp();
   }
 
   /**
@@ -336,6 +340,7 @@ public class TransactionPrepare {
           "{0} aborted during prepare by {1}", new Object[] { txnLog, cause });
       runAbort();
     }
+    if (currentStatus == Status.ABORTING) cleanUp();
   }
 
   /**
