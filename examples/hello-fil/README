@@ -73,10 +73,18 @@ And push them to the terminal of another worker
 	worker2> Message contains (Accessed 2 times): message contents
 
 Note: it may be the case that the nodes keys are out of date when you
-run this.  To create new keys:
+run this, which will cause the nodes to crash on start.
+To create new keys, first remove the old keys under
+$FABRIC/examples/hello-fil/etc/keys/. Then run the following:
 	1. Create the store key
 		# $FABRIC/bin/create-node --app-home $FABRIC/examples/hello-fil --name store
 	2. Create the worker key
 		# $FABRIC/bin/create-node --app-home $FABRIC/examples/hello-fil --name worker
 	3. Create the worker2 key
 		# $FABRIC/bin/create-node --app-home $FABRIC/examples/hello-fil --name worker2
+
+When asked for a password, use "password" (no quotes) for the default
+setting.  If you want to use a different password, make sure to update
+the config file for the node under
+$FABRIC/examples/hello-file/etc/config/ to include the line:
+	fabric.node.password=YOUR_PASSWORD
