@@ -1,0 +1,177 @@
+// This is a simple FabIL program to demonstrate transactions, remote calls, and
+// persistent object features of the Fabric system.
+public class Hello {
+
+  // FabIL classes have a funny "second constructor" that is used as the actual
+  // constructor in FabIL programs.
+  public Hello Hello$() {
+    // If there are final fields, they should be set here, before the parent
+    // constructor is called.
+    //
+    // There's currently a bug causing one notable exception for final fields to
+    // set here before the parent constructor: arrays.  For now, initialize
+    // final array fields after the parent cosntructor call.
+
+    // Name convention for these second constructors is the fully qualified name
+    // (so the entire package path) with . replaced with $, and ended with a
+    // final $.
+    // Note: things will likely break if you forget the parent constructor.
+    // Unfortunately, FabIL's compiler currently does not check for an
+    // appropriate parent constructor call.
+    fabric$lang$Object$();
+    // Other initialization happens after the parent call, such as initializing
+    // non-final variables using fields set by the parent constructor
+
+    // After everything is done, the second constructor returns the object,
+    // unlike Java constructors.
+    return this;
+  }
+
+  // Just like java, FabIL programs have a main function with an array of
+  // Strings representing the arguments.  The first entry in the array is the
+  // first argument after the program name in the command line.
+  public static void main(String[] args) {
+    // This program takes 2-3 arguments
+    // First arg is "create", "read", or "send"
+    // Second arg is name of the message
+    // Third arg, if present, is either the message contents or the target
+    // recipient, depending on the action.
+    if (args.length < 2 || args.length > 3) {
+      System.err.println("Need 2-3 arguments: action, message-name, and additional arg");
+      System.exit(1);
+    }
+
+    String action = args[0];
+    String title = args[1];
+    String recipient = args.length == 2 ? "worker" : args[2];
+    if (action.equals("create")) {
+      runCreate(title, args.length == 2 ? "default" : args[2]);
+    } else if (action.equals("read")) {
+      runRead(title);
+    } else if (action.equals("send")) {
+      runSend(title, recipient);
+    } else {
+      System.err.println("Unknown action type!");
+      System.exit(1);
+    }
+  }
+
+  public static void runCreate(String title, String contents) {
+    // Stores are objects representing Fabric processes that host persistent
+    // objects.  Here we ask the current worker for the store named "store".
+    final Store store = Worker.getWorker().getStore("store");
+
+    // Atomic blocks are used to indicate some code should be performed within a
+    // _transaction_.  Transactions ensure that updates occur in a consistent
+    // way, possibly rerunning if some of the data is out of date or if there
+    // were conflicting writes performed by another transaction.
+    //
+    // All updates should be peformed in a transaction.
+    //
+    // If a transaction is not currently in progress (the code was not running
+    // from a scope inside an atomic block), writes to an existing object will
+    // create a transaction for the write.
+    //
+    // Constructor calls, however, do not get an "implicit" transaction created,
+    // and the runtime will throw an exception about creating an object outside
+    // a transaction.
+    atomic {
+      // Persistent objects are constructed using an additional @<store> to
+      // indicate where the object should persistently exist.  If no store is
+      // given (so called like a regular Java constructor), a default is used:
+      //        1. In a constructor, the store is set to be the same as the
+      //        store hosting the object currently being constructed.
+      //        2. Not in a constructor, the store is set to the LocalStore,
+      //        a store of objects private to the current worker.
+      Message m = new Message@store().Message$(contents);
+
+      // Each store is equipped with a "root map" which maps Fabric objects (or
+      // Java primitives, which can be implicitly converted to Fabric objects)
+      // to Fabric objects.
+      // The root map provides a convenient place to find data created by other
+      // workers/transactions that you do not have an existing reference to.
+      store.getRoot().put(title, m);
+    }
+    System.out.println("Message created.");
+  }
+
+  public static void runRead(String title) {
+    final Store store = Worker.getWorker().getStore("store");
+    Message m = null;
+    atomic {
+      // Each store is equipped with a "root map" which maps Fabric objects (or
+      // Java primitives, which can be implicitly converted to Fabric objects)
+      // to Fabric objects.
+      // The root map provides a convenient place to find data created by other
+      // workers/transactions that you do not have an existing reference to.
+      m = (Message) store.getRoot().get(title);
+    }
+    System.out.println("Reading message " + title);
+    System.out.println("Contents: " + m.getContents());
+  }
+
+  public static void runSend(String title, String recipient) {
+    final Store store = Worker.getWorker().getStore("store");
+
+    // Here we are getting a remote worker from the current worker.
+    // RemoteWorker objects represent another fabric process which can run
+    // fabric code.
+    //
+    // Ideally we would verify the recipient name is a valid, known worker.
+    // Here, the runtime will throw an exception if there is no worker with the
+    // given name.
+    RemoteWorker w = Worker.getWorker().getWorker(recipient);
+    atomic {
+      Message m = (Message) store.getRoot().get(title);
+
+      // FabIL currently only supports remote calls on instance (non-static)
+      // methods.  So here we create an object to act as a handle for calling a
+      // remote call.
+      //
+      // Objects stored on LocalStores should not (and often cannot) be shared,
+      // so objects on which remote calls are performend or non-primitive
+      // objects returned by a remote call should be constructed on a
+      // non-LocalStore.
+      Hello handle = new Hello@store().Hello$();
+
+      // Here a remote call is performed
+      //
+      // Remote calls, similar to constructing persistent objects, are given an
+      // additional @<worker> argument specifying the worker that will execute
+      // the method.
+      //
+      // The first argument is the security principal of the current worker, so
+      // the worker running the call can perform security checks if they like.
+      // In FabIL, remote calls can only be performed on methods with names
+      // ending with _remote.
+      handle.send_remote@w(Worker.getWorker().getPrincipal(), m);
+    }
+    System.out.println("Message sent");
+  }
+
+  // The remote call method for send.  used above in runSend.  It should take
+  // a principal p, followed by the same arguments as the method without the
+  // _remote suffix name.  Usually this is just passing all the non-principal
+  // arguments along to the "real" method and returning the result (in the case
+  // of non void methods).
+  public void send_remote(fabric.lang.security.Principal p, Message msg) {
+    // Security checks involving principal p would go here, if there are any
+    // necessary.  In FabIL code, there typically aren't.
+    send(msg);
+  }
+
+  public void send(Message msg) {
+    String contents = "";
+    // Here we are reading data from a persistent object.  To ensure the data
+    // is consistent with the current version stored in the system (and not an
+    // out-of-date value in the worker's cached copy), we run a transaction.
+    //
+    // Reads performed outside a transaction will use the value found in the
+    // worker's cached copy of the object.  This may be out of date and won't
+    // reflect updates committed to the store.
+    atomic {
+      contents = msg.getContents();
+    }
+    System.out.println("Message contains " + contents);
+  }
+}

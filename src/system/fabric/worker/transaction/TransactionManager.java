@@ -849,6 +849,12 @@ public final class TransactionManager {
           }
         }
         return;
+      } catch (TransactionAbortingException e) {
+        abortTransaction();
+        throw e;
+      } catch (TransactionRestartingException e) {
+        abortTransaction();
+        throw e;
       } finally {
         Timing.SUBTX.end();
       }
@@ -1183,6 +1189,8 @@ public final class TransactionManager {
         checkRetrySignal();
       }
     } finally {
+      // Remove this log from the possibly deadlocked set.
+      deadlockDetector.stopRequestDetect(current);
       current.clearWaitsFor();
     }
 
@@ -1347,7 +1355,9 @@ public final class TransactionManager {
                         obj.getClass(), lock, System.identityHashCode(obj),
                         Thread.currentThread());
                   }
-                  waitsFor.add(lock);
+                  // Don't wait for readers, either they'll abort later on or
+                  // finish their 2PC
+                  //waitsFor.add(lock);
                   lock.flagRetry("writer " + current.tid + " wants to write "
                       + obj.$getStore() + "/" + obj.$getOnum());
                 }
@@ -1377,6 +1387,8 @@ public final class TransactionManager {
         checkRetrySignal();
       }
     } finally {
+      // Remove this log from the possibly deadlocked set.
+      deadlockDetector.stopRequestDetect(current);
       current.clearWaitsFor();
     }
 
@@ -1599,12 +1611,12 @@ public final class TransactionManager {
     // Go through each store and send check messages in parallel.
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
+      final LongKeyMap<Pair<Integer, Long>> reads =
+          checkingLog.getReadsForStore(store, true);
       NamedRunnable runnable =
           new NamedRunnable("worker freshness check to " + store.name()) {
             @Override
             public void runImpl() {
-              LongKeyMap<Pair<Integer, Long>> reads =
-                  checkingLog.getReadsForStore(store, true);
               if (store.checkForStaleObjects(reads))
                 nodesWithStaleObjects.add((RemoteNode<?>) store);
               synchronized (outstandingChecks) {
@@ -1631,6 +1643,20 @@ public final class TransactionManager {
     }
 
     return !nodesWithStaleObjects.isEmpty();
+  }
+
+  /**
+   * If there's a transaction currently, enqueue a runnable to run if the
+   * transaction successfully runs 2PC.
+   *
+   * @param r the runnable to run on successful 2PC.
+   */
+  public void registerCommitHook(Runnable r) {
+    if (current != null) {
+      synchronized (current.commitHooks) {
+        current.commitHooks.add(r);
+      }
+    }
   }
 
   /**

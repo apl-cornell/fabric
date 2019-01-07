@@ -190,6 +190,11 @@ public final class Log {
   public final List<RemoteWorker> workersCalled;
 
   /**
+   * Set of runnables to run if this transaction commits.
+   */
+  public final List<Runnable> commitHooks;
+
+  /**
    * Indicates the state of commit for the top-level transaction.
    */
   public final CommitState commitState;
@@ -307,6 +312,7 @@ public final class Log {
     this.extensionTriggers = new OidKeyHashMap<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
+    this.commitHooks = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
     this.waitsFor = new HashSet<>();
     this.waitsOn = null;
@@ -639,14 +645,15 @@ public final class Log {
     Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
-        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
-          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-              "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
-              this, write.$getStore(), write.$getOnum(), write.getClass(),
-              System.identityHashCode(write), Thread.currentThread());
+        if (write.$writeLockHolder == this) {
+          if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
+                this, write.$getStore(), write.$getOnum(), write.getClass(),
+                System.identityHashCode(write), Thread.currentThread());
+          }
+          write.$copyStateFrom(write.$history);
         }
-        write.$copyStateFrom(write.$history);
-
         // Signal any waiting readers/writers.
         if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
           write.notifyAll();
@@ -681,6 +688,7 @@ public final class Log {
       acquires.clear();
       pendingReleases.clear();
       locksCreated.clear();
+      commitHooks.clear();
 
       if (parent != null) {
         writerMap = new WriterMap(parent.writerMap);
@@ -694,10 +702,8 @@ public final class Log {
 
       if (retrySignal != null) {
         synchronized (this) {
-          if (retrySignal.equals(tid)) {
-            retrySignal = null;
-            retryCause = null;
-          }
+          retrySignal = null;
+          retryCause = null;
         }
       }
     }
@@ -921,6 +927,11 @@ public final class Log {
       parent.locksCreated.putAll(locksCreated);
     }
 
+    // Merge hooks.
+    synchronized (parent.commitHooks) {
+      parent.commitHooks.addAll(commitHooks);
+    }
+
     // Update the expiry time and drop this child.
     synchronized (parent) {
       parent.expiryToCheck = Math.min(expiryToCheck, parent.expiryToCheck);
@@ -1056,6 +1067,11 @@ public final class Log {
 
     // Merge the security cache into the top-level label cache.
     securityCache.mergeWithTopLevel();
+
+    // Run commit hooks.
+    for (Runnable hook : commitHooks) {
+      hook.run();
+    }
   }
 
   /**

@@ -113,8 +113,12 @@ public abstract class ObjectDB {
 
     public final long tid;
     public final Principal owner;
-    private final Collection<Long> reads;
     public State state;
+
+    /**
+     * Identifiers read in the transaction.
+     */
+    private final Collection<Long> reads;
 
     /**
      * Objects that have been created.

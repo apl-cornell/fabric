@@ -3,6 +3,8 @@ package fabric.worker.transaction;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabric.worker.Worker;
+
 /**
  * Class for easily tracking stats about app level transactions (as opposed to
  * individual attempts).
@@ -14,7 +16,9 @@ public class TxnStats {
   private boolean coordinated = false;
   private boolean locksUsed = false;
   private int fetches = 0;
+  private int fetchWaits = 0;
   private List<String> msgs = new ArrayList<>();
+  private List<String> fetched = new ArrayList<>();
   private List<String> versionConflicts = new ArrayList<>();
 
   public TxnStats() {
@@ -27,7 +31,9 @@ public class TxnStats {
     coordinated = false;
     locksUsed = false;
     fetches = 0;
+    fetchWaits = 0;
     msgs.clear();
+    fetched.clear();
     versionConflicts.clear();
   }
 
@@ -74,6 +80,13 @@ public class TxnStats {
   }
 
   /**
+   * @return the fetch waits (possibly being performed by another transaction)
+   */
+  public int getFetchWaits() {
+    return fetchWaits;
+  }
+
+  /**
    * Mark the final attempt as a coordination.
    */
   public void markCoordination() {
@@ -116,6 +129,21 @@ public class TxnStats {
   }
 
   /**
+   * Record a fetch wait (possibly waiting for another doing the fetching).
+   */
+  public void markFetchWait() {
+    fetchWaits++;
+  }
+
+  /**
+   * Record the object being waited for by a txn.
+   */
+  public void markFetched(fabric.lang.Object._Proxy p) {
+    if (p != null && Worker.getWorker().config.recordFetched)
+      fetched.add("" + p.getClass() + "#" + p.$getOnum() + "@" + p.$getStore());
+  }
+
+  /**
    * Add a custom message.
    */
   public void addMsg(String msg) {
@@ -133,15 +161,16 @@ public class TxnStats {
    * Mark the version conflicts that occurred.
    */
   public void addConflicts(String conflicts) {
-    versionConflicts.add(conflicts);
+    if (Worker.getWorker().config.recordConflicts)
+      versionConflicts.add(conflicts);
   }
 
   @Override
   public String toString() {
     return "[COORDINATED: " + coordinated + " WITH " + txnAttempts
-        + " TXN ATTEMPTS" + " AND " + lockAttempts
-        + " LOCK ATTEMPTS AND LOCKS USED: " + locksUsed + " USING " + fetches
-        + " FETCHES" + " MSGS: " + msgs + " CONFLICTS: " + versionConflicts
-        + " IN " + Long.toHexString(tid) + "]";
+        + " TXN ATTEMPTS" + " USING " + fetches + " FETCHES " + fetchWaits
+        + " WAITS FOR FETCHES" + " MSGS: " + msgs + " FETCHED: " + fetched
+        + " CONFLICTS: " + versionConflicts + " IN " + Long.toHexString(tid)
+        + "]";
   }
 }

@@ -73,11 +73,14 @@ public class TransactionPrepare {
     }
     this.commitTime = 0;
     this.longerContracts = new OidKeyHashMap<>();
-    if (TransactionManager.pendingPrepares.putIfAbsent(txnLog.tid.topTid,
-        this) != null) {
-      // This shouldn't be possible, somehow we're trying to prepare an already
-      // preparing transaction id.
-      throw new InternalError("Preparing an already preparing tid!");
+    // Only register it if we're going to be waiting for some replies.
+    if (!(this.outstandingStores.isEmpty() && this.outstandingWorkers.isEmpty())) {
+      if (TransactionManager.pendingPrepares.putIfAbsent(txnLog.tid.topTid,
+          this) != null) {
+        // This shouldn't be possible, somehow we're trying to prepare an already
+        // preparing transaction id.
+        throw new InternalError("Preparing an already preparing tid!");
+      }
     }
   }
 
@@ -162,15 +165,20 @@ public class TransactionPrepare {
       RemoteStore store = (RemoteStore) s;
       OidKeyHashMap<SerializedObject> versionConflicts = m.conflicts;
       String conflictsString = "";
-      for (SerializedObject obj : versionConflicts.values()) {
-        store.updateCache(obj);
-        if (!conflictsString.equals("")) {
-          conflictsString += " ";
+      if (versionConflicts != null) {
+        for (SerializedObject obj : versionConflicts.values()) {
+          store.updateCache(obj);
+          if (Worker.getWorker().config.recordConflicts) {
+            if (!conflictsString.equals("")) {
+              conflictsString += " ";
+            }
+            conflictsString +=
+                obj.getClassName() + "@" + store.name() + "#" + obj.getOnum();
+          }
         }
-        conflictsString +=
-            obj.getClassName() + "@" + store.name() + "#" + obj.getOnum();
       }
-      txnLog.stats.addConflicts(conflictsString);
+      if (Worker.getWorker().config.recordConflicts)
+        txnLog.stats.addConflicts(conflictsString);
     }
     cleanUp();
   }
@@ -359,12 +367,15 @@ public class TransactionPrepare {
    * Initiate an abort due to some problem on the coordinator side.
    */
   public synchronized void abort() {
-    if (currentStatus != Status.ABORTING) {
+    // Don't run an abort if this is a transaction that commits in a single
+    // round trip or is already committing/committed.
+    if (currentStatus != Status.ABORTING && currentStatus != Status.COMMITTING
+        && currentStatus != Status.COMMITTED) {
       WORKER_TRANSACTION_LOGGER.log(Level.FINE,
           "{0} aborted during prepare by external actor", txnLog);
       runAbort();
     }
-    cleanUp();
+    if (currentStatus == Status.ABORTING) cleanUp();
   }
 
   /**
@@ -384,11 +395,13 @@ public class TransactionPrepare {
    * @param cause the failed worker that initiated the abort.
    */
   private synchronized void abort(RemoteWorker cause) {
-    if (currentStatus != Status.ABORTING) {
+    if (currentStatus != Status.ABORTING && currentStatus != Status.COMMITTING
+        && currentStatus != Status.COMMITTED) {
       WORKER_TRANSACTION_LOGGER.log(Level.FINE,
           "{0} aborted during prepare by {1}", new Object[] { txnLog, cause });
       runAbort();
     }
+    if (currentStatus == Status.ABORTING) cleanUp();
   }
 
   /**
@@ -396,11 +409,13 @@ public class TransactionPrepare {
    * @param cause the failed store that initiated the abort.
    */
   private synchronized void abort(Store cause) {
-    if (currentStatus != Status.ABORTING) {
+    if (currentStatus != Status.ABORTING && currentStatus != Status.COMMITTING
+        && currentStatus != Status.COMMITTED) {
       WORKER_TRANSACTION_LOGGER.log(Level.FINE,
           "{0} aborted during prepare by {1}", new Object[] { txnLog, cause });
       runAbort();
     }
+    if (currentStatus == Status.ABORTING) cleanUp();
   }
 
   /**
@@ -417,17 +432,22 @@ public class TransactionPrepare {
       if (!outstandingStores.get(s)) outstandingStores.remove(s);
     }
 
-    // Abort the rest.
-    for (RemoteWorker w : SysUtil.chain(outstandingWorkers.keySet(),
-        respondedWorkers)) {
-      WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
-          new Object[] { txnLog, w });
-      w.abortTransaction(txnLog.tid);
-    }
-    for (Store s : SysUtil.chain(outstandingStores.keySet(), respondedStores)) {
-      WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
-          new Object[] { txnLog, s });
-      s.abortTransaction(txnLog.tid);
+    // Only bother with sending messages if this was using more than 1 round of
+    // messages.  If the txn was single store or read only, aborting after
+    // beginning 2PC doesn't require further action by the cohorts.
+    if (!singleStore && !readOnly) {
+      // Abort the rest.
+      for (RemoteWorker w : SysUtil.chain(outstandingWorkers.keySet(),
+          respondedWorkers)) {
+        WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
+            new Object[] { txnLog, w });
+        w.abortTransaction(txnLog.tid);
+      }
+      for (Store s : SysUtil.chain(outstandingStores.keySet(), respondedStores)) {
+        WORKER_TRANSACTION_LOGGER.log(Level.FINER, "{0} sending abort to {1}",
+            new Object[] { txnLog, s });
+        s.abortTransaction(txnLog.tid);
+      }
     }
 
     // Flag that local locks should be released.
