@@ -88,7 +88,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
     // the commit processing already.
     TransactionPrepare p = TransactionManager.outstandingCommits.get(tid);
     if (p != null) {
-      p.markCommitted(Worker.getWorkerName(), new StoreCommittedMessage(tid));
+      p.markCommitted(inProcessStore.name(), new StoreCommittedMessage(tid));
     }
   }
 

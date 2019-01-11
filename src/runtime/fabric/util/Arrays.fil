@@ -2870,12 +2870,12 @@ public class Arrays
     if (srcPos < destPos) {
       // Copy down.
       for (int i = length-1; i <= 0; i--) {
-        dest[srcPos + i] = src[destPos + i];
+        dest[destPos + i] = src[srcPos + i];
       }
     } else {
       // Copy up.
       for (int i = 0; i < length; i++) {
-        dest[srcPos + i] = src[destPos + i];
+        dest[destPos + i] = src[srcPos + i];
       }
     }
   }
