@@ -275,10 +275,14 @@ public class MetricTreatySet extends TreatySet {
   public boolean isStrictExtensionOf(TreatySet t) {
     if (t instanceof MetricTreatySet) {
       MetricTreatySet other = (MetricTreatySet) t;
-      if (other.items.keySet().equals(this.items.keySet())) {
+      if (other.items.size() == this.items.size()) {
         boolean hasExtension = false;
         for (MetricTreaty oldTreaty : other) {
           MetricTreaty newTreaty = items.get(oldTreaty.getId());
+          if (newTreaty == null) {
+            // There's a difference of the treaty keys in the update.
+            return false;
+          }
           if (newTreaty.isStrictExtensionOf(oldTreaty)) {
             hasExtension = true;
           } else if (!newTreaty.equals(oldTreaty)) {
@@ -309,9 +313,13 @@ public class MetricTreatySet extends TreatySet {
   public boolean isExtensionOf(TreatySet from) {
     if (from instanceof MetricTreatySet) {
       MetricTreatySet other = (MetricTreatySet) from;
-      if (other.items.keySet().equals(this.items.keySet())) {
+      if (other.items.size() == this.items.size()) {
         for (MetricTreaty oldTreaty : other) {
           MetricTreaty newTreaty = items.get(oldTreaty.getId());
+          if (newTreaty == null) {
+            // There's a difference of the treaty keys in the update.
+            return false;
+          }
           if (!newTreaty.equals(oldTreaty)
               && !newTreaty.isStrictExtensionOf(oldTreaty)) {
             return false;
