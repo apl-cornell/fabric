@@ -735,7 +735,7 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
         public _Impl(fabric.worker.Store store, long onum, int version,
                      fabric.worker.metrics.ImmutableObjectSet associates,
 
-                     fabric.worker.metrics.treaties.TreatySet treaties,
+                     fabric.worker.metrics.treaties.TreatySet treaties, long expiry,
                      fabric.worker.Store labelStore, long labelOnum,
                      fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
@@ -744,7 +744,7 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, associates, treaties,
+            super(store, onum, version, associates, treaties, expiry,
                   labelStore, labelOnum, accessPolicyStore, accessPolicyOnum,
                   in, refTypes, intraStoreRefs, interStoreRefs);
             this.scalar = in.readDouble();
@@ -801,7 +801,7 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
             public _Impl(fabric.worker.Store store, long onum, int version,
                          fabric.worker.metrics.ImmutableObjectSet associates,
 
-                         fabric.worker.metrics.treaties.TreatySet treaties,
+                         fabric.worker.metrics.treaties.TreatySet treaties, long expiry,
                          fabric.worker.Store labelStore, long labelOnum,
                          fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
@@ -810,7 +810,7 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, associates, treaties,
+                super(store, onum, version, associates, treaties, expiry,
                       labelStore, labelOnum, accessPolicyStore,
                       accessPolicyOnum, in, refTypes, intraStoreRefs,
                       interStoreRefs);

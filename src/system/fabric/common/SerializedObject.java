@@ -90,6 +90,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     private int version;
     private ImmutableObjectSet associates;
     private TreatySet treaties;
+    private long expiry;
 
     /**
      * Construct default with onum
@@ -99,6 +100,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.version = 0;
       this.associates = null;
       this.treaties = null;
+      this.expiry = 0;
     }
 
     /**
@@ -109,6 +111,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.version = obj.$version;
       this.associates = obj.$associates;
       this.treaties = obj.$treaties.makeCopy();
+      this.expiry = obj.$expiry;
     }
 
     /**
@@ -124,6 +127,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
         if (in.readBoolean()) {
           this.treaties = TreatySet.read(in);
         }
+        this.expiry = in.readLong();
       } catch (IOException e) {
         throw new InternalError("This shouldn't be possible", e);
       }
@@ -146,6 +150,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
         } else {
           out.writeBoolean(false);
         }
+        out.writeLong(expiry);
       } catch (IOException e) {
         throw new InternalError("This shouldn't be possible", e);
       }
@@ -200,6 +205,20 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.associates = associates;
     }
 
+    /**
+     * @return the expiry
+     */
+    public long getExpiry() {
+      return expiry;
+    }
+
+    /**
+     * @param expiry the expiry to set
+     */
+    public void setExpiry(long expiry) {
+      this.expiry = expiry;
+    }
+
     private void writeObject(ObjectOutputStream out) throws IOException {
       write(out);
     }
@@ -214,6 +233,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       if (in.readBoolean()) {
         this.treaties = TreatySet.read(in);
       }
+      this.expiry = in.readLong();
     }
 
     private void readObjectNoData() throws ObjectStreamException {
@@ -436,6 +456,22 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public void setTreaties(TreatySet treaties) {
     header.setTreaties(treaties.makeCopy());
+  }
+
+  /**
+   * @return the serialized object's expiry
+   */
+  public long getExpiry() {
+    return header.getExpiry();
+  }
+
+  /**
+   * Modifies the serialized object's expiry
+   *
+   * @param expiry
+   */
+  public void setExpiry(long expiry) {
+    header.setExpiry(expiry);
   }
 
   /**
@@ -1281,8 +1317,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       if (constructor == null) {
         constructor = implClass.getConstructor(Store.class, long.class,
-            int.class, ImmutableObjectSet.class, TreatySet.class, Store.class,
-            long.class, Store.class, long.class, ObjectInput.class,
+            int.class, ImmutableObjectSet.class, TreatySet.class, long.class,
+            Store.class, long.class, Store.class, long.class, ObjectInput.class,
             Iterator.class, Iterator.class, Iterator.class);
         constructorTable.put(implClass, constructor);
       }
@@ -1310,7 +1346,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       }
 
       _Impl result = (_Impl) constructor.newInstance(store, getOnum(),
-          getVersion(), getAssociates(), getTreaties().makeCopy(),
+          getVersion(), getAssociates(), getTreaties().makeCopy(), getExpiry(),
           updateLabelStore, updateLabelOnum, accessPolicyStore,
           accessPolicyOnum, new ObjectInputStream(getSerializedDataStream()),
           getRefTypeIterator(), getIntraStoreRefIterator(),

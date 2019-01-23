@@ -41,15 +41,15 @@ public interface _charArray extends Object {
      * Used for deserializing.
      */
     public _Impl(Store store, long onum, int version,
-        ImmutableObjectSet associates, TreatySet treaties, Store labelStore,
-        long labelOnum, Store accessPolicyStore, long accessPolicyOnum,
-        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        ImmutableObjectSet associates, TreatySet treaties, long expiry,
+        Store labelStore, long labelOnum, Store accessPolicyStore,
+        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws IOException, ClassNotFoundException {
-      super(store, onum, version, associates, treaties, labelStore, labelOnum,
-          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
-          interStoreRefs);
+      super(store, onum, version, associates, treaties, expiry, labelStore,
+          labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
+          intraStoreRefs, interStoreRefs);
       value = new char[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readChar();

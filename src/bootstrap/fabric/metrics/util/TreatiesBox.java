@@ -19,17 +19,17 @@ import java.util.SortedSet;
 public interface TreatiesBox
   extends fabric.metrics.util.Observer, fabric.metrics.util.AbstractSubject {
     public fabric.metrics.Metric get$owner();
-    
+
     public fabric.metrics.Metric set$owner(fabric.metrics.Metric val);
-    
+
     public fabric.metrics.util.TreatiesBox fabric$metrics$util$TreatiesBox$(
       fabric.metrics.Metric m);
-    
+
     public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
       boolean includesObserver, java.util.SortedSet treaties);
-    
+
     public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects();
-    
+
     public static class _Proxy
     extends fabric.metrics.util.AbstractSubject._Proxy
       implements fabric.metrics.util.TreatiesBox {
@@ -37,40 +37,40 @@ public interface TreatiesBox
             return ((fabric.metrics.util.TreatiesBox._Impl) fetch()).get$owner(
                                                                        );
         }
-        
+
         public fabric.metrics.Metric set$owner(fabric.metrics.Metric val) {
             return ((fabric.metrics.util.TreatiesBox._Impl) fetch()).set$owner(
                                                                        val);
         }
-        
+
         public fabric.metrics.util.TreatiesBox fabric$metrics$util$TreatiesBox$(
           fabric.metrics.Metric arg1) {
             return ((fabric.metrics.util.TreatiesBox) fetch()).
               fabric$metrics$util$TreatiesBox$(arg1);
         }
-        
+
         public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
           boolean arg1, java.util.SortedSet arg2) {
             return ((fabric.metrics.util.TreatiesBox) fetch()).handleUpdates(
                                                                  arg1, arg2);
         }
-        
+
         public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             return ((fabric.metrics.util.TreatiesBox) fetch()).getLeafSubjects(
                                                                  );
         }
-        
+
         public _Proxy(TreatiesBox._Impl impl) { super(impl); }
-        
+
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }
     }
-    
+
     public static class _Impl extends fabric.metrics.util.AbstractSubject._Impl
       implements fabric.metrics.util.TreatiesBox {
         public fabric.metrics.Metric get$owner() { return this.owner; }
-        
+
         public fabric.metrics.Metric set$owner(fabric.metrics.Metric val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
@@ -79,31 +79,31 @@ public interface TreatiesBox
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-        
+
         public fabric.metrics.Metric owner;
-        
+
         public fabric.metrics.util.TreatiesBox fabric$metrics$util$TreatiesBox$(
           fabric.metrics.Metric m) {
             this.set$owner(m);
             fabric$metrics$util$AbstractSubject$();
             return (fabric.metrics.util.TreatiesBox) this.$getProxy();
         }
-        
+
         public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
           boolean includesObserver, java.util.SortedSet treaties) {
             return this.get$owner().handleUpdates(includesObserver, treaties);
         }
-        
+
         public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             return this.get$owner().getLeafSubjects();
         }
-        
+
         public _Impl(fabric.worker.Store $location) { super($location); }
-        
+
         protected fabric.lang.Object._Proxy $makeProxy() {
             return new fabric.metrics.util.TreatiesBox._Proxy(this);
         }
-        
+
         public void $serialize(java.io.ObjectOutput out,
                                java.util.List refTypes,
                                java.util.List intraStoreRefs,
@@ -113,11 +113,11 @@ public interface TreatiesBox
             $writeRef($getStore(), this.owner, refTypes, out, intraStoreRefs,
                       interStoreRefs);
         }
-        
+
         public _Impl(fabric.worker.Store store, long onum, int version,
                      fabric.worker.metrics.ImmutableObjectSet associates,
 
-                     fabric.worker.metrics.treaties.TreatySet treaties,
+                     fabric.worker.metrics.treaties.TreatySet treaties, long expiry,
                      fabric.worker.Store labelStore, long labelOnum,
                      fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
@@ -126,7 +126,7 @@ public interface TreatiesBox
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, associates, treaties,
+            super(store, onum, version, associates, treaties, expiry,
                   labelStore, labelOnum, accessPolicyStore, accessPolicyOnum,
                   in, refTypes, intraStoreRefs, interStoreRefs);
             this.owner = (fabric.metrics.Metric)
@@ -134,7 +134,7 @@ public interface TreatiesBox
                                     (fabric.common.RefTypeEnum) refTypes.next(),
                                     in, store, intraStoreRefs, interStoreRefs);
         }
-        
+
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
             super.$copyAppStateFrom(other);
             fabric.metrics.util.TreatiesBox._Impl src =
@@ -142,21 +142,21 @@ public interface TreatiesBox
             this.owner = src.owner;
         }
     }
-    
+
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
           implements fabric.metrics.util.TreatiesBox._Static {
             public _Proxy(fabric.metrics.util.TreatiesBox._Static._Impl impl) {
                 super(impl);
             }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
-            
+
             public static final fabric.metrics.util.TreatiesBox._Static
               $instance;
-            
+
             static {
                 fabric.
                   metrics.
@@ -174,7 +174,7 @@ public interface TreatiesBox
                 impl.$init();
             }
         }
-        
+
         class _Impl extends fabric.lang.Object._Impl
           implements fabric.metrics.util.TreatiesBox._Static {
             public void $serialize(java.io.ObjectOutput out,
@@ -184,11 +184,11 @@ public interface TreatiesBox
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
                          fabric.worker.metrics.ImmutableObjectSet associates,
 
-                         fabric.worker.metrics.treaties.TreatySet treaties,
+                         fabric.worker.metrics.treaties.TreatySet treaties, long expiry,
                          fabric.worker.Store labelStore, long labelOnum,
                          fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
@@ -197,23 +197,23 @@ public interface TreatiesBox
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, associates, treaties,
+                super(store, onum, version, associates, treaties, expiry,
                       labelStore, labelOnum, accessPolicyStore,
                       accessPolicyOnum, in, refTypes, intraStoreRefs,
                       interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store) { super(store); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.metrics.util.TreatiesBox._Static._Proxy(this);
             }
-            
+
             private void $init() {  }
         }
-        
+
     }
-    
+
     public static final byte[] $classHash = new byte[] { 78, 77, 58, -100, 50,
     -25, -105, -46, 61, 51, -119, -5, 75, 31, 55, -100, 21, -24, -91, -97, -17,
     111, -105, 42, -66, 65, -30, -31, 65, 79, -61, -15 };

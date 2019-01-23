@@ -161,15 +161,15 @@ public interface Principal extends fabric.lang.Object {
     }
 
     public _Impl(Store store, long onum, int version,
-        ImmutableObjectSet associates, TreatySet treaties, Store labelStore,
-        long labelOnum, Store accessPolicyStore, long accessPolicyOnum,
-        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        ImmutableObjectSet associates, TreatySet treaties, long expiry,
+        Store labelStore, long labelOnum, Store accessPolicyStore,
+        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws java.io.IOException, ClassNotFoundException {
-      super(store, onum, version, associates, treaties, labelStore, labelOnum,
-          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
-          interStoreRefs);
+      super(store, onum, version, associates, treaties, expiry, labelStore,
+          labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
+          intraStoreRefs, interStoreRefs);
     }
 
     public static Principal jif$cast$fabric_lang_security_Principal(Object o) {

@@ -59,6 +59,11 @@ public interface Object {
 
   Label set$$updateLabel(Label label);
 
+  /** The expiry (if this is a treaty object) */
+  long get$$expiry();
+
+  long set$$expiry(long expiry);
+
   /** The set of treaties on this object. */
   TreatySet get$$treaties();
 
@@ -289,6 +294,16 @@ public interface Object {
     @Override
     public final Label set$$updateLabel(Label label) {
       return fetch().set$$updateLabel(label);
+    }
+
+    @Override
+    public final long get$$expiry() {
+      return fetch().get$$expiry();
+    }
+
+    @Override
+    public final long set$$expiry(long expiry) {
+      return fetch().set$$expiry(expiry);
     }
 
     @Override
@@ -535,6 +550,11 @@ public interface Object {
     public final StackTraceElement[] $stackTrace;
 
     /**
+     * The expiry (if this is a treaty object).
+     */
+    public long $expiry;
+
+    /**
      * The treaties field, to be used by metrics.
      */
     public TreatySet $treaties;
@@ -549,7 +569,7 @@ public interface Object {
      * A private constructor for initializing transaction-management state.
      */
     private _Impl(Store store, long onum, int version,
-        ImmutableObjectSet associates, TreatySet treaties) {
+        ImmutableObjectSet associates, TreatySet treaties, long expiry) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
@@ -559,6 +579,7 @@ public interface Object {
       this.$numWaiting = 0;
       this.$ref = new FabricSoftRef(store, onum, this);
       this.$cacheEntry = store.newCacheEntry(this);
+      this.$expiry = expiry;
       // Do this before read map entry is created to avoid null treaty set in
       // entry, but after ref to avoid uninitialized value when getting the
       // store of a metric.
@@ -588,7 +609,7 @@ public interface Object {
      *          the location for the object
      */
     public _Impl(Store store) throws UnreachableNodeException {
-      this(store, store.createOnum(), 0, null, null);
+      this(store, store.createOnum(), 0, null, null, 0);
       store.cache(this);
 
       // Register the new object with the transaction manager.
@@ -707,6 +728,7 @@ public interface Object {
       $copyAppStateFrom(other);
       $associates = other.$associates;
       $treaties = other.$treaties;
+      $expiry = other.$expiry;
     }
 
     /**
@@ -734,6 +756,21 @@ public interface Object {
     @Override
     public final Label get$$updateLabel() {
       return $updateLabel;
+    }
+
+    @Override
+    public final long get$$expiry() {
+      TransactionManager.getInstance().registerRead(this);
+      return $expiry;
+    }
+
+    @Override
+    public final long set$$expiry(long expiry) {
+      TransactionManager tm = TransactionManager.getInstance();
+      boolean transactionCreated = tm.registerWrite(this);
+      this.$expiry = expiry;
+      if (transactionCreated) tm.commitTransaction();
+      return $expiry;
     }
 
     @Override
@@ -888,13 +925,13 @@ public interface Object {
      * @throws ClassNotFoundException
      */
     public _Impl(Store store, long onum, int version,
-        ImmutableObjectSet associates, TreatySet treaties,
+        ImmutableObjectSet associates, TreatySet treaties, long expiry,
         Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
         long accessPolicyOnum, ObjectInput serializedInput,
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws IOException, ClassNotFoundException {
-      this(store, onum, version, associates, treaties);
+      this(store, onum, version, associates, treaties, expiry);
       this.$updateLabel = new Label._Proxy(updateLabelStore, updateLabelOnum);
       this.$accessPolicy =
           new ConfPolicy._Proxy(accessPolicyStore, accessPolicyOnum);
@@ -1156,15 +1193,16 @@ public interface Object {
       }
 
       public _Impl(Store store, long onum, int version,
-          ImmutableObjectSet associates, TreatySet treaties,
+          ImmutableObjectSet associates, TreatySet treaties, long expiry,
           Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
           long accessPolicyOnum, ObjectInput serializedInput,
           Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
           Iterator<Pair<String, Long>> interStoreRefs)
           throws IOException, ClassNotFoundException {
-        super(store, onum, version, associates, treaties, updateLabelStore,
-            updateLabelOnum, accessPolicyStore, accessPolicyOnum,
-            serializedInput, refTypes, intraStoreRefs, interStoreRefs);
+        super(store, onum, version, associates, treaties, expiry,
+            updateLabelStore, updateLabelOnum, accessPolicyStore,
+            accessPolicyOnum, serializedInput, refTypes, intraStoreRefs,
+            interStoreRefs);
       }
 
       @Override
