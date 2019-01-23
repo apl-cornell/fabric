@@ -10,7 +10,6 @@ import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableObjectSet;
-import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.TreatySet;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
@@ -95,16 +94,6 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   @Override
   public TreatySet set$$treaties(TreatySet val) {
     throw new InternalError("WrappedJavaInlineables don't have treaties.");
-  }
-
-  @Override
-  public ImmutableObserverSet get$$observers() {
-    throw new InternalError("WrappedJavaInlineables don't have observers.");
-  }
-
-  @Override
-  public ImmutableObserverSet set$$observers(ImmutableObserverSet val) {
-    throw new InternalError("WrappedJavaInlineables don't have observers.");
   }
 
   @Override

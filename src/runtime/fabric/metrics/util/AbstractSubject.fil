@@ -26,6 +26,8 @@ import fabric.common.Logging;
  */
 public abstract class AbstractSubject implements Subject {
 
+  private ImmutableObserverSet observers;
+
   // Ugh, avoid getting a surrogate's store.
   public Store getStore() {
     return $getStore();
@@ -33,7 +35,7 @@ public abstract class AbstractSubject implements Subject {
 
   protected AbstractSubject fabric$metrics$util$AbstractSubject$() {
     fabric$lang$Object$();
-    this.$observers = ImmutableObserverSet.emptySet();
+    this.observers = ImmutableObserverSet.emptySet();
     return this;
   }
 
@@ -46,12 +48,12 @@ public abstract class AbstractSubject implements Subject {
     //Logging.METRICS_LOGGER.finer("ADD OBSERVER " + o + " FOR " + tmp + " IN " +
     //    TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
-      if (!tmp.$observers.contains(o))
-        tmp.$observers = tmp.$observers.add(o);
+      if (!tmp.observers.contains(o))
+        tmp.observers = tmp.observers.add(o);
     } else {
       atomic {
-        if (!tmp.$observers.contains(o))
-          tmp.$observers = tmp.$observers.add(o);
+        if (!tmp.observers.contains(o))
+          tmp.observers = tmp.observers.add(o);
       }
     }
   }
@@ -65,12 +67,12 @@ public abstract class AbstractSubject implements Subject {
     //Logging.METRICS_LOGGER.finer("ADD OBSERVER " + o + " FOR " + tmp + " IN " +
     //    TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
-      if (!tmp.$observers.contains(o, id))
-        tmp.$observers = tmp.$observers.add(o, id);
+      if (!tmp.observers.contains(o, id))
+        tmp.observers = tmp.observers.add(o, id);
     } else {
       atomic {
-        if (!tmp.$observers.contains(o, id))
-          tmp.$observers = tmp.$observers.add(o, id);
+        if (!tmp.observers.contains(o, id))
+          tmp.observers = tmp.observers.add(o, id);
       }
     }
   }
@@ -84,12 +86,12 @@ public abstract class AbstractSubject implements Subject {
     //Logging.METRICS_LOGGER.finer("REMOVE OBSERVER " + o + " FOR " + tmp + " IN "
     //    + TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.$observers.contains(o))
-        tmp.$observers = tmp.$observers.remove(o);
+      if (tmp.observers.contains(o))
+        tmp.observers = tmp.observers.remove(o);
     } else {
       atomic {
-        if (tmp.$observers.contains(o))
-          tmp.$observers = tmp.$observers.remove(o);
+        if (tmp.observers.contains(o))
+          tmp.observers = tmp.observers.remove(o);
       }
     }
   }
@@ -103,29 +105,29 @@ public abstract class AbstractSubject implements Subject {
     //Logging.METRICS_LOGGER.finer("REMOVE OBSERVER " + o + " FOR " + tmp + " IN "
     //    + TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.$observers.contains(o, id))
-        tmp.$observers = tmp.$observers.remove(o, id);
+      if (tmp.observers.contains(o, id))
+        tmp.observers = tmp.observers.remove(o, id);
     } else {
       atomic {
-        if (tmp.$observers.contains(o, id))
-          tmp.$observers = tmp.$observers.remove(o, id);
+        if (tmp.observers.contains(o, id))
+          tmp.observers = tmp.observers.remove(o, id);
       }
     }
   }
 
   /*@Override*/
   public boolean observedBy(Observer o) {
-    return $observers.contains(o);
+    return observers.contains(o);
   }
 
   /*@Override*/
   public boolean isObserved() {
-    return !$observers.isEmpty();
+    return !observers.isEmpty();
   }
 
   /*@Override*/
   public ImmutableObserverSet getObservers() {
-    return $observers;
+    return observers;
   }
 
   /**

@@ -267,19 +267,6 @@ public class TransactionManager {
         }
       }
     }
-    // Go through observers
-    ImmutableObserverSet observerSet = obj.getObservers();
-    if (observerSet != null) {
-      Set<Long> subSet = observerSet.onumsForStore(store);
-      if (subSet != null) {
-        for (long associate : subSet) {
-          if (explored.contains(associate) || sm.subscribed(associate, worker))
-            continue;
-          explored.add(associate);
-          getAssociatedOnums(associate, explored, worker);
-        }
-      }
-    }
     // Go through treaty observers.
     TreatySet set3 = obj.getTreaties();
     if (set3 != null) {

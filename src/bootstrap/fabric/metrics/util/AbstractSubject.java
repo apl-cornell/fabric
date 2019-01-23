@@ -28,120 +28,120 @@ import fabric.common.Logging;
 public interface AbstractSubject
   extends fabric.metrics.util.Subject, fabric.lang.Object {
     public fabric.worker.Store getStore();
-    
+
     public fabric.metrics.util.AbstractSubject
       fabric$metrics$util$AbstractSubject$();
-    
+
     public void addObserver(fabric.metrics.util.Observer o);
-    
+
     public void addObserver(fabric.metrics.util.Observer o, long id);
-    
+
     public void removeObserver(fabric.metrics.util.Observer o);
-    
+
     public void removeObserver(fabric.metrics.util.Observer o, long id);
-    
+
     public boolean observedBy(fabric.metrics.util.Observer o);
-    
+
     public boolean isObserved();
-    
+
     public fabric.worker.metrics.ImmutableObserverSet getObservers();
-    
+
     public static class _Proxy extends fabric.lang.Object._Proxy
       implements fabric.metrics.util.AbstractSubject {
         public fabric.worker.Store getStore() {
             return ((fabric.metrics.util.AbstractSubject) fetch()).getStore();
         }
-        
+
         public fabric.metrics.util.AbstractSubject
           fabric$metrics$util$AbstractSubject$() {
             return ((fabric.metrics.util.AbstractSubject) fetch()).
               fabric$metrics$util$AbstractSubject$();
         }
-        
+
         public void addObserver(fabric.metrics.util.Observer arg1) {
             ((fabric.metrics.util.AbstractSubject) fetch()).addObserver(arg1);
         }
-        
+
         public void addObserver(fabric.metrics.util.Observer arg1, long arg2) {
             ((fabric.metrics.util.AbstractSubject) fetch()).addObserver(arg1,
                                                                         arg2);
         }
-        
+
         public void removeObserver(fabric.metrics.util.Observer arg1) {
             ((fabric.metrics.util.AbstractSubject) fetch()).removeObserver(
                                                               arg1);
         }
-        
+
         public static void static_removeObserver(
           fabric.metrics.util.AbstractSubject arg1,
           fabric.metrics.util.Observer arg2) {
             fabric.metrics.util.AbstractSubject._Impl.static_removeObserver(
                                                         arg1, arg2);
         }
-        
+
         public void removeObserver(fabric.metrics.util.Observer arg1,
                                    long arg2) {
             ((fabric.metrics.util.AbstractSubject) fetch()).removeObserver(
                                                               arg1, arg2);
         }
-        
+
         public static void static_removeObserver(
           fabric.metrics.util.AbstractSubject arg1,
           fabric.metrics.util.Observer arg2, long arg3) {
             fabric.metrics.util.AbstractSubject._Impl.static_removeObserver(
                                                         arg1, arg2, arg3);
         }
-        
+
         public boolean observedBy(fabric.metrics.util.Observer arg1) {
             return ((fabric.metrics.util.AbstractSubject) fetch()).observedBy(
                                                                      arg1);
         }
-        
+
         public boolean isObserved() {
             return ((fabric.metrics.util.AbstractSubject) fetch()).isObserved();
         }
-        
+
         public fabric.worker.metrics.ImmutableObserverSet getObservers() {
             return ((fabric.metrics.util.AbstractSubject) fetch()).getObservers(
                                                                      );
         }
-        
+
         public static void processSamples(java.util.LinkedList arg1) {
             fabric.metrics.util.AbstractSubject._Impl.processSamples(arg1);
         }
-        
+
         public _Proxy(AbstractSubject._Impl impl) { super(impl); }
-        
+
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }
     }
-    
+
     public abstract static class _Impl extends fabric.lang.Object._Impl
       implements fabric.metrics.util.AbstractSubject {
         public fabric.worker.Store getStore() { return $getStore(); }
-        
+
         public fabric.metrics.util.AbstractSubject
           fabric$metrics$util$AbstractSubject$() {
             fabric$lang$Object$();
-            this.set$$observers(
-                   fabric.worker.metrics.ImmutableObserverSet.emptySet());
+            //this.set$$observers(
+            //       fabric.worker.metrics.ImmutableObserverSet.emptySet());
             return (fabric.metrics.util.AbstractSubject) this.$getProxy();
         }
-        
+
         public void addObserver(fabric.metrics.util.Observer o) {
             fabric.metrics.util.AbstractSubject._Impl.
               static_addObserver((fabric.metrics.util.AbstractSubject)
                                    this.$getProxy(), o);
         }
-        
+
         private static void static_addObserver(
           fabric.metrics.util.AbstractSubject tmp,
           fabric.metrics.util.Observer o) {
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                if (!tmp.get$$observers().contains(o))
-                    tmp.set$$observers(tmp.get$$observers().add(o));
+                //if (!tmp.get$$observers().contains(o))
+                //    tmp.set$$observers(tmp.get$$observers().add(o));
             }
             else {
                 {
@@ -170,7 +170,7 @@ public interface AbstractSubject
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e499) {
-                                            
+
                                         }
                                     }
                                 }
@@ -183,9 +183,9 @@ public interface AbstractSubject
                           getInstance().startTransaction();
                         try {
                             try {
-                                if (!tmp.get$$observers().contains(o))
-                                    tmp.set$$observers(
-                                          tmp.get$$observers().add(o));
+                                //if (!tmp.get$$observers().contains(o))
+                                //    tmp.set$$observers(
+                                //          tmp.get$$observers().add(o));
                             }
                             catch (final fabric.worker.RetryException $e499) {
                                 throw $e499;
@@ -333,20 +333,20 @@ public interface AbstractSubject
                 }
             }
         }
-        
+
         public void addObserver(fabric.metrics.util.Observer o, long id) {
             fabric.metrics.util.AbstractSubject._Impl.
               static_addObserver((fabric.metrics.util.AbstractSubject)
                                    this.$getProxy(), o, id);
         }
-        
+
         private static void static_addObserver(
           fabric.metrics.util.AbstractSubject tmp,
           fabric.metrics.util.Observer o, long id) {
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                if (!tmp.get$$observers().contains(o, id))
-                    tmp.set$$observers(tmp.get$$observers().add(o, id));
+                //if (!tmp.get$$observers().contains(o, id))
+                //    tmp.set$$observers(tmp.get$$observers().add(o, id));
             }
             else {
                 {
@@ -375,7 +375,7 @@ public interface AbstractSubject
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e509) {
-                                            
+
                                         }
                                     }
                                 }
@@ -388,9 +388,9 @@ public interface AbstractSubject
                           getInstance().startTransaction();
                         try {
                             try {
-                                if (!tmp.get$$observers().contains(o, id))
-                                    tmp.set$$observers(
-                                          tmp.get$$observers().add(o, id));
+                                //if (!tmp.get$$observers().contains(o, id))
+                                //    tmp.set$$observers(
+                                //          tmp.get$$observers().add(o, id));
                             }
                             catch (final fabric.worker.RetryException $e509) {
                                 throw $e509;
@@ -538,20 +538,20 @@ public interface AbstractSubject
                 }
             }
         }
-        
+
         public void removeObserver(fabric.metrics.util.Observer o) {
             fabric.metrics.util.AbstractSubject._Impl.
               static_removeObserver((fabric.metrics.util.AbstractSubject)
                                       this.$getProxy(), o);
         }
-        
+
         public static void static_removeObserver(
           fabric.metrics.util.AbstractSubject tmp,
           fabric.metrics.util.Observer o) {
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                if (tmp.get$$observers().contains(o))
-                    tmp.set$$observers(tmp.get$$observers().remove(o));
+                //if (tmp.get$$observers().contains(o))
+                //    tmp.set$$observers(tmp.get$$observers().remove(o));
             }
             else {
                 {
@@ -580,7 +580,7 @@ public interface AbstractSubject
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e519) {
-                                            
+
                                         }
                                     }
                                 }
@@ -593,9 +593,9 @@ public interface AbstractSubject
                           getInstance().startTransaction();
                         try {
                             try {
-                                if (tmp.get$$observers().contains(o))
-                                    tmp.set$$observers(
-                                          tmp.get$$observers().remove(o));
+                                //if (tmp.get$$observers().contains(o))
+                                //    tmp.set$$observers(
+                                //          tmp.get$$observers().remove(o));
                             }
                             catch (final fabric.worker.RetryException $e519) {
                                 throw $e519;
@@ -743,20 +743,20 @@ public interface AbstractSubject
                 }
             }
         }
-        
+
         public void removeObserver(fabric.metrics.util.Observer o, long id) {
             fabric.metrics.util.AbstractSubject._Impl.
               static_removeObserver((fabric.metrics.util.AbstractSubject)
                                       this.$getProxy(), o, id);
         }
-        
+
         public static void static_removeObserver(
           fabric.metrics.util.AbstractSubject tmp,
           fabric.metrics.util.Observer o, long id) {
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                if (tmp.get$$observers().contains(o, id))
-                    tmp.set$$observers(tmp.get$$observers().remove(o, id));
+                //if (tmp.get$$observers().contains(o, id))
+                //    tmp.set$$observers(tmp.get$$observers().remove(o, id));
             }
             else {
                 {
@@ -785,7 +785,7 @@ public interface AbstractSubject
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e529) {
-                                            
+
                                         }
                                     }
                                 }
@@ -798,9 +798,9 @@ public interface AbstractSubject
                           getInstance().startTransaction();
                         try {
                             try {
-                                if (tmp.get$$observers().contains(o, id))
-                                    tmp.set$$observers(
-                                          tmp.get$$observers().remove(o, id));
+                                //if (tmp.get$$observers().contains(o, id))
+                                //    tmp.set$$observers(
+                                //          tmp.get$$observers().remove(o, id));
                             }
                             catch (final fabric.worker.RetryException $e529) {
                                 throw $e529;
@@ -948,17 +948,22 @@ public interface AbstractSubject
                 }
             }
         }
-        
+
         public boolean observedBy(fabric.metrics.util.Observer o) {
-            return this.get$$observers().contains(o);
+            return false;
+            //return this.get$$observers().contains(o);
         }
-        
-        public boolean isObserved() { return !this.get$$observers().isEmpty(); }
-        
+
+        public boolean isObserved() {
+          return false;
+          //return !this.get$$observers().isEmpty();
+        }
+
         public fabric.worker.metrics.ImmutableObserverSet getObservers() {
-            return this.get$$observers();
+            return null;
+            //return this.get$$observers();
         }
-        
+
         /**
    * Utility for processing a batch of samples for the transaction manager.
    *
@@ -1071,13 +1076,13 @@ public interface AbstractSubject
                 }
             }
         }
-        
+
         public _Impl(fabric.worker.Store $location) { super($location); }
-        
+
         protected fabric.lang.Object._Proxy $makeProxy() {
             return new fabric.metrics.util.AbstractSubject._Proxy(this);
         }
-        
+
         public void $serialize(java.io.ObjectOutput out,
                                java.util.List refTypes,
                                java.util.List intraStoreRefs,
@@ -1085,10 +1090,10 @@ public interface AbstractSubject
               throws java.io.IOException {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
         }
-        
+
         public _Impl(fabric.worker.Store store, long onum, int version,
                      fabric.worker.metrics.ImmutableObjectSet associates,
-                     fabric.worker.metrics.ImmutableObserverSet observers,
+
                      fabric.worker.metrics.treaties.TreatySet treaties,
                      fabric.worker.Store labelStore, long labelOnum,
                      fabric.worker.Store accessPolicyStore,
@@ -1098,25 +1103,25 @@ public interface AbstractSubject
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, associates, observers, treaties,
+            super(store, onum, version, associates, treaties,
                   labelStore, labelOnum, accessPolicyStore, accessPolicyOnum,
                   in, refTypes, intraStoreRefs, interStoreRefs);
         }
     }
-    
+
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
           implements fabric.metrics.util.AbstractSubject._Static {
             public _Proxy(fabric.metrics.util.AbstractSubject._Static.
                             _Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
-            
+
             public static final fabric.metrics.util.AbstractSubject._Static
               $instance;
-            
+
             static {
                 fabric.
                   metrics.
@@ -1134,7 +1139,7 @@ public interface AbstractSubject
                 impl.$init();
             }
         }
-        
+
         class _Impl extends fabric.lang.Object._Impl
           implements fabric.metrics.util.AbstractSubject._Static {
             public void $serialize(java.io.ObjectOutput out,
@@ -1144,10 +1149,10 @@ public interface AbstractSubject
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
                          fabric.worker.metrics.ImmutableObjectSet associates,
-                         fabric.worker.metrics.ImmutableObserverSet observers,
+
                          fabric.worker.metrics.treaties.TreatySet treaties,
                          fabric.worker.Store labelStore, long labelOnum,
                          fabric.worker.Store accessPolicyStore,
@@ -1157,24 +1162,24 @@ public interface AbstractSubject
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, associates, observers, treaties,
+                super(store, onum, version, associates, treaties,
                       labelStore, labelOnum, accessPolicyStore,
                       accessPolicyOnum, in, refTypes, intraStoreRefs,
                       interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store) { super(store); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.metrics.util.AbstractSubject._Static._Proxy(
                          this);
             }
-            
+
             private void $init() {  }
         }
-        
+
     }
-    
+
     public static final byte[] $classHash = new byte[] { 73, 56, 105, 122, -60,
     10, -81, -7, 28, 13, -88, -55, -9, -20, -57, -28, 107, 86, -98, -42, 59, 83,
     -29, -108, -117, -10, 31, -126, -50, -34, -58, 29 };

@@ -25,7 +25,6 @@ import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
-import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.TransactionManager;
 
@@ -232,18 +231,6 @@ public final class ObjectCache {
       if (next != null) return next.getVersion();
       if (impl != null) return impl.$version;
       if (serialized != null) return serialized.getVersion();
-      return null;
-    }
-
-    /**
-     * Obtains the object's expiry. (Returns null if this entry has been
-     * evicted.)
-     */
-    public synchronized ImmutableObserverSet getObservers() {
-      if (next != null) return next.getObservers();
-      if (impl != null) return impl.$writer == null ? impl.$observers
-          : impl.$history.$observers;
-      if (serialized != null) return serialized.getObservers();
       return null;
     }
 
@@ -607,18 +594,6 @@ public final class ObjectCache {
         Map<Store, Set<Long>> fetches = null;
         if (update.getAssociates() != null) {
           fetches = update.getAssociates().prefetch(store);
-        }
-        if (update.getObservers() != null) {
-          if (fetches == null) {
-            fetches = update.getObservers().prefetch(store);
-          } else {
-            for (Map.Entry<Store, Set<Long>> e : update.getObservers()
-                .prefetch(store).entrySet()) {
-              if (fetches.containsKey(e.getKey()))
-                fetches.get(e.getKey()).addAll(e.getValue());
-              else fetches.put(e.getKey(), e.getValue());
-            }
-          }
         }
         if (update.getTreaties() != null) {
           if (fetches == null) {

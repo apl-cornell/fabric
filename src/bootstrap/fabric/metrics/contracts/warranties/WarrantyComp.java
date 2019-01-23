@@ -36,27 +36,27 @@ import fabric.common.util.Pair;
 public interface WarrantyComp
   extends fabric.metrics.util.Observer, fabric.lang.Object {
     public fabric.lang.Object get$curVal();
-    
+
     public fabric.lang.Object set$curVal(fabric.lang.Object val);
-    
+
     public fabric.worker.metrics.treaties.TreatyRef get$curTreaty();
-    
+
     public fabric.worker.metrics.treaties.TreatyRef set$curTreaty(
       fabric.worker.metrics.treaties.TreatyRef val);
-    
+
     public fabric.worker.metrics.proxies.ProxyMap get$proxies();
-    
+
     public fabric.worker.metrics.proxies.ProxyMap set$proxies(
       fabric.worker.metrics.proxies.ProxyMap val);
-    
+
     public boolean get$recomputeOnInvalidation();
-    
+
     public boolean set$recomputeOnInvalidation(boolean val);
-    
+
     public boolean get$proactive();
-    
+
     public boolean set$proactive(boolean val);
-    
+
     /**
    * Create a new updated result paired with a treaty that would enforce it
    * after this call.
@@ -65,7 +65,7 @@ public interface WarrantyComp
    *            the current time we're running a new update at.
    */
     public abstract fabric.worker.metrics.WarrantyValue updatedVal(long time);
-    
+
     /**
    * Run this warranty computation at the given time.
    *
@@ -76,7 +76,7 @@ public interface WarrantyComp
    * that the return value is consistent.
    */
     public fabric.worker.metrics.WarrantyValue apply(long time);
-    
+
     /**
    * Run this warranty computation at the given time.
    *
@@ -91,12 +91,12 @@ public interface WarrantyComp
    */
     public fabric.worker.metrics.WarrantyValue apply(long time,
                                                      boolean autoRetry);
-    
+
     public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects();
-    
+
     public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
       boolean includesObserver, java.util.SortedSet treaties);
-    
+
     /**
    * Copy result for a proxy computation to use.
    *
@@ -105,25 +105,25 @@ public interface WarrantyComp
    */
     public fabric.lang.Object makeProxyResult(
       fabric.worker.metrics.WarrantyValue val, final fabric.worker.Store proxyStore);
-    
+
     /**
    * Make a warranty comp that resides on another store that can be used locally
    * at that store when a memoized result is available.
    */
     public fabric.metrics.contracts.warranties.WarrantyComp makeProxy(
       final fabric.worker.Store proxyStore);
-    
+
     public fabric.metrics.contracts.warranties.WarrantyComp
       fabric$metrics$contracts$warranties$WarrantyComp$(
       boolean recomputeOnInvalidation, boolean proactive);
-    
+
     public fabric.metrics.contracts.warranties.WarrantyComp
       fabric$metrics$contracts$warranties$WarrantyComp$(
       boolean recomputeOnInvalidation);
-    
+
     public fabric.metrics.contracts.warranties.WarrantyComp
       fabric$metrics$contracts$warranties$WarrantyComp$();
-    
+
     /**
    * A "Proxy" computation to allow for avoiding contacting a remote store for
    * memoized results.
@@ -132,17 +132,17 @@ public interface WarrantyComp
       extends fabric.metrics.contracts.warranties.WarrantyComp {
         public fabric.metrics.contracts.warranties.WarrantyComp
           get$baseComputation();
-        
+
         public fabric.metrics.contracts.warranties.WarrantyComp
           set$baseComputation(
           fabric.metrics.contracts.warranties.WarrantyComp val);
-        
+
         public ProxyComp
           fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(
           fabric.metrics.contracts.warranties.WarrantyComp baseComputation);
-        
+
         public fabric.worker.metrics.WarrantyValue updatedVal(long time);
-        
+
         public static class _Proxy
         extends fabric.metrics.contracts.warranties.WarrantyComp._Proxy
           implements ProxyComp {
@@ -151,14 +151,14 @@ public interface WarrantyComp
                 return ((fabric.metrics.contracts.warranties.WarrantyComp.
                           ProxyComp._Impl) fetch()).get$baseComputation();
             }
-            
+
             public fabric.metrics.contracts.warranties.WarrantyComp
               set$baseComputation(
               fabric.metrics.contracts.warranties.WarrantyComp val) {
                 return ((fabric.metrics.contracts.warranties.WarrantyComp.
                           ProxyComp._Impl) fetch()).set$baseComputation(val);
             }
-            
+
             public fabric.metrics.contracts.warranties.WarrantyComp.ProxyComp
               fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(
               fabric.metrics.contracts.warranties.WarrantyComp arg1) {
@@ -167,14 +167,14 @@ public interface WarrantyComp
                   fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(
                     arg1);
             }
-            
+
             public _Proxy(ProxyComp._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
         }
-        
+
         public static class _Impl
         extends fabric.metrics.contracts.warranties.WarrantyComp._Impl
           implements ProxyComp {
@@ -182,7 +182,7 @@ public interface WarrantyComp
               get$baseComputation() {
                 return this.baseComputation;
             }
-            
+
             public fabric.metrics.contracts.warranties.WarrantyComp
               set$baseComputation(
               fabric.metrics.contracts.warranties.WarrantyComp val) {
@@ -193,10 +193,10 @@ public interface WarrantyComp
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             protected fabric.metrics.contracts.warranties.WarrantyComp
               baseComputation;
-            
+
             public ProxyComp
               fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(
               fabric.metrics.contracts.warranties.WarrantyComp baseComputation) {
@@ -220,18 +220,18 @@ public interface WarrantyComp
                   baseComputation.get$proactive());
                 return (ProxyComp) this.$getProxy();
             }
-            
+
             public fabric.worker.metrics.WarrantyValue updatedVal(long time) {
                 return this.get$baseComputation().updatedVal(time);
             }
-            
+
             public _Impl(fabric.worker.Store $location) { super($location); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.metrics.contracts.warranties.WarrantyComp.
                          ProxyComp._Proxy(this);
             }
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -241,10 +241,10 @@ public interface WarrantyComp
                 $writeRef($getStore(), this.baseComputation, refTypes, out,
                           intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
                          fabric.worker.metrics.ImmutableObjectSet associates,
-                         fabric.worker.metrics.ImmutableObserverSet observers,
+
                          fabric.worker.metrics.treaties.TreatySet treaties,
                          fabric.worker.Store labelStore, long labelOnum,
                          fabric.worker.Store accessPolicyStore,
@@ -254,7 +254,7 @@ public interface WarrantyComp
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, associates, observers, treaties,
+                super(store, onum, version, associates, treaties,
                       labelStore, labelOnum, accessPolicyStore,
                       accessPolicyOnum, in, refTypes, intraStoreRefs,
                       interStoreRefs);
@@ -270,7 +270,7 @@ public interface WarrantyComp
                       (fabric.common.RefTypeEnum) refTypes.next(), in, store,
                       intraStoreRefs, interStoreRefs);
             }
-            
+
             public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
                 super.$copyAppStateFrom(other);
                 fabric.
@@ -286,7 +286,7 @@ public interface WarrantyComp
                 this.baseComputation = src.baseComputation;
             }
         }
-        
+
         interface _Static extends fabric.lang.Object, Cloneable {
             final class _Proxy
             extends fabric.
@@ -298,14 +298,14 @@ public interface WarrantyComp
             {
                 public _Proxy(fabric.metrics.contracts.warranties.WarrantyComp.
                                 ProxyComp._Static._Impl impl) { super(impl); }
-                
+
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
-                
+
                 public static final fabric.metrics.contracts.warranties.
                   WarrantyComp.ProxyComp._Static $instance;
-                
+
                 static {
                     fabric.
                       metrics.
@@ -334,7 +334,7 @@ public interface WarrantyComp
                     impl.$init();
                 }
             }
-            
+
             class _Impl
             extends fabric.
               lang.
@@ -351,14 +351,12 @@ public interface WarrantyComp
                     super.$serialize(out, refTypes, intraStoreRefs,
                                      interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store,
                              long onum,
                              int version,
                              fabric.worker.metrics.
                                ImmutableObjectSet associates,
-                             fabric.worker.metrics.
-                               ImmutableObserverSet observers,
                              fabric.worker.metrics.treaties.TreatySet treaties,
                              fabric.worker.Store labelStore, long labelOnum,
                              fabric.worker.Store accessPolicyStore,
@@ -372,24 +370,24 @@ public interface WarrantyComp
                     java.
                   lang.
                   ClassNotFoundException {
-                    super(store, onum, version, associates, observers, treaties,
+                    super(store, onum, version, associates, treaties,
                           labelStore, labelOnum, accessPolicyStore,
                           accessPolicyOnum, in, refTypes, intraStoreRefs,
                           interStoreRefs);
                 }
-                
+
                 public _Impl(fabric.worker.Store store) { super(store); }
-                
+
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.metrics.contracts.warranties.WarrantyComp.
                              ProxyComp._Static._Proxy(this);
                 }
-                
+
                 private void $init() {  }
             }
-            
+
         }
-        
+
         public static final byte[] $classHash = new byte[] { 80, 15, -110, -28,
         -78, 77, 2, -55, -30, -115, 20, 2, -46, -42, -9, 77, 120, -89, 53, 11,
         -124, 57, -62, 92, 67, -92, -122, -39, 59, -109, 125, 84 };
@@ -399,126 +397,126 @@ public interface WarrantyComp
         public static final java.lang.String jlc$ClassType$fabil =
           "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";
     }
-    
+
     public static class _Proxy extends fabric.lang.Object._Proxy
       implements fabric.metrics.contracts.warranties.WarrantyComp {
         public fabric.lang.Object get$curVal() {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).get$curVal();
         }
-        
+
         public fabric.lang.Object set$curVal(fabric.lang.Object val) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).set$curVal(val);
         }
-        
+
         public fabric.worker.metrics.treaties.TreatyRef get$curTreaty() {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).get$curTreaty();
         }
-        
+
         public fabric.worker.metrics.treaties.TreatyRef set$curTreaty(
           fabric.worker.metrics.treaties.TreatyRef val) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).set$curTreaty(val);
         }
-        
+
         public fabric.worker.metrics.proxies.ProxyMap get$proxies() {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).get$proxies();
         }
-        
+
         public fabric.worker.metrics.proxies.ProxyMap set$proxies(
           fabric.worker.metrics.proxies.ProxyMap val) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).set$proxies(val);
         }
-        
+
         public boolean get$recomputeOnInvalidation() {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).get$recomputeOnInvalidation();
         }
-        
+
         public boolean set$recomputeOnInvalidation(boolean val) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).set$recomputeOnInvalidation(val);
         }
-        
+
         public boolean get$proactive() {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).get$proactive();
         }
-        
+
         public boolean set$proactive(boolean val) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp._Impl)
                       fetch()).set$proactive(val);
         }
-        
+
         public fabric.worker.metrics.WarrantyValue updatedVal(long arg1) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               updatedVal(arg1);
         }
-        
+
         public fabric.worker.metrics.WarrantyValue apply(long arg1) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               apply(arg1);
         }
-        
+
         public fabric.worker.metrics.WarrantyValue apply(long arg1,
                                                          boolean arg2) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               apply(arg1, arg2);
         }
-        
+
         public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               getLeafSubjects();
         }
-        
+
         public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
           boolean arg1, java.util.SortedSet arg2) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               handleUpdates(arg1, arg2);
         }
-        
+
         public fabric.lang.Object makeProxyResult(
           fabric.worker.metrics.WarrantyValue arg1, fabric.worker.Store arg2) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               makeProxyResult(arg1, arg2);
         }
-        
+
         public fabric.metrics.contracts.warranties.WarrantyComp makeProxy(
           fabric.worker.Store arg1) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               makeProxy(arg1);
         }
-        
+
         public fabric.metrics.contracts.warranties.WarrantyComp
           fabric$metrics$contracts$warranties$WarrantyComp$(boolean arg1,
                                                             boolean arg2) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               fabric$metrics$contracts$warranties$WarrantyComp$(arg1, arg2);
         }
-        
+
         public fabric.metrics.contracts.warranties.WarrantyComp
           fabric$metrics$contracts$warranties$WarrantyComp$(boolean arg1) {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               fabric$metrics$contracts$warranties$WarrantyComp$(arg1);
         }
-        
+
         public fabric.metrics.contracts.warranties.WarrantyComp
           fabric$metrics$contracts$warranties$WarrantyComp$() {
             return ((fabric.metrics.contracts.warranties.WarrantyComp) fetch()).
               fabric$metrics$contracts$warranties$WarrantyComp$();
         }
-        
+
         public _Proxy(WarrantyComp._Impl impl) { super(impl); }
-        
+
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }
     }
-    
+
     public abstract static class _Impl extends fabric.lang.Object._Impl
       implements fabric.metrics.contracts.warranties.WarrantyComp {
         public fabric.lang.Object get$curVal() {
@@ -526,7 +524,7 @@ public interface WarrantyComp
               registerRead(this);
             return this.curVal;
         }
-        
+
         public fabric.lang.Object set$curVal(fabric.lang.Object val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
@@ -535,16 +533,16 @@ public interface WarrantyComp
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-        
+
         /** The currently cached result. */
         protected fabric.lang.Object curVal;
-        
+
         public fabric.worker.metrics.treaties.TreatyRef get$curTreaty() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
             return this.curTreaty;
         }
-        
+
         public fabric.worker.metrics.treaties.TreatyRef set$curTreaty(
           fabric.worker.metrics.treaties.TreatyRef val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -554,16 +552,16 @@ public interface WarrantyComp
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-        
+
         /** The currently cached result. */
         protected fabric.worker.metrics.treaties.TreatyRef curTreaty;
-        
+
         public fabric.worker.metrics.proxies.ProxyMap get$proxies() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
             return this.proxies;
         }
-        
+
         public fabric.worker.metrics.proxies.ProxyMap set$proxies(
           fabric.worker.metrics.proxies.ProxyMap val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -573,14 +571,14 @@ public interface WarrantyComp
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-        
+
         /** The set of proxy computations for this computation. */
         protected fabric.worker.metrics.proxies.ProxyMap proxies;
-        
+
         public boolean get$recomputeOnInvalidation() {
             return this.recomputeOnInvalidation;
         }
-        
+
         public boolean set$recomputeOnInvalidation(boolean val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
@@ -589,11 +587,11 @@ public interface WarrantyComp
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-        
+
         protected boolean recomputeOnInvalidation;
-        
+
         public boolean get$proactive() { return this.proactive; }
-        
+
         public boolean set$proactive(boolean val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
@@ -602,9 +600,9 @@ public interface WarrantyComp
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-        
+
         protected boolean proactive;
-        
+
         /**
    * Create a new updated result paired with a treaty that would enforce it
    * after this call.
@@ -613,7 +611,7 @@ public interface WarrantyComp
    *            the current time we're running a new update at.
    */
         public abstract fabric.worker.metrics.WarrantyValue updatedVal(long time);
-        
+
         /**
    * Run this warranty computation at the given time.
    *
@@ -626,7 +624,7 @@ public interface WarrantyComp
         public fabric.worker.metrics.WarrantyValue apply(long time) {
             return apply(time, true);
         }
-        
+
         /**
    * Run this warranty computation at the given time.
    *
@@ -645,7 +643,7 @@ public interface WarrantyComp
               static_apply((fabric.metrics.contracts.warranties.WarrantyComp)
                              this.$getProxy(), time, autoRetry);
         }
-        
+
         private static fabric.worker.metrics.WarrantyValue static_apply(
           fabric.metrics.contracts.warranties.WarrantyComp tmp, long time,
           boolean autoRetry) {
@@ -784,7 +782,7 @@ public interface WarrantyComp
                                                          tmp.get$curVal(),
                                                          tmp.get$curTreaty());
         }
-        
+
         private static boolean static_dropOldValue(
           fabric.metrics.contracts.warranties.WarrantyComp tmp) {
             boolean rtn = false;
@@ -821,7 +819,7 @@ public interface WarrantyComp
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e468) {
-                                            
+
                                         }
                                     }
                                 }
@@ -985,7 +983,7 @@ public interface WarrantyComp
             }
             return rtn;
         }
-        
+
         private boolean dropOldValue() {
             if (!fabric.lang.Object._Proxy.idEquals(this.get$curTreaty(),
                                                     null)) {
@@ -1006,7 +1004,7 @@ public interface WarrantyComp
             return fabric.lang.Object._Proxy.idEquals(this.get$curTreaty(),
                                                       null);
         }
-        
+
         private static void static_setNewValue(
           fabric.metrics.contracts.warranties.WarrantyComp tmp,
           fabric.lang.Object newVal,
@@ -1043,7 +1041,7 @@ public interface WarrantyComp
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e478) {
-                                            
+
                                         }
                                     }
                                 }
@@ -1206,7 +1204,7 @@ public interface WarrantyComp
                 }
             }
         }
-        
+
         private void setNewValue(
           fabric.lang.Object newVal,
           fabric.worker.metrics.treaties.TreatyRef newTreaty) {
@@ -1226,7 +1224,7 @@ public interface WarrantyComp
                                   this.$getProxy())));
             }
         }
-        
+
         public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             if (!fabric.lang.Object._Proxy.idEquals(this.get$curTreaty(),
                                                     null) &&
@@ -1236,7 +1234,7 @@ public interface WarrantyComp
                 return this.get$curTreaty().get().getLeafSubjects();
             return fabric.worker.metrics.ImmutableMetricsVector.emptyVector();
         }
-        
+
         public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
           boolean includesObserver, java.util.SortedSet treaties) {
             fabric.worker.metrics.ImmutableObserverSet affected =
@@ -1250,7 +1248,7 @@ public interface WarrantyComp
             }
             return affected;
         }
-        
+
         /**
    * Copy result for a proxy computation to use.
    *
@@ -1262,7 +1260,7 @@ public interface WarrantyComp
           final fabric.worker.Store proxyStore) {
             return val.value;
         }
-        
+
         /**
    * Make a warranty comp that resides on another store that can be used locally
    * at that store when a memoized result is available.
@@ -1274,7 +1272,7 @@ public interface WarrantyComp
                 (fabric.metrics.contracts.warranties.WarrantyComp)
                   this.$getProxy(), proxyStore);
         }
-        
+
         private static fabric.metrics.contracts.warranties.WarrantyComp
           static_makeProxy(fabric.metrics.contracts.warranties.WarrantyComp tmp,
                            final fabric.worker.Store proxyStore) {
@@ -1349,7 +1347,7 @@ public interface WarrantyComp
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e489) {
-                                            
+
                                         }
                                     }
                                 }
@@ -1560,7 +1558,7 @@ public interface WarrantyComp
             }
             return rtn;
         }
-        
+
         public fabric.metrics.contracts.warranties.WarrantyComp
           fabric$metrics$contracts$warranties$WarrantyComp$(
           boolean recomputeOnInvalidation, boolean proactive) {
@@ -1571,27 +1569,27 @@ public interface WarrantyComp
             return (fabric.metrics.contracts.warranties.WarrantyComp)
                      this.$getProxy();
         }
-        
+
         public fabric.metrics.contracts.warranties.WarrantyComp
           fabric$metrics$contracts$warranties$WarrantyComp$(
           boolean recomputeOnInvalidation) {
             return fabric$metrics$contracts$warranties$WarrantyComp$(
                      recomputeOnInvalidation, true);
         }
-        
+
         public fabric.metrics.contracts.warranties.WarrantyComp
           fabric$metrics$contracts$warranties$WarrantyComp$() {
             return fabric$metrics$contracts$warranties$WarrantyComp$(true,
                                                                      true);
         }
-        
+
         public _Impl(fabric.worker.Store $location) { super($location); }
-        
+
         protected fabric.lang.Object._Proxy $makeProxy() {
             return new fabric.metrics.contracts.warranties.WarrantyComp._Proxy(
                      this);
         }
-        
+
         public void $serialize(java.io.ObjectOutput out,
                                java.util.List refTypes,
                                java.util.List intraStoreRefs,
@@ -1605,10 +1603,10 @@ public interface WarrantyComp
             out.writeBoolean(this.recomputeOnInvalidation);
             out.writeBoolean(this.proactive);
         }
-        
+
         public _Impl(fabric.worker.Store store, long onum, int version,
                      fabric.worker.metrics.ImmutableObjectSet associates,
-                     fabric.worker.metrics.ImmutableObserverSet observers,
+
                      fabric.worker.metrics.treaties.TreatySet treaties,
                      fabric.worker.Store labelStore, long labelOnum,
                      fabric.worker.Store accessPolicyStore,
@@ -1618,7 +1616,7 @@ public interface WarrantyComp
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, associates, observers, treaties,
+            super(store, onum, version, associates, treaties,
                   labelStore, labelOnum, accessPolicyStore, accessPolicyOnum,
                   in, refTypes, intraStoreRefs, interStoreRefs);
             this.curVal = (fabric.lang.Object)
@@ -1633,7 +1631,7 @@ public interface WarrantyComp
             this.recomputeOnInvalidation = in.readBoolean();
             this.proactive = in.readBoolean();
         }
-        
+
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
             super.$copyAppStateFrom(other);
             fabric.metrics.contracts.warranties.WarrantyComp._Impl src =
@@ -1645,20 +1643,20 @@ public interface WarrantyComp
             this.proactive = src.proactive;
         }
     }
-    
+
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
           implements fabric.metrics.contracts.warranties.WarrantyComp._Static {
             public _Proxy(fabric.metrics.contracts.warranties.WarrantyComp.
                             _Static._Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
-            
+
             public static final fabric.metrics.contracts.warranties.
               WarrantyComp._Static $instance;
-            
+
             static {
                 fabric.
                   metrics.
@@ -1685,7 +1683,7 @@ public interface WarrantyComp
                 impl.$init();
             }
         }
-        
+
         class _Impl extends fabric.lang.Object._Impl
           implements fabric.metrics.contracts.warranties.WarrantyComp._Static {
             public void $serialize(java.io.ObjectOutput out,
@@ -1695,10 +1693,10 @@ public interface WarrantyComp
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
                          fabric.worker.metrics.ImmutableObjectSet associates,
-                         fabric.worker.metrics.ImmutableObserverSet observers,
+
                          fabric.worker.metrics.treaties.TreatySet treaties,
                          fabric.worker.Store labelStore, long labelOnum,
                          fabric.worker.Store accessPolicyStore,
@@ -1708,24 +1706,24 @@ public interface WarrantyComp
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, associates, observers, treaties,
+                super(store, onum, version, associates, treaties,
                       labelStore, labelOnum, accessPolicyStore,
                       accessPolicyOnum, in, refTypes, intraStoreRefs,
                       interStoreRefs);
             }
-            
+
             public _Impl(fabric.worker.Store store) { super(store); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.metrics.contracts.warranties.WarrantyComp.
                          _Static._Proxy(this);
             }
-            
+
             private void $init() {  }
         }
-        
+
     }
-    
+
     public static final byte[] $classHash = new byte[] { 107, -104, 38, -86,
     -116, 90, -56, 18, 108, -91, -88, 52, -50, 25, 75, 104, 99, -117, -40, 124,
     -70, -30, 82, 2, -27, 69, -93, 17, 105, 24, -61, 6 };

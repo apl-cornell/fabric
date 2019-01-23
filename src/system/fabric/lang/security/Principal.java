@@ -13,7 +13,6 @@ import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableObjectSet;
-import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.TreatySet;
 
 /**
@@ -162,15 +161,15 @@ public interface Principal extends fabric.lang.Object {
     }
 
     public _Impl(Store store, long onum, int version,
-        ImmutableObjectSet associates, ImmutableObserverSet observers,
-        TreatySet treaties, Store labelStore, long labelOnum,
-        Store accessPolicyStore, long accessPolicyOnum, ObjectInput in,
-        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+        ImmutableObjectSet associates, TreatySet treaties, Store labelStore,
+        long labelOnum, Store accessPolicyStore, long accessPolicyOnum,
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws java.io.IOException, ClassNotFoundException {
-      super(store, onum, version, associates, observers, treaties, labelStore,
-          labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
-          intraStoreRefs, interStoreRefs);
+      super(store, onum, version, associates, treaties, labelStore, labelOnum,
+          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
+          interStoreRefs);
     }
 
     public static Principal jif$cast$fabric_lang_security_Principal(Object o) {
