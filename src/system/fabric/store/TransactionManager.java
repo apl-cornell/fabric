@@ -615,9 +615,6 @@ public class TransactionManager {
                           }, true);
                     } catch (AbortException e) {
                       success = false;
-                      // Clear out any leftover locking state
-                      fabric.worker.transaction.TransactionManager.getInstance()
-                          .clearLockObjectState();
                       StringWriter sw = new StringWriter();
                       PrintWriter pw = new PrintWriter(sw);
                       e.printStackTrace(pw);
@@ -627,9 +624,6 @@ public class TransactionManager {
                               sw, });
                     } catch (LockConflictException e) {
                       success = false;
-                      // Clear out any leftover locking state
-                      fabric.worker.transaction.TransactionManager.getInstance()
-                          .clearLockObjectState();
                       StringWriter sw = new StringWriter();
                       PrintWriter pw = new PrintWriter(sw);
                       e.printStackTrace(pw);

@@ -303,22 +303,6 @@ public final class Log {
   private Pair<Lock, Condition> waitsOnJavaCond;
 
   /**
-   * Locks that will be acquired if this transaction commits successfully.
-   */
-  protected final OidKeyHashMap<Boolean> acquires = new OidKeyHashMap<>();
-
-  /**
-   * Locks that will be released if this transaction commits successfully.
-   */
-  protected final OidKeyHashMap<Boolean> pendingReleases =
-      new OidKeyHashMap<>();
-
-  /**
-   * Locks that were created in this transaction.
-   */
-  protected final OidKeyHashMap<Boolean> locksCreated = new OidKeyHashMap<>();
-
-  /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
    * given TID is null, a random tid is generated for the subtransaction.
@@ -415,8 +399,6 @@ public final class Log {
         Timing.SUBTX.end();
       }
       this.resolving = parent.resolving;
-      this.locksCreated.putAll(parent.locksCreated);
-      this.acquires.putAll(parent.acquires);
       stats = parent.stats;
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
@@ -800,9 +782,6 @@ public final class Log {
       localStoreWrites.clear();
       workersCalled.clear();
       securityCache.reset();
-      acquires.clear();
-      pendingReleases.clear();
-      locksCreated.clear();
       commitHooks.clear();
       untreatiedUpdateChecks.clear();
       treatiedUpdateChecks.clear();
@@ -811,8 +790,6 @@ public final class Log {
         writerMap = new WriterMap(parent.writerMap);
         unobservedSamples.putAll(parent.unobservedSamples);
         resolving = parent.resolving;
-        locksCreated.putAll(parent.locksCreated);
-        acquires.putAll(parent.acquires);
       } else {
         writerMap = new WriterMap(tid.topTid);
       }
@@ -899,9 +876,6 @@ public final class Log {
         localStoreWrites.clear();
         workersCalled.clear();
         securityCache.reset();
-        acquires.clear();
-        pendingReleases.clear();
-        locksCreated.clear();
         commitHooks.clear();
         untreatiedUpdateChecks.clear();
         treatiedUpdateChecks.clear();
@@ -910,8 +884,6 @@ public final class Log {
           writerMap = new WriterMap(parent.writerMap);
           unobservedSamples.putAll(parent.unobservedSamples);
           resolving = parent.resolving;
-          locksCreated.putAll(parent.locksCreated);
-          acquires.putAll(parent.acquires);
         } else {
           writerMap = new WriterMap(tid.topTid);
         }
@@ -1237,20 +1209,6 @@ public final class Log {
       parent.writerMap.putAll(writerMap);
     }
 
-    // Merge pessimistic lock pending operations.
-    // Acquires
-    synchronized (parent.acquires) {
-      parent.acquires.putAll(acquires);
-    }
-    // Releases
-    synchronized (parent.pendingReleases) {
-      parent.pendingReleases.putAll(pendingReleases);
-    }
-    // Creates
-    synchronized (parent.locksCreated) {
-      parent.locksCreated.putAll(locksCreated);
-    }
-
     // Merge hooks.
     synchronized (parent.commitHooks) {
       parent.commitHooks.addAll(commitHooks);
@@ -1374,9 +1332,6 @@ public final class Log {
       }
     }
 
-    // Update this thread's lock state in the TransactionManager.
-    TransactionManager tm = TransactionManager.getInstance();
-    tm.updateLockState(acquires, pendingReleases);
     prepare = null;
 
     // Merge the security cache into the top-level label cache.
