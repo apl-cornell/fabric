@@ -128,10 +128,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     if (this.activated && this.policy instanceof NoPolicy) {
       // Garbage collect if this is no longer enforced and has been activated
       // previously.
-      this.getMetric().get$treatiesBox().get$$treaties().remove(original);
+      this.getMetric().get$treatiesBox().get$treaties().remove(original);
     } else {
       // Otherwise, make sure the updated value is in the set.
-      this.getMetric().get$treatiesBox().get$$treaties().add(this);
+      this.getMetric().get$treatiesBox().get$treaties().add(this);
     }
 
     TransactionManager.getInstance()
@@ -171,10 +171,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     if (this.activated && this.policy instanceof NoPolicy) {
       // Garbage collect if this is no longer enforced and has been activated
       // previously.
-      this.getMetric().get$treatiesBox().get$$treaties().remove(original);
+      this.getMetric().get$treatiesBox().get$treaties().remove(original);
     } else {
       // Otherwise, make sure the updated value is in the set.
-      this.getMetric().get$treatiesBox().get$$treaties().add(this);
+      this.getMetric().get$treatiesBox().get$treaties().add(this);
     }
 
     TransactionManager.getInstance()
@@ -212,10 +212,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
           new Object[] { original,
               TransactionManager.getInstance().getCurrentTid(),
               Thread.currentThread() });
-      this.getMetric().get$treatiesBox().get$$treaties().remove(original);
+      this.getMetric().get$treatiesBox().get$treaties().remove(original);
     } else {
       // Otherwise, make sure the updated value is in the set.
-      this.getMetric().get$treatiesBox().get$$treaties().add(this);
+      this.getMetric().get$treatiesBox().get$treaties().add(this);
     }
 
     TransactionManager.getInstance()
@@ -259,10 +259,10 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
           new Object[] { original,
               TransactionManager.getInstance().getCurrentTid(),
               Thread.currentThread() });
-      this.getMetric().get$treatiesBox().get$$treaties().remove(original);
+      this.getMetric().get$treatiesBox().get$treaties().remove(original);
     } else {
       // Otherwise, make sure the updated value is in the set.
-      this.getMetric().get$treatiesBox().get$$treaties().add(this);
+      this.getMetric().get$treatiesBox().get$treaties().add(this);
     }
 
     TransactionManager.getInstance()
@@ -426,7 +426,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
             Thread.currentThread() });
     TransactionManager.getInstance().resolveObservations();
     MetricTreaty updated =
-        metric.get().get$treatiesBox().get$$treaties().get(id);
+        metric.get().get$treatiesBox().get$treaties().get(id);
     boolean result =
         updated != null && updated.expiry > System.currentTimeMillis();
     if (result) TransactionManager.getInstance().registerExpiryUse(expiry);
@@ -620,7 +620,7 @@ public class MetricTreaty implements Treaty<MetricTreaty> {
     long newExpiry = newPolicy.calculateExpiry(this, weakStats);
 
     //if (newExpiry >= expiry) {
-      new MetricTreaty(this, newPolicy, newExpiry);
+    new MetricTreaty(this, newPolicy, newExpiry);
     //}
   }
 }

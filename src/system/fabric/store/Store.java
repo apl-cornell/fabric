@@ -20,6 +20,7 @@ import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
+import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.InternalError;
@@ -41,7 +42,6 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
@@ -65,7 +65,6 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 class Store extends MessageToStoreHandler {
@@ -246,10 +245,9 @@ class Store extends MessageToStoreHandler {
         nameOf(client.principal), Long.toHexString(msg.tid));
 
     try {
-      OidKeyHashMap<TreatySet> longerTreaties =
-          prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
-              msg.serializedWrites, msg.reads, msg.extensions,
-              msg.extensionsTriggered, msg.delayedExtensions);
+      OidKeyHashMap<Long> longerTreaties = prepareTransaction(client.principal,
+          msg.tid, msg.serializedCreates, msg.serializedWrites, msg.reads,
+          msg.extensions, msg.extensionsTriggered, msg.delayedExtensions);
 
       long prepareTime = System.currentTimeMillis();
 
@@ -456,7 +454,7 @@ class Store extends MessageToStoreHandler {
         "Handling Staleness Check Message from {0}", nameOf(client.principal));
 
     return new StalenessCheckMessage.Response(
-        tm.checkForStaleObjects(client.principal, message.versionsAndTreaties));
+        tm.checkForStaleObjects(client.principal, message.versionsAndExpiries));
   }
 
   /**
@@ -492,10 +490,10 @@ class Store extends MessageToStoreHandler {
         tm.waitForUpdates(message.onumsAndVersions));
   }
 
-  private OidKeyHashMap<TreatySet> prepareTransaction(Principal p, long tid,
+  private OidKeyHashMap<Long> prepareTransaction(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites,
-      LongKeyMap<Pair<Integer, TreatySet>> reads,
+      LongKeyMap<VersionAndExpiry> reads,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
       LongKeyMap<LongSet> delayedExtensions)

@@ -16,6 +16,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TransactionManager;
+import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.RunningMetricStats;
@@ -45,7 +46,7 @@ public interface Metric
 {
     /** @return the current value of the {@link Metric}. */
     public double value();
-
+    
     /**
    * @param scalar
    *            a double scalar to scale this metric by
@@ -53,7 +54,7 @@ public interface Metric
    *         {@link Metric}.
    */
     public fabric.metrics.DerivedMetric times(double scalar);
-
+    
     /**
    * @param other
    *            another {@link Metric} to add with this {@link Metric}.
@@ -61,7 +62,7 @@ public interface Metric
    *         this.
    */
     public fabric.metrics.DerivedMetric plus(fabric.metrics.Metric other);
-
+    
     /**
    * @param other
    *            another {@link Metric} to take the minimum of along with this
@@ -70,7 +71,7 @@ public interface Metric
    *         the other {@link Metric}.
    */
     public fabric.metrics.Metric min(fabric.metrics.Metric other);
-
+    
     /**
    * @param other
    *            another {@link Metric} to take the maximum of along with this
@@ -79,7 +80,7 @@ public interface Metric
    *         the other {@link Metric}.
    */
     public fabric.metrics.Metric max(fabric.metrics.Metric other);
-
+    
     /**
    * @param rate
    *            the rate parameter for the bound on the resulting
@@ -96,7 +97,7 @@ public interface Metric
    *         otherwise a new one is created and returned (unactivated).
    */
     public fabric.worker.metrics.treaties.MetricTreaty getEqualityTreaty(double value);
-
+    
     /**
    * @param rate
    *            the rate parameter for the bound on the resulting
@@ -116,7 +117,7 @@ public interface Metric
    */
     public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
       double rate, double base, long time);
-
+    
     /**
    * @param rate
    *            the rate parameter for the bound on the resulting
@@ -132,37 +133,37 @@ public interface Metric
    */
     public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
       double rate, double base);
-
+    
     /**
    * Cache of DerivedMetrics using this Metric as a term (helps to break up
    * interning cache to avoid one big map.
    */
     public abstract boolean getUsePreset();
-
+    
     public abstract double getPresetR();
-
+    
     public abstract double getPresetB();
-
+    
     public abstract double getPresetV();
-
+    
     public abstract double getPresetN();
-
+    
     public fabric.worker.metrics.proxies.ProxyMap get$proxies();
-
+    
     public fabric.worker.metrics.proxies.ProxyMap set$proxies(
       fabric.worker.metrics.proxies.ProxyMap val);
-
+    
     /**
    * @param store
    *            the Store that holds this {@link Metric}
    */
     public fabric.metrics.Metric fabric$metrics$Metric$();
-
+    
     /**
    * Get a proxy metric for this metric (returns this if the store is the same).
    */
     public fabric.metrics.Metric getProxy(fabric.worker.Store s);
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -170,10 +171,10 @@ public interface Metric
    * @return the current value of the {@link Metric}.
    */
     public abstract double value(fabric.worker.metrics.StatsMap weakStats);
-
+    
     /** @return the number of samples of the {@link Metric}. */
     public long samples();
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -181,10 +182,10 @@ public interface Metric
    * @return the number of samples of the {@link Metric}.
    */
     public abstract long samples(fabric.worker.metrics.StatsMap weakStats);
-
+    
     /** @return the time of the last update of the {@link Metric}. */
     public long lastUpdate();
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -192,10 +193,10 @@ public interface Metric
    * @return the time of the last update of the {@link Metric}.
    */
     public abstract long lastUpdate(fabric.worker.metrics.StatsMap weakStats);
-
+    
     /** @return the current updateInterval estimate for updates of {@link Metric}. */
     public double updateInterval();
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -204,10 +205,10 @@ public interface Metric
    */
     public abstract double updateInterval(
       fabric.worker.metrics.StatsMap weakStats);
-
+    
     /** @return the estimated velocity of the {@link Metric}. */
     public double velocity();
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -215,10 +216,10 @@ public interface Metric
    * @return the estimated velocity of the {@link Metric}.
    */
     public abstract double velocity(fabric.worker.metrics.StatsMap weakStats);
-
+    
     /** @return the estimated noise of the {@link Metric}. */
     public double noise();
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -226,7 +227,7 @@ public interface Metric
    * @return the estimated velocity of the {@link Metric}.
    */
     public abstract double noise(fabric.worker.metrics.StatsMap weakStats);
-
+    
     /**
    * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
@@ -247,7 +248,7 @@ public interface Metric
     public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
       equalityPolicy(
       double value, fabric.worker.metrics.StatsMap weakStats, final fabric.worker.Store s);
-
+    
     /**
    * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
@@ -264,7 +265,7 @@ public interface Metric
    */
     public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
       equalityPolicy(double value, final fabric.worker.Store s);
-
+    
     /**
    * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
@@ -286,7 +287,7 @@ public interface Metric
       thresholdPolicy(
       double rate,
       double base, fabric.worker.metrics.StatsMap weakStats, final fabric.worker.Store s);
-
+    
     /**
    * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
@@ -303,7 +304,7 @@ public interface Metric
    */
     public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
       thresholdPolicy(double rate, double base, final fabric.worker.Store s);
-
+    
     /**
    * Update the current "weak" estimates to be used by {@link #policy(Bound)}
    * @param weakStats
@@ -312,10 +313,10 @@ public interface Metric
    */
     public fabric.worker.metrics.StatsMap refreshWeakEstimates(
       fabric.worker.metrics.StatsMap weakStats);
-
+    
     public fabric.worker.metrics.StatsMap refreshWeakEstimates_remote(
       fabric.lang.security.Principal caller, fabric.worker.metrics.StatsMap weakStats);
-
+    
     /**
    * Utility to allow for running updates as close to the metric as possible.
    * @param weakStats
@@ -326,10 +327,10 @@ public interface Metric
    */
     public fabric.worker.metrics.StatsMap refreshLocally(
       fabric.worker.metrics.StatsMap weakStats);
-
+    
     public fabric.worker.metrics.StatsMap refreshLocally_remote(
       fabric.lang.security.Principal caller, fabric.worker.metrics.StatsMap weakStats);
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -337,7 +338,7 @@ public interface Metric
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
     public abstract double computeValue(fabric.worker.metrics.StatsMap weakStats);
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -345,7 +346,7 @@ public interface Metric
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
     public abstract long computeSamples(fabric.worker.metrics.StatsMap weakStats);
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -353,7 +354,7 @@ public interface Metric
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
     public abstract long computeLastUpdate(fabric.worker.metrics.StatsMap weakStats);
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -361,7 +362,7 @@ public interface Metric
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
     public abstract double computeUpdateInterval(fabric.worker.metrics.StatsMap weakStats);
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -369,7 +370,7 @@ public interface Metric
    * @return a freshly computed weak velocity for this {@link DerivedMetric}.
    */
     public abstract double computeVelocity(fabric.worker.metrics.StatsMap weakStats);
-
+    
     /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -377,17 +378,17 @@ public interface Metric
    * @return a freshly computed noise for this {@link DerivedMetric}.
    */
     public abstract double computeNoise(fabric.worker.metrics.StatsMap weakStats);
-
+    
     /**
    * @return true iff all the sampling and transformations on this metric are
    *         stored on a single store.
    */
     public abstract boolean isSingleStore();
-
+    
     public fabric.metrics.util.TreatiesBox get$treatiesBox();
-
+    
     public fabric.metrics.util.TreatiesBox set$treatiesBox(fabric.metrics.util.TreatiesBox val);
-
+    
     /**
    * @param bound
    *        the bound that the treaty will enforce on this
@@ -397,7 +398,7 @@ public interface Metric
    */
     public fabric.worker.metrics.treaties.MetricTreaty createThresholdTreaty(
       double rate, double base, long time);
-
+    
     /**
    * @param bound
    *        the bound that the treaty will enforce on this
@@ -407,40 +408,40 @@ public interface Metric
    */
     public fabric.worker.metrics.treaties.MetricTreaty createEqualityTreaty(
       double value);
-
+    
     public int compareTo(java.lang.Object that);
-
+    
     public void refreshTreaty_remote(fabric.lang.security.Principal p,
                                      boolean asyncExtension, long treatyId,
                                      fabric.worker.metrics.StatsMap weakStats);
-
+    
     public void refreshTreaty(boolean asyncExtension, long treatyId,
                               fabric.worker.metrics.StatsMap weakStats);
-
+    
     public void refreshEqualityTreaty_remote(
       fabric.lang.security.Principal p, boolean asyncExtension, double value,
       fabric.worker.metrics.StatsMap weakStats);
-
+    
     public void refreshEqualityTreaty(boolean asyncExtension, double value,
                                       fabric.worker.metrics.StatsMap weakStats);
-
+    
     public void refreshThresholdTreaty_remote(
       fabric.lang.security.Principal p, boolean asyncExtension, double rate,
       double base, fabric.worker.metrics.StatsMap weakStats);
-
+    
     public void refreshThresholdTreaty(
       boolean asyncExtension, double rate, double base,
       fabric.worker.metrics.StatsMap weakStats);
-
+    
     public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
       boolean includesObserver, java.util.SortedSet treaties);
-
+    
     /**
    * Handle an update where the metric itself is observing.
    */
     public abstract fabric.worker.metrics.ImmutableObserverSet
       handleDirectUpdates();
-
+    
     /**
    * Given a treaty bound that must hold as a post condition, apply the given
    * update if the bound will still hold on this metric afterwards.
@@ -453,7 +454,7 @@ public interface Metric
    */
     public boolean updateWithPostcondition(double bound,
                                            fabric.worker.metrics.MetricUpdate[] updates);
-
+    
     /**
    * Create and activate a threshold treaty (purely for
    * updateWithPostcondition), possibly across all proxies of this metric.
@@ -465,192 +466,192 @@ public interface Metric
     public void createAndActivateTreaty(
       fabric.worker.metrics.treaties.statements.TreatyStatement stmt,
       boolean proactive);
-
+    
     public void assertPostcondition(
       fabric.worker.metrics.treaties.statements.TreatyStatement stmt);
-
+    
     public void addObserver(fabric.metrics.util.Observer o);
-
+    
     public void addObserver(fabric.metrics.util.Observer o, long id);
-
+    
     public void removeObserver(fabric.metrics.util.Observer o);
-
+    
     public void removeObserver(fabric.metrics.util.Observer o, long id);
-
+    
     public boolean observedBy(fabric.metrics.util.Observer o);
-
+    
     public boolean isObserved();
-
+    
     public fabric.worker.metrics.ImmutableObserverSet getObservers();
-
+    
     public static class _Proxy
     extends fabric.metrics.util.AbstractSubject._Proxy
       implements fabric.metrics.Metric {
         public fabric.worker.metrics.proxies.ProxyMap get$proxies() {
             return ((fabric.metrics.Metric._Impl) fetch()).get$proxies();
         }
-
+        
         public fabric.worker.metrics.proxies.ProxyMap set$proxies(
           fabric.worker.metrics.proxies.ProxyMap val) {
             return ((fabric.metrics.Metric._Impl) fetch()).set$proxies(val);
         }
-
+        
         public fabric.metrics.util.TreatiesBox get$treatiesBox() {
             return ((fabric.metrics.Metric._Impl) fetch()).get$treatiesBox();
         }
-
+        
         public fabric.metrics.util.TreatiesBox set$treatiesBox(
           fabric.metrics.util.TreatiesBox val) {
             return ((fabric.metrics.Metric._Impl) fetch()).set$treatiesBox(val);
         }
-
+        
         public double value() {
             return ((fabric.metrics.Metric) fetch()).value();
         }
-
+        
         public fabric.metrics.DerivedMetric times(double arg1) {
             return ((fabric.metrics.Metric) fetch()).times(arg1);
         }
-
+        
         public fabric.metrics.DerivedMetric plus(fabric.metrics.Metric arg1) {
             return ((fabric.metrics.Metric) fetch()).plus(arg1);
         }
-
+        
         public static fabric.metrics.DerivedMetric static_plus(
           fabric.metrics.Metric arg1, fabric.metrics.Metric arg2) {
             return fabric.metrics.Metric._Impl.static_plus(arg1, arg2);
         }
-
+        
         public fabric.metrics.Metric min(fabric.metrics.Metric arg1) {
             return ((fabric.metrics.Metric) fetch()).min(arg1);
         }
-
+        
         public fabric.metrics.Metric max(fabric.metrics.Metric arg1) {
             return ((fabric.metrics.Metric) fetch()).max(arg1);
         }
-
+        
         public fabric.worker.metrics.treaties.MetricTreaty getEqualityTreaty(
           double arg1) {
             return ((fabric.metrics.Metric) fetch()).getEqualityTreaty(arg1);
         }
-
+        
         public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
           double arg1, double arg2, long arg3) {
             return ((fabric.metrics.Metric) fetch()).getThresholdTreaty(arg1,
                                                                         arg2,
                                                                         arg3);
         }
-
+        
         public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
           double arg1, double arg2) {
             return ((fabric.metrics.Metric) fetch()).getThresholdTreaty(arg1,
                                                                         arg2);
         }
-
+        
         public static fabric.metrics.Metric scaleAtStore(
           fabric.worker.Store arg1, double arg2, fabric.metrics.Metric arg3) {
             return fabric.metrics.Metric._Impl.scaleAtStore(arg1, arg2, arg3);
         }
-
+        
         public static fabric.metrics.Metric addAtStore(
           fabric.worker.Store arg1, fabric.metrics.Metric[] arg2) {
             return fabric.metrics.Metric._Impl.addAtStore(arg1, arg2);
         }
-
+        
         public static fabric.metrics.Metric minAtStore(
           fabric.worker.Store arg1, fabric.metrics.Metric[] arg2) {
             return fabric.metrics.Metric._Impl.minAtStore(arg1, arg2);
         }
-
+        
         public static fabric.metrics.Metric maxAtStore(
           fabric.worker.Store arg1, fabric.metrics.Metric[] arg2) {
             return fabric.metrics.Metric._Impl.maxAtStore(arg1, arg2);
         }
-
+        
         public boolean getUsePreset() {
             return ((fabric.metrics.Metric) fetch()).getUsePreset();
         }
-
+        
         public double getPresetR() {
             return ((fabric.metrics.Metric) fetch()).getPresetR();
         }
-
+        
         public double getPresetB() {
             return ((fabric.metrics.Metric) fetch()).getPresetB();
         }
-
+        
         public double getPresetV() {
             return ((fabric.metrics.Metric) fetch()).getPresetV();
         }
-
+        
         public double getPresetN() {
             return ((fabric.metrics.Metric) fetch()).getPresetN();
         }
-
+        
         public fabric.metrics.Metric fabric$metrics$Metric$() {
             return ((fabric.metrics.Metric) fetch()).fabric$metrics$Metric$();
         }
-
+        
         public fabric.metrics.Metric getProxy(fabric.worker.Store arg1) {
             return ((fabric.metrics.Metric) fetch()).getProxy(arg1);
         }
-
+        
         public double value(fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).value(arg1);
         }
-
+        
         public long samples() {
             return ((fabric.metrics.Metric) fetch()).samples();
         }
-
+        
         public long samples(fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).samples(arg1);
         }
-
+        
         public long lastUpdate() {
             return ((fabric.metrics.Metric) fetch()).lastUpdate();
         }
-
+        
         public long lastUpdate(fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).lastUpdate(arg1);
         }
-
+        
         public double updateInterval() {
             return ((fabric.metrics.Metric) fetch()).updateInterval();
         }
-
+        
         public double updateInterval(fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).updateInterval(arg1);
         }
-
+        
         public double velocity() {
             return ((fabric.metrics.Metric) fetch()).velocity();
         }
-
+        
         public double velocity(fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).velocity(arg1);
         }
-
+        
         public double noise() {
             return ((fabric.metrics.Metric) fetch()).noise();
         }
-
+        
         public double noise(fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).noise(arg1);
         }
-
+        
         public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           equalityPolicy(double arg1, fabric.worker.metrics.StatsMap arg2,
                          fabric.worker.Store arg3) {
             return ((fabric.metrics.Metric) fetch()).equalityPolicy(arg1, arg2,
                                                                     arg3);
         }
-
+        
         public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           equalityPolicy(double arg1, fabric.worker.Store arg2) {
             return ((fabric.metrics.Metric) fetch()).equalityPolicy(arg1, arg2);
         }
-
+        
         public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           thresholdPolicy(double arg1, double arg2,
                           fabric.worker.metrics.StatsMap arg3,
@@ -659,28 +660,28 @@ public interface Metric
                                                                      arg3,
                                                                      arg4);
         }
-
+        
         public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           thresholdPolicy(double arg1, double arg2, fabric.worker.Store arg3) {
             return ((fabric.metrics.Metric) fetch()).thresholdPolicy(arg1, arg2,
                                                                      arg3);
         }
-
+        
         public fabric.worker.metrics.StatsMap refreshWeakEstimates(
           fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).refreshWeakEstimates(arg1);
         }
-
+        
         public fabric.worker.metrics.StatsMap refreshWeakEstimates_remote(
           fabric.lang.security.Principal arg1,
           fabric.worker.metrics.StatsMap arg2) {
             return ((fabric.metrics.Metric) fetch()).
               refreshWeakEstimates_remote(arg1, arg2);
         }
-
+        
         public static final java.lang.Class[] $paramTypes0 =
           { fabric.worker.metrics.StatsMap.class };
-
+        
         public fabric.worker.metrics.StatsMap refreshWeakEstimates$remote(
           final fabric.worker.remote.RemoteWorker $remoteWorker,
           fabric.lang.security.Principal arg1,
@@ -703,22 +704,22 @@ public interface Metric
                     throw new fabric.common.exceptions.InternalError($e);
                 }
         }
-
+        
         public fabric.worker.metrics.StatsMap refreshLocally(
           fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).refreshLocally(arg1);
         }
-
+        
         public fabric.worker.metrics.StatsMap refreshLocally_remote(
           fabric.lang.security.Principal arg1,
           fabric.worker.metrics.StatsMap arg2) {
             return ((fabric.metrics.Metric) fetch()).refreshLocally_remote(
                                                        arg1, arg2);
         }
-
+        
         public static final java.lang.Class[] $paramTypes1 =
           { fabric.worker.metrics.StatsMap.class };
-
+        
         public fabric.worker.metrics.StatsMap refreshLocally$remote(
           final fabric.worker.remote.RemoteWorker $remoteWorker,
           fabric.lang.security.Principal arg1,
@@ -741,62 +742,62 @@ public interface Metric
                     throw new fabric.common.exceptions.InternalError($e);
                 }
         }
-
+        
         public double computeValue(fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).computeValue(arg1);
         }
-
+        
         public long computeSamples(fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).computeSamples(arg1);
         }
-
+        
         public long computeLastUpdate(fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).computeLastUpdate(arg1);
         }
-
+        
         public double computeUpdateInterval(
           fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).computeUpdateInterval(
                                                        arg1);
         }
-
+        
         public double computeVelocity(fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).computeVelocity(arg1);
         }
-
+        
         public double computeNoise(fabric.worker.metrics.StatsMap arg1) {
             return ((fabric.metrics.Metric) fetch()).computeNoise(arg1);
         }
-
+        
         public boolean isSingleStore() {
             return ((fabric.metrics.Metric) fetch()).isSingleStore();
         }
-
+        
         public fabric.worker.metrics.treaties.MetricTreaty
           createThresholdTreaty(double arg1, double arg2, long arg3) {
             return ((fabric.metrics.Metric) fetch()).createThresholdTreaty(
                                                        arg1, arg2, arg3);
         }
-
+        
         public fabric.worker.metrics.treaties.MetricTreaty createEqualityTreaty(
           double arg1) {
             return ((fabric.metrics.Metric) fetch()).createEqualityTreaty(arg1);
         }
-
+        
         public int compareTo(java.lang.Object arg1) {
             return ((fabric.metrics.Metric) fetch()).compareTo(arg1);
         }
-
+        
         public void refreshTreaty_remote(fabric.lang.security.Principal arg1,
                                          boolean arg2, long arg3,
                                          fabric.worker.metrics.StatsMap arg4) {
             ((fabric.metrics.Metric) fetch()).refreshTreaty_remote(arg1, arg2,
                                                                    arg3, arg4);
         }
-
+        
         public static final java.lang.Class[] $paramTypes2 = { boolean.class,
         long.class, fabric.worker.metrics.StatsMap.class };
-
+        
         public void refreshTreaty$remote(
           final fabric.worker.remote.RemoteWorker $remoteWorker,
           fabric.lang.security.Principal arg1, boolean arg2, long arg3,
@@ -817,22 +818,22 @@ public interface Metric
                     throw new fabric.common.exceptions.InternalError($e);
                 }
         }
-
+        
         public void refreshTreaty(boolean arg1, long arg2,
                                   fabric.worker.metrics.StatsMap arg3) {
             ((fabric.metrics.Metric) fetch()).refreshTreaty(arg1, arg2, arg3);
         }
-
+        
         public void refreshEqualityTreaty_remote(
           fabric.lang.security.Principal arg1, boolean arg2, double arg3,
           fabric.worker.metrics.StatsMap arg4) {
             ((fabric.metrics.Metric) fetch()).refreshEqualityTreaty_remote(
                                                 arg1, arg2, arg3, arg4);
         }
-
+        
         public static final java.lang.Class[] $paramTypes3 = { boolean.class,
         double.class, fabric.worker.metrics.StatsMap.class };
-
+        
         public void refreshEqualityTreaty$remote(
           final fabric.worker.remote.RemoteWorker $remoteWorker,
           fabric.lang.security.Principal arg1, boolean arg2, double arg3,
@@ -853,23 +854,23 @@ public interface Metric
                     throw new fabric.common.exceptions.InternalError($e);
                 }
         }
-
+        
         public void refreshEqualityTreaty(boolean arg1, double arg2,
                                           fabric.worker.metrics.StatsMap arg3) {
             ((fabric.metrics.Metric) fetch()).refreshEqualityTreaty(arg1, arg2,
                                                                     arg3);
         }
-
+        
         public void refreshThresholdTreaty_remote(
           fabric.lang.security.Principal arg1, boolean arg2, double arg3,
           double arg4, fabric.worker.metrics.StatsMap arg5) {
             ((fabric.metrics.Metric) fetch()).refreshThresholdTreaty_remote(
                                                 arg1, arg2, arg3, arg4, arg5);
         }
-
+        
         public static final java.lang.Class[] $paramTypes4 = { boolean.class,
         double.class, double.class, fabric.worker.metrics.StatsMap.class };
-
+        
         public void refreshThresholdTreaty$remote(
           final fabric.worker.remote.RemoteWorker $remoteWorker,
           fabric.lang.security.Principal arg1, boolean arg2, double arg3,
@@ -890,7 +891,7 @@ public interface Metric
                     throw new fabric.common.exceptions.InternalError($e);
                 }
         }
-
+        
         public void refreshThresholdTreaty(
           boolean arg1, double arg2, double arg3,
           fabric.worker.metrics.StatsMap arg4) {
@@ -898,46 +899,46 @@ public interface Metric
                                                                      arg3,
                                                                      arg4);
         }
-
+        
         public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
           boolean arg1, java.util.SortedSet arg2) {
             return ((fabric.metrics.Metric) fetch()).handleUpdates(arg1, arg2);
         }
-
+        
         public fabric.worker.metrics.ImmutableObserverSet handleDirectUpdates(
           ) {
             return ((fabric.metrics.Metric) fetch()).handleDirectUpdates();
         }
-
+        
         public boolean updateWithPostcondition(
           double arg1, fabric.worker.metrics.MetricUpdate[] arg2) {
             return ((fabric.metrics.Metric) fetch()).updateWithPostcondition(
                                                        arg1, arg2);
         }
-
+        
         public void createAndActivateTreaty(
           fabric.worker.metrics.treaties.statements.TreatyStatement arg1,
           boolean arg2) {
             ((fabric.metrics.Metric) fetch()).createAndActivateTreaty(arg1,
                                                                       arg2);
         }
-
+        
         public void assertPostcondition(
           fabric.worker.metrics.treaties.statements.TreatyStatement arg1) {
             ((fabric.metrics.Metric) fetch()).assertPostcondition(arg1);
         }
-
+        
         public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             return ((fabric.metrics.Metric) fetch()).getLeafSubjects();
         }
-
+        
         public _Proxy(Metric._Impl impl) { super(impl); }
-
+        
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }
     }
-
+    
     public abstract static class _Impl
     extends fabric.metrics.util.AbstractSubject._Impl
       implements fabric.metrics.Metric {
@@ -945,7 +946,7 @@ public interface Metric
         public double value() {
             return value(fabric.worker.metrics.StatsMap.emptyStats());
         }
-
+        
         /**
    * @param scalar
    *            a double scalar to scale this metric by
@@ -957,7 +958,7 @@ public interface Metric
                                                  (fabric.metrics.Metric)
                                                    this.$getProxy(), scalar);
         }
-
+        
         private static fabric.metrics.DerivedMetric static_times(
           fabric.metrics.Metric tmp, double scalar) {
             final fabric.worker.Store s = tmp.$getStore();
@@ -997,7 +998,7 @@ public interface Metric
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e102) {
-
+                                            
                                         }
                                     }
                                 }
@@ -1056,7 +1057,7 @@ public interface Metric
                                   !$e102.tid.isDescendantOf($currentTid103)) {
                                 throw $e102;
                             }
-                            throw new fabric.worker.UserAbortException();
+                            throw new fabric.worker.UserAbortException($e102);
                         }
                         catch (final fabric.worker.
                                  TransactionRestartingException $e102) {
@@ -1130,7 +1131,7 @@ public interface Metric
                                                        $currentTid103))
                                         throw $e102;
                                     throw new fabric.worker.UserAbortException(
-                                            );
+                                            $e102);
                                 }
                                 catch (final fabric.worker.
                                          TransactionRestartingException $e102) {
@@ -1163,7 +1164,7 @@ public interface Metric
             }
             return val;
         }
-
+        
         /**
    * @param other
    *            another {@link Metric} to add with this {@link Metric}.
@@ -1175,7 +1176,7 @@ public interface Metric
                                                  (fabric.metrics.Metric)
                                                    this.$getProxy(), other);
         }
-
+        
         public static fabric.metrics.DerivedMetric static_plus(
           fabric.metrics.Metric tmp, fabric.metrics.Metric other) {
             if (fabric.lang.Object._Proxy.
@@ -1222,7 +1223,7 @@ public interface Metric
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e113) {
-
+                                            
                                         }
                                     }
                                 }
@@ -1283,7 +1284,7 @@ public interface Metric
                                   !$e113.tid.isDescendantOf($currentTid114)) {
                                 throw $e113;
                             }
-                            throw new fabric.worker.UserAbortException();
+                            throw new fabric.worker.UserAbortException($e113);
                         }
                         catch (final fabric.worker.
                                  TransactionRestartingException $e113) {
@@ -1357,7 +1358,7 @@ public interface Metric
                                                        $currentTid114))
                                         throw $e113;
                                     throw new fabric.worker.UserAbortException(
-                                            );
+                                            $e113);
                                 }
                                 catch (final fabric.worker.
                                          TransactionRestartingException $e113) {
@@ -1390,7 +1391,7 @@ public interface Metric
             }
             return val;
         }
-
+        
         /**
    * @param other
    *            another {@link Metric} to take the minimum of along with this
@@ -1403,7 +1404,7 @@ public interface Metric
                                                  (fabric.metrics.Metric)
                                                    this.$getProxy(), other);
         }
-
+        
         private static fabric.metrics.Metric static_min(
           fabric.metrics.Metric tmp, fabric.metrics.Metric other) {
             if (tmp.equals(other)) return tmp;
@@ -1458,7 +1459,7 @@ public interface Metric
                                             }
                                             catch (java.lang.
                                                      InterruptedException $e124) {
-
+                                                
                                             }
                                         }
                                     }
@@ -1523,7 +1524,8 @@ public interface Metric
                                                    $currentTid125)) {
                                     throw $e124;
                                 }
-                                throw new fabric.worker.UserAbortException();
+                                throw new fabric.worker.UserAbortException(
+                                        $e124);
                             }
                             catch (final fabric.worker.
                                      TransactionRestartingException $e124) {
@@ -1597,7 +1599,7 @@ public interface Metric
                                                            $currentTid125))
                                             throw $e124;
                                         throw new fabric.worker.
-                                                UserAbortException();
+                                                UserAbortException($e124);
                                     }
                                     catch (final fabric.worker.
                                              TransactionRestartingException $e124) {
@@ -1667,7 +1669,7 @@ public interface Metric
                                             }
                                             catch (java.lang.
                                                      InterruptedException $e135) {
-
+                                                
                                             }
                                         }
                                     }
@@ -1732,7 +1734,8 @@ public interface Metric
                                                    $currentTid136)) {
                                     throw $e135;
                                 }
-                                throw new fabric.worker.UserAbortException();
+                                throw new fabric.worker.UserAbortException(
+                                        $e135);
                             }
                             catch (final fabric.worker.
                                      TransactionRestartingException $e135) {
@@ -1806,7 +1809,7 @@ public interface Metric
                                                            $currentTid136))
                                             throw $e135;
                                         throw new fabric.worker.
-                                                UserAbortException();
+                                                UserAbortException($e135);
                                     }
                                     catch (final fabric.worker.
                                              TransactionRestartingException $e135) {
@@ -1838,7 +1841,7 @@ public interface Metric
             }
             return val;
         }
-
+        
         /**
    * @param other
    *            another {@link Metric} to take the maximum of along with this
@@ -1849,7 +1852,7 @@ public interface Metric
         public fabric.metrics.Metric max(fabric.metrics.Metric other) {
             return this.times(-1).min(other.times(-1)).times(-1);
         }
-
+        
         /**
    * @param rate
    *            the rate parameter for the bound on the resulting
@@ -1871,7 +1874,7 @@ public interface Metric
                                                  (fabric.metrics.Metric)
                                                    this.$getProxy(), value);
         }
-
+        
         private static fabric.worker.metrics.treaties.MetricTreaty
           static_getEqualityTreaty(fabric.metrics.Metric tmp, double value) {
             fabric.worker.metrics.treaties.MetricTreaty mc = null;
@@ -1907,7 +1910,7 @@ public interface Metric
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e146) {
-
+                                            
                                         }
                                     }
                                 }
@@ -1960,7 +1963,7 @@ public interface Metric
                                   !$e146.tid.isDescendantOf($currentTid147)) {
                                 throw $e146;
                             }
-                            throw new fabric.worker.UserAbortException();
+                            throw new fabric.worker.UserAbortException($e146);
                         }
                         catch (final fabric.worker.
                                  TransactionRestartingException $e146) {
@@ -2034,7 +2037,7 @@ public interface Metric
                                                        $currentTid147))
                                         throw $e146;
                                     throw new fabric.worker.UserAbortException(
-                                            );
+                                            $e146);
                                 }
                                 catch (final fabric.worker.
                                          TransactionRestartingException $e146) {
@@ -2067,7 +2070,7 @@ public interface Metric
             }
             return mc;
         }
-
+        
         /**
    * @param rate
    *            the rate parameter for the bound on the resulting
@@ -2092,7 +2095,7 @@ public interface Metric
                                                    this.$getProxy(), rate, base,
                                                  time);
         }
-
+        
         private static fabric.worker.metrics.treaties.MetricTreaty
           static_getThresholdTreaty(fabric.metrics.Metric tmp, double rate,
                                     double base, long time) {
@@ -2129,7 +2132,7 @@ public interface Metric
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e157) {
-
+                                            
                                         }
                                     }
                                 }
@@ -2185,7 +2188,7 @@ public interface Metric
                                   !$e157.tid.isDescendantOf($currentTid158)) {
                                 throw $e157;
                             }
-                            throw new fabric.worker.UserAbortException();
+                            throw new fabric.worker.UserAbortException($e157);
                         }
                         catch (final fabric.worker.
                                  TransactionRestartingException $e157) {
@@ -2259,7 +2262,7 @@ public interface Metric
                                                        $currentTid158))
                                         throw $e157;
                                     throw new fabric.worker.UserAbortException(
-                                            );
+                                            $e157);
                                 }
                                 catch (final fabric.worker.
                                          TransactionRestartingException $e157) {
@@ -2292,7 +2295,7 @@ public interface Metric
             }
             return mc;
         }
-
+        
         /**
    * @param rate
    *            the rate parameter for the bound on the resulting
@@ -2310,7 +2313,7 @@ public interface Metric
           double rate, double base) {
             return getThresholdTreaty(rate, base, 0);
         }
-
+        
         /**
    * Create a locally tracked {@link DerivedMetric} that takes a scaled value
    * of another {@link Metric}.
@@ -2364,7 +2367,7 @@ public interface Metric
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e168) {
-
+                                            
                                         }
                                     }
                                 }
@@ -2423,7 +2426,7 @@ public interface Metric
                                   !$e168.tid.isDescendantOf($currentTid169)) {
                                 throw $e168;
                             }
-                            throw new fabric.worker.UserAbortException();
+                            throw new fabric.worker.UserAbortException($e168);
                         }
                         catch (final fabric.worker.
                                  TransactionRestartingException $e168) {
@@ -2497,7 +2500,7 @@ public interface Metric
                                                        $currentTid169))
                                         throw $e168;
                                     throw new fabric.worker.UserAbortException(
-                                            );
+                                            $e168);
                                 }
                                 catch (final fabric.worker.
                                          TransactionRestartingException $e168) {
@@ -2530,7 +2533,7 @@ public interface Metric
             }
             return val;
         }
-
+        
         /**
    * Create a locally tracked {@link DerivedMetric} that takes the sum of
    * other {@link Metric}s.
@@ -2587,7 +2590,7 @@ public interface Metric
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e179) {
-
+                                            
                                         }
                                     }
                                 }
@@ -2646,7 +2649,7 @@ public interface Metric
                                   !$e179.tid.isDescendantOf($currentTid180)) {
                                 throw $e179;
                             }
-                            throw new fabric.worker.UserAbortException();
+                            throw new fabric.worker.UserAbortException($e179);
                         }
                         catch (final fabric.worker.
                                  TransactionRestartingException $e179) {
@@ -2720,7 +2723,7 @@ public interface Metric
                                                        $currentTid180))
                                         throw $e179;
                                     throw new fabric.worker.UserAbortException(
-                                            );
+                                            $e179);
                                 }
                                 catch (final fabric.worker.
                                          TransactionRestartingException $e179) {
@@ -2753,7 +2756,7 @@ public interface Metric
             }
             return val;
         }
-
+        
         /**
    * Create a locally tracked {@link DerivedMetric} that takes the minimum of
    * other {@link Metric}s.
@@ -2809,7 +2812,7 @@ public interface Metric
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e190) {
-
+                                            
                                         }
                                     }
                                 }
@@ -2868,7 +2871,7 @@ public interface Metric
                                   !$e190.tid.isDescendantOf($currentTid191)) {
                                 throw $e190;
                             }
-                            throw new fabric.worker.UserAbortException();
+                            throw new fabric.worker.UserAbortException($e190);
                         }
                         catch (final fabric.worker.
                                  TransactionRestartingException $e190) {
@@ -2942,7 +2945,7 @@ public interface Metric
                                                        $currentTid191))
                                         throw $e190;
                                     throw new fabric.worker.UserAbortException(
-                                            );
+                                            $e190);
                                 }
                                 catch (final fabric.worker.
                                          TransactionRestartingException $e190) {
@@ -2975,7 +2978,7 @@ public interface Metric
             }
             return val;
         }
-
+        
         /**
    * Create a locally tracked {@link DerivedMetric} that takes the maximum of
    * other {@link Metric}s.
@@ -3000,27 +3003,27 @@ public interface Metric
             }
             return fabric.metrics.Metric._Impl.minAtStore(s, terms).times(-1);
         }
-
+        
         /**
    * Cache of DerivedMetrics using this Metric as a term (helps to break up
    * interning cache to avoid one big map.
    */
         public abstract boolean getUsePreset();
-
+        
         public abstract double getPresetR();
-
+        
         public abstract double getPresetB();
-
+        
         public abstract double getPresetV();
-
+        
         public abstract double getPresetN();
-
+        
         public fabric.worker.metrics.proxies.ProxyMap get$proxies() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
             return this.proxies;
         }
-
+        
         public fabric.worker.metrics.proxies.ProxyMap set$proxies(
           fabric.worker.metrics.proxies.ProxyMap val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -3030,9 +3033,9 @@ public interface Metric
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-
+        
         protected fabric.worker.metrics.proxies.ProxyMap proxies;
-
+        
         /**
    * @param store
    *            the Store that holds this {@link Metric}
@@ -3047,9 +3050,13 @@ public interface Metric
                                                    this.$getProxy()));
             fabric$metrics$util$AbstractSubject$();
             this.set$proxies(fabric.worker.metrics.proxies.ProxyMap.emptyMap());
+            this.
+              set$$associates(
+                fabric.worker.metrics.ImmutableObjectSet.emptySet().
+                    add(this.get$treatiesBox()));
             return (fabric.metrics.Metric) this.$getProxy();
         }
-
+        
         /**
    * Get a proxy metric for this metric (returns this if the store is the same).
    */
@@ -3066,9 +3073,10 @@ public interface Metric
               fabric$metrics$ProxyMetric$((fabric.metrics.Metric)
                                             this.$getProxy());
             this.set$proxies(this.get$proxies().put(s, result));
+            this.set$$associates(this.get$$associates().add(result));
             return result;
         }
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3076,12 +3084,12 @@ public interface Metric
    * @return the current value of the {@link Metric}.
    */
         public abstract double value(fabric.worker.metrics.StatsMap weakStats);
-
+        
         /** @return the number of samples of the {@link Metric}. */
         public long samples() {
             return samples(fabric.worker.metrics.StatsMap.emptyStats());
         }
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3089,12 +3097,12 @@ public interface Metric
    * @return the number of samples of the {@link Metric}.
    */
         public abstract long samples(fabric.worker.metrics.StatsMap weakStats);
-
+        
         /** @return the time of the last update of the {@link Metric}. */
         public long lastUpdate() {
             return lastUpdate(fabric.worker.metrics.StatsMap.emptyStats());
         }
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3102,12 +3110,12 @@ public interface Metric
    * @return the time of the last update of the {@link Metric}.
    */
         public abstract long lastUpdate(fabric.worker.metrics.StatsMap weakStats);
-
+        
         /** @return the current updateInterval estimate for updates of {@link Metric}. */
         public double updateInterval() {
             return updateInterval(fabric.worker.metrics.StatsMap.emptyStats());
         }
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3116,12 +3124,12 @@ public interface Metric
    */
         public abstract double updateInterval(
           fabric.worker.metrics.StatsMap weakStats);
-
+        
         /** @return the estimated velocity of the {@link Metric}. */
         public double velocity() {
             return velocity(fabric.worker.metrics.StatsMap.emptyStats());
         }
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3130,12 +3138,12 @@ public interface Metric
    */
         public abstract double velocity(
           fabric.worker.metrics.StatsMap weakStats);
-
+        
         /** @return the estimated noise of the {@link Metric}. */
         public double noise() {
             return noise(fabric.worker.metrics.StatsMap.emptyStats());
         }
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3143,7 +3151,7 @@ public interface Metric
    * @return the estimated velocity of the {@link Metric}.
    */
         public abstract double noise(fabric.worker.metrics.StatsMap weakStats);
-
+        
         /**
    * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
@@ -3167,7 +3175,7 @@ public interface Metric
             return fabric.worker.metrics.treaties.enforcement.DirectPolicy.
                      singleton;
         }
-
+        
         /**
    * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
@@ -3188,7 +3196,7 @@ public interface Metric
                                   fabric.worker.metrics.StatsMap.emptyStats(),
                                   s);
         }
-
+        
         /**
    * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
@@ -3213,7 +3221,7 @@ public interface Metric
             return fabric.worker.metrics.treaties.enforcement.DirectPolicy.
                      singleton;
         }
-
+        
         /**
    * Used to construct and enforce {@link MetricTreaty}s bounding this
    * {@link Metric}s value.
@@ -3235,7 +3243,7 @@ public interface Metric
                                    fabric.worker.metrics.StatsMap.emptyStats(),
                                    s);
         }
-
+        
         /**
    * Update the current "weak" estimates to be used by {@link #policy(Bound)}
    * @param weakStats
@@ -3246,13 +3254,13 @@ public interface Metric
           fabric.worker.metrics.StatsMap weakStats) {
             return refreshLocally(weakStats);
         }
-
+        
         public fabric.worker.metrics.StatsMap refreshWeakEstimates_remote(
           fabric.lang.security.Principal caller,
           fabric.worker.metrics.StatsMap weakStats) {
             return refreshWeakEstimates(weakStats);
         }
-
+        
         /**
    * Utility to allow for running updates as close to the metric as possible.
    * @param weakStats
@@ -3267,7 +3275,7 @@ public interface Metric
                                                  (fabric.metrics.Metric)
                                                    this.$getProxy(), weakStats);
         }
-
+        
         private static fabric.worker.metrics.StatsMap static_refreshLocally(
           fabric.metrics.Metric tmp, fabric.worker.metrics.StatsMap weakStats) {
             fabric.common.Logging.METRICS_LOGGER.
@@ -3319,7 +3327,7 @@ public interface Metric
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e201) {
-
+                                            
                                         }
                                     }
                                 }
@@ -3383,7 +3391,7 @@ public interface Metric
                                   !$e201.tid.isDescendantOf($currentTid202)) {
                                 throw $e201;
                             }
-                            throw new fabric.worker.UserAbortException();
+                            throw new fabric.worker.UserAbortException($e201);
                         }
                         catch (final fabric.worker.
                                  TransactionRestartingException $e201) {
@@ -3457,7 +3465,7 @@ public interface Metric
                                                        $currentTid202))
                                         throw $e201;
                                     throw new fabric.worker.UserAbortException(
-                                            );
+                                            $e201);
                                 }
                                 catch (final fabric.worker.
                                          TransactionRestartingException $e201) {
@@ -3490,13 +3498,13 @@ public interface Metric
                 return result;
             }
         }
-
+        
         public fabric.worker.metrics.StatsMap refreshLocally_remote(
           fabric.lang.security.Principal caller,
           fabric.worker.metrics.StatsMap weakStats) {
             return refreshLocally(weakStats);
         }
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3504,7 +3512,7 @@ public interface Metric
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
         public abstract double computeValue(fabric.worker.metrics.StatsMap weakStats);
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3512,7 +3520,7 @@ public interface Metric
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
         public abstract long computeSamples(fabric.worker.metrics.StatsMap weakStats);
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3520,7 +3528,7 @@ public interface Metric
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
         public abstract long computeLastUpdate(fabric.worker.metrics.StatsMap weakStats);
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3528,7 +3536,7 @@ public interface Metric
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
         public abstract double computeUpdateInterval(fabric.worker.metrics.StatsMap weakStats);
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3536,7 +3544,7 @@ public interface Metric
    * @return a freshly computed weak velocity for this {@link DerivedMetric}.
    */
         public abstract double computeVelocity(fabric.worker.metrics.StatsMap weakStats);
-
+        
         /**
    * @param weakStats
    *            StatsMap for mapping metrics to weakly consistent values to use
@@ -3544,17 +3552,17 @@ public interface Metric
    * @return a freshly computed noise for this {@link DerivedMetric}.
    */
         public abstract double computeNoise(fabric.worker.metrics.StatsMap weakStats);
-
+        
         /**
    * @return true iff all the sampling and transformations on this metric are
    *         stored on a single store.
    */
         public abstract boolean isSingleStore();
-
+        
         public fabric.metrics.util.TreatiesBox get$treatiesBox() {
             return this.treatiesBox;
         }
-
+        
         public fabric.metrics.util.TreatiesBox set$treatiesBox(
           fabric.metrics.util.TreatiesBox val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -3564,9 +3572,9 @@ public interface Metric
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-
+        
         public fabric.metrics.util.TreatiesBox treatiesBox;
-
+        
         /**
    * @param bound
    *        the bound that the treaty will enforce on this
@@ -3576,12 +3584,12 @@ public interface Metric
    */
         public fabric.worker.metrics.treaties.MetricTreaty
           createThresholdTreaty(double rate, double base, long time) {
-            return this.get$treatiesBox().get$$treaties().
+            return this.get$treatiesBox().get$treaties().
               create(
                 new fabric.worker.metrics.treaties.statements.ThresholdStatement(
                   rate, base, time));
         }
-
+        
         /**
    * @param bound
    *        the bound that the treaty will enforce on this
@@ -3591,12 +3599,12 @@ public interface Metric
    */
         public fabric.worker.metrics.treaties.MetricTreaty createEqualityTreaty(
           double value) {
-            return this.get$treatiesBox().get$$treaties().
+            return this.get$treatiesBox().get$treaties().
               create(
                 new fabric.worker.metrics.treaties.statements.EqualityStatement(
                   value));
         }
-
+        
         public int compareTo(java.lang.Object that) {
             if (!(fabric.lang.Object._Proxy.
                     $getProxy(that) instanceof fabric.metrics.Metric)) return 0;
@@ -3623,20 +3631,20 @@ public interface Metric
             }
             return thisHash - thatHash;
         }
-
+        
         public void refreshTreaty_remote(
           fabric.lang.security.Principal p, boolean asyncExtension,
           long treatyId, fabric.worker.metrics.StatsMap weakStats) {
             this.refreshTreaty(asyncExtension, treatyId, weakStats);
         }
-
+        
         private static void refreshTreaty_static(
           fabric.metrics.Metric tmp, boolean asyncExtension, long treatyId,
           fabric.worker.metrics.StatsMap weakStats) {
             fabric.worker.metrics.treaties.MetricTreaty t = null;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                t = tmp.get$treatiesBox().get$$treaties().get(treatyId);
+                t = tmp.get$treatiesBox().get$treaties().get(treatyId);
             }
             else {
                 {
@@ -3666,7 +3674,7 @@ public interface Metric
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e212) {
-
+                                            
                                         }
                                     }
                                 }
@@ -3680,7 +3688,7 @@ public interface Metric
                         try {
                             try {
                                 t =
-                                  tmp.get$treatiesBox().get$$treaties().
+                                  tmp.get$treatiesBox().get$treaties().
                                     get(treatyId);
                             }
                             catch (final fabric.worker.RetryException $e212) {
@@ -3723,7 +3731,7 @@ public interface Metric
                                   !$e212.tid.isDescendantOf($currentTid213)) {
                                 throw $e212;
                             }
-                            throw new fabric.worker.UserAbortException();
+                            throw new fabric.worker.UserAbortException($e212);
                         }
                         catch (final fabric.worker.
                                  TransactionRestartingException $e212) {
@@ -3797,7 +3805,7 @@ public interface Metric
                                                        $currentTid213))
                                         throw $e212;
                                     throw new fabric.worker.UserAbortException(
-                                            );
+                                            $e212);
                                 }
                                 catch (final fabric.worker.
                                          TransactionRestartingException $e212) {
@@ -3830,7 +3838,7 @@ public interface Metric
             }
             t.update(asyncExtension, weakStats);
         }
-
+        
         public void refreshTreaty(boolean asyncExtension, long treatyId,
                                   fabric.worker.metrics.StatsMap weakStats) {
             fabric.metrics.Metric._Impl.refreshTreaty_static(
@@ -3838,13 +3846,13 @@ public interface Metric
                                             this.$getProxy(), asyncExtension,
                                           treatyId, weakStats);
         }
-
+        
         public void refreshEqualityTreaty_remote(
           fabric.lang.security.Principal p, boolean asyncExtension,
           double value, fabric.worker.metrics.StatsMap weakStats) {
             this.refreshEqualityTreaty(asyncExtension, value, weakStats);
         }
-
+        
         private static void refreshEqualityTreaty_static(
           fabric.metrics.Metric tmp, boolean asyncExtension, double value,
           fabric.worker.metrics.StatsMap weakStats) {
@@ -3855,11 +3863,11 @@ public interface Metric
                 value);
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                t = tmp.get$treatiesBox().get$$treaties().get(treatyStatement);
+                t = tmp.get$treatiesBox().get$treaties().get(treatyStatement);
                 if (fabric.lang.Object._Proxy.idEquals(t, null)) {
                     t =
-                      tmp.get$treatiesBox().get$$treaties().create(
-                                                              treatyStatement);
+                      tmp.get$treatiesBox().get$treaties().create(
+                                                             treatyStatement);
                 }
             }
             else {
@@ -3890,7 +3898,7 @@ public interface Metric
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e223) {
-
+                                            
                                         }
                                     }
                                 }
@@ -3904,12 +3912,12 @@ public interface Metric
                         try {
                             try {
                                 t =
-                                  tmp.get$treatiesBox().get$$treaties().
+                                  tmp.get$treatiesBox().get$treaties().
                                     get(treatyStatement);
                                 if (fabric.lang.Object._Proxy.idEquals(t,
                                                                        null)) {
                                     t =
-                                      tmp.get$treatiesBox().get$$treaties().
+                                      tmp.get$treatiesBox().get$treaties().
                                         create(treatyStatement);
                                 }
                             }
@@ -3953,7 +3961,7 @@ public interface Metric
                                   !$e223.tid.isDescendantOf($currentTid224)) {
                                 throw $e223;
                             }
-                            throw new fabric.worker.UserAbortException();
+                            throw new fabric.worker.UserAbortException($e223);
                         }
                         catch (final fabric.worker.
                                  TransactionRestartingException $e223) {
@@ -4027,7 +4035,7 @@ public interface Metric
                                                        $currentTid224))
                                         throw $e223;
                                     throw new fabric.worker.UserAbortException(
-                                            );
+                                            $e223);
                                 }
                                 catch (final fabric.worker.
                                          TransactionRestartingException $e223) {
@@ -4060,7 +4068,7 @@ public interface Metric
             }
             t.update(asyncExtension, weakStats);
         }
-
+        
         public void refreshEqualityTreaty(
           boolean asyncExtension, double value,
           fabric.worker.metrics.StatsMap weakStats) {
@@ -4069,13 +4077,13 @@ public interface Metric
                                             this.$getProxy(), asyncExtension,
                                           value, weakStats);
         }
-
+        
         public void refreshThresholdTreaty_remote(
           fabric.lang.security.Principal p, boolean asyncExtension, double rate,
           double base, fabric.worker.metrics.StatsMap weakStats) {
             this.refreshThresholdTreaty(asyncExtension, rate, base, weakStats);
         }
-
+        
         private static void refreshThresholdTreaty_static(
           fabric.metrics.Metric tmp, boolean asyncExtension, double rate,
           double base, fabric.worker.metrics.StatsMap weakStats) {
@@ -4086,11 +4094,11 @@ public interface Metric
                 rate, base);
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                t = tmp.get$treatiesBox().get$$treaties().get(treatyStatement);
+                t = tmp.get$treatiesBox().get$treaties().get(treatyStatement);
                 if (fabric.lang.Object._Proxy.idEquals(t, null)) {
                     t =
-                      tmp.get$treatiesBox().get$$treaties().create(
-                                                              treatyStatement);
+                      tmp.get$treatiesBox().get$treaties().create(
+                                                             treatyStatement);
                 }
             }
             else {
@@ -4121,7 +4129,7 @@ public interface Metric
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e234) {
-
+                                            
                                         }
                                     }
                                 }
@@ -4135,12 +4143,12 @@ public interface Metric
                         try {
                             try {
                                 t =
-                                  tmp.get$treatiesBox().get$$treaties().
+                                  tmp.get$treatiesBox().get$treaties().
                                     get(treatyStatement);
                                 if (fabric.lang.Object._Proxy.idEquals(t,
                                                                        null)) {
                                     t =
-                                      tmp.get$treatiesBox().get$$treaties().
+                                      tmp.get$treatiesBox().get$treaties().
                                         create(treatyStatement);
                                 }
                             }
@@ -4184,7 +4192,7 @@ public interface Metric
                                   !$e234.tid.isDescendantOf($currentTid235)) {
                                 throw $e234;
                             }
-                            throw new fabric.worker.UserAbortException();
+                            throw new fabric.worker.UserAbortException($e234);
                         }
                         catch (final fabric.worker.
                                  TransactionRestartingException $e234) {
@@ -4258,7 +4266,7 @@ public interface Metric
                                                        $currentTid235))
                                         throw $e234;
                                     throw new fabric.worker.UserAbortException(
-                                            );
+                                            $e234);
                                 }
                                 catch (final fabric.worker.
                                          TransactionRestartingException $e234) {
@@ -4291,7 +4299,7 @@ public interface Metric
             }
             t.update(asyncExtension, weakStats);
         }
-
+        
         public void refreshThresholdTreaty(
           boolean asyncExtension, double rate, double base,
           fabric.worker.metrics.StatsMap weakStats) {
@@ -4300,7 +4308,7 @@ public interface Metric
                                             this.$getProxy(), asyncExtension,
                                           rate, base, weakStats);
         }
-
+        
         public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
           boolean includesObserver, java.util.SortedSet treaties) {
             java.util.SortedSet treatiesToProcess =
@@ -4317,7 +4325,7 @@ public interface Metric
                  iter.hasNext(); ) {
                 long treatyId = ((java.lang.Long) iter.next()).longValue();
                 fabric.worker.metrics.treaties.MetricTreaty treaty =
-                  this.get$treatiesBox().get$$treaties().get(treatyId);
+                  this.get$treatiesBox().get$treaties().get(treatyId);
                 if (fabric.lang.Object._Proxy.idEquals(treaty, null)) continue;
                 fabric.common.Logging.METRICS_LOGGER.
                   log(
@@ -4338,13 +4346,13 @@ public interface Metric
             }
             return affected;
         }
-
+        
         /**
    * Handle an update where the metric itself is observing.
    */
         public abstract fabric.worker.metrics.ImmutableObserverSet
           handleDirectUpdates();
-
+        
         /**
    * Given a treaty bound that must hold as a post condition, apply the given
    * update if the bound will still hold on this metric afterwards.
@@ -4358,7 +4366,7 @@ public interface Metric
         public boolean updateWithPostcondition(
           double bound, fabric.worker.metrics.MetricUpdate[] updates) {
             fabric.worker.metrics.treaties.MetricTreaty existingTreaty =
-              this.get$treatiesBox().get$$treaties().
+              this.get$treatiesBox().get$treaties().
               get(
                 new fabric.worker.metrics.treaties.statements.ThresholdStatement(
                   0, bound, 0));
@@ -4397,7 +4405,7 @@ public interface Metric
             }
             return false;
         }
-
+        
         /**
    * Create and activate a threshold treaty (purely for
    * updateWithPostcondition), possibly across all proxies of this metric.
@@ -4463,12 +4471,13 @@ public interface Metric
                 }
             }
         }
-
+        
         public void assertPostcondition(
           fabric.worker.metrics.treaties.statements.TreatyStatement stmt) {
             fabric.worker.metrics.treaties.MetricTreaty existing =
-              this.get$treatiesBox().get$$treaties().get(stmt);
-            if (!fabric.lang.Object._Proxy.idEquals(existing, null)) {
+              this.get$treatiesBox().get$treaties().get(stmt);
+            if (!fabric.lang.Object._Proxy.idEquals(existing, null) &&
+                  !existing.invalid()) {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   addTreatiedPostcondition(existing);
             }
@@ -4478,41 +4487,41 @@ public interface Metric
                                                this.$getProxy(), stmt);
             }
         }
-
+        
         public void addObserver(fabric.metrics.util.Observer o) {
             this.get$treatiesBox().addObserver(o);
         }
-
+        
         public void addObserver(fabric.metrics.util.Observer o, long id) {
             this.get$treatiesBox().addObserver(o, id);
         }
-
+        
         public void removeObserver(fabric.metrics.util.Observer o) {
             this.get$treatiesBox().removeObserver(o);
         }
-
+        
         public void removeObserver(fabric.metrics.util.Observer o, long id) {
             this.get$treatiesBox().removeObserver(o, id);
         }
-
+        
         public boolean observedBy(fabric.metrics.util.Observer o) {
             return this.get$treatiesBox().observedBy(o);
         }
-
+        
         public boolean isObserved() {
             return this.get$treatiesBox().isObserved();
         }
-
+        
         public fabric.worker.metrics.ImmutableObserverSet getObservers() {
             return this.get$treatiesBox().getObservers();
         }
-
+        
         public _Impl(fabric.worker.Store $location) { super($location); }
-
+        
         protected fabric.lang.Object._Proxy $makeProxy() {
             return new fabric.metrics.Metric._Proxy(this);
         }
-
+        
         public void $serialize(java.io.ObjectOutput out,
                                java.util.List refTypes,
                                java.util.List intraStoreRefs,
@@ -4523,22 +4532,20 @@ public interface Metric
             $writeRef($getStore(), this.treatiesBox, refTypes, out,
                       intraStoreRefs, interStoreRefs);
         }
-
+        
         public _Impl(fabric.worker.Store store, long onum, int version,
                      fabric.worker.metrics.ImmutableObjectSet associates,
-
-                     fabric.worker.metrics.treaties.TreatySet treaties, long expiry,
-                     fabric.worker.Store labelStore, long labelOnum,
-                     fabric.worker.Store accessPolicyStore,
+                     long expiry, fabric.worker.Store labelStore,
+                     long labelOnum, fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, associates, treaties, expiry,
-                  labelStore, labelOnum, accessPolicyStore, accessPolicyOnum,
-                  in, refTypes, intraStoreRefs, interStoreRefs);
+            super(store, onum, version, associates, expiry, labelStore,
+                  labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
+                  intraStoreRefs, interStoreRefs);
             this.proxies = (fabric.worker.metrics.proxies.ProxyMap)
                              in.readObject();
             this.treatiesBox =
@@ -4547,7 +4554,7 @@ public interface Metric
                          (fabric.common.RefTypeEnum) refTypes.next(), in, store,
                          intraStoreRefs, interStoreRefs);
         }
-
+        
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
             super.$copyAppStateFrom(other);
             fabric.metrics.Metric._Impl src = (fabric.metrics.Metric._Impl)
@@ -4556,20 +4563,20 @@ public interface Metric
             this.treatiesBox = src.treatiesBox;
         }
     }
-
+    
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
           implements fabric.metrics.Metric._Static {
             public _Proxy(fabric.metrics.Metric._Static._Impl impl) {
                 super(impl);
             }
-
+            
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
-
+            
             public static final fabric.metrics.Metric._Static $instance;
-
+            
             static {
                 fabric.
                   metrics.
@@ -4585,7 +4592,7 @@ public interface Metric
                 impl.$init();
             }
         }
-
+        
         class _Impl extends fabric.lang.Object._Impl
           implements fabric.metrics.Metric._Static {
             public void $serialize(java.io.ObjectOutput out,
@@ -4595,41 +4602,38 @@ public interface Metric
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             }
-
+            
             public _Impl(fabric.worker.Store store, long onum, int version,
                          fabric.worker.metrics.ImmutableObjectSet associates,
-
-                         fabric.worker.metrics.treaties.TreatySet treaties, long expiry,
-                         fabric.worker.Store labelStore, long labelOnum,
-                         fabric.worker.Store accessPolicyStore,
+                         long expiry, fabric.worker.Store labelStore,
+                         long labelOnum, fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, associates, treaties, expiry,
-                      labelStore, labelOnum, accessPolicyStore,
-                      accessPolicyOnum, in, refTypes, intraStoreRefs,
-                      interStoreRefs);
+                super(store, onum, version, associates, expiry, labelStore,
+                      labelOnum, accessPolicyStore, accessPolicyOnum, in,
+                      refTypes, intraStoreRefs, interStoreRefs);
             }
-
+            
             public _Impl(fabric.worker.Store store) { super(store); }
-
+            
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.metrics.Metric._Static._Proxy(this);
             }
-
+            
             private void $init() {  }
         }
-
+        
     }
-
-    public static final byte[] $classHash = new byte[] { 30, 63, 111, -76, 5,
-    124, 89, 26, -35, -35, -17, -103, 13, 105, 126, -73, -114, -107, -89, 40,
-    -99, -111, -55, 45, -80, 7, 103, 94, -55, -9, -17, 91 };
+    
+    public static final byte[] $classHash = new byte[] { -46, 71, -60, -101, 1,
+    -104, -103, 101, -42, 24, 110, -5, 54, 18, -7, 2, 36, -8, -106, -18, -114,
+    12, -123, 76, 78, -99, 43, 89, 106, -29, -86, 90 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1537039040000L;
+    public static final long jlc$SourceLastModified$fabil = 1548621387000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "H4sIAAAAAAAAAK1cCXgVVZa+7z0SSFgSdg2LgBENSOKCOqwKkUAkSCAJCgih8l4lKai8elTdBy8qKjCKyzTtgog9SuuIG4LOqDT9TQ/tMu0IYtui42j3NIrTbbc2wwDTbtPjMufce96S96puXs2XfF/d/6Xq3nPPf8+55y617DnBChybjWvVWgyzknfGdKeyRmupravXbEePVJua4zTC2eZw31612z99MjI6yIJ1rF9Yi1pRI6yZzVGHswF1q7V1WlVU51VNi2unLWdFYSw4T3PaOQsun52w2ZiYZXa2mRanSnLk3z+xatsDK0ufD7GSZazEiDZwjRvhaivK9QRfxvp16B0tuu3MikT0yDI2MKrrkQbdNjTTuB4yWtFlbJBjtEU1Hrd1Z7HuWOY6zDjIicd0W9SZPInqW6C2HQ9zywb1S6X6cW6YVXWGw6fVscJWQzcjzlp2E+tVxwpaTa0NMg6rS7KoEhKravA8ZC82QE27VQvrySK91hjRCGdnZZdIMS6fDxmgaO8Onbdbqap6RTU4wQZJlUwt2lbVwG0j2gZZC6w41MJZmadQyNQnpoXXaG16M2dnZOerl5cgV5FoFizC2dDsbEIS2Kwsy2YZ1jpx9fStN0TnRYMsADpH9LCJ+veBQqOzCi3WW3Vbj4Z1WbDfhLrt2rADtwcZg8xDszLLPPtvPH3F+aNfPijzjHDJs7BltR7mzeFdLQOOjKyumBJCNfrELMdAV+jCXFi1nq5MS8TA24elJOLFyuTFlxf/y9JbduvHg6y4lhWGLTPeAV41MGx1xAxTt+fqUd3WuB6pZUV6NFItrtey3vC7zojq8uzC1lZH57WslylOFVrif2iiVhCBTdQbfhvRViv5O6bxdvE7EWOMlcLBAoyF9jG2+Rj8Po+xApOzK6varQ69qsWM6+vBvavg0DU73F4F/dY2wlWOHa6y41FuQCY6BV4E4FQtEFgJ9cd6SE4C9S1dHwhAU54VtiJ6i+aAXchHZteb0A3mWWZEt5vD5tYDtWzwgQeFnxShbzvgn6IlAmDbkdlRIbPstvjsOaefbT4sfQzLUkOBy0rlKkm5Sqkc6NMPu00lBKJKCER7AonK6p21zwjvKHREN0qJ6AcipsZMjbdadkeCBQKCzxBRXrgFGHUNBAuIB/0qGlZcter2cSHwx9j6XmgiyFqe3TvSMaUWfmng8s3hki2ffvnc9g1Wup9wVp7TfXNLYvcbl904thXWIxDe0uInjNH2NR/YUB7E0FEEUY1r4HcQIkZn19GlG05LhjRsjYI61hfbQDPxUjIOFfN221qfPiOMPgCTQdL+2FhZCopoOKMh9vAHb312sRgnkoGzJCPCNuh8WkZnRWElolsOTLd9o63rkO/ojvr77j+xZbloeMhxtluF5ZhWQyfVoHda9q0H1/76ow93/WswbSzOCmPxFtMIJwSXgd/DXwCO7/DAHocnECHuVlNvH5Pq7jGseXxaN+j4JgQfUN0pb4p2WBGj1dBaTB095ZuScy7c959bS6W5TTgjG89m53cvIH3+zNnslsMrvxotxATCOPCk2y+dTUazwWnJs2xb60Q9EhvfGfXg69rD4PkQixzjel2EFybagwkDXiTaYpJIL8y6NhmTcbK1RorzQSc3stfgEJn2xWVVex4qq555XHb1lC+ijLEuXX2JltFNLtrd8UVwXOFrQdZ7GSsVo7MW5Us0iFPgBstgfHWq6WQd69/letexUg4M01J9bWR2P8ioNrsXpEMM/Mbc+LtYOr50HGiIfthIFeBUYcaqJhMOx6uDY5gOSQSY+DFVFDlbpOMxqUg6Y1HMtjhoqUcSKbFBFNuXxA0j7J8hlrPeUCxh6I4oM5Sz8RQD11v2Gt1OhULKhdEi0blAi4nsZ2bHO9mFMb00pUMJ6nAu6HIrY9dsJ7zJhdocd2pB/DkB+BkdHXGOHi2qmchZX27rMEnTndlWIqn+WVkhPNnvk/kwW5lQM6Guro/WAtFTC/N0a4q/Eho+1xBel8Gki2eTQjL0oxdVUjQBBsnWK8LWMy2Y8KYIjHQjsLDF0e110uvLEtBpRnnNocT8b9embTsjCx+/UM50BnWdl8yJxjv2/tu3b1buOHbIZQws4lZskqmv080MNvOhyrE5k/kFYoqZ7m7Hjo+aUr3mkzZZ7VlZKmbnfnrBnkNzx4fvDbJQql/lzGu7FprWtTcV2zpMy6ONXfrUmJS5itBcw+G4gLHCDwjfyHS8tLvmdijhBlk9qQ8JOUT4z9m2d497rYprYpa2irOCdRh1XMJhvW10wIi2jia6+u3b7vy+cus2aTm5Gjg7Z0KeWUauCERloudPRP8Zq6pFlKj543MbfvbUhi1BUnQpDHcRK5503hVdm3kiHFMZ632c8JBHM2MSzm1ULHKQ8FXvRg2kTSOni3FFy67HBBy6AKedjlf3uhIWe7B4kzM90b2y6ImOXwPHTFB1FeHEPL0oKOKrsQ4GfI5TRVx7ZvlUKYmcQDjSm34wHaBK022wWdEGt2JyA0RpWXWzaAo81+lmRBh/2CLGih8l3OjPiFjkFsLr8zJiqZD6NwoCWzHZwmFBY8ZdFRdLm2o4mmCgGyix+MN8zSM6OSa3ZFmlhCQdJXw7f6tIUtsVpHZgcjeMX2QVL27CKGPhMBkbwCT2/9SfUbDIHwk/9mGUHyv0fxSTH3EW6jCiaQ2yusx0OGByOKCdcIYfm9zsZpNSkpSUXOnXJk8rOD2DyWOcFZNNPKilTHIfY4NOEX7gzyRY5H3CIz5M8rxC/Rcx2Ysm0RKeel8Cx5OMDbuCcIg/vbHIYML+eektA9TPFHofwOQnnA1s0/mctXHNNHinmK11JgP2RPf5aHLqR2t0WQaLNLo5Yz0cz4DabxDe1SPOiJLuJLwxf2eUrfK6olXE6PkKZ2eQM+Y0Dl5/yc3EC+CAgbRsP6Hjz8RYxCY0vRmFhK4hQUYk4spqTCbKduqAkG1a0TZR59sKqu9hchhWW8Cxsd3WnXbLjHiTFNbEkPImYyN0wgE9Yk2U1F9i2ffe3HsJUb3S1kwlR0TdRxVkP8Lkfc7OTNs1D85ibTgHjk8YG/07wt0Kw87IWf+JIk8TPpKXq5ppV/2DgpIYjj7O235iuK6F4ysIo+dKHPNffuznOVyjpBOEx7r13WR4Gdw1vDRwy06tznLXtqJRZDQ+pWiULzH5E067YGWnz+JCappYVnPMhWgJ/5QvJRzXE80hJI0lHOLdHBkWPw3rghGZi7yrYOUq9n7k0mPlwNXa250nt8vlXfYufkbGU3s+Ov5O/1HPiu3DXriNi+KLs29/5N7d6HLTQlDvlyKGgxebBkcDeHQdYQ1n8///e89d5v60ld2T4jKMlzEwiv8vhSQQpJ2PQKHKwLCCaTWimpnc9Sg09Wgbb3cLuSFoUZQXSGTbN+XuGbsREJ913IzAS43JDHK7wrAqU3fBkjkSrkRWSCKi1oyhRejl3UMCwxXXzsRkCNAOo4ZJxUrTmsvdOKmUaJXvFNJG48mvYWKnRSL59MTzGTv3KOETPdITUdLjhDvy64nSiJiOV1A7D5MxQA0mq/lQg2OiRjihR6ihpArC/BauGdQuUFC7CJMJSE1LKKgNwgLngQIrGKs0CZf4prYwi9pAktREWONNLVPpqYpr0zGZDEMCjJNNjl6PcYW79eHeLZZl6lrUjek5oM9K0Oc+wlt6hClKupkwlh/TuYprtZjMAtMBU0lzMWYzvQg1Q7X/SPhkjxBCSU8QPpAfoUWKaw2YzM8kNFtJaBVU+zHhWz1CCCX9kvDn+RFarrgmYnZTJqElSkIQM6r6SKz8okcIoaTPCT/Jj5CuuIa3XwPNmYSudiMkJtIToVoDCP2U8EEPQpjkTqRFkR2EP8xP86jimhj+Dc6GyblEOc0lyuUkotwt5iW3IAIOYxd8TvhbBYvcdZ4o8u+E73mzyFjKnxbqrldQwfl+wOasjzCCleh0U1741EUgczPAd4T+t+vcfAolHSV8q1tOyWnFaPftBXxMyPG8zSX4blS0xRZMbkju6rv5YvLmROA2xi5eQjjPnxWxyFzCWfn54lbFtbsxuQNGIEfriNE2/xEv+93N2OQ7CI0esR9Kaidcmo9PBjYJtXcoKP0Ik3vVlIQlykAkjKqT/0T4a3+WwCIfEL6TnyUeVVx7DJOHIJ6ZmsObYhGN657GgHVR4GHGLq0gLOwRY6CkAomXfOnDGM8oWO3F5PFuWQl7jAGpj4AOjxDe4c8eWOR2wk352eNFxbWfYPIcZwPiQutaXLdCz3br18ImsEwN7Gbssi8Jf9kjNkFJbxIe8GGTnyuYvYzJT/Niluonexn7q8WEszyYedgFi1xBODU/uyj2SQO4Txp4FYacdbpphQ255eRqEewl+xmbcidhW49YBCW1El7jwyJHFJzexeRwN5xSowdMnKccI3zHg5OHLbDIEcLD+dniN4prOAMJvAdDXtQyHNchLzV2/AJ6yCCJU/+7RwyBkk4T/ocPQ/xeQegPmHyoIiSssAwEvs/YzDMlzjjozwpY5HXCV7w1z9pxD4igJudkJxQcTmLyKXRvnW4f1FumEU7dW5nezb0VPQrTnbDeoUd55Zz0bykEZWTfbBEtUgN0PmPsij2Elr8WwSJRwnbvFsneqpaN8bWiMf6CyZ9zGgPPnnbj0SaVunIH4VRfPESRKYQXe/PIuJ+QupWQYd5gwJtREP0h8A1nJTy5894NpQbQB3re3KkSa075o4RFThJ+lrezZtgnWKxg0w+TAh9skMVoxmovIezljw0WCUmc923+QSM4WMFhKCYDOBti661I4hpdWzPH4UYHDK6OEOFGBKa9wXGgzWFC0x8RLLKGUO+2xyQ7f3LlI7ZUHT0ct6FL4INA0bAR02Ssc7sJQq0wUtEKeAcjOJyzEW6t0GzrHZaY+rk3xmTQsZKx+W2E0/01BhaZRniJD6tWKPjg4z7BcogcxKcOn9gzO90o4MEWQv0w0M0/TfiCBwXXQc7rBqWQ9DzhrrwCY2ma3sUKethMwUmcDaXbkt2zFIZqgVrmA9l3Ca/3YOlhKCzSSejkQyc4Kk1nuoLOTEwuAzpdeSj8biiWnQ61NDG2aKTEel87XVhnzsxkCEn6nNDHzCRYoyCI2wTBKzi+b9QRi3N9idcmQ4rXCsYWTyUc3CO8UNIgQuaDV72CF+4TB6+Cbka8GrwX7YLZ5VC/DoPacsILe4QZSrqAcLQPZssUzPAh4WAjl2/9ALM65QpYkJsDKnQw1riJcHGPkENJiwgv90EuoiDXislK6G9ErqnbpWTKenHGmp4gvLFHCKKkGwgNHwQVm7RBlBBsh4lJsr8pVmapLreBsSUvEe7oEWoo6QHCW31QSyioYcwO2ulQcrVy8VYBtW9m7BqTsMkPL6/Fm5DUSDjHm1em2psU1/4akxs56284DUa0zdSTdw8DM7M4ifsBOCXeyti1LxEmPDhhkns/QBRZTxj1Vt51SiweGArepeDyA0xuw66FSzI934eFcP7zICxNKyQu/Ys/TljkfwhPeXPKftAvuE3BZDsmP4SJsWSS5+Nsk0CLnUBkH+E9CiIuUwwscjfhnXn1mBFC2YcVRH6MyQ6OryLh2xx6Iy5vA33dtL8Zqn6Wsev+lvAcf9pjkXJCxUCUXkDKCZKIH0fS3f8JBZmnMHk0vVyR5qCZkiiR/VDfOsuIuE1514KiMDldsUjidaf9hAbPKS9KOkWomD1lPZOX0wQvKJpgHyZ7c5pAToXx2m430y4BpV5mrHmYxJX+3ncQRQ4SvppP1Mih9E8KSniLOLgfImAXSp5cbgNFXmNs1XkSm5/xxwWL7CZULEtc3dRME3pNQeh1TF7mbCQR6ho90hP7HH7CNROg3BuMaRUSV73qwc+fa6KkVwhf8OmaGbR/paCN5g4e8qTdjYvCzDz4EWORIonhff7MikVeJHw2fxfNoPaBgtpvMHk3vUbLGQ/cOd0HCv2eMX2SxMhj/jhhkb8jfMibU4FQtCDXVTPZfaxg9ztMfsvZqGQH7Dpud+ewt4KKnzHWOkui7uv2kafDoqQ3CRUPkaTJZzlsJvnjCvInMPnEm3w3brsaVPyOMWOyxPZ3/ZkYi7xD+GY+3dKd4OcKgng/NHiSs2HuBD2ZLYV+EgJmXxA+7ouZKLKLcKc3s/R+Cc13U099irc/Gyyb4ydO6PFJVPZbb64hnBQFv4ahpF2LRkxa2qVeppvgfv+gNvmibvK11QZ61C1nO9FtkQGLpxBMe6x2wpl+vN9rkSEkzSBUvDiUyb2/4loJJr2hZWW7XGnYephW9Jg/FHJzgCaoHwSttQnH+3MALHIO4Vn5OAAt4r5PiboMRVWTiFWEjZlaJC07zt2y8rGk9M5FY/YcWvyPDzeHzqCHm0MjuzFXoEhwxz3WQDEmfbHU8JxHmPESNntgoPeTyFCrKIzZhirMd7biGs7SQ2NRAr4nDisCcXaYosS5mAzkbLi8iX6NwdvrLYeHrWgk+S2KnLWncIirxcjJbghJvD4zLOfhEFjkAOH+bh0iadop3dz0w/gsbvM58r35zobkCWFxQUbQrlQ0CT6/G6qAJpHLvVnRyKwwF+/BdhMkwUVDt8PS6VFCx1+TYBGbUPECU3rFF6oS+k5RcJmGyWTo65oD4Yxnm9adB3bUbYxtXER4iT8eWGQyoSJcZSzBlwhdZyt4XInJDM76apFIxgcF3PWvhMph/b9xP+G9/vTHIvcQ3uWtf0asEo+gih2R0HwFiQWY1ORJAlY0IVj7bxohceM3/khgkf8l/MKbRI4RGhX6I83QQnErqcNap3dLAcqHHgMKWwib/VHAIisJr/VrhxUKHqhH6Nr8eZwLSjwFSpwg/JU/HljkLcKD3jxyTKH49EIIHy4IaZwVW1L5yGxxr8s1Uo+Cuvcytnke4WR/6mORiwkneaufqZ2luLYWk9Ucv19DDR/x1Px8qPZ5qPYfCLf60xyL/IBwS36aK/abQ7jfHHLkaxBJn5ETpgRnhXJ6gV8fGuHyATD6AF24+hf6rk/mnz/U4+NfZ+R8EpDKPbuzpM/wnU3vy9fSkh+XK6pjfVrjppn5lZ6M34UxmOUboqHkPGVATBC5GVy/66ckuHh9DX8JQhtkvk1AS+bD/zaLxhPfnylLjsdnu33wZRZ9fKYhnnrXqUxUXxa38dOHe/48/OvCPo3HxOeooHHHjL7cerHgxqVlR4+efLC/cdP+rfc/ed7D9xya9Pe921Ye+urk8v8DGgk2l5JRAAA=";
+      "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";
 }

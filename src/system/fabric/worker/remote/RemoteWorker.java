@@ -48,7 +48,6 @@ import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
-import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.worker.transaction.TransactionManager;
@@ -89,7 +88,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   }
 
   public void notifyStorePrepareSuccess(long tid, long time,
-      OidKeyHashMap<TreatySet> longerTreaties) {
+      OidKeyHashMap<Long> longerTreaties) {
     sendAsync(new StorePrepareSuccessMessage(tid, time, longerTreaties));
   }
 
@@ -103,7 +102,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   }
 
   public void notifyWorkerPrepareSuccess(long tid, long time,
-      OidKeyHashMap<TreatySet> longerTreaties) {
+      OidKeyHashMap<Long> longerTreaties) {
     sendAsync(new WorkerPrepareSuccessMessage(tid, time, longerTreaties));
   }
 

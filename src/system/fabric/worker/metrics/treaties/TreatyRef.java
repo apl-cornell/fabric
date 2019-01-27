@@ -76,7 +76,7 @@ public final class TreatyRef implements FastSerializable, Serializable {
   }
 
   public MetricTreaty get() {
-    return objRef.get().get$treatiesBox().get$$treaties().get(treatyId);
+    return objRef.get().get$treatiesBox().get$treaties().get(treatyId);
   }
 
   @Override

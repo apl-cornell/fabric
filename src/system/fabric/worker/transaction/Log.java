@@ -31,6 +31,7 @@ import fabric.common.SysUtil;
 import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
+import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
@@ -492,23 +493,23 @@ public final class Log {
    * @param includeModified
    *          whether to include reads on modified objects.
    */
-  LongKeyMap<Pair<Integer, TreatySet>> getReadsForStore(Store store,
+  LongKeyMap<VersionAndExpiry> getReadsForStore(Store store,
       boolean includeModified) {
-    LongKeyMap<Pair<Integer, TreatySet>> result = new LongKeyHashMap<>();
+    LongKeyMap<VersionAndExpiry> result = new LongKeyHashMap<>();
     LongKeyMap<ReadMap.Entry> submap = reads.get(store);
     if (submap == null) return result;
 
     for (LongKeyMap.Entry<ReadMap.Entry> entry : submap.entrySet()) {
-      result.put(entry.getKey(), new Pair<>(entry.getValue().getVersionNumber(),
-          entry.getValue().getTreaties()));
+      result.put(entry.getKey(), new VersionAndExpiry(
+          entry.getValue().getVersionNumber(), entry.getValue().getExpiry()));
     }
 
     if (parent != null) {
       for (ReadMap.Entry entry : readsReadByParent) {
         FabricSoftRef entryRef = entry.getRef();
         if (store.equals(entryRef.store)) {
-          result.put(entryRef.onum,
-              new Pair<>(entry.getVersionNumber(), entry.getTreaties()));
+          result.put(entryRef.onum, new VersionAndExpiry(
+              entry.getVersionNumber(), entry.getExpiry()));
         }
       }
     }
@@ -549,6 +550,7 @@ public final class Log {
 
     if (store.isLocalStore()) {
       for (_Impl obj : localStoreWrites) {
+        // TODO: This condition should never fail...
         if (!extendedTreaties.containsKey(obj)) {
           result.put(obj.$getOnum(), obj);
         }
@@ -560,6 +562,7 @@ public final class Log {
     } else {
       for (_Impl obj : writes.values()) {
         if (obj.$getStore() == store && obj.$isOwned
+        // TODO: This condition should never fail...
             && !extendedTreaties.containsKey(obj)) {
           result.put(obj.$getOnum(), obj);
         }
@@ -1121,12 +1124,14 @@ public final class Log {
           // transaction's write lock.
           obj.$history = obj.$history.$history;
           if (extendedTreaties.containsKey(obj)) {
-            extendedTreaties.get(obj).treaties.flattenUpdates();
+            // TODO
+            //extendedTreaties.get(obj).treaties.flattenUpdates();
             // Make sure that we don't lose "subextensions"
             if (!parent.extendedTreaties.containsKey(obj))
-              obj.$treaties = extendedTreaties.get(obj).treaties;
+              obj.$expiry = extendedTreaties.get(obj).expiry;
           } else {
-            obj.$treaties.flattenUpdates();
+            // TODO
+            //obj.$treaties.flattenUpdates();
           }
         } else {
           // The parent transaction didn't write to the object. Add write to
@@ -1153,12 +1158,14 @@ public final class Log {
           // transaction's write lock.
           obj.$history = obj.$history.$history;
           if (extendedTreaties.containsKey(obj)) {
-            extendedTreaties.get(obj).treaties.flattenUpdates();
+            // TODO
+            //extendedTreaties.get(obj).treaties.flattenUpdates();
             // Make sure we don't lose "subextensions"
             if (!parent.extendedTreaties.containsKey(obj))
-              obj.$treaties = extendedTreaties.get(obj).treaties;
+              obj.$expiry = extendedTreaties.get(obj).expiry;
           } else {
-            obj.$treaties.flattenUpdates();
+            // TODO
+            //obj.$treaties.flattenUpdates();
           }
         } else {
           // The parent transaction didn't write to the object. Add write to
@@ -1257,9 +1264,9 @@ public final class Log {
       obj.$writeLockHolder = null;
       obj.$writeLockStackTrace = null;
       obj.$version = 1;
-      TreatySet treaties = getFinalTreaties(obj);
-      obj.$readMapEntry.incrementVersionAndUpdateTreaties(treaties);
-      obj.$treaties = treaties;
+      long expiry = getFinalExpiry(obj);
+      obj.$readMapEntry.incrementVersionAndUpdateExpiry(expiry);
+      obj.$expiry = expiry;
       obj.$isOwned = false;
     }
 
@@ -1297,15 +1304,16 @@ public final class Log {
         // Discard one layer of history.
         obj.$history = obj.$history.$history;
 
-        TreatySet treaties = getFinalTreaties(obj);
-        treaties.flattenUpdates();
-        obj.$treaties = treaties;
+        long expiry = getFinalExpiry(obj);
+        // TODO
+        //treaties.flattenUpdates();
+        obj.$expiry = expiry;
         // Don't increment the version if it's only extending treaties
         if (!extendedTreaties.containsKey(obj)) {
           obj.$version++;
-          obj.$readMapEntry.incrementVersionAndUpdateTreaties(treaties);
+          obj.$readMapEntry.incrementVersionAndUpdateExpiry(expiry);
         } else {
-          obj.$readMapEntry.extendTreaties(treaties);
+          obj.$readMapEntry.extendExpiry(expiry);
         }
         obj.$isOwned = false;
 
@@ -1706,7 +1714,7 @@ public final class Log {
     }
   }
 
-  public OidKeyHashMap<TreatySet> getLongerTreaties() {
+  public OidKeyHashMap<Long> getLongerTreaties() {
     if (prepare != null) return prepare.getLongerTreaties();
     return new OidKeyHashMap<>();
   }
@@ -1715,12 +1723,12 @@ public final class Log {
    * Get the final treaties associated with the written object, accounting for
    * any extensions during the transaction or update sent back from the store.
    */
-  public TreatySet getFinalTreaties(_Impl obj) {
+  public long getFinalExpiry(_Impl obj) {
     if (getLongerTreaties().containsKey(obj))
       return getLongerTreaties().get(obj);
     if (extendedTreaties.containsKey(obj))
-      return extendedTreaties.get(obj).treaties;
-    return obj.$treaties;
+      return extendedTreaties.get(obj).expiry;
+    return obj.$expiry;
   }
 
   /**
@@ -1728,11 +1736,11 @@ public final class Log {
    * any extensions during the transaction or update sent back from the store.
    * If there was no change in the treaties, returns null.
    */
-  public TreatySet getFinalTreaties(Store s, long onum) {
+  public Long getFinalExpiry(Store s, long onum) {
     if (getLongerTreaties().containsKey(s, onum))
       return getLongerTreaties().get(s, onum);
     if (extendedTreaties.containsKey(s, onum))
-      return extendedTreaties.get(s, onum).treaties;
+      return extendedTreaties.get(s, onum).expiry;
     return null;
   }
 
@@ -1751,7 +1759,7 @@ public final class Log {
    */
   public void clearExtension(fabric.lang.Object._Impl o) {
     ExpiryExtension p = extendedTreaties.remove(o);
-    if (p != null) o.$treaties = p.treaties;
+    if (p != null) o.$expiry = p.expiry;
   }
 
   /**

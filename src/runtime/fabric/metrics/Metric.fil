@@ -655,7 +655,7 @@ public abstract class Metric extends AbstractSubject
    *       given bound.
    */
   protected MetricTreaty createThresholdTreaty(double rate, double base, long time) {
-    return treatiesBox.$treaties.create(new ThresholdStatement(rate, base, time));
+    return treatiesBox.treaties.create(new ThresholdStatement(rate, base, time));
   }
 
   /**
@@ -666,7 +666,7 @@ public abstract class Metric extends AbstractSubject
    *       given bound.
    */
   protected MetricTreaty createEqualityTreaty(double value) {
-    return treatiesBox.$treaties.create(new EqualityStatement(value));
+    return treatiesBox.treaties.create(new EqualityStatement(value));
   }
 
   /*@Override*/
@@ -695,10 +695,10 @@ public abstract class Metric extends AbstractSubject
     // call.
     MetricTreaty t = null;
     if (TransactionManager.getInstance().inTxn()) {
-      t = tmp.treatiesBox.$treaties.get(treatyId);
+      t = tmp.treatiesBox.treaties.get(treatyId);
     } else {
       atomic {
-        t = tmp.treatiesBox.$treaties.get(treatyId);
+        t = tmp.treatiesBox.treaties.get(treatyId);
       }
     }
     t.update(asyncExtension, weakStats);
@@ -720,15 +720,15 @@ public abstract class Metric extends AbstractSubject
     MetricTreaty t = null;
     TreatyStatement treatyStatement = new EqualityStatement(value);
     if (TransactionManager.getInstance().inTxn()) {
-      t = tmp.treatiesBox.$treaties.get(treatyStatement);
+      t = tmp.treatiesBox.treaties.get(treatyStatement);
       if (t == null) {
-        t = tmp.treatiesBox.$treaties.create(treatyStatement);
+        t = tmp.treatiesBox.treaties.create(treatyStatement);
       }
     } else {
       atomic {
-        t = tmp.treatiesBox.$treaties.get(treatyStatement);
+        t = tmp.treatiesBox.treaties.get(treatyStatement);
         if (t == null) {
-          t = tmp.treatiesBox.$treaties.create(treatyStatement);
+          t = tmp.treatiesBox.treaties.create(treatyStatement);
         }
       }
     }
@@ -751,15 +751,15 @@ public abstract class Metric extends AbstractSubject
     MetricTreaty t = null;
     TreatyStatement treatyStatement = new ThresholdStatement(rate, base);
     if (TransactionManager.getInstance().inTxn()) {
-      t = tmp.treatiesBox.$treaties.get(treatyStatement);
+      t = tmp.treatiesBox.treaties.get(treatyStatement);
       if (t == null) {
-        t = tmp.treatiesBox.$treaties.create(treatyStatement);
+        t = tmp.treatiesBox.treaties.create(treatyStatement);
       }
     } else {
       atomic {
-        t = tmp.treatiesBox.$treaties.get(treatyStatement);
+        t = tmp.treatiesBox.treaties.get(treatyStatement);
         if (t == null) {
-          t = tmp.treatiesBox.$treaties.create(treatyStatement);
+          t = tmp.treatiesBox.treaties.create(treatyStatement);
         }
       }
     }
@@ -782,7 +782,7 @@ public abstract class Metric extends AbstractSubject
     }
     for (Iterator iter = treatiesToProcess.iterator(); iter.hasNext();) {
       long treatyId = ((Long) iter.next()).longValue();
-      MetricTreaty treaty = treatiesBox.$treaties.get(treatyId);
+      MetricTreaty treaty = treatiesBox.treaties.get(treatyId);
 
       // Skip if the treaty doesn't exist.
       if (treaty == null) continue;
@@ -819,7 +819,7 @@ public abstract class Metric extends AbstractSubject
   // TODO: Make it configurable if we proactively update proxies?
   public boolean updateWithPostcondition(double bound, MetricUpdate native[] updates) {
     // First check if there's an existing treaty for the post condition.
-    MetricTreaty existingTreaty = treatiesBox.$treaties.get(
+    MetricTreaty existingTreaty = treatiesBox.treaties.get(
         new ThresholdStatement(0, bound, 0));
     if (existingTreaty != null && existingTreaty.valid()) {
       // Treaty exists, now check if any of the updates would violate existing
@@ -905,7 +905,7 @@ public abstract class Metric extends AbstractSubject
   }
 
   public void assertPostcondition(TreatyStatement stmt) {
-    MetricTreaty existing = treatiesBox.$treaties.get(stmt);
+    MetricTreaty existing = treatiesBox.treaties.get(stmt);
     if (existing != null  && !existing.invalid()) {
       TransactionManager.getInstance().addTreatiedPostcondition(existing);
     } else {

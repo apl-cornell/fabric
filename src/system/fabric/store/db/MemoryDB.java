@@ -26,7 +26,6 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
 import fabric.worker.TransactionPrepareFailedException;
-import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
 
@@ -145,7 +144,7 @@ public class MemoryDB extends ObjectDB {
 
     // Update extended objects.
     for (ExpiryExtension extension : tx.getExtensions()) {
-      objectTable.get(extension.onum).setTreaties(extension.treaties);
+      objectTable.get(extension.onum).setExpiry(extension.expiry);
       writtenOnums.add(extension.onum);
     }
 

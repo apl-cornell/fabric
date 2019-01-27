@@ -89,7 +89,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
     private long onum;
     private int version;
     private ImmutableObjectSet associates;
-    private TreatySet treaties;
     private long expiry;
 
     /**
@@ -99,7 +98,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.onum = onum;
       this.version = 0;
       this.associates = null;
-      this.treaties = null;
       this.expiry = 0;
     }
 
@@ -110,7 +108,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.onum = obj.$getOnum();
       this.version = obj.$version;
       this.associates = obj.$associates;
-      this.treaties = obj.$treaties.makeCopy();
       this.expiry = obj.$expiry;
     }
 
@@ -123,9 +120,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
         this.version = in.readInt();
         if (in.readBoolean()) {
           this.associates = new ImmutableObjectSet(in);
-        }
-        if (in.readBoolean()) {
-          this.treaties = TreatySet.read(in);
         }
         this.expiry = in.readLong();
       } catch (IOException e) {
@@ -141,12 +135,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
         if (associates != null) {
           out.writeBoolean(true);
           associates.write(out);
-        } else {
-          out.writeBoolean(false);
-        }
-        if (treaties != null) {
-          out.writeBoolean(true);
-          treaties.write(out);
         } else {
           out.writeBoolean(false);
         }
@@ -175,20 +163,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
      */
     public void setVersion(int version) {
       this.version = version;
-    }
-
-    /**
-     * @return the treaties
-     */
-    public TreatySet getTreaties() {
-      return treaties;
-    }
-
-    /**
-     * @param treaties the treaties to set
-     */
-    public void setTreaties(TreatySet treaties) {
-      this.treaties = treaties;
     }
 
     /**
@@ -229,9 +203,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       this.version = in.readInt();
       if (in.readBoolean()) {
         this.associates = new ImmutableObjectSet(in);
-      }
-      if (in.readBoolean()) {
-        this.treaties = TreatySet.read(in);
       }
       this.expiry = in.readLong();
     }
@@ -440,22 +411,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public void setAssociates(ImmutableObjectSet associates) {
     header.setAssociates(associates);
-  }
-
-  /**
-   * @return the serialized object's treaties
-   */
-  public TreatySet getTreaties() {
-    return header.getTreaties();
-  }
-
-  /**
-   * Modifies the serialized object's treaties
-   *
-   * @param treaties
-   */
-  public void setTreaties(TreatySet treaties) {
-    header.setTreaties(treaties.makeCopy());
   }
 
   /**
@@ -1346,9 +1301,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
       }
 
       _Impl result = (_Impl) constructor.newInstance(store, getOnum(),
-          getVersion(), getAssociates(), getTreaties().makeCopy(), getExpiry(),
-          updateLabelStore, updateLabelOnum, accessPolicyStore,
-          accessPolicyOnum, new ObjectInputStream(getSerializedDataStream()),
+          getVersion(), getAssociates(), getExpiry(), updateLabelStore,
+          updateLabelOnum, accessPolicyStore, accessPolicyOnum,
+          new ObjectInputStream(getSerializedDataStream()),
           getRefTypeIterator(), getIntraStoreRefIterator(),
           getInterStoreRefIterator());
 

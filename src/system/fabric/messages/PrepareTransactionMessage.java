@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import fabric.common.SerializedObject;
+import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongHashSet;
@@ -16,12 +17,10 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -55,7 +54,7 @@ public class PrepareTransactionMessage extends AsyncMessage {
    */
   public final long expiryToCheck;
 
-  public final LongKeyMap<Pair<Integer, TreatySet>> reads;
+  public final LongKeyMap<VersionAndExpiry> reads;
 
   /**
    * The objects created during the transaction, unserialized. This will only be
@@ -112,7 +111,7 @@ public class PrepareTransactionMessage extends AsyncMessage {
    */
   public PrepareTransactionMessage(long tid, boolean singleStore,
       boolean readOnly, long expiryToCheck, Collection<_Impl> toCreate,
-      LongKeyMap<Pair<Integer, TreatySet>> reads, Collection<_Impl> writes,
+      LongKeyMap<VersionAndExpiry> reads, Collection<_Impl> writes,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
       LongKeyMap<LongSet> delayedExtensions) {
@@ -165,11 +164,9 @@ public class PrepareTransactionMessage extends AsyncMessage {
       out.writeInt(0);
     } else {
       out.writeInt(reads.size());
-      for (LongKeyMap.Entry<Pair<Integer, TreatySet>> entry : reads
-          .entrySet()) {
+      for (LongKeyMap.Entry<VersionAndExpiry> entry : reads.entrySet()) {
         out.writeLong(entry.getKey());
-        out.writeInt(entry.getValue().first);
-        entry.getValue().second.write(out);
+        entry.getValue().write(out);
       }
     }
 
@@ -266,7 +263,7 @@ public class PrepareTransactionMessage extends AsyncMessage {
     } else {
       reads = new LongKeyHashMap<>(size);
       for (int i = 0; i < size; i++)
-        reads.put(in.readLong(), new Pair<>(in.readInt(), TreatySet.read(in)));
+        reads.put(in.readLong(), new VersionAndExpiry(in));
     }
 
     // Read creates.

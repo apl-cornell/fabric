@@ -12,10 +12,10 @@ import java.util.logging.Level;
 import fabric.common.Logging;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
+import fabric.common.VersionAndExpiry;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.messages.StoreCommittedMessage;
 import fabric.messages.StorePrepareFailedMessage;
@@ -29,7 +29,6 @@ import fabric.worker.Store;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -56,7 +55,7 @@ public class TransactionPrepare {
   // time at which all prepares were finished.
   private long commitTime;
   // All longer treaties to forward to the coordinator.
-  private OidKeyHashMap<TreatySet> longerTreaties;
+  private OidKeyHashMap<Long> longerTreaties;
   // Flag indicating if timeout caused abort, so we can extend the timeout.
   private boolean abortedForTimeout = false;
 
@@ -125,13 +124,13 @@ public class TransactionPrepare {
     respondedStores.add(s);
     commitTime = Math.max(commitTime, m.time);
     for (Store store : m.longerTreaties.storeSet()) {
-      for (LongKeyMap.Entry<TreatySet> entry : m.longerTreaties.get(store)
+      for (LongKeyMap.Entry<Long> entry : m.longerTreaties.get(store)
           .entrySet()) {
         long onum = entry.getKey();
-        TreatySet treaties = entry.getValue();
+        long expiry = entry.getValue();
         ObjectCache.Entry curEntry = store.readFromCache(onum);
-        if (curEntry != null) curEntry.extendTreaties(treaties);
-        this.longerTreaties.put(store, onum, treaties);
+        if (curEntry != null) curEntry.extendExpiry(expiry);
+        this.longerTreaties.put(store, onum, expiry);
       }
     }
     cleanUp();
@@ -159,12 +158,12 @@ public class TransactionPrepare {
     respondedStores.add(s);
     this.longerTreaties.putAll(m.longerTreaties);
     for (Store store : m.longerTreaties.storeSet()) {
-      for (LongKeyMap.Entry<TreatySet> entry : m.longerTreaties.get(store)
+      for (LongKeyMap.Entry<Long> entry : m.longerTreaties.get(store)
           .entrySet()) {
         long onum = entry.getKey();
-        TreatySet treaties = entry.getValue();
+        long expiry = entry.getValue();
         ObjectCache.Entry curEntry = store.readFromCache(onum);
-        if (curEntry != null) curEntry.extendTreaties(treaties);
+        if (curEntry != null) curEntry.extendExpiry(expiry);
       }
     }
     abort(s);
@@ -225,12 +224,12 @@ public class TransactionPrepare {
     commitTime = Math.max(commitTime, m.time);
     this.longerTreaties.putAll(m.longerTreaties);
     for (Store store : m.longerTreaties.storeSet()) {
-      for (LongKeyMap.Entry<TreatySet> entry : m.longerTreaties.get(store)
+      for (LongKeyMap.Entry<Long> entry : m.longerTreaties.get(store)
           .entrySet()) {
         long onum = entry.getKey();
-        TreatySet treaties = entry.getValue();
+        long expiry = entry.getValue();
         ObjectCache.Entry curEntry = store.readFromCache(onum);
-        if (curEntry != null) curEntry.extendTreaties(treaties);
+        if (curEntry != null) curEntry.extendExpiry(expiry);
       }
     }
     cleanUp();
@@ -256,12 +255,12 @@ public class TransactionPrepare {
     respondedWorkers.add(w);
     this.longerTreaties.putAll(m.longerTreaties);
     for (Store store : m.longerTreaties.storeSet()) {
-      for (LongKeyMap.Entry<TreatySet> entry : m.longerTreaties.get(store)
+      for (LongKeyMap.Entry<Long> entry : m.longerTreaties.get(store)
           .entrySet()) {
         long onum = entry.getKey();
-        TreatySet treaties = entry.getValue();
+        long expiry = entry.getValue();
         ObjectCache.Entry curEntry = store.readFromCache(onum);
-        if (curEntry != null) curEntry.extendTreaties(treaties);
+        if (curEntry != null) curEntry.extendExpiry(expiry);
       }
     }
     abort(w);
@@ -292,7 +291,7 @@ public class TransactionPrepare {
     // Send prepares to stores.
     for (Store store : outstandingStores.keySet()) {
       Collection<_Impl> creates = txnLog.getCreatesForStore(store);
-      LongKeyMap<Pair<Integer, TreatySet>> reads =
+      LongKeyMap<VersionAndExpiry> reads =
           txnLog.getReadsForStore(store, false);
       Collection<_Impl> writes = txnLog.getWritesForStore(store);
       Collection<ExpiryExtension> extensions =
@@ -497,7 +496,7 @@ public class TransactionPrepare {
   /**
    * @return the longerTreaties
    */
-  public synchronized OidKeyHashMap<TreatySet> getLongerTreaties() {
+  public synchronized OidKeyHashMap<Long> getLongerTreaties() {
     return longerTreaties;
   }
 }

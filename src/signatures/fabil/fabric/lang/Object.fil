@@ -16,19 +16,6 @@ public class Object extends java.lang.Object {
   protected ImmutableObjectSet $associates;
 
   /**
-   * The observers for treaties and metrics
-   */
-  protected ImmutableObserverSet $observers;
-
-  /**
-   * The treaties on this object.
-   *
-   * XXX: For now, marked as transient to avoid compiler error due to non-Fabric
-   * type field.  Should be fixed soon.
-   */
-  public transient TreatySet $treaties;
-
-  /**
    * The object's access policy, specifying the program contexts in which it is
    * safe to use this object.
    */

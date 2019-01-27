@@ -21,6 +21,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.TransactionID;
+import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.FabricRuntimeException;
@@ -31,7 +32,6 @@ import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
@@ -55,7 +55,6 @@ import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
 import fabric.worker.ObjectCache.FetchLock;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 
@@ -132,8 +131,8 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   @Override
   public void prepareTransaction(long tid, boolean singleStore,
       boolean readOnly, long expiryToCheck, Collection<Object._Impl> toCreate,
-      LongKeyMap<Pair<Integer, TreatySet>> reads,
-      Collection<Object._Impl> writes, Collection<ExpiryExtension> extensions,
+      LongKeyMap<VersionAndExpiry> reads, Collection<Object._Impl> writes,
+      Collection<ExpiryExtension> extensions,
       LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
       LongKeyMap<LongSet> delayedExtensions) throws UnreachableNodeException {
     sendAsync(Worker.getWorker().authToStore,
@@ -353,8 +352,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   @Override
-  public boolean checkForStaleObjects(
-      LongKeyMap<Pair<Integer, TreatySet>> reads) {
+  public boolean checkForStaleObjects(LongKeyMap<VersionAndExpiry> reads) {
     List<SerializedObject> staleObjects = getStaleObjects(reads);
 
     for (SerializedObject obj : staleObjects)
@@ -367,7 +365,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    * Helper for checkForStaleObjects.
    */
   protected List<SerializedObject> getStaleObjects(
-      LongKeyMap<Pair<Integer, TreatySet>> reads) {
+      LongKeyMap<VersionAndExpiry> reads) {
     try {
       return send(Worker.getWorker().authToStore,
           new StalenessCheckMessage(reads)).staleObjects;

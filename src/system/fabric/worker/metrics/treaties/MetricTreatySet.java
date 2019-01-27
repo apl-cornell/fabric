@@ -16,7 +16,6 @@ import fabric.common.util.DeltaMap;
 import fabric.common.util.SortedDeltaMap;
 import fabric.metrics.util.TreatiesBox;
 import fabric.worker.Store;
-import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 import fabric.worker.transaction.Log;
@@ -129,11 +128,11 @@ public class MetricTreatySet extends TreatySet {
   // lock for.
   private static MetricTreatySet getAssociatedTreaties(
       fabric.lang.Object._Impl impl) {
+    // TODO
     // Check if there's an associated extension.  If so, use that.
-    ExpiryExtension extension =
-        TransactionManager.getInstance().getPendingExtension(impl);
-    return (MetricTreatySet) (extension == null ? impl.$treaties
-        : extension.treaties);
+    //ExpiryExtension extension =
+    //    TransactionManager.getInstance().getPendingExtension(impl);
+    return (MetricTreatySet) ((fabric.metrics.util.TreatiesBox._Impl) impl).treaties;
   }
 
   @Override
@@ -161,7 +160,7 @@ public class MetricTreatySet extends TreatySet {
         curLog.clearExtension(curBox);
       }
       statementMap.put(treaty.statement, treaty);
-      owner.get().get$treatiesBox().set$$treaties(this);
+      owner.get().get$treatiesBox().set$treaties(this);
     } else {
       MetricTreatySet updated = new MetricTreatySet(this);
       updated.items.put(treaty.getId(), treaty);
@@ -172,7 +171,7 @@ public class MetricTreatySet extends TreatySet {
             new Object[] { old,
                 TransactionManager.getInstance().getCurrentTid(),
                 Thread.currentThread(), treaty });
-      owner.get().get$treatiesBox().set$$treaties(updated);
+      owner.get().get$treatiesBox().set$treaties(updated);
     }
   }
 
@@ -199,13 +198,13 @@ public class MetricTreatySet extends TreatySet {
       curLog.clearExtension(curBox);
       MetricTreaty val = items.remove(treaty.getId());
       statementMap.remove(treaty.statement, val);
-      owner.get().get$treatiesBox().set$$treaties(this);
+      owner.get().get$treatiesBox().set$treaties(this);
     } else {
       // TODO check that it's a proper garbage collection?
       MetricTreatySet updated = new MetricTreatySet(this);
       MetricTreaty val = updated.items.remove(treaty.getId());
       updated.statementMap.remove(treaty.statement, val);
-      owner.get().get$treatiesBox().set$$treaties(updated);
+      owner.get().get$treatiesBox().set$treaties(updated);
     }
   }
 
@@ -242,7 +241,7 @@ public class MetricTreatySet extends TreatySet {
         curLog.clearExtension(curBox);
       }
       statementMap.put(newTreaty.statement, newTreaty);
-      owner.get().get$treatiesBox().set$$treaties(this);
+      owner.get().get$treatiesBox().set$treaties(this);
       return newTreaty;
     } else {
       MetricTreatySet updated = new MetricTreatySet(this);
@@ -257,7 +256,7 @@ public class MetricTreatySet extends TreatySet {
             new Object[] { old,
                 TransactionManager.getInstance().getCurrentTid(),
                 Thread.currentThread(), newTreaty });
-      owner.get().get$treatiesBox().set$$treaties(updated);
+      owner.get().get$treatiesBox().set$treaties(updated);
       return newTreaty;
     }
   }

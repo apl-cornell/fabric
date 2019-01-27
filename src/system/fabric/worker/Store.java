@@ -8,16 +8,15 @@ import java.util.Set;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
+import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.treaties.TreatySet;
 
 public interface Store extends Serializable {
   /**
@@ -43,7 +42,7 @@ public interface Store extends Serializable {
    */
   void prepareTransaction(long tid, boolean singleStore, boolean readOnly,
       long expiryToCheck, Collection<_Impl> toCreate,
-      LongKeyMap<Pair<Integer, TreatySet>> reads, Collection<_Impl> writes,
+      LongKeyMap<VersionAndExpiry> reads, Collection<_Impl> writes,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
       LongKeyMap<LongSet> delayedExtensions) throws UnreachableNodeException;
@@ -118,7 +117,7 @@ public interface Store extends Serializable {
    *
    * @return true iff stale objects were found.
    */
-  boolean checkForStaleObjects(LongKeyMap<Pair<Integer, TreatySet>> reads);
+  boolean checkForStaleObjects(LongKeyMap<VersionAndExpiry> reads);
 
   /**
    * Obtains a new, unused object number from the Store.

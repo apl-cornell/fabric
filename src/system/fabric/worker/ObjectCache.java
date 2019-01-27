@@ -25,7 +25,6 @@ import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
-import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.TransactionManager;
 
 /**
@@ -238,19 +237,19 @@ public final class ObjectCache {
      * Obtains the object's treaties. (Returns null if this entry has been
      * evicted.)
      */
-    public synchronized TreatySet getTreaties() {
-      if (next != null) return next.getTreaties();
-      if (impl != null) return impl.$readMapEntry.getTreaties();
-      if (serialized != null) return serialized.getTreaties();
+    public synchronized Long getExpiry() {
+      if (next != null) return next.getExpiry();
+      if (impl != null) return impl.$readMapEntry.getExpiry();
+      if (serialized != null) return serialized.getExpiry();
       return null;
     }
 
     /**
      * Updates the object's expiry in place.
      */
-    public synchronized void extendTreaties(TreatySet newTreaties) {
+    public synchronized void extendExpiry(long newExpiry) {
       if (next != null) {
-        next.extendTreaties(newTreaties);
+        next.extendExpiry(newExpiry);
         return;
       }
       if (impl != null) {
@@ -258,16 +257,14 @@ public final class ObjectCache {
         _Impl curImpl = impl;
         // Run through history and update as well.
         while (curImpl != null && curImpl.$version == ver) {
-          if (newTreaties.isStrictExtensionOf(curImpl.$treaties))
-            curImpl.$treaties.mergeExtensions(newTreaties);
-          curImpl.$readMapEntry.extendTreaties(newTreaties);
+          if (newExpiry > curImpl.$expiry) curImpl.$expiry = newExpiry;
+          curImpl.$readMapEntry.extendExpiry(newExpiry);
           curImpl = curImpl.$history;
         }
         return;
       }
       if (serialized != null) {
-        if (newTreaties.isStrictExtensionOf(serialized.getTreaties()))
-          serialized.setTreaties(newTreaties);
+        if (newExpiry > serialized.getExpiry()) serialized.setExpiry(newExpiry);
         return;
       }
     }
@@ -563,8 +560,8 @@ public final class ObjectCache {
           if (!curEntry.isEvicted()) {
             // Check if object in current entry is an older version.
             if (curEntry.getVersion() > update.getVersion()
-                || (curEntry.getVersion() == update.getVersion() && curEntry
-                    .getTreaties().isExtensionOf(update.getTreaties())))
+                || (curEntry.getVersion() == update.getVersion()
+                    && curEntry.getExpiry() >= update.getExpiry()))
               return curEntry;
 
             /*
@@ -594,18 +591,6 @@ public final class ObjectCache {
         Map<Store, Set<Long>> fetches = null;
         if (update.getAssociates() != null) {
           fetches = update.getAssociates().prefetch(store);
-        }
-        if (update.getTreaties() != null) {
-          if (fetches == null) {
-            fetches = update.getTreaties().prefetch(store);
-          } else {
-            for (Map.Entry<Store, Set<Long>> e : update.getTreaties()
-                .prefetch(store).entrySet()) {
-              if (fetches.containsKey(e.getKey()))
-                fetches.get(e.getKey()).addAll(e.getValue());
-              else fetches.put(e.getKey(), e.getValue());
-            }
-          }
         }
         if (fetches != null) {
           for (Map.Entry<Store, Set<Long>> e : fetches.entrySet()) {

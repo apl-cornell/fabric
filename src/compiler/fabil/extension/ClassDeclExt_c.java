@@ -561,7 +561,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     ClassMember deserialize = qq.parseMember(
         "public _Impl(fabric.worker.Store store, long onum, int version, "
             + "fabric.worker.metrics.ImmutableObjectSet associates, "
-            + "fabric.worker.metrics.treaties.TreatySet treaties, "
             + "long expiry, "
             + "fabric.worker.Store labelStore, long labelOnum, "
             + "fabric.worker.Store accessPolicyStore, long accessPolicyOnum, "
@@ -569,7 +568,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             + "java.util.Iterator intraStoreRefs, "
             + "java.util.Iterator interStoreRefs) "
             + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-            + "super(store, onum, version, associates, treaties, expiry, "
+            + "super(store, onum, version, associates, expiry, "
             + "labelStore, labelOnum, accessPolicyStore, accessPolicyOnum, in, "
             + "refTypes, intraStoreRefs, interStoreRefs);" + in + " }",
         inSubst.toArray());

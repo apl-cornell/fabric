@@ -117,7 +117,7 @@ public class WitnessPolicy extends EnforcementPolicy {
     for (Map.Entry<TreatiesBoxRef, TreatyStatement> witness : witnesses
         .entries()) {
       MetricTreaty witnessTreaty = witness.getKey().get().get$treatiesBox()
-          .get$$treaties().get(witness.getValue());
+          .get$treaties().get(witness.getValue());
       calculated = Math.min(calculated,
           witnessTreaty == null ? 0 : witnessTreaty.getExpiry());
     }
@@ -130,7 +130,7 @@ public class WitnessPolicy extends EnforcementPolicy {
     for (Map.Entry<TreatiesBoxRef, TreatyStatement> witness : witnesses
         .entries()) {
       MetricTreaty witnessTreaty = witness.getKey().get().get$treatiesBox()
-          .get$$treaties().get(witness.getValue());
+          .get$treaties().get(witness.getValue());
       calculated = Math.min(calculated,
           witnessTreaty == null ? 0 : witnessTreaty.getExpiry());
     }
@@ -180,7 +180,7 @@ public class WitnessPolicy extends EnforcementPolicy {
         }
         // Small optimization to give up once we know this policy isn't going
         // anywhere.
-        MetricTreaty w = witnessMetric.get().get$treatiesBox().get$$treaties()
+        MetricTreaty w = witnessMetric.get().get$treatiesBox().get$treaties()
             .get(witness.getValue());
         if (w == null || w.invalid()) break;
       }
@@ -232,7 +232,7 @@ public class WitnessPolicy extends EnforcementPolicy {
       if (m == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
           "A witness metric was null applying to {0}", t);
       MetricTreaty w =
-          m.get$treatiesBox().get$$treaties().get(witness.getValue());
+          m.get$treatiesBox().get$treaties().get(witness.getValue());
       if (w == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
           "A witness treaty was null applying to {0}", t);
       w.addObserver(t.getMetric(), t.getId());
@@ -250,7 +250,7 @@ public class WitnessPolicy extends EnforcementPolicy {
       Metric m = witness.getKey().get();
       if (m == null) continue;
       MetricTreaty w =
-          m.get$treatiesBox().get$$treaties().get(witness.getValue());
+          m.get$treatiesBox().get$treaties().get(witness.getValue());
       if (w == null) continue;
       w.removeObserver(t.getMetric(), t.getId());
     }
@@ -267,7 +267,7 @@ public class WitnessPolicy extends EnforcementPolicy {
       for (Map.Entry<TreatiesBoxRef, TreatyStatement> e : toBeRemoved) {
         Metric m = e.getKey().get();
         if (m == null) continue;
-        MetricTreaty w = m.get$treatiesBox().get$$treaties().get(e.getValue());
+        MetricTreaty w = m.get$treatiesBox().get$treaties().get(e.getValue());
         if (w == null) continue;
         w.removeObserver(t.getMetric(), t.getId());
       }
@@ -279,7 +279,7 @@ public class WitnessPolicy extends EnforcementPolicy {
         Metric m = e.getKey().get();
         if (m == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
             "A witness metric was null applying to {0}", t);
-        MetricTreaty w = m.get$treatiesBox().get$$treaties().get(e.getValue());
+        MetricTreaty w = m.get$treatiesBox().get$treaties().get(e.getValue());
         if (w == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
             "A witness treaty was null applying to {0}", t);
         w.addObserver(t.getMetric(), t.getId());

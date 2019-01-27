@@ -12,6 +12,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.TransactionID;
+import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
@@ -21,7 +22,6 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.worker.ObjectCache.FetchLock;
@@ -30,7 +30,6 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -105,8 +104,7 @@ public class InProcessStore extends RemoteStore {
   public void prepareTransaction(final long tid, final boolean singleStore,
       final boolean readOnly, final long expiryToCheck,
       final Collection<_Impl> toCreate,
-      final LongKeyMap<Pair<Integer, TreatySet>> reads,
-      final Collection<_Impl> writes,
+      final LongKeyMap<VersionAndExpiry> reads, final Collection<_Impl> writes,
       final Collection<ExpiryExtension> extensions,
       final LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
       final LongKeyMap<LongSet> delayedExtensions) {
@@ -138,7 +136,7 @@ public class InProcessStore extends RemoteStore {
         sm.createSurrogates(req);
 
         try {
-          OidKeyHashMap<TreatySet> longerTreaties =
+          OidKeyHashMap<Long> longerTreaties =
               tm.prepare(Worker.getWorker().getPrincipal(), req);
 
           long prepareTime = System.currentTimeMillis();
@@ -199,7 +197,7 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   protected List<SerializedObject> getStaleObjects(
-      LongKeyMap<Pair<Integer, TreatySet>> reads) {
+      LongKeyMap<VersionAndExpiry> reads) {
     try {
       return tm.checkForStaleObjects(getPrincipal(), reads);
     } catch (AccessException e) {

@@ -18,7 +18,6 @@ import fabric.lang.security.Label;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableObjectSet;
-import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _ObjectArray<T extends Object> extends Object {
@@ -53,15 +52,15 @@ public interface _ObjectArray<T extends Object> extends Object {
      * Used for deserializing.
      */
     public _Impl(Store store, long onum, int version,
-        ImmutableObjectSet associates, TreatySet treaties, long expiry,
-        Store labelStore, long labelOnum, Store accessPolicyStore,
-        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        ImmutableObjectSet associates, long expiry, Store labelStore,
+        long labelOnum, Store accessPolicyStore, long accessPolicyOnum,
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws IOException, ClassNotFoundException {
-      super(store, onum, version, associates, treaties, expiry, labelStore,
-          labelOnum, accessPolicyStore, accessPolicyOnum, in, refTypes,
-          intraStoreRefs, interStoreRefs);
+      super(store, onum, version, associates, expiry, labelStore, labelOnum,
+          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
+          interStoreRefs);
       proxyType = (Class<? extends Object._Proxy>) Worker.getWorker()
           .getClassLoader().loadClass(in.readUTF());
       value = new Object[in.readInt()];

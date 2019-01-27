@@ -14,6 +14,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.TransactionID;
+import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
@@ -36,7 +37,6 @@ import fabric.store.DelayedExtension;
 import fabric.util.HashMap;
 import fabric.util.Map;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionPrepare;
 
@@ -65,7 +65,7 @@ public final class LocalStore implements Store, Serializable {
   public void prepareTransaction(final long tid, final boolean singleStore,
       final boolean readOnly, final long expiryToCheck,
       final Collection<Object._Impl> toCreate,
-      final LongKeyMap<Pair<Integer, TreatySet>> reads,
+      final LongKeyMap<VersionAndExpiry> reads,
       final Collection<Object._Impl> writes,
       final Collection<ExpiryExtension> extensions,
       final LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
@@ -78,7 +78,7 @@ public final class LocalStore implements Store, Serializable {
         WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
         TransactionManager.pendingPrepares.get(tid).markSuccess(name(),
             new StorePrepareSuccessMessage(tid, System.currentTimeMillis(),
-                new OidKeyHashMap<TreatySet>()));
+                new OidKeyHashMap<Long>()));
       }
     });
   }
@@ -160,8 +160,7 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public boolean checkForStaleObjects(
-      LongKeyMap<Pair<Integer, TreatySet>> reads) {
+  public boolean checkForStaleObjects(LongKeyMap<VersionAndExpiry> reads) {
     return false;
   }
 

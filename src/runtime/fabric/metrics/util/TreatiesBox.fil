@@ -4,6 +4,7 @@ import fabric.metrics.Metric;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.worker.metrics.treaties.TreatySet;
 import java.util.SortedSet;
 
 /**
@@ -16,10 +17,14 @@ public class TreatiesBox extends AbstractSubject implements Observer {
 
   public final Metric owner;
 
+  // Remember to resolve this later...
+  public transient TreatySet treaties;
+
   public TreatiesBox fabric$metrics$util$TreatiesBox$(Metric m) {
     this.owner = m;
     fabric$metrics$util$AbstractSubject$();
     this.$associates = ImmutableObjectSet.emptySet().add(m);
+    this.treaties = TreatySet.emptySet(this);
     return this;
   }
 

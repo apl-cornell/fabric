@@ -7,13 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fabric.common.SerializedObject;
+import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Pair;
-import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -27,12 +26,12 @@ public final class StalenessCheckMessage
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
 
-  public final LongKeyMap<Pair<Integer, TreatySet>> versionsAndTreaties;
+  public final LongKeyMap<VersionAndExpiry> versionsAndExpiries;
 
   public StalenessCheckMessage(
-      LongKeyMap<Pair<Integer, TreatySet>> versionsAndTreaties) {
+      LongKeyMap<VersionAndExpiry> versionsAndExpiries) {
     super(MessageType.STALENESS_CHECK, AccessException.class);
-    this.versionsAndTreaties = versionsAndTreaties;
+    this.versionsAndExpiries = versionsAndExpiries;
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -63,12 +62,11 @@ public final class StalenessCheckMessage
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
-    out.writeInt(versionsAndTreaties.size());
-    for (LongKeyMap.Entry<Pair<Integer, TreatySet>> entry : versionsAndTreaties
+    out.writeInt(versionsAndExpiries.size());
+    for (LongKeyMap.Entry<VersionAndExpiry> entry : versionsAndExpiries
         .entrySet()) {
       out.writeLong(entry.getKey());
-      out.writeInt(entry.getValue().first);
-      entry.getValue().second.write(out);
+      entry.getValue().write(out);
     }
   }
 
@@ -78,13 +76,12 @@ public final class StalenessCheckMessage
   }
 
   /* helper method for deserialization constructor */
-  private static LongKeyHashMap<Pair<Integer, TreatySet>> readMap(DataInput in)
+  private static LongKeyHashMap<VersionAndExpiry> readMap(DataInput in)
       throws IOException {
     int size = in.readInt();
-    LongKeyHashMap<Pair<Integer, TreatySet>> versions =
-        new LongKeyHashMap<>(size);
+    LongKeyHashMap<VersionAndExpiry> versions = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++)
-      versions.put(in.readLong(), new Pair<>(in.readInt(), TreatySet.read(in)));
+      versions.put(in.readLong(), new VersionAndExpiry(in));
 
     return versions;
   }

@@ -29,12 +29,12 @@ import fabric.common.Threading;
 import fabric.common.Threading.NamedRunnable;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
+import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -858,8 +858,7 @@ public final class TransactionManager {
       if (obj.$writer == current
           && obj.writerMapVersion == current.writerMap.version
           && obj.$isOwned) {
-        if (clobberedExtension != null)
-          obj.$treaties = clobberedExtension.treaties;
+        if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
         return needTransaction;
       }
 
@@ -872,7 +871,7 @@ public final class TransactionManager {
         Timing.TXLOG.end();
       }
     }
-    if (clobberedExtension != null) obj.$treaties = clobberedExtension.treaties;
+    if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
 
     return needTransaction;
 
@@ -900,8 +899,7 @@ public final class TransactionManager {
       if (obj.$writer == current
           && obj.writerMapVersion == current.writerMap.version
           && obj.$isOwned) {
-        if (clobberedExtension != null)
-          obj.$treaties = clobberedExtension.treaties;
+        if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
         return needTransaction;
       }
 
@@ -926,7 +924,7 @@ public final class TransactionManager {
         Timing.TXLOG.end();
       }
     }
-    if (clobberedExtension != null) obj.$treaties = clobberedExtension.treaties;
+    if (clobberedExtension != null) obj.$expiry = clobberedExtension.expiry;
 
     return needTransaction;
 
@@ -1228,7 +1226,7 @@ public final class TransactionManager {
 
     // Go through each store and send check messages in parallel.
     for (Store store : stores) {
-      final LongKeyMap<Pair<Integer, TreatySet>> reads =
+      final LongKeyMap<VersionAndExpiry> reads =
           checkingLog.getReadsForStore(store, true);
       NamedRunnable runnable =
           new NamedRunnable("worker freshness check to " + store.name()) {
