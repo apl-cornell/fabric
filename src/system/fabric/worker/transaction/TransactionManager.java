@@ -53,7 +53,6 @@ import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.LockConflictException;
 import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatyRef;
 import fabric.worker.metrics.treaties.TreatySet;
@@ -389,10 +388,6 @@ public final class TransactionManager {
         current);
     try {
       current.runFinalResolution();
-    } catch (LockConflictException e) {
-      TransactionID tid = current.tid;
-      abortTransaction();
-      throw new TransactionRestartingException(tid);
     } catch (TransactionAbortingException e) {
       if (e.keepReads)
         abortTransactionUpdates();
