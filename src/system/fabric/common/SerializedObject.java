@@ -33,7 +33,6 @@ import fabric.worker.LocalStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ImmutableObjectSet;
-import fabric.worker.metrics.treaties.TreatySet;
 
 /**
  * <code>_Impl</code> objects are stored on stores in serialized form as
@@ -1272,8 +1271,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       if (constructor == null) {
         constructor = implClass.getConstructor(Store.class, long.class,
-            int.class, ImmutableObjectSet.class, TreatySet.class, long.class,
-            Store.class, long.class, Store.class, long.class, ObjectInput.class,
+            int.class, ImmutableObjectSet.class, long.class, Store.class,
+            long.class, Store.class, long.class, ObjectInput.class,
             Iterator.class, Iterator.class, Iterator.class);
         constructorTable.put(implClass, constructor);
       }
