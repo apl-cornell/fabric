@@ -22,6 +22,11 @@ public class Object extends java.lang.Object {
   protected final ConfPolicy $accessPolicy;
 
   /**
+   * The object's expiry, primarily for Treaties.
+   */
+  protected long $expiry;
+
+  /**
    * Initializes the object's update label and access policy.
    */
   public native Object $initLabels();
