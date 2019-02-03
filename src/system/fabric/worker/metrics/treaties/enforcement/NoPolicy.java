@@ -3,27 +3,27 @@ package fabric.worker.metrics.treaties.enforcement;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.metrics.treaties.Treaty;
 import fabric.worker.metrics.StatsMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 
 /**
  * Stand-in when there is no method of enforcement being used.
  */
+@SuppressWarnings("serial")
 public class NoPolicy extends EnforcementPolicy {
 
   public static final NoPolicy singleton = new NoPolicy();
 
-  private NoPolicy() {
-    super(EnforcementPolicy.Kind.NONE);
-  }
+  // Hide this.
+  private NoPolicy() {}
 
   @Override
-  public long calculateExpiry(MetricTreaty treaty, StatsMap weakStats) {
+  public long calculateExpiry(Treaty treaty, StatsMap weakStats) {
     return 0;
   }
 
   @Override
-  public long updatedExpiry(MetricTreaty oldTreaty, StatsMap weakStats) {
+  public long updatedExpiry(Treaty oldTreaty, StatsMap weakStats) {
     return 0;
   }
 
@@ -53,18 +53,23 @@ public class NoPolicy extends EnforcementPolicy {
   }
 
   @Override
-  public void apply(MetricTreaty t) {
+  public void apply(Treaty t) {
     // Do nothing.
   }
 
   @Override
-  public void unapply(MetricTreaty t) {
+  public void unapply(Treaty t) {
     // Do nothing.
   }
 
   @Override
-  public void shiftPolicies(MetricTreaty t, EnforcementPolicy newPolicy) {
+  public void shiftPolicies(Treaty t, EnforcementPolicy newPolicy) {
     // Just apply the new policy.
     newPolicy.apply(t);
+  }
+
+  @Override
+  protected void writeKind(DataOutput out) throws IOException {
+    out.writeByte(Kind.NONE.ordinal());
   }
 }

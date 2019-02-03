@@ -12,8 +12,9 @@ import java.util.SortedSet;
  * purposes of managing contention and conflicts between transactions.
  *
  * This acts as a proxy for the Metric's treaties and observers.
+ * TODO: Should this still be a proxy?
  */
-public class TreatiesBox extends AbstractSubject implements Observer {
+public class TreatiesBox {
 
   public final Metric owner;
 
@@ -22,20 +23,10 @@ public class TreatiesBox extends AbstractSubject implements Observer {
 
   public TreatiesBox fabric$metrics$util$TreatiesBox$(Metric m) {
     this.owner = m;
-    fabric$metrics$util$AbstractSubject$();
+    fabric$lang$Object$();
     this.$associates = ImmutableObjectSet.emptySet().add(m);
+    // TODO: add treaties as associates as they get added.
     this.treaties = TreatySet.emptySet(this);
     return this;
-  }
-
-  // Forward observer behavior back to metric.
-  /*@Override*/
-  public ImmutableObserverSet handleUpdates(boolean includesObserver, SortedSet/*<Long>*/ treaties) {
-    return owner.handleUpdates(includesObserver, treaties);
-  }
-
-  /*@Override*/
-  public ImmutableMetricsVector/*<SampledMetric>*/ getLeafSubjects() {
-    return owner.getLeafSubjects();
   }
 }

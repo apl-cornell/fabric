@@ -912,10 +912,6 @@ public interface longArray extends fabric.lang.Object {
                                          TransactionRestartingException $e74) {
                                     throw $e74;
                                 }
-                                catch (final fabric.worker.metrics.
-                                         LockConflictException $e74) {
-                                    throw $e74;
-                                }
                                 catch (final Throwable $e74) {
                                     $tm76.getCurrentLog().checkRetrySignal();
                                     throw $e74;
@@ -959,27 +955,6 @@ public interface longArray extends fabric.lang.Object {
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e74) {
-                                $commit71 = false;
-                                if ($tm76.checkForStaleObjects())
-                                    continue $label70;
-                                fabric.common.TransactionID $currentTid75 =
-                                  $tm76.getCurrentTid();
-                                if ($e74.tid.isDescendantOf($currentTid75)) {
-                                    $retry72 = true;
-                                }
-                                else if ($currentTid75.parent != null) {
-                                    $retry72 = false;
-                                    throw $e74;
-                                }
-                                else {
-                                    throw new InternalError(
-                                            "Something is broken with transaction " +
-                                                "management. Got a signal for a lock conflict in a different " +
-                                                "transaction than the one being managed.");
-                                }
                             }
                             catch (final Throwable $e74) {
                                 $commit71 = false;
@@ -1049,11 +1024,11 @@ public interface longArray extends fabric.lang.Object {
         
     }
     
-    public static final byte[] $classHash = new byte[] { -61, 113, -120, -6,
-    -92, -6, -72, 88, 63, -9, -59, 61, 104, 1, -43, 110, -33, 86, -128, 6, 86,
-    34, -103, -50, -66, 51, 55, -92, -78, -60, 94, 120 };
+    public static final byte[] $classHash = new byte[] { -88, 28, -54, -78, 127,
+    96, -88, 95, -24, -107, 23, -76, -35, 109, -34, 52, -85, -43, 54, -16, 124,
+    -113, 72, 50, 119, -19, -54, 23, 65, 89, 38, 90 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
     public static final long jlc$SourceLastModified$fabil = 1525719795000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

@@ -1,0 +1,49 @@
+package fabric.worker.metrics.treaties.enforcement;
+
+import fabric.worker.metrics.StatsMap;
+import fabric.metrics.treaties.Treaty;
+
+import java.io.Serializable;
+
+/**
+ * Policy enforcing the treaty by directly monitoring the metric value.
+ */
+public class DirectPolicy extends EnforcementPolicy implements Serializable, fabric.lang.JavaInlineable {
+
+  /** Get the singleton object for this class */
+  public static final DirectPolicy singleton;
+
+  /**
+   * Utility for getting the policy determined expiration, no consideration for
+   * existing advertised expiry.
+   */
+  public native long calculateExpiry(Treaty treaty, StatsMap weakStats);
+
+  /**
+   * Utility for getting the policy determined expiration, assuming this is an
+   * update from a state already using this policy.
+   */
+  public native long updatedExpiry(Treaty oldTreaty, StatsMap weakStats);
+
+  /**
+   * Activate anything that needs activation for this policy to work.
+   */
+  public native void activate(StatsMap weakStats);
+
+  /**
+   * Add the given treaty as an observer of the values being used for this
+   * policy.
+   */
+  public native void apply(Treaty t);
+
+  /**
+   * Remove the given treaty as an observer of the values being used for this
+   * policy.
+   */
+  public native void unapply(Treaty t);
+
+  /**
+   * Shift from this policy to the given policy on the given Treaty.
+   */
+  public native void shiftPolicies(Treaty t, EnforcementPolicy newPolicy);
+}

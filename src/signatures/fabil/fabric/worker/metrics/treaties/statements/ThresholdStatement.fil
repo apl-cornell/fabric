@@ -1,0 +1,67 @@
+package fabric.worker.metrics.treaties.statements;
+
+import java.io.Serializable;
+
+import fabric.metrics.Metric;
+import fabric.metrics.treaties.Treaty;
+import fabric.worker.Store;
+import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
+
+/**
+ * {@link TreatyStatement} for threshold bounds.
+ */
+public class ThresholdStatement extends TreatyStatement
+    implements Serializable, JavaInlineable {
+
+  public native double rate();
+
+  public native double base();
+
+  /**
+   * Utility factory method because signatures don't allow native constructors.
+   */
+  public native static ThresholdStatement create(double rate, double base);
+
+  /**
+   * Utility factory method because signatures don't allow native constructors.
+   */
+  public native static ThresholdStatement create(double rate, double base, long startTime);
+
+  /**
+   * Hedged expiry time that will be used, avoiding retractions due to expected
+   * updates.
+   *
+   * Essentially a static version of {@link #directExpiry(Metric,StatsMap)}
+   */
+  public static native long hedgedExpiry(Metric m, double rate, double base, long time, StatsMap weakStats);
+
+  /**
+   * Estimated time the treaty will last, given current trends.
+   */
+  public static native long hedgedEstimate(Metric m, double rate, double base, long time, StatsMap weakStats);
+
+  /**
+   * The expiry if there are no further updates.
+   */
+  public static native long trueExpiry(double rate, double base, double value, long time);
+
+  /**
+   * The expiry if there are no further updates.
+   */
+  public native long trueExpiry(double value, long time);
+
+  public native long directExpiry(Metric m, StatsMap weakStats);
+
+  public native long trueExpiry(Metric m, StatsMap weakStats);
+
+  public native long trueExpiry(double v);
+
+  public native boolean implies(TreatyStatement stmt);
+
+  public native EnforcementPolicy getNewPolicy(Metric m, StatsMap weakStats);
+
+  public native Treaty getProxy(Metric m, Store s);
+
+  public native boolean check(Metric m);
+}

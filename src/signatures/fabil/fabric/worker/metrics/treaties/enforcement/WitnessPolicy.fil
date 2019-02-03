@@ -1,0 +1,52 @@
+package fabric.worker.metrics.treaties.enforcement;
+
+import fabric.worker.metrics.StatsMap;
+import fabric.metrics.treaties.Treaty;
+
+import java.io.Serializable;
+
+import com.google.common.collect.Multimap;
+
+/**
+ * Policy enforcing the treaty by relying on subtreaties.
+ */
+public class WitnessPolicy extends EnforcementPolicy implements Serializable, fabric.lang.JavaInlineable {
+  /**
+   * Utility factory method since we can't expose constructors for signatures.
+   */
+  public static native WitnessPolicy create(Multimap/*<Metric, TreatyStatement>*/ witnesses);
+
+  /**
+   * Utility for getting the policy determined expiration, no consideration for
+   * existing advertised expiry.
+   */
+  public native long calculateExpiry(Treaty treaty, StatsMap weakStats);
+
+  /**
+   * Utility for getting the policy determined expiration, assuming this is an
+   * update from a state already using this policy.
+   */
+  public native long updatedExpiry(Treaty oldTreaty, StatsMap weakStats);
+
+  /**
+   * Activate anything that needs activation for this policy to work.
+   */
+  public native void activate(StatsMap weakStats);
+
+  /**
+   * Add the given treaty as an observer of the values being used for this
+   * policy.
+   */
+  public native void apply(Treaty t);
+
+  /**
+   * Remove the given treaty as an observer of the values being used for this
+   * policy.
+   */
+  public native void unapply(Treaty t);
+
+  /**
+   * Shift from this policy to the given policy on the given Treaty.
+   */
+  public native void shiftPolicies(Treaty t, EnforcementPolicy newPolicy);
+}

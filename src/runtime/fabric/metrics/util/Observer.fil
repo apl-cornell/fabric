@@ -31,7 +31,7 @@ public interface Observer {
    * @return the set of observers that should handle updates based on the
    * results of this update processing.
    */
-  public ImmutableObserverSet handleUpdates(boolean includesObserver, SortedSet/*<Long>*/ treaties);
+  public ImmutableObserverSet handleUpdates();
 
   /**
    * Used by {@link AbstractSubject#processSamples} to determine if all

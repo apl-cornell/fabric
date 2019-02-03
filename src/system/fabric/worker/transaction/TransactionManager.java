@@ -42,6 +42,7 @@ import fabric.lang.security.SecurityCache;
 import fabric.messages.NonAtomicCallMessage;
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
+import fabric.metrics.treaties.Treaty;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
@@ -53,9 +54,6 @@ import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.treaties.MetricTreaty;
-import fabric.worker.metrics.treaties.TreatyRef;
-import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
@@ -877,14 +875,14 @@ public final class TransactionManager {
    *
    * @return whether a new (top-level) transaction was created.
    */
-  public boolean registerTreatySetWrite(_Impl obj, TreatySet oldTreaties,
-      TreatySet newTreaties) {
+  public boolean registerExpiryWrite(_Impl obj, long oldExpiry,
+      long newExpiry) {
     boolean needTransaction = (current == null);
     if (needTransaction) startTransaction();
 
     ExpiryExtension clobberedExtension = null;
     synchronized (obj) {
-      boolean extending = newTreaties.isExtensionOf(oldTreaties);
+      boolean extending = newExpiry >= oldExpiry;
       if (!extending) {
         synchronized (current.extendedTreaties) {
           clobberedExtension = current.extendedTreaties.remove(obj);
@@ -1498,15 +1496,8 @@ public final class TransactionManager {
   /**
    * Mark a postcondition using a treaty.
    */
-  public void addTreatiedPostcondition(TreatyRef t) {
+  public void addTreatiedPostcondition(Treaty t) {
     if (current != null) current.addTreatiedPostcondition(t);
-  }
-
-  /**
-   * Mark a postcondition using a treaty.
-   */
-  public void addTreatiedPostcondition(MetricTreaty t) {
-    if (current != null) current.addTreatiedPostcondition(new TreatyRef(t));
   }
 
   /**

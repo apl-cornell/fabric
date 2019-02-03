@@ -18,105 +18,18 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import fabric.common.FastSerializable;
-import fabric.common.util.Triple;
-import fabric.metrics.util.Observer;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
 /**
- * Utility class to easily express an immutable vector of observers.
+ * Utility class to easily express an immutable vector of objects.
  */
 @SuppressWarnings("serial")
 public class ImmutableObserverSet implements FastSerializable, Serializable,
-    Iterable<Triple<Observer._Proxy, Boolean, SortedSet<Long>>> {
+    Iterable<fabric.metrics.util.Observer._Proxy> {
 
-  public static class ObserverGroup implements FastSerializable {
-    public final boolean includesOwner;
-    public final SortedSet<Long> treaties;
-
-    public static final ObserverGroup EMPTY =
-        new ObserverGroup(false, new TreeSet<>());
-
-    /**
-     * @param includesOwner
-     * @param treaties
-     */
-    public ObserverGroup(boolean includesOwner, SortedSet<Long> treaties) {
-      this.includesOwner = includesOwner;
-      this.treaties = treaties;
-    }
-
-    /**
-     * @param includesOwner
-     * @param treaties
-     */
-    public ObserverGroup(DataInput in) throws IOException {
-      this.includesOwner = in.readBoolean();
-      int size = in.readInt();
-      this.treaties = new TreeSet<>();
-      for (int i = 0; i < size; i++) {
-        this.treaties.add(in.readLong());
-      }
-    }
-
-    public ObserverGroup addOwner() {
-      return new ObserverGroup(true, treaties);
-    }
-
-    public ObserverGroup removeOwner() {
-      return new ObserverGroup(false, treaties);
-    }
-
-    public ObserverGroup addTreaty(long id) {
-      SortedSet<Long> updated = new TreeSet<>(treaties);
-      updated.add(id);
-      return new ObserverGroup(includesOwner, updated);
-    }
-
-    public ObserverGroup removeTreaty(long id) {
-      SortedSet<Long> updated = new TreeSet<>(treaties);
-      updated.remove(id);
-      return new ObserverGroup(includesOwner, updated);
-    }
-
-    public boolean isEmpty() {
-      return !includesOwner && treaties.isEmpty();
-    }
-
-    public boolean containsAll(ObserverGroup other) {
-      return (includesOwner || !other.includesOwner)
-          && treaties.containsAll(other.treaties);
-    }
-
-    @Override
-    public void write(DataOutput out) throws IOException {
-      out.writeBoolean(includesOwner);
-      out.writeInt(treaties.size());
-      for (long l : treaties) {
-        out.writeLong(l);
-      }
-    }
-
-    @Override
-    public String toString() {
-      return "owner:" + includesOwner + ",treaties:" + treaties;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      return o == this || ((o instanceof ObserverGroup)
-          && ((ObserverGroup) o).includesOwner == includesOwner
-          && ((ObserverGroup) o).treaties.equals(treaties));
-    }
-
-    @Override
-    public int hashCode() {
-      return Boolean.hashCode(includesOwner) ^ treaties.hashCode();
-    }
-  }
-
-  // 2 level map, store name -> onum -> ObserverGroup
-  private SortedMap<String, SortedMap<Long, ObserverGroup>> map;
+  // store name -> onums
+  private SortedMap<String, SortedSet<Long>> map;
 
   private ImmutableObserverSet() {
     this.map = new TreeMap<>();
@@ -124,192 +37,93 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
 
   private ImmutableObserverSet(ImmutableObserverSet orig) {
     this.map = new TreeMap<>();
-    for (Map.Entry<String, SortedMap<Long, ObserverGroup>> e : orig.map
-        .entrySet()) {
-      this.map.put(e.getKey(), new TreeMap<>(e.getValue()));
+    for (Map.Entry<String, SortedSet<Long>> e : orig.map.entrySet()) {
+      this.map.put(e.getKey(), new TreeSet<>(e.getValue()));
     }
   }
 
   /** @return the length. */
   public int size() {
     int total = 0;
-    for (SortedMap<Long, ObserverGroup> val : map.values()) {
+    for (SortedSet<Long> val : map.values()) {
       total += val.size();
     }
     return total;
   }
 
-  /** @return a new set with the given observer added. */
-  public ImmutableObserverSet add(Observer obs) {
-    if (contains(obs)) return this;
+  /** @return a new set with the given object added. */
+  public ImmutableObserverSet add(fabric.metrics.util.Observer o) {
+    if (contains(o)) return this;
 
     ImmutableObserverSet updated = new ImmutableObserverSet(this);
 
-    // Get or Add First Level
-    SortedMap<Long, ObserverGroup> submap =
-        updated.map.get(obs.$getStore().name());
-    if (submap == null) {
-      submap = new TreeMap<>();
-      updated.map.put(obs.$getStore().name(), submap);
+    // Get or Add onum set
+    SortedSet<Long> subset = updated.map.get(o.$getStore().name());
+    if (subset == null) {
+      subset = new TreeSet<>();
+      updated.map.put(o.$getStore().name(), subset);
     }
+    // Add onum
+    subset.add(o.$getOnum());
 
-    // Get or Add Second Level
-    ObserverGroup orig = submap.get(obs.$getOnum());
-    if (orig == null) orig = ObserverGroup.EMPTY;
-
-    // Add Third Level.
-    submap.put(obs.$getOnum(), orig.addOwner());
-    return updated;
-  }
-
-  /** @return a new set with the given observer's treaty added. */
-  public ImmutableObserverSet add(Observer obs, long id) {
-    if (contains(obs, id)) return this;
-
-    ImmutableObserverSet updated = new ImmutableObserverSet(this);
-
-    // Get or Add First Level
-    SortedMap<Long, ObserverGroup> submap =
-        updated.map.get(obs.$getStore().name());
-    if (submap == null) {
-      submap = new TreeMap<>();
-      updated.map.put(obs.$getStore().name(), submap);
-    }
-
-    // Get or Add Second Level
-    ObserverGroup orig = submap.get(obs.$getOnum());
-    if (orig == null) orig = ObserverGroup.EMPTY;
-
-    // Add Third Level.
-    submap.put(obs.$getOnum(), orig.addTreaty(id));
     return updated;
   }
 
   /**
    * Add all items in the given ImmutableObserverSet.
-   * @return the updated observer set.
+   * @return the updated object set.
    */
   public ImmutableObserverSet addAll(ImmutableObserverSet other) {
     ImmutableObserverSet result = this;
-    for (Triple<Observer._Proxy, Boolean, SortedSet<Long>> item : other) {
-      if (item.second) result = result.add(item.first);
-      for (long treatyId : item.third) {
-        result = result.add(item.first, treatyId);
-      }
+    for (fabric.metrics.util.Observer._Proxy item : other) {
+      result = result.add(item);
     }
     return result;
   }
 
-  /** @return a new set with the given observer removed. */
-  public ImmutableObserverSet remove(Observer obs) {
-    if (!contains(obs)) return this;
+  /** @return a new set with the given object removed. */
+  public ImmutableObserverSet remove(fabric.metrics.util.Observer o) {
+    if (!contains(o)) return this;
 
     ImmutableObserverSet updated = new ImmutableObserverSet(this);
 
-    // Get First Level
-    SortedMap<Long, ObserverGroup> submap =
-        updated.map.get(obs.$getStore().name());
+    // Get onums
+    SortedSet<Long> subset = updated.map.get(o.$getStore().name());
 
-    // Get Second Level
-    ObserverGroup orig = submap.get(obs.$getOnum());
+    // Remove or Update onums
+    subset.remove(o.$getOnum());
 
-    // Remove Third Level
-    ObserverGroup updatedGrp = orig.removeOwner();
-
-    // Remove or Update Second Level
-    if (updatedGrp.isEmpty()) {
-      submap.remove(obs.$getOnum());
-    } else {
-      submap.put(obs.$getOnum(), updatedGrp);
-    }
-
-    // Remove First Level
-    if (submap.isEmpty()) updated.map.remove(obs.$getStore().name());
-
-    return updated;
-  }
-
-  /** @return a new set with the given observer's treaty removed. */
-  public ImmutableObserverSet remove(Observer obs, long id) {
-    if (!contains(obs, id)) return this;
-
-    ImmutableObserverSet updated = new ImmutableObserverSet(this);
-
-    // Get First Level
-    SortedMap<Long, ObserverGroup> submap =
-        updated.map.get(obs.$getStore().name());
-
-    // Get Second Level
-    ObserverGroup orig = submap.get(obs.$getOnum());
-
-    // Remove Third Level
-    ObserverGroup updatedGrp = orig.removeTreaty(id);
-
-    // Remove or Update Second Level
-    if (updatedGrp.isEmpty()) {
-      submap.remove(obs.$getOnum());
-    } else {
-      submap.put(obs.$getOnum(), updatedGrp);
-    }
-
-    // Remove First Level
-    if (submap.isEmpty()) updated.map.remove(obs.$getStore().name());
+    // Clear set if it's now empty.
+    if (subset.isEmpty()) updated.map.remove(o.$getStore().name());
 
     return updated;
   }
 
   /**
    * Remove all items in the given ImmutableObserverSet.
-   * @return the updated observer set.
+   * @return the updated object set.
    */
   public ImmutableObserverSet removeAll(ImmutableObserverSet other) {
     ImmutableObserverSet result = this;
-    for (Triple<Observer._Proxy, Boolean, SortedSet<Long>> item : other) {
-      if (item.second) result = result.remove(item.first);
-      for (long treatyId : item.third) {
-        result = result.remove(item.first, treatyId);
-      }
+    for (fabric.metrics.util.Observer._Proxy item : other) {
+      result = result.remove(item);
     }
     return result;
   }
 
-  /** @return true iff the given observer is in the set */
-  public boolean contains(Observer obs) {
+  /** @return true iff the given object is in the set */
+  public boolean contains(fabric.metrics.util.Observer obs) {
     return map.containsKey(obs.$getStore().name())
-        && map.get(obs.$getStore().name()).containsKey(obs.$getOnum())
-        && map.get(obs.$getStore().name()).get(obs.$getOnum()).includesOwner;
-  }
-
-  /** @return true iff the given observer treaty is in the set */
-  public boolean contains(Observer obs, long id) {
-    return map.containsKey(obs.$getStore().name())
-        && map.get(obs.$getStore().name()).containsKey(obs.$getOnum())
-        && map.get(obs.$getStore().name()).get(obs.$getOnum()).treaties
-            .contains(id);
-  }
-
-  /** @return the treaties for a given obs */
-  public SortedSet<Long> getTreaties(Observer obs) {
-    if (map.containsKey(obs.$getStore().name())
-        && map.get(obs.$getStore().name()).containsKey(obs.$getOnum()))
-      return map.get(obs.$getStore().name()).get(obs.$getOnum()).treaties;
-    return new TreeSet<>();
+        && map.get(obs.$getStore().name()).contains(obs.$getOnum());
   }
 
   /** @return true iff the given set is fully contained in this set */
   public boolean containsAll(ImmutableObserverSet other) {
     // Superset of stores
     if (!map.keySet().containsAll(other.map.keySet())) return false;
-    for (Map.Entry<String, SortedMap<Long, ObserverGroup>> e : other.map
-        .entrySet()) {
+    for (Map.Entry<String, SortedSet<Long>> e : other.map.entrySet()) {
       // Superset of onums for store
-      if (!map.get(e.getKey()).keySet().containsAll(e.getValue().keySet()))
-        return false;
-      for (Map.Entry<Long, ObserverGroup> e2 : e.getValue().entrySet()) {
-        // Superset of observer group
-        if (!map.get(e.getKey()).get(e2.getKey()).containsAll(e2.getValue()))
-          return false;
-      }
+      if (!map.get(e.getKey()).containsAll(e.getValue())) return false;
     }
     return true;
   }
@@ -320,12 +134,12 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   }
 
   @Override
-  public Iterator<Triple<Observer._Proxy, Boolean, SortedSet<Long>>> iterator() {
-    return new Iterator<Triple<Observer._Proxy, Boolean, SortedSet<Long>>>() {
-      Iterator<Map.Entry<String, SortedMap<Long, ObserverGroup>>> topIter =
+  public Iterator<fabric.metrics.util.Observer._Proxy> iterator() {
+    return new Iterator<fabric.metrics.util.Observer._Proxy>() {
+      Iterator<Map.Entry<String, SortedSet<Long>>> topIter =
           map.entrySet().iterator();
       Store curStore = null;
-      Iterator<Map.Entry<Long, ObserverGroup>> subIter = null;
+      Iterator<Long> subIter = null;
 
       @Override
       public boolean hasNext() {
@@ -333,16 +147,14 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
       }
 
       @Override
-      public Triple<Observer._Proxy, Boolean, SortedSet<Long>> next() {
+      public fabric.metrics.util.Observer._Proxy next() {
         if (subIter == null || !subIter.hasNext()) {
-          Map.Entry<String, SortedMap<Long, ObserverGroup>> nextBunch =
-              topIter.next();
+          Map.Entry<String, SortedSet<Long>> nextBunch = topIter.next();
           curStore = Worker.getWorker().getStore(nextBunch.getKey());
-          subIter = nextBunch.getValue().entrySet().iterator();
+          subIter = nextBunch.getValue().iterator();
         }
-        Map.Entry<Long, ObserverGroup> nextItem = subIter.next();
-        return new Triple<>(new Observer._Proxy(curStore, nextItem.getKey()),
-            nextItem.getValue().includesOwner, nextItem.getValue().treaties);
+        long nextItem = subIter.next();
+        return new fabric.metrics.util.Observer._Proxy(curStore, nextItem);
       }
     };
   }
@@ -362,12 +174,12 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     for (int i = 0; i < size1; i++) {
       String storeName = in.readUTF();
       int size2 = in.readInt();
-      SortedMap<Long, ObserverGroup> submap = new TreeMap<>();
+      SortedSet<Long> subset = new TreeSet<>();
       for (int j = 0; j < size2; j++) {
         long onum = in.readLong();
-        submap.put(onum, new ObserverGroup(in));
+        subset.add(onum);
       }
-      this.map.put(storeName, submap);
+      this.map.put(storeName, subset);
     }
   }
 
@@ -382,12 +194,12 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     for (int i = 0; i < size1; i++) {
       String storeName = in.readUTF();
       int size2 = in.readInt();
-      SortedMap<Long, ObserverGroup> submap = new TreeMap<>();
+      SortedSet<Long> subset = new TreeSet<>();
       for (int j = 0; j < size2; j++) {
         long onum = in.readLong();
-        submap.put(onum, new ObserverGroup(in));
+        subset.add(onum);
       }
-      this.map.put(storeName, submap);
+      this.map.put(storeName, subset);
     }
   }
 
@@ -409,12 +221,11 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(map.size());
-    for (Map.Entry<String, SortedMap<Long, ObserverGroup>> e : map.entrySet()) {
+    for (Map.Entry<String, SortedSet<Long>> e : map.entrySet()) {
       out.writeUTF(e.getKey());
       out.writeInt(e.getValue().size());
-      for (Map.Entry<Long, ObserverGroup> e2 : e.getValue().entrySet()) {
-        out.writeLong(e2.getKey());
-        e2.getValue().write(out);
+      for (long onum : e.getValue()) {
+        out.writeLong(onum);
       }
     }
   }
@@ -429,23 +240,22 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   }
 
   public Set<Long> onumsForStore(String s) {
-    return map.get(s) == null ? null : map.get(s).keySet();
+    return map.get(s);
   }
 
   /**
-   * Allow for prefetching of the observer objects.
+   * Allow for prefetching of the objects.
    */
   public Map<Store, Set<Long>> prefetch(Store triggeringStore) {
-    // Hack to prefetch observers into cache.
+    // Hack to prefetch objects into cache.
     Map<Store, Set<Long>> result = new HashMap<>();
-    for (final Map.Entry<String, SortedMap<Long, ObserverGroup>> e : map
-        .entrySet()) {
+    for (final Map.Entry<String, SortedSet<Long>> e : map.entrySet()) {
       if (e.getKey().equals(triggeringStore.name())) continue;
       Store s = Worker.getWorker().getStore(e.getKey());
       //Logging.METRICS_LOGGER.log(Level.INFO,
       //    "PREFETCHING ASSOCIATES FROM {0}: {1}",
       //    new Object[] { s, e.getValue() });
-      result.put(s, new HashSet<>(e.getValue().keySet()));
+      result.put(s, new HashSet<>(e.getValue()));
     }
     return result;
   }

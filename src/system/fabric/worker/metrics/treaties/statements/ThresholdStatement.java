@@ -3,27 +3,29 @@ package fabric.worker.metrics.treaties.statements;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 import fabric.metrics.Metric;
+import fabric.metrics.treaties.Treaty;
 import fabric.worker.Store;
 import fabric.worker.metrics.StatsMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.transaction.TransactionManager;
 
 /**
  * {@link TreatyStatement} for threshold bounds.
  */
-public class ThresholdStatement extends TreatyStatement {
+public class ThresholdStatement extends TreatyStatement
+    implements Serializable {
 
   // Number of standard deviations to consider for hedging.
   private static final double HEDGE_FACTOR = 3.0;
 
-  public final double rate;
-  public final double base;
+  private double rate;
+  private double base;
 
   public ThresholdStatement(double rate, double base) {
-    super(TreatyStatement.Kind.THRESHOLD);
     this.rate = rate;
     this.base = base;
   }
@@ -33,9 +35,35 @@ public class ThresholdStatement extends TreatyStatement {
   }
 
   public ThresholdStatement(DataInput in) throws IOException {
-    super(TreatyStatement.Kind.THRESHOLD);
     this.rate = in.readDouble();
     this.base = in.readDouble();
+  }
+
+  /**
+   * Utility factory method because signatures don't allow native constructors.
+   */
+  public static ThresholdStatement create(double rate, double base) {
+    return new ThresholdStatement(rate, base);
+  }
+
+  /**
+   * Utility factory method because signatures don't allow native constructors.
+   */
+  public static ThresholdStatement create(double rate, double base, long startTime) {
+    return new ThresholdStatement(rate, base, startTime);
+  }
+
+  public double rate() {
+    return rate;
+  }
+
+  public double base() {
+    return base;
+  }
+
+  @Override
+  public void writeStatementKind(DataOutput out) throws IOException {
+    out.writeByte(Kind.THRESHOLD.ordinal());
   }
 
   @Override
@@ -357,7 +385,7 @@ public class ThresholdStatement extends TreatyStatement {
   }
 
   @Override
-  public MetricTreaty getProxy(Metric m, Store s) {
+  public Treaty getProxy(Metric m, Store s) {
     return m.getProxy(s).getThresholdTreaty(rate, base);
   }
 
@@ -369,10 +397,27 @@ public class ThresholdStatement extends TreatyStatement {
   @Override
   public boolean check(Metric m) {
     double value = m.value();
-    boolean result = checkBound(this.rate, this.base, value, System.currentTimeMillis());
+    boolean result =
+        checkBound(this.rate, this.base, value, System.currentTimeMillis());
     if (result) {
       TransactionManager.getInstance().registerExpiryUse(trueExpiry(value));
     }
     return result;
+  }
+
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    out.writeDouble(this.rate);
+    out.writeDouble(this.base);
+  }
+
+  private void readObject(java.io.ObjectInputStream in) throws IOException {
+    this.rate = in.readDouble();
+    this.base = in.readDouble();
+  }
+
+  private void readObjectNoData() {
+    // This shouldn't happen.
+    this.rate = 0;
+    this.base = 0;
   }
 }

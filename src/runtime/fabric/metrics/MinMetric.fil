@@ -14,7 +14,6 @@ import fabric.metrics.util.Subject;
 import fabric.worker.Store;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.StatsMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
@@ -291,9 +290,9 @@ public class MinMetric extends DerivedMetric {
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
         for (int i = 0; i < terms.length(); i++) {
-            witnesses.put(term(i), new ThresholdStatement(rate, base));
+            witnesses.put(term(i), ThresholdStatement.create(rate, base));
         }
-        return new WitnessPolicy(witnesses);
+        return WitnessPolicy.create(witnesses);
     }
 
     /*@Override*/

@@ -1,0 +1,45 @@
+package fabric.worker.metrics.treaties.enforcement;
+
+import fabric.worker.metrics.StatsMap;
+import fabric.metrics.treaties.Treaty;
+
+import java.io.Serializable;
+
+/**
+ * Method of enforcement for a treaty.
+ */
+public abstract class EnforcementPolicy implements Serializable, fabric.lang.JavaInlineable {
+  /**
+   * Utility for getting the policy determined expiration, no consideration for
+   * existing advertised expiry.
+   */
+  public abstract long calculateExpiry(Treaty treaty, StatsMap weakStats);
+
+  /**
+   * Utility for getting the policy determined expiration, assuming this is an
+   * update from a state already using this policy.
+   */
+  public abstract long updatedExpiry(Treaty oldTreaty, StatsMap weakStats);
+
+  /**
+   * Activate anything that needs activation for this policy to work.
+   */
+  public abstract void activate(StatsMap weakStats);
+
+  /**
+   * Add the given treaty as an observer of the values being used for this
+   * policy.
+   */
+  public abstract void apply(Treaty t);
+
+  /**
+   * Remove the given treaty as an observer of the values being used for this
+   * policy.
+   */
+  public abstract void unapply(Treaty t);
+
+  /**
+   * Shift from this policy to the given policy on the given Treaty.
+   */
+  public abstract void shiftPolicies(Treaty t, EnforcementPolicy newPolicy);
+}

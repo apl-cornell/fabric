@@ -3,42 +3,43 @@ package fabric.worker.metrics.treaties.enforcement;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.metrics.treaties.Treaty;
 import fabric.worker.metrics.StatsMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 
 /**
  * Policy enforcing the treaty by directly monitoring the metric value.
  */
+@SuppressWarnings("serial")
 public class DirectPolicy extends EnforcementPolicy {
 
   public static final DirectPolicy singleton = new DirectPolicy();
 
+  // Hide this.
   private DirectPolicy() {
-    super(EnforcementPolicy.Kind.DIRECT);
   }
 
   @Override
-  public long calculateExpiry(MetricTreaty treaty, StatsMap weakStats) {
-    return treaty.statement.directExpiry(treaty.getMetric(), weakStats);
+  public long calculateExpiry(Treaty treaty, StatsMap weakStats) {
+    return treaty.get$predicate().directExpiry(treaty.get$metric(), weakStats);
   }
 
   @Override
-  public long updatedExpiry(MetricTreaty oldTreaty, StatsMap weakStats) {
+  public long updatedExpiry(Treaty oldTreaty, StatsMap weakStats) {
     // Update if either we're advertising too optimistic of an expiry right
     // now or we're close enough to the advertised expiry to start ramping
     // up.
     long currentTime = System.currentTimeMillis();
     long trueTime =
-        oldTreaty.statement.trueExpiry(oldTreaty.getMetric(), weakStats);
-    if (trueTime < currentTime && currentTime <= oldTreaty.expiry) {
+        oldTreaty.get$predicate().trueExpiry(oldTreaty.get$metric(), weakStats);
+    if (trueTime < currentTime && currentTime <= oldTreaty.get$$expiry()) {
       // We can't actually enforce it.
       return 0;
     }
     long hedgedTime = calculateExpiry(oldTreaty, weakStats);
-    if (oldTreaty.expiry <= trueTime) {
+    if (oldTreaty.get$$expiry() <= trueTime) {
       // If the currently advertised time is still good, move to new
       // hedgedTime if it's larger.
-      return Math.max(oldTreaty.expiry, hedgedTime);
+      return Math.max(oldTreaty.get$$expiry(), hedgedTime);
     }
     // Otherwise, just move to new expiry.
     return hedgedTime;
@@ -70,23 +71,28 @@ public class DirectPolicy extends EnforcementPolicy {
   }
 
   @Override
-  public void apply(MetricTreaty t) {
+  public void apply(Treaty t) {
     // Observe the metric.
-    t.getMetric().addObserver(t.getMetric(), t.getId());
+    t.get$metric().addObserver(t);
   }
 
   @Override
-  public void unapply(MetricTreaty t) {
+  public void unapply(Treaty t) {
     // Stop observing the metric.
-    t.getMetric().removeObserver(t.getMetric(), t.getId());
+    t.get$metric().removeObserver(t);
   }
 
   @Override
-  public void shiftPolicies(MetricTreaty t, EnforcementPolicy newPolicy) {
+  public void shiftPolicies(Treaty t, EnforcementPolicy newPolicy) {
     // If the new policy is also direct, don't do anything.
     if (!(newPolicy instanceof DirectPolicy)) {
       unapply(t);
       newPolicy.apply(t);
     }
+  }
+
+  @Override
+  protected void writeKind(DataOutput out) throws IOException {
+    out.writeByte(Kind.DIRECT.ordinal());
   }
 }

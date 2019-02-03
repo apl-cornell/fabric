@@ -3,7 +3,6 @@ package fabric.metrics;
 import fabric.worker.Store;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.proxies.ProxyMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
 import fabric.worker.metrics.treaties.statements.EqualityStatement;
@@ -79,16 +78,16 @@ public class ProxyMetric extends DerivedMetric {
   public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
     // TODO: Is this right?
     Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
-    witnesses.put(term(0), new EqualityStatement(value));
-    return new WitnessPolicy(witnesses);
+    witnesses.put(term(0), EqualityStatement.create(value));
+    return WitnessPolicy.create(witnesses);
   }
 
   /*@Override*/
   public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
     // TODO: Is this right?
     Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
-    witnesses.put(term(0), new ThresholdStatement(rate, base));
-    return new WitnessPolicy(witnesses);
+    witnesses.put(term(0), ThresholdStatement.create(rate, base));
+    return WitnessPolicy.create(witnesses);
   }
 
   /*@Override*/
@@ -99,9 +98,9 @@ public class ProxyMetric extends DerivedMetric {
   /*@Override*/
   protected void createAndActivateThresholdTreaty(double rate, double base, long time, boolean proactive) {
     if (proactive) {
-      term(0).createAndActivateTreaty(new ThresholdStatement(rate, base, time), proactive);
+      term(0).createAndActivateTreaty(ThresholdStatement.create(rate, base, time), proactive);
     } else {
-      createThresholdTreaty(rate, base, time).update(false, StatsMap.emptyStats());
+      createThresholdTreaty(rate, base, time);
     }
   }
 }

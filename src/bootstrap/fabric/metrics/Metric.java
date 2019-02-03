@@ -12,6 +12,7 @@ import fabric.util.Set;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.TreatiesBox;
+import fabric.metrics.treaties.Treaty;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
@@ -20,9 +21,7 @@ import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.RunningMetricStats;
-import fabric.worker.metrics.MetricUpdate;
 import fabric.worker.metrics.proxies.ProxyMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
@@ -41,9 +40,7 @@ import fabric.common.util.Pair;
  * Abstract class with base implementation of some {@link Metric} methods.
  */
 public interface Metric
-  extends java.lang.Comparable, fabric.metrics.util.Observer,
-          fabric.metrics.util.AbstractSubject
-{
+  extends java.lang.Comparable, fabric.metrics.util.AbstractSubject {
     /** @return the current value of the {@link Metric}. */
     public double value();
     
@@ -84,55 +81,54 @@ public interface Metric
     /**
    * @param rate
    *            the rate parameter for the bound on the resulting
-   *            {@link MetricTreaty}
+   *            {@link Treaty}
    * @param base
    *            the base parameter for the bound on the resulting
-   *            {@link MetricTreaty}
+   *            {@link Treaty}
    * @param time
    *            the startTime parameter of the bound on the resulting
-   *            {@link MetricTreaty}
-   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *            {@link Treaty}
+   * @return a {@link Treaty} which enforces that the {@link Metric}
    *         satisfies a bound with the given parameters at the given time. If
-   *         such a {@link MetricTreaty} already exists, it is returned,
+   *         such a {@link Treaty} already exists, it is returned,
    *         otherwise a new one is created and returned (unactivated).
    */
-    public fabric.worker.metrics.treaties.MetricTreaty getEqualityTreaty(double value);
+    public fabric.metrics.treaties.Treaty getEqualityTreaty(double value);
     
     /**
    * @param rate
    *            the rate parameter for the bound on the resulting
-   *            {@link MetricTreaty}
+   *            {@link Treaty}
    * @param base
    *            the base parameter for the bound on the resulting
-   *            {@link MetricTreaty}
+   *            {@link Treaty}
    * @param time
    *            the startTime parameter of the bound on the resulting
-   *            {@link MetricTreaty}
-   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *            {@link Treaty}
+   * @return a {@link Treaty} which enforces that the {@link Metric}
    *         satisfies a bound with the given parameters at the given
-   *         time. If such a {@link MetricTreaty} already exists, it is
+   *         time. If such a {@link Treaty} already exists, it is
    *         returned, otherwise a new one is created and returned
    *         (unactivated).
    *
    */
-    public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
-      double rate, double base, long time);
+    public fabric.metrics.treaties.Treaty getThresholdTreaty(double rate,
+                                                             double base, long time);
     
     /**
    * @param rate
    *            the rate parameter for the bound on the resulting
-   *            {@link MetricTreaty}
+   *            {@link Treaty}
    * @param base
    *            the base parameter for the bound on the resulting
-   *            {@link MetricTreaty}
-   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *            {@link Treaty}
+   * @return a {@link Treaty} which enforces that the {@link Metric}
    *         satisfies a bound with the given parameters at the
-   *         current time. If such a {@link MetricTreaty} already exists, it
+   *         current time. If such a {@link Treaty} already exists, it
    *         is returned, otherwise a new one is created and returned
    *         (unactivated).
    */
-    public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
-      double rate, double base);
+    public fabric.metrics.treaties.Treaty getThresholdTreaty(double rate, double base);
     
     /**
    * Cache of DerivedMetrics using this Metric as a term (helps to break up
@@ -229,7 +225,7 @@ public interface Metric
     public abstract double noise(fabric.worker.metrics.StatsMap weakStats);
     
     /**
-   * Used to construct and enforce {@link MetricTreaty}s bounding this
+   * Used to construct and enforce {@link Treaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -250,7 +246,7 @@ public interface Metric
       double value, fabric.worker.metrics.StatsMap weakStats, final fabric.worker.Store s);
     
     /**
-   * Used to construct and enforce {@link MetricTreaty}s bounding this
+   * Used to construct and enforce {@link Treaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -267,7 +263,7 @@ public interface Metric
       equalityPolicy(double value, final fabric.worker.Store s);
     
     /**
-   * Used to construct and enforce {@link MetricTreaty}s bounding this
+   * Used to construct and enforce {@link Treaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -289,7 +285,7 @@ public interface Metric
       double base, fabric.worker.metrics.StatsMap weakStats, final fabric.worker.Store s);
     
     /**
-   * Used to construct and enforce {@link MetricTreaty}s bounding this
+   * Used to construct and enforce {@link Treaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -390,70 +386,84 @@ public interface Metric
     public fabric.metrics.util.TreatiesBox set$treatiesBox(fabric.metrics.util.TreatiesBox val);
     
     /**
-   * @param bound
-   *        the bound that the treaty will enforce on this
-   *        {@link Metric}
-   * @return a {@link MetricTreaty} asserting this metric satisfies the
-   *       given bound.
+   * @return a {@link Treaty} asserting this metric satisfies the
+   *       given statement.
    */
-    public fabric.worker.metrics.treaties.MetricTreaty createThresholdTreaty(
-      double rate, double base, long time);
+    public fabric.metrics.treaties.Treaty createTreaty(
+      fabric.worker.metrics.treaties.statements.TreatyStatement stmt);
+    
+    public fabric.metrics.treaties.Treaty
+      createTreaty_remote(fabric.lang.security.Principal p,
+                          fabric.worker.metrics.treaties.statements.TreatyStatement stmt);
+    
+    /**
+   * @return a {@link Treaty} asserting this metric satisfies the
+   *       given statement.
+   */
+    public fabric.metrics.treaties.Treaty createTreaty(
+      fabric.worker.metrics.treaties.statements.TreatyStatement stmt,
+      fabric.worker.metrics.StatsMap stats);
+    
+    public fabric.metrics.treaties.Treaty createTreaty_remote(
+      fabric.lang.security.Principal p,
+      fabric.worker.metrics.treaties.statements.TreatyStatement stmt, fabric.worker.metrics.StatsMap stats);
     
     /**
    * @param bound
    *        the bound that the treaty will enforce on this
    *        {@link Metric}
-   * @return a {@link MetricTreaty} asserting this metric satisfies the
+   * @return a {@link Treaty} asserting this metric satisfies the
    *       given bound.
    */
-    public fabric.worker.metrics.treaties.MetricTreaty createEqualityTreaty(
-      double value);
+    public fabric.metrics.treaties.Treaty createThresholdTreaty(double rate,
+                                                                double base,
+                                                                long time);
+    
+    public fabric.metrics.treaties.Treaty createThresholdTreaty_remote(
+      fabric.lang.security.Principal p, double rate, double base, long time);
+    
+    /**
+   * @param bound
+   *        the bound that the treaty will enforce on this
+   *        {@link Metric}
+   * @return a {@link Treaty} asserting this metric satisfies the
+   *       given bound.
+   */
+    public fabric.metrics.treaties.Treaty createThresholdTreaty(
+      double rate, double base, long time,
+      fabric.worker.metrics.StatsMap weakStats);
+    
+    public fabric.metrics.treaties.Treaty createThresholdTreaty_remote(
+      fabric.lang.security.Principal p,
+      double rate, double base, long time, fabric.worker.metrics.StatsMap weakStats);
+    
+    /**
+   * @param bound
+   *        the bound that the treaty will enforce on this
+   *        {@link Metric}
+   * @return a {@link Treaty} asserting this metric satisfies the
+   *       given bound.
+   */
+    public fabric.metrics.treaties.Treaty createEqualityTreaty(double value);
+    
+    public fabric.metrics.treaties.Treaty
+      createEqualityTreaty_remote(fabric.lang.security.Principal p, double value);
+    
+    /**
+   * @param bound
+   *        the bound that the treaty will enforce on this
+   *        {@link Metric}
+   * @return a {@link Treaty} asserting this metric satisfies the
+   *       given bound.
+   */
+    public fabric.metrics.treaties.Treaty createEqualityTreaty(
+      double value, fabric.worker.metrics.StatsMap weakStats);
+    
+    public fabric.metrics.treaties.Treaty createEqualityTreaty_remote(
+      fabric.lang.security.Principal p, double value,
+      fabric.worker.metrics.StatsMap weakStats);
     
     public int compareTo(java.lang.Object that);
-    
-    public void refreshTreaty_remote(fabric.lang.security.Principal p,
-                                     boolean asyncExtension, long treatyId,
-                                     fabric.worker.metrics.StatsMap weakStats);
-    
-    public void refreshTreaty(boolean asyncExtension, long treatyId,
-                              fabric.worker.metrics.StatsMap weakStats);
-    
-    public void refreshEqualityTreaty_remote(
-      fabric.lang.security.Principal p, boolean asyncExtension, double value,
-      fabric.worker.metrics.StatsMap weakStats);
-    
-    public void refreshEqualityTreaty(boolean asyncExtension, double value,
-                                      fabric.worker.metrics.StatsMap weakStats);
-    
-    public void refreshThresholdTreaty_remote(
-      fabric.lang.security.Principal p, boolean asyncExtension, double rate,
-      double base, fabric.worker.metrics.StatsMap weakStats);
-    
-    public void refreshThresholdTreaty(
-      boolean asyncExtension, double rate, double base,
-      fabric.worker.metrics.StatsMap weakStats);
-    
-    public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
-      boolean includesObserver, java.util.SortedSet treaties);
-    
-    /**
-   * Handle an update where the metric itself is observing.
-   */
-    public abstract fabric.worker.metrics.ImmutableObserverSet
-      handleDirectUpdates();
-    
-    /**
-   * Given a treaty bound that must hold as a post condition, apply the given
-   * update if the bound will still hold on this metric afterwards.
-   *
-   * TODO Bound is static for now, in the future maybe we can support dynamic
-   * bounds.
-   *
-   * TODO: Might be worth allowing multiple bounds to apply relative to the
-   * updates in a static method.
-   */
-    public boolean updateWithPostcondition(double bound,
-                                           fabric.worker.metrics.MetricUpdate[] updates);
     
     /**
    * Create and activate a threshold treaty (purely for
@@ -469,20 +479,6 @@ public interface Metric
     
     public void assertPostcondition(
       fabric.worker.metrics.treaties.statements.TreatyStatement stmt);
-    
-    public void addObserver(fabric.metrics.util.Observer o);
-    
-    public void addObserver(fabric.metrics.util.Observer o, long id);
-    
-    public void removeObserver(fabric.metrics.util.Observer o);
-    
-    public void removeObserver(fabric.metrics.util.Observer o, long id);
-    
-    public boolean observedBy(fabric.metrics.util.Observer o);
-    
-    public boolean isObserved();
-    
-    public fabric.worker.metrics.ImmutableObserverSet getObservers();
     
     public static class _Proxy
     extends fabric.metrics.util.AbstractSubject._Proxy
@@ -530,20 +526,20 @@ public interface Metric
             return ((fabric.metrics.Metric) fetch()).max(arg1);
         }
         
-        public fabric.worker.metrics.treaties.MetricTreaty getEqualityTreaty(
-          double arg1) {
+        public fabric.metrics.treaties.Treaty getEqualityTreaty(double arg1) {
             return ((fabric.metrics.Metric) fetch()).getEqualityTreaty(arg1);
         }
         
-        public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
-          double arg1, double arg2, long arg3) {
+        public fabric.metrics.treaties.Treaty getThresholdTreaty(double arg1,
+                                                                 double arg2,
+                                                                 long arg3) {
             return ((fabric.metrics.Metric) fetch()).getThresholdTreaty(arg1,
                                                                         arg2,
                                                                         arg3);
         }
         
-        public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
-          double arg1, double arg2) {
+        public fabric.metrics.treaties.Treaty getThresholdTreaty(double arg1,
+                                                                 double arg2) {
             return ((fabric.metrics.Metric) fetch()).getThresholdTreaty(arg1,
                                                                         arg2);
         }
@@ -773,147 +769,274 @@ public interface Metric
             return ((fabric.metrics.Metric) fetch()).isSingleStore();
         }
         
-        public fabric.worker.metrics.treaties.MetricTreaty
-          createThresholdTreaty(double arg1, double arg2, long arg3) {
+        public fabric.metrics.treaties.Treaty createTreaty(
+          fabric.worker.metrics.treaties.statements.TreatyStatement arg1) {
+            return ((fabric.metrics.Metric) fetch()).createTreaty(arg1);
+        }
+        
+        public fabric.metrics.treaties.Treaty createTreaty_remote(
+          fabric.lang.security.Principal arg1,
+          fabric.worker.metrics.treaties.statements.TreatyStatement arg2) {
+            return ((fabric.metrics.Metric) fetch()).createTreaty_remote(arg1,
+                                                                         arg2);
+        }
+        
+        public static final java.lang.Class[] $paramTypes2 =
+          { fabric.worker.metrics.treaties.statements.TreatyStatement.class };
+        
+        public fabric.metrics.treaties.Treaty createTreaty$remote(
+          final fabric.worker.remote.RemoteWorker $remoteWorker,
+          fabric.lang.security.Principal arg1,
+          fabric.worker.metrics.treaties.statements.TreatyStatement arg2) {
+            if ($remoteWorker ==
+                  fabric.worker.Worker.getWorker().getLocalWorker())
+                return createTreaty(arg2);
+            else
+                try {
+                    return (fabric.metrics.treaties.Treaty)
+                             fabric.lang.Object._Proxy.
+                             $getProxy(
+                               $remoteWorker.
+                                   issueRemoteCall(
+                                     this, "createTreaty", $paramTypes2,
+                                     new java.lang.Object[] { arg2 }));
+                }
+                catch (fabric.worker.remote.RemoteCallException $e) {
+                    java.lang.Throwable $t = $e.getCause();
+                    throw new fabric.common.exceptions.InternalError($e);
+                }
+        }
+        
+        public fabric.metrics.treaties.Treaty createTreaty(
+          fabric.worker.metrics.treaties.statements.TreatyStatement arg1,
+          fabric.worker.metrics.StatsMap arg2) {
+            return ((fabric.metrics.Metric) fetch()).createTreaty(arg1, arg2);
+        }
+        
+        public fabric.metrics.treaties.Treaty createTreaty_remote(
+          fabric.lang.security.Principal arg1,
+          fabric.worker.metrics.treaties.statements.TreatyStatement arg2,
+          fabric.worker.metrics.StatsMap arg3) {
+            return ((fabric.metrics.Metric) fetch()).createTreaty_remote(arg1,
+                                                                         arg2,
+                                                                         arg3);
+        }
+        
+        public static final java.lang.Class[] $paramTypes3 =
+          { fabric.worker.metrics.treaties.statements.TreatyStatement.class,
+        fabric.worker.metrics.StatsMap.class };
+        
+        public fabric.metrics.treaties.Treaty createTreaty$remote(
+          final fabric.worker.remote.RemoteWorker $remoteWorker,
+          fabric.lang.security.Principal arg1,
+          fabric.worker.metrics.treaties.statements.TreatyStatement arg2,
+          fabric.worker.metrics.StatsMap arg3) {
+            if ($remoteWorker ==
+                  fabric.worker.Worker.getWorker().getLocalWorker())
+                return createTreaty(arg2, arg3);
+            else
+                try {
+                    return (fabric.metrics.treaties.Treaty)
+                             fabric.lang.Object._Proxy.
+                             $getProxy(
+                               $remoteWorker.issueRemoteCall(
+                                               this,
+                                               "createTreaty",
+                                               $paramTypes3,
+                                               new java.lang.Object[] { arg2,
+                                                 arg3 }));
+                }
+                catch (fabric.worker.remote.RemoteCallException $e) {
+                    java.lang.Throwable $t = $e.getCause();
+                    throw new fabric.common.exceptions.InternalError($e);
+                }
+        }
+        
+        public static fabric.metrics.treaties.Treaty createTreaty_static(
+          fabric.metrics.Metric arg1,
+          fabric.worker.metrics.treaties.statements.TreatyStatement arg2,
+          fabric.worker.metrics.StatsMap arg3) {
+            return fabric.metrics.Metric._Impl.createTreaty_static(arg1, arg2,
+                                                                   arg3);
+        }
+        
+        public fabric.metrics.treaties.Treaty createThresholdTreaty(double arg1,
+                                                                    double arg2,
+                                                                    long arg3) {
             return ((fabric.metrics.Metric) fetch()).createThresholdTreaty(
                                                        arg1, arg2, arg3);
         }
         
-        public fabric.worker.metrics.treaties.MetricTreaty createEqualityTreaty(
+        public fabric.metrics.treaties.Treaty createThresholdTreaty_remote(
+          fabric.lang.security.Principal arg1, double arg2, double arg3,
+          long arg4) {
+            return ((fabric.metrics.Metric) fetch()).
+              createThresholdTreaty_remote(arg1, arg2, arg3, arg4);
+        }
+        
+        public static final java.lang.Class[] $paramTypes4 = { double.class,
+        double.class, long.class };
+        
+        public fabric.metrics.treaties.Treaty createThresholdTreaty$remote(
+          final fabric.worker.remote.RemoteWorker $remoteWorker,
+          fabric.lang.security.Principal arg1, double arg2, double arg3,
+          long arg4) {
+            if ($remoteWorker ==
+                  fabric.worker.Worker.getWorker().getLocalWorker())
+                return createThresholdTreaty(arg2, arg3, arg4);
+            else
+                try {
+                    return (fabric.metrics.treaties.Treaty)
+                             fabric.lang.Object._Proxy.
+                             $getProxy(
+                               $remoteWorker.issueRemoteCall(
+                                               this,
+                                               "createThresholdTreaty",
+                                               $paramTypes4,
+                                               new java.lang.Object[] { arg2,
+                                                 arg3, arg4 }));
+                }
+                catch (fabric.worker.remote.RemoteCallException $e) {
+                    java.lang.Throwable $t = $e.getCause();
+                    throw new fabric.common.exceptions.InternalError($e);
+                }
+        }
+        
+        public fabric.metrics.treaties.Treaty createThresholdTreaty(
+          double arg1, double arg2, long arg3,
+          fabric.worker.metrics.StatsMap arg4) {
+            return ((fabric.metrics.Metric) fetch()).createThresholdTreaty(
+                                                       arg1, arg2, arg3, arg4);
+        }
+        
+        public fabric.metrics.treaties.Treaty createThresholdTreaty_remote(
+          fabric.lang.security.Principal arg1, double arg2, double arg3,
+          long arg4, fabric.worker.metrics.StatsMap arg5) {
+            return ((fabric.metrics.Metric) fetch()).
+              createThresholdTreaty_remote(arg1, arg2, arg3, arg4, arg5);
+        }
+        
+        public static final java.lang.Class[] $paramTypes5 = { double.class,
+        double.class, long.class, fabric.worker.metrics.StatsMap.class };
+        
+        public fabric.metrics.treaties.Treaty createThresholdTreaty$remote(
+          final fabric.worker.remote.RemoteWorker $remoteWorker,
+          fabric.lang.security.Principal arg1, double arg2, double arg3,
+          long arg4, fabric.worker.metrics.StatsMap arg5) {
+            if ($remoteWorker ==
+                  fabric.worker.Worker.getWorker().getLocalWorker())
+                return createThresholdTreaty(arg2, arg3, arg4, arg5);
+            else
+                try {
+                    return (fabric.metrics.treaties.Treaty)
+                             fabric.lang.Object._Proxy.
+                             $getProxy(
+                               $remoteWorker.issueRemoteCall(
+                                               this,
+                                               "createThresholdTreaty",
+                                               $paramTypes5,
+                                               new java.lang.Object[] { arg2,
+                                                 arg3, arg4, arg5 }));
+                }
+                catch (fabric.worker.remote.RemoteCallException $e) {
+                    java.lang.Throwable $t = $e.getCause();
+                    throw new fabric.common.exceptions.InternalError($e);
+                }
+        }
+        
+        public static fabric.metrics.treaties.Treaty
+          createThresholdTreaty_static(fabric.metrics.Metric arg1, double arg2,
+                                       double arg3, long arg4,
+                                       fabric.worker.metrics.StatsMap arg5) {
+            return fabric.metrics.Metric._Impl.createThresholdTreaty_static(
+                                                 arg1, arg2, arg3, arg4, arg5);
+        }
+        
+        public fabric.metrics.treaties.Treaty createEqualityTreaty(
           double arg1) {
             return ((fabric.metrics.Metric) fetch()).createEqualityTreaty(arg1);
         }
         
+        public fabric.metrics.treaties.Treaty createEqualityTreaty_remote(
+          fabric.lang.security.Principal arg1, double arg2) {
+            return ((fabric.metrics.Metric) fetch()).
+              createEqualityTreaty_remote(arg1, arg2);
+        }
+        
+        public static final java.lang.Class[] $paramTypes6 = { double.class };
+        
+        public fabric.metrics.treaties.Treaty createEqualityTreaty$remote(
+          final fabric.worker.remote.RemoteWorker $remoteWorker,
+          fabric.lang.security.Principal arg1, double arg2) {
+            if ($remoteWorker ==
+                  fabric.worker.Worker.getWorker().getLocalWorker())
+                return createEqualityTreaty(arg2);
+            else
+                try {
+                    return (fabric.metrics.treaties.Treaty)
+                             fabric.lang.Object._Proxy.
+                             $getProxy(
+                               $remoteWorker.
+                                   issueRemoteCall(
+                                     this, "createEqualityTreaty", $paramTypes6,
+                                     new java.lang.Object[] { arg2 }));
+                }
+                catch (fabric.worker.remote.RemoteCallException $e) {
+                    java.lang.Throwable $t = $e.getCause();
+                    throw new fabric.common.exceptions.InternalError($e);
+                }
+        }
+        
+        public fabric.metrics.treaties.Treaty createEqualityTreaty(
+          double arg1, fabric.worker.metrics.StatsMap arg2) {
+            return ((fabric.metrics.Metric) fetch()).createEqualityTreaty(arg1,
+                                                                          arg2);
+        }
+        
+        public fabric.metrics.treaties.Treaty createEqualityTreaty_remote(
+          fabric.lang.security.Principal arg1, double arg2,
+          fabric.worker.metrics.StatsMap arg3) {
+            return ((fabric.metrics.Metric) fetch()).
+              createEqualityTreaty_remote(arg1, arg2, arg3);
+        }
+        
+        public static final java.lang.Class[] $paramTypes7 = { double.class,
+        fabric.worker.metrics.StatsMap.class };
+        
+        public fabric.metrics.treaties.Treaty createEqualityTreaty$remote(
+          final fabric.worker.remote.RemoteWorker $remoteWorker,
+          fabric.lang.security.Principal arg1, double arg2,
+          fabric.worker.metrics.StatsMap arg3) {
+            if ($remoteWorker ==
+                  fabric.worker.Worker.getWorker().getLocalWorker())
+                return createEqualityTreaty(arg2, arg3);
+            else
+                try {
+                    return (fabric.metrics.treaties.Treaty)
+                             fabric.lang.Object._Proxy.
+                             $getProxy(
+                               $remoteWorker.issueRemoteCall(
+                                               this,
+                                               "createEqualityTreaty",
+                                               $paramTypes7,
+                                               new java.lang.Object[] { arg2,
+                                                 arg3 }));
+                }
+                catch (fabric.worker.remote.RemoteCallException $e) {
+                    java.lang.Throwable $t = $e.getCause();
+                    throw new fabric.common.exceptions.InternalError($e);
+                }
+        }
+        
+        public static fabric.metrics.treaties.Treaty
+          createEqualityTreaty_static(fabric.metrics.Metric arg1, double arg2,
+                                      fabric.worker.metrics.StatsMap arg3) {
+            return fabric.metrics.Metric._Impl.createEqualityTreaty_static(
+                                                 arg1, arg2, arg3);
+        }
+        
         public int compareTo(java.lang.Object arg1) {
             return ((fabric.metrics.Metric) fetch()).compareTo(arg1);
-        }
-        
-        public void refreshTreaty_remote(fabric.lang.security.Principal arg1,
-                                         boolean arg2, long arg3,
-                                         fabric.worker.metrics.StatsMap arg4) {
-            ((fabric.metrics.Metric) fetch()).refreshTreaty_remote(arg1, arg2,
-                                                                   arg3, arg4);
-        }
-        
-        public static final java.lang.Class[] $paramTypes2 = { boolean.class,
-        long.class, fabric.worker.metrics.StatsMap.class };
-        
-        public void refreshTreaty$remote(
-          final fabric.worker.remote.RemoteWorker $remoteWorker,
-          fabric.lang.security.Principal arg1, boolean arg2, long arg3,
-          fabric.worker.metrics.StatsMap arg4) {
-            if ($remoteWorker ==
-                  fabric.worker.Worker.getWorker().getLocalWorker())
-                refreshTreaty(arg2, arg3, arg4);
-            else
-                try {
-                    $remoteWorker.issueRemoteCall(this,
-                                                  "refreshTreaty",
-                                                  $paramTypes2,
-                                                  new java.lang.Object[] { arg2,
-                                                    arg3, arg4 });
-                }
-                catch (fabric.worker.remote.RemoteCallException $e) {
-                    java.lang.Throwable $t = $e.getCause();
-                    throw new fabric.common.exceptions.InternalError($e);
-                }
-        }
-        
-        public void refreshTreaty(boolean arg1, long arg2,
-                                  fabric.worker.metrics.StatsMap arg3) {
-            ((fabric.metrics.Metric) fetch()).refreshTreaty(arg1, arg2, arg3);
-        }
-        
-        public void refreshEqualityTreaty_remote(
-          fabric.lang.security.Principal arg1, boolean arg2, double arg3,
-          fabric.worker.metrics.StatsMap arg4) {
-            ((fabric.metrics.Metric) fetch()).refreshEqualityTreaty_remote(
-                                                arg1, arg2, arg3, arg4);
-        }
-        
-        public static final java.lang.Class[] $paramTypes3 = { boolean.class,
-        double.class, fabric.worker.metrics.StatsMap.class };
-        
-        public void refreshEqualityTreaty$remote(
-          final fabric.worker.remote.RemoteWorker $remoteWorker,
-          fabric.lang.security.Principal arg1, boolean arg2, double arg3,
-          fabric.worker.metrics.StatsMap arg4) {
-            if ($remoteWorker ==
-                  fabric.worker.Worker.getWorker().getLocalWorker())
-                refreshEqualityTreaty(arg2, arg3, arg4);
-            else
-                try {
-                    $remoteWorker.issueRemoteCall(this,
-                                                  "refreshEqualityTreaty",
-                                                  $paramTypes3,
-                                                  new java.lang.Object[] { arg2,
-                                                    arg3, arg4 });
-                }
-                catch (fabric.worker.remote.RemoteCallException $e) {
-                    java.lang.Throwable $t = $e.getCause();
-                    throw new fabric.common.exceptions.InternalError($e);
-                }
-        }
-        
-        public void refreshEqualityTreaty(boolean arg1, double arg2,
-                                          fabric.worker.metrics.StatsMap arg3) {
-            ((fabric.metrics.Metric) fetch()).refreshEqualityTreaty(arg1, arg2,
-                                                                    arg3);
-        }
-        
-        public void refreshThresholdTreaty_remote(
-          fabric.lang.security.Principal arg1, boolean arg2, double arg3,
-          double arg4, fabric.worker.metrics.StatsMap arg5) {
-            ((fabric.metrics.Metric) fetch()).refreshThresholdTreaty_remote(
-                                                arg1, arg2, arg3, arg4, arg5);
-        }
-        
-        public static final java.lang.Class[] $paramTypes4 = { boolean.class,
-        double.class, double.class, fabric.worker.metrics.StatsMap.class };
-        
-        public void refreshThresholdTreaty$remote(
-          final fabric.worker.remote.RemoteWorker $remoteWorker,
-          fabric.lang.security.Principal arg1, boolean arg2, double arg3,
-          double arg4, fabric.worker.metrics.StatsMap arg5) {
-            if ($remoteWorker ==
-                  fabric.worker.Worker.getWorker().getLocalWorker())
-                refreshThresholdTreaty(arg2, arg3, arg4, arg5);
-            else
-                try {
-                    $remoteWorker.issueRemoteCall(this,
-                                                  "refreshThresholdTreaty",
-                                                  $paramTypes4,
-                                                  new java.lang.Object[] { arg2,
-                                                    arg3, arg4, arg5 });
-                }
-                catch (fabric.worker.remote.RemoteCallException $e) {
-                    java.lang.Throwable $t = $e.getCause();
-                    throw new fabric.common.exceptions.InternalError($e);
-                }
-        }
-        
-        public void refreshThresholdTreaty(
-          boolean arg1, double arg2, double arg3,
-          fabric.worker.metrics.StatsMap arg4) {
-            ((fabric.metrics.Metric) fetch()).refreshThresholdTreaty(arg1, arg2,
-                                                                     arg3,
-                                                                     arg4);
-        }
-        
-        public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
-          boolean arg1, java.util.SortedSet arg2) {
-            return ((fabric.metrics.Metric) fetch()).handleUpdates(arg1, arg2);
-        }
-        
-        public fabric.worker.metrics.ImmutableObserverSet handleDirectUpdates(
-          ) {
-            return ((fabric.metrics.Metric) fetch()).handleDirectUpdates();
-        }
-        
-        public boolean updateWithPostcondition(
-          double arg1, fabric.worker.metrics.MetricUpdate[] arg2) {
-            return ((fabric.metrics.Metric) fetch()).updateWithPostcondition(
-                                                       arg1, arg2);
         }
         
         public void createAndActivateTreaty(
@@ -926,10 +1049,6 @@ public interface Metric
         public void assertPostcondition(
           fabric.worker.metrics.treaties.statements.TreatyStatement arg1) {
             ((fabric.metrics.Metric) fetch()).assertPostcondition(arg1);
-        }
-        
-        public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
-            return ((fabric.metrics.Metric) fetch()).getLeafSubjects();
         }
         
         public _Proxy(Metric._Impl impl) { super(impl); }
@@ -1028,10 +1147,6 @@ public interface Metric
                                      TransactionRestartingException $e102) {
                                 throw $e102;
                             }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e102) {
-                                throw $e102;
-                            }
                             catch (final Throwable $e102) {
                                 $tm104.getCurrentLog().checkRetrySignal();
                                 throw $e102;
@@ -1074,27 +1189,6 @@ public interface Metric
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e102) {
-                            $commit99 = false;
-                            if ($tm104.checkForStaleObjects())
-                                continue $label98;
-                            fabric.common.TransactionID $currentTid103 =
-                              $tm104.getCurrentTid();
-                            if ($e102.tid.isDescendantOf($currentTid103)) {
-                                $retry100 = true;
-                            }
-                            else if ($currentTid103.parent != null) {
-                                $retry100 = false;
-                                throw $e102;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
                         }
                         catch (final Throwable $e102) {
                             $commit99 = false;
@@ -1255,10 +1349,6 @@ public interface Metric
                                      TransactionRestartingException $e113) {
                                 throw $e113;
                             }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e113) {
-                                throw $e113;
-                            }
                             catch (final Throwable $e113) {
                                 $tm115.getCurrentLog().checkRetrySignal();
                                 throw $e113;
@@ -1301,27 +1391,6 @@ public interface Metric
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e113) {
-                            $commit110 = false;
-                            if ($tm115.checkForStaleObjects())
-                                continue $label109;
-                            fabric.common.TransactionID $currentTid114 =
-                              $tm115.getCurrentTid();
-                            if ($e113.tid.isDescendantOf($currentTid114)) {
-                                $retry111 = true;
-                            }
-                            else if ($currentTid114.parent != null) {
-                                $retry111 = false;
-                                throw $e113;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
                         }
                         catch (final Throwable $e113) {
                             $commit110 = false;
@@ -1493,10 +1562,6 @@ public interface Metric
                                          TransactionRestartingException $e124) {
                                     throw $e124;
                                 }
-                                catch (final fabric.worker.metrics.
-                                         LockConflictException $e124) {
-                                    throw $e124;
-                                }
                                 catch (final Throwable $e124) {
                                     $tm126.getCurrentLog().checkRetrySignal();
                                     throw $e124;
@@ -1542,27 +1607,6 @@ public interface Metric
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e124) {
-                                $commit121 = false;
-                                if ($tm126.checkForStaleObjects())
-                                    continue $label120;
-                                fabric.common.TransactionID $currentTid125 =
-                                  $tm126.getCurrentTid();
-                                if ($e124.tid.isDescendantOf($currentTid125)) {
-                                    $retry122 = true;
-                                }
-                                else if ($currentTid125.parent != null) {
-                                    $retry122 = false;
-                                    throw $e124;
-                                }
-                                else {
-                                    throw new InternalError(
-                                            "Something is broken with transaction " +
-                                                "management. Got a signal for a lock conflict in a different " +
-                                                "transaction than the one being managed.");
-                                }
                             }
                             catch (final Throwable $e124) {
                                 $commit121 = false;
@@ -1703,10 +1747,6 @@ public interface Metric
                                          TransactionRestartingException $e135) {
                                     throw $e135;
                                 }
-                                catch (final fabric.worker.metrics.
-                                         LockConflictException $e135) {
-                                    throw $e135;
-                                }
                                 catch (final Throwable $e135) {
                                     $tm137.getCurrentLog().checkRetrySignal();
                                     throw $e135;
@@ -1752,27 +1792,6 @@ public interface Metric
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e135) {
-                                $commit132 = false;
-                                if ($tm137.checkForStaleObjects())
-                                    continue $label131;
-                                fabric.common.TransactionID $currentTid136 =
-                                  $tm137.getCurrentTid();
-                                if ($e135.tid.isDescendantOf($currentTid136)) {
-                                    $retry133 = true;
-                                }
-                                else if ($currentTid136.parent != null) {
-                                    $retry133 = false;
-                                    throw $e135;
-                                }
-                                else {
-                                    throw new InternalError(
-                                            "Something is broken with transaction " +
-                                                "management. Got a signal for a lock conflict in a different " +
-                                                "transaction than the one being managed.");
-                                }
                             }
                             catch (final Throwable $e135) {
                                 $commit132 = false;
@@ -1856,35 +1875,34 @@ public interface Metric
         /**
    * @param rate
    *            the rate parameter for the bound on the resulting
-   *            {@link MetricTreaty}
+   *            {@link Treaty}
    * @param base
    *            the base parameter for the bound on the resulting
-   *            {@link MetricTreaty}
+   *            {@link Treaty}
    * @param time
    *            the startTime parameter of the bound on the resulting
-   *            {@link MetricTreaty}
-   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *            {@link Treaty}
+   * @return a {@link Treaty} which enforces that the {@link Metric}
    *         satisfies a bound with the given parameters at the given time. If
-   *         such a {@link MetricTreaty} already exists, it is returned,
+   *         such a {@link Treaty} already exists, it is returned,
    *         otherwise a new one is created and returned (unactivated).
    */
-        public fabric.worker.metrics.treaties.MetricTreaty getEqualityTreaty(
-          double value) {
+        public fabric.metrics.treaties.Treaty getEqualityTreaty(double value) {
             return fabric.metrics.Metric._Impl.static_getEqualityTreaty(
                                                  (fabric.metrics.Metric)
                                                    this.$getProxy(), value);
         }
         
-        private static fabric.worker.metrics.treaties.MetricTreaty
-          static_getEqualityTreaty(fabric.metrics.Metric tmp, double value) {
-            fabric.worker.metrics.treaties.MetricTreaty mc = null;
+        private static fabric.metrics.treaties.Treaty static_getEqualityTreaty(
+          fabric.metrics.Metric tmp, double value) {
+            fabric.metrics.treaties.Treaty mc = null;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
                 mc = tmp.createEqualityTreaty(value);
             }
             else {
                 {
-                    fabric.worker.metrics.treaties.MetricTreaty mc$var141 = mc;
+                    fabric.metrics.treaties.Treaty mc$var141 = mc;
                     fabric.worker.transaction.TransactionManager $tm148 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
@@ -1934,10 +1952,6 @@ public interface Metric
                                      TransactionRestartingException $e146) {
                                 throw $e146;
                             }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e146) {
-                                throw $e146;
-                            }
                             catch (final Throwable $e146) {
                                 $tm148.getCurrentLog().checkRetrySignal();
                                 throw $e146;
@@ -1980,27 +1994,6 @@ public interface Metric
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e146) {
-                            $commit143 = false;
-                            if ($tm148.checkForStaleObjects())
-                                continue $label142;
-                            fabric.common.TransactionID $currentTid147 =
-                              $tm148.getCurrentTid();
-                            if ($e146.tid.isDescendantOf($currentTid147)) {
-                                $retry144 = true;
-                            }
-                            else if ($currentTid147.parent != null) {
-                                $retry144 = false;
-                                throw $e146;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
                         }
                         catch (final Throwable $e146) {
                             $commit143 = false;
@@ -2074,39 +2067,39 @@ public interface Metric
         /**
    * @param rate
    *            the rate parameter for the bound on the resulting
-   *            {@link MetricTreaty}
+   *            {@link Treaty}
    * @param base
    *            the base parameter for the bound on the resulting
-   *            {@link MetricTreaty}
+   *            {@link Treaty}
    * @param time
    *            the startTime parameter of the bound on the resulting
-   *            {@link MetricTreaty}
-   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *            {@link Treaty}
+   * @return a {@link Treaty} which enforces that the {@link Metric}
    *         satisfies a bound with the given parameters at the given
-   *         time. If such a {@link MetricTreaty} already exists, it is
+   *         time. If such a {@link Treaty} already exists, it is
    *         returned, otherwise a new one is created and returned
    *         (unactivated).
    *
    */
-        public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
-          double rate, double base, long time) {
+        public fabric.metrics.treaties.Treaty getThresholdTreaty(double rate,
+                                                                 double base,
+                                                                 long time) {
             return fabric.metrics.Metric._Impl.static_getThresholdTreaty(
                                                  (fabric.metrics.Metric)
                                                    this.$getProxy(), rate, base,
                                                  time);
         }
         
-        private static fabric.worker.metrics.treaties.MetricTreaty
-          static_getThresholdTreaty(fabric.metrics.Metric tmp, double rate,
-                                    double base, long time) {
-            fabric.worker.metrics.treaties.MetricTreaty mc = null;
+        private static fabric.metrics.treaties.Treaty static_getThresholdTreaty(
+          fabric.metrics.Metric tmp, double rate, double base, long time) {
+            fabric.metrics.treaties.Treaty mc = null;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
                 mc = tmp.createThresholdTreaty(rate, base, time);
             }
             else {
                 {
-                    fabric.worker.metrics.treaties.MetricTreaty mc$var152 = mc;
+                    fabric.metrics.treaties.Treaty mc$var152 = mc;
                     fabric.worker.transaction.TransactionManager $tm159 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
@@ -2159,10 +2152,6 @@ public interface Metric
                                      TransactionRestartingException $e157) {
                                 throw $e157;
                             }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e157) {
-                                throw $e157;
-                            }
                             catch (final Throwable $e157) {
                                 $tm159.getCurrentLog().checkRetrySignal();
                                 throw $e157;
@@ -2205,27 +2194,6 @@ public interface Metric
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e157) {
-                            $commit154 = false;
-                            if ($tm159.checkForStaleObjects())
-                                continue $label153;
-                            fabric.common.TransactionID $currentTid158 =
-                              $tm159.getCurrentTid();
-                            if ($e157.tid.isDescendantOf($currentTid158)) {
-                                $retry155 = true;
-                            }
-                            else if ($currentTid158.parent != null) {
-                                $retry155 = false;
-                                throw $e157;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
                         }
                         catch (final Throwable $e157) {
                             $commit154 = false;
@@ -2299,18 +2267,18 @@ public interface Metric
         /**
    * @param rate
    *            the rate parameter for the bound on the resulting
-   *            {@link MetricTreaty}
+   *            {@link Treaty}
    * @param base
    *            the base parameter for the bound on the resulting
-   *            {@link MetricTreaty}
-   * @return a {@link MetricTreaty} which enforces that the {@link Metric}
+   *            {@link Treaty}
+   * @return a {@link Treaty} which enforces that the {@link Metric}
    *         satisfies a bound with the given parameters at the
-   *         current time. If such a {@link MetricTreaty} already exists, it
+   *         current time. If such a {@link Treaty} already exists, it
    *         is returned, otherwise a new one is created and returned
    *         (unactivated).
    */
-        public fabric.worker.metrics.treaties.MetricTreaty getThresholdTreaty(
-          double rate, double base) {
+        public fabric.metrics.treaties.Treaty getThresholdTreaty(double rate,
+                                                                 double base) {
             return getThresholdTreaty(rate, base, 0);
         }
         
@@ -2397,10 +2365,6 @@ public interface Metric
                                      TransactionRestartingException $e168) {
                                 throw $e168;
                             }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e168) {
-                                throw $e168;
-                            }
                             catch (final Throwable $e168) {
                                 $tm170.getCurrentLog().checkRetrySignal();
                                 throw $e168;
@@ -2443,27 +2407,6 @@ public interface Metric
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e168) {
-                            $commit165 = false;
-                            if ($tm170.checkForStaleObjects())
-                                continue $label164;
-                            fabric.common.TransactionID $currentTid169 =
-                              $tm170.getCurrentTid();
-                            if ($e168.tid.isDescendantOf($currentTid169)) {
-                                $retry166 = true;
-                            }
-                            else if ($currentTid169.parent != null) {
-                                $retry166 = false;
-                                throw $e168;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
                         }
                         catch (final Throwable $e168) {
                             $commit165 = false;
@@ -2620,10 +2563,6 @@ public interface Metric
                                      TransactionRestartingException $e179) {
                                 throw $e179;
                             }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e179) {
-                                throw $e179;
-                            }
                             catch (final Throwable $e179) {
                                 $tm181.getCurrentLog().checkRetrySignal();
                                 throw $e179;
@@ -2666,27 +2605,6 @@ public interface Metric
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e179) {
-                            $commit176 = false;
-                            if ($tm181.checkForStaleObjects())
-                                continue $label175;
-                            fabric.common.TransactionID $currentTid180 =
-                              $tm181.getCurrentTid();
-                            if ($e179.tid.isDescendantOf($currentTid180)) {
-                                $retry177 = true;
-                            }
-                            else if ($currentTid180.parent != null) {
-                                $retry177 = false;
-                                throw $e179;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
                         }
                         catch (final Throwable $e179) {
                             $commit176 = false;
@@ -2842,10 +2760,6 @@ public interface Metric
                                      TransactionRestartingException $e190) {
                                 throw $e190;
                             }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e190) {
-                                throw $e190;
-                            }
                             catch (final Throwable $e190) {
                                 $tm192.getCurrentLog().checkRetrySignal();
                                 throw $e190;
@@ -2888,27 +2802,6 @@ public interface Metric
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e190) {
-                            $commit187 = false;
-                            if ($tm192.checkForStaleObjects())
-                                continue $label186;
-                            fabric.common.TransactionID $currentTid191 =
-                              $tm192.getCurrentTid();
-                            if ($e190.tid.isDescendantOf($currentTid191)) {
-                                $retry188 = true;
-                            }
-                            else if ($currentTid191.parent != null) {
-                                $retry188 = false;
-                                throw $e190;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
                         }
                         catch (final Throwable $e190) {
                             $commit187 = false;
@@ -3153,7 +3046,7 @@ public interface Metric
         public abstract double noise(fabric.worker.metrics.StatsMap weakStats);
         
         /**
-   * Used to construct and enforce {@link MetricTreaty}s bounding this
+   * Used to construct and enforce {@link Treaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -3177,7 +3070,7 @@ public interface Metric
         }
         
         /**
-   * Used to construct and enforce {@link MetricTreaty}s bounding this
+   * Used to construct and enforce {@link Treaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -3198,7 +3091,7 @@ public interface Metric
         }
         
         /**
-   * Used to construct and enforce {@link MetricTreaty}s bounding this
+   * Used to construct and enforce {@link Treaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -3223,7 +3116,7 @@ public interface Metric
         }
         
         /**
-   * Used to construct and enforce {@link MetricTreaty}s bounding this
+   * Used to construct and enforce {@link Treaty}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -3362,10 +3255,6 @@ public interface Metric
                                      TransactionRestartingException $e201) {
                                 throw $e201;
                             }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e201) {
-                                throw $e201;
-                            }
                             catch (final Throwable $e201) {
                                 $tm203.getCurrentLog().checkRetrySignal();
                                 throw $e201;
@@ -3408,27 +3297,6 @@ public interface Metric
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e201) {
-                            $commit198 = false;
-                            if ($tm203.checkForStaleObjects())
-                                continue $label197;
-                            fabric.common.TransactionID $currentTid202 =
-                              $tm203.getCurrentTid();
-                            if ($e201.tid.isDescendantOf($currentTid202)) {
-                                $retry199 = true;
-                            }
-                            else if ($currentTid202.parent != null) {
-                                $retry199 = false;
-                                throw $e201;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
                         }
                         catch (final Throwable $e201) {
                             $commit198 = false;
@@ -3576,79 +3444,133 @@ public interface Metric
         public fabric.metrics.util.TreatiesBox treatiesBox;
         
         /**
-   * @param bound
-   *        the bound that the treaty will enforce on this
-   *        {@link Metric}
-   * @return a {@link MetricTreaty} asserting this metric satisfies the
-   *       given bound.
+   * @return a {@link Treaty} asserting this metric satisfies the
+   *       given statement.
    */
-        public fabric.worker.metrics.treaties.MetricTreaty
-          createThresholdTreaty(double rate, double base, long time) {
-            return this.get$treatiesBox().get$treaties().
-              create(
-                new fabric.worker.metrics.treaties.statements.ThresholdStatement(
-                  rate, base, time));
+        public fabric.metrics.treaties.Treaty createTreaty(
+          fabric.worker.metrics.treaties.statements.TreatyStatement stmt) {
+            return createTreaty(stmt,
+                                fabric.worker.metrics.StatsMap.emptyStats());
+        }
+        
+        public fabric.metrics.treaties.Treaty createTreaty_remote(
+          fabric.lang.security.Principal p,
+          fabric.worker.metrics.treaties.statements.TreatyStatement stmt) {
+            return createTreaty(stmt);
+        }
+        
+        /**
+   * @return a {@link Treaty} asserting this metric satisfies the
+   *       given statement.
+   */
+        public fabric.metrics.treaties.Treaty createTreaty(
+          fabric.worker.metrics.treaties.statements.TreatyStatement stmt,
+          fabric.worker.metrics.StatsMap stats) {
+            return fabric.metrics.Metric._Impl.createTreaty_static(
+                                                 (fabric.metrics.Metric)
+                                                   this.$getProxy(), stmt,
+                                                 stats);
+        }
+        
+        public fabric.metrics.treaties.Treaty createTreaty_remote(
+          fabric.lang.security.Principal p,
+          fabric.worker.metrics.treaties.statements.TreatyStatement stmt,
+          fabric.worker.metrics.StatsMap stats) {
+            return createTreaty(stmt, stats);
+        }
+        
+        public static fabric.metrics.treaties.Treaty createTreaty_static(
+          fabric.metrics.Metric tmp,
+          fabric.worker.metrics.treaties.statements.TreatyStatement stmt,
+          fabric.worker.metrics.StatsMap stats) {
+            if (fabric.lang.Object._Proxy.
+                  $getProxy(
+                    stmt) instanceof fabric.worker.metrics.treaties.statements.ThresholdStatement) {
+                return fabric.metrics.Metric._Impl.
+                  createThresholdTreaty_static(
+                    tmp,
+                    ((fabric.worker.metrics.treaties.statements.ThresholdStatement)
+                       stmt).rate(),
+                    ((fabric.worker.metrics.treaties.statements.ThresholdStatement)
+                       stmt).base(), 0, stats);
+            }
+            else if (fabric.lang.Object._Proxy.
+                       $getProxy(
+                         stmt) instanceof fabric.worker.metrics.treaties.statements.EqualityStatement) {
+                return fabric.metrics.Metric._Impl.
+                  createEqualityTreaty_static(
+                    tmp,
+                    ((fabric.worker.metrics.treaties.statements.EqualityStatement)
+                       stmt).value(), stats);
+            }
+            else {
+                throw new java.lang.InternalError("Unknown statement type.");
+            }
         }
         
         /**
    * @param bound
    *        the bound that the treaty will enforce on this
    *        {@link Metric}
-   * @return a {@link MetricTreaty} asserting this metric satisfies the
+   * @return a {@link Treaty} asserting this metric satisfies the
    *       given bound.
    */
-        public fabric.worker.metrics.treaties.MetricTreaty createEqualityTreaty(
-          double value) {
-            return this.get$treatiesBox().get$treaties().
-              create(
-                new fabric.worker.metrics.treaties.statements.EqualityStatement(
-                  value));
+        public fabric.metrics.treaties.Treaty createThresholdTreaty(double rate,
+                                                                    double base,
+                                                                    long time) {
+            return fabric.metrics.Metric._Impl.
+              createThresholdTreaty_static(
+                (fabric.metrics.Metric) this.$getProxy(), rate, base, time,
+                fabric.worker.metrics.StatsMap.emptyStats());
         }
         
-        public int compareTo(java.lang.Object that) {
-            if (!(fabric.lang.Object._Proxy.
-                    $getProxy(that) instanceof fabric.metrics.Metric)) return 0;
-            fabric.metrics.Metric
-              other =
-              (fabric.metrics.Metric)
-                fabric.lang.Object._Proxy.
-                $getProxy(fabric.lang.WrappedJavaInlineable.$wrap(that));
-            int thisHash = hashCode();
-            int thatHash =
-              ((java.lang.Comparable)
-                 fabric.lang.WrappedJavaInlineable.$unwrap(other)).hashCode();
-            if (thisHash == thatHash) {
-                if (other.equals((fabric.metrics.Metric) this.$getProxy())) {
-                    return 0;
-                }
-                else {
-                    return toString().
-                      compareTo(
-                        ((java.lang.Comparable)
-                           fabric.lang.WrappedJavaInlineable.$unwrap(other)).
-                            toString());
-                }
-            }
-            return thisHash - thatHash;
+        public fabric.metrics.treaties.Treaty createThresholdTreaty_remote(
+          fabric.lang.security.Principal p, double rate, double base,
+          long time) {
+            return createThresholdTreaty(rate, base, time);
         }
         
-        public void refreshTreaty_remote(
-          fabric.lang.security.Principal p, boolean asyncExtension,
-          long treatyId, fabric.worker.metrics.StatsMap weakStats) {
-            this.refreshTreaty(asyncExtension, treatyId, weakStats);
-        }
-        
-        private static void refreshTreaty_static(
-          fabric.metrics.Metric tmp, boolean asyncExtension, long treatyId,
+        /**
+   * @param bound
+   *        the bound that the treaty will enforce on this
+   *        {@link Metric}
+   * @return a {@link Treaty} asserting this metric satisfies the
+   *       given bound.
+   */
+        public fabric.metrics.treaties.Treaty createThresholdTreaty(
+          double rate, double base, long time,
           fabric.worker.metrics.StatsMap weakStats) {
-            fabric.worker.metrics.treaties.MetricTreaty t = null;
+            return fabric.metrics.Metric._Impl.createThresholdTreaty_static(
+                                                 (fabric.metrics.Metric)
+                                                   this.$getProxy(), rate, base,
+                                                 time, weakStats);
+        }
+        
+        public fabric.metrics.treaties.Treaty createThresholdTreaty_remote(
+          fabric.lang.security.Principal p, double rate, double base, long time,
+          fabric.worker.metrics.StatsMap weakStats) {
+            return createThresholdTreaty(rate, base, time, weakStats);
+        }
+        
+        public static fabric.metrics.treaties.Treaty
+          createThresholdTreaty_static(
+          fabric.metrics.Metric tmp, double rate, double base, long time,
+          fabric.worker.metrics.StatsMap weakStats) {
+            fabric.metrics.treaties.Treaty t = null;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                t = tmp.get$treatiesBox().get$treaties().get(treatyId);
+                t =
+                  tmp.get$treatiesBox().get$treaties().
+                    create(
+                      fabric.worker.metrics.treaties.statements.ThresholdStatement.create(
+                                                                                     rate,
+                                                                                     base,
+                                                                                     time),
+                      weakStats);
             }
             else {
                 {
-                    fabric.worker.metrics.treaties.MetricTreaty t$var207 = t;
+                    fabric.metrics.treaties.Treaty t$var207 = t;
                     fabric.worker.transaction.TransactionManager $tm214 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
@@ -3689,7 +3611,12 @@ public interface Metric
                             try {
                                 t =
                                   tmp.get$treatiesBox().get$treaties().
-                                    get(treatyId);
+                                    create(
+                                      fabric.worker.metrics.treaties.statements.ThresholdStatement.create(
+                                                                                                     rate,
+                                                                                                     base,
+                                                                                                     time),
+                                      weakStats);
                             }
                             catch (final fabric.worker.RetryException $e212) {
                                 throw $e212;
@@ -3700,10 +3627,6 @@ public interface Metric
                             }
                             catch (final fabric.worker.
                                      TransactionRestartingException $e212) {
-                                throw $e212;
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e212) {
                                 throw $e212;
                             }
                             catch (final Throwable $e212) {
@@ -3748,27 +3671,6 @@ public interface Metric
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e212) {
-                            $commit209 = false;
-                            if ($tm214.checkForStaleObjects())
-                                continue $label208;
-                            fabric.common.TransactionID $currentTid213 =
-                              $tm214.getCurrentTid();
-                            if ($e212.tid.isDescendantOf($currentTid213)) {
-                                $retry210 = true;
-                            }
-                            else if ($currentTid213.parent != null) {
-                                $retry210 = false;
-                                throw $e212;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
                         }
                         catch (final Throwable $e212) {
                             $commit209 = false;
@@ -3836,43 +3738,67 @@ public interface Metric
                     }
                 }
             }
-            t.update(asyncExtension, weakStats);
+            return t;
         }
         
-        public void refreshTreaty(boolean asyncExtension, long treatyId,
-                                  fabric.worker.metrics.StatsMap weakStats) {
-            fabric.metrics.Metric._Impl.refreshTreaty_static(
-                                          (fabric.metrics.Metric)
-                                            this.$getProxy(), asyncExtension,
-                                          treatyId, weakStats);
+        /**
+   * @param bound
+   *        the bound that the treaty will enforce on this
+   *        {@link Metric}
+   * @return a {@link Treaty} asserting this metric satisfies the
+   *       given bound.
+   */
+        public fabric.metrics.treaties.Treaty createEqualityTreaty(
+          double value) {
+            return fabric.metrics.Metric._Impl.
+              createEqualityTreaty_static(
+                (fabric.metrics.Metric) this.$getProxy(), value,
+                fabric.worker.metrics.StatsMap.emptyStats());
         }
         
-        public void refreshEqualityTreaty_remote(
-          fabric.lang.security.Principal p, boolean asyncExtension,
+        public fabric.metrics.treaties.Treaty createEqualityTreaty_remote(
+          fabric.lang.security.Principal p, double value) {
+            return createEqualityTreaty(value);
+        }
+        
+        /**
+   * @param bound
+   *        the bound that the treaty will enforce on this
+   *        {@link Metric}
+   * @return a {@link Treaty} asserting this metric satisfies the
+   *       given bound.
+   */
+        public fabric.metrics.treaties.Treaty createEqualityTreaty(
           double value, fabric.worker.metrics.StatsMap weakStats) {
-            this.refreshEqualityTreaty(asyncExtension, value, weakStats);
+            return fabric.metrics.Metric._Impl.createEqualityTreaty_static(
+                                                 (fabric.metrics.Metric)
+                                                   this.$getProxy(), value,
+                                                 weakStats);
         }
         
-        private static void refreshEqualityTreaty_static(
-          fabric.metrics.Metric tmp, boolean asyncExtension, double value,
+        public fabric.metrics.treaties.Treaty createEqualityTreaty_remote(
+          fabric.lang.security.Principal p, double value,
           fabric.worker.metrics.StatsMap weakStats) {
-            fabric.worker.metrics.treaties.MetricTreaty t = null;
-            fabric.worker.metrics.treaties.statements.TreatyStatement
-              treatyStatement =
-              new fabric.worker.metrics.treaties.statements.EqualityStatement(
-                value);
+            return createEqualityTreaty(value, weakStats);
+        }
+        
+        public static fabric.metrics.treaties.Treaty
+          createEqualityTreaty_static(
+          fabric.metrics.Metric tmp, double value,
+          fabric.worker.metrics.StatsMap weakStats) {
+            fabric.metrics.treaties.Treaty t = null;
             if (fabric.worker.transaction.TransactionManager.getInstance().
                   inTxn()) {
-                t = tmp.get$treatiesBox().get$treaties().get(treatyStatement);
-                if (fabric.lang.Object._Proxy.idEquals(t, null)) {
-                    t =
-                      tmp.get$treatiesBox().get$treaties().create(
-                                                             treatyStatement);
-                }
+                t =
+                  tmp.get$treatiesBox().get$treaties().
+                    create(
+                      fabric.worker.metrics.treaties.statements.EqualityStatement.create(
+                                                                                    value),
+                      weakStats);
             }
             else {
                 {
-                    fabric.worker.metrics.treaties.MetricTreaty t$var218 = t;
+                    fabric.metrics.treaties.Treaty t$var218 = t;
                     fabric.worker.transaction.TransactionManager $tm225 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
@@ -3913,13 +3839,10 @@ public interface Metric
                             try {
                                 t =
                                   tmp.get$treatiesBox().get$treaties().
-                                    get(treatyStatement);
-                                if (fabric.lang.Object._Proxy.idEquals(t,
-                                                                       null)) {
-                                    t =
-                                      tmp.get$treatiesBox().get$treaties().
-                                        create(treatyStatement);
-                                }
+                                    create(
+                                      fabric.worker.metrics.treaties.statements.EqualityStatement.create(
+                                                                                                    value),
+                                      weakStats);
                             }
                             catch (final fabric.worker.RetryException $e223) {
                                 throw $e223;
@@ -3930,10 +3853,6 @@ public interface Metric
                             }
                             catch (final fabric.worker.
                                      TransactionRestartingException $e223) {
-                                throw $e223;
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e223) {
                                 throw $e223;
                             }
                             catch (final Throwable $e223) {
@@ -3978,27 +3897,6 @@ public interface Metric
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e223) {
-                            $commit220 = false;
-                            if ($tm225.checkForStaleObjects())
-                                continue $label219;
-                            fabric.common.TransactionID $currentTid224 =
-                              $tm225.getCurrentTid();
-                            if ($e223.tid.isDescendantOf($currentTid224)) {
-                                $retry221 = true;
-                            }
-                            else if ($currentTid224.parent != null) {
-                                $retry221 = false;
-                                throw $e223;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
                         }
                         catch (final Throwable $e223) {
                             $commit220 = false;
@@ -4066,344 +3964,34 @@ public interface Metric
                     }
                 }
             }
-            t.update(asyncExtension, weakStats);
+            return t;
         }
         
-        public void refreshEqualityTreaty(
-          boolean asyncExtension, double value,
-          fabric.worker.metrics.StatsMap weakStats) {
-            fabric.metrics.Metric._Impl.refreshEqualityTreaty_static(
-                                          (fabric.metrics.Metric)
-                                            this.$getProxy(), asyncExtension,
-                                          value, weakStats);
-        }
-        
-        public void refreshThresholdTreaty_remote(
-          fabric.lang.security.Principal p, boolean asyncExtension, double rate,
-          double base, fabric.worker.metrics.StatsMap weakStats) {
-            this.refreshThresholdTreaty(asyncExtension, rate, base, weakStats);
-        }
-        
-        private static void refreshThresholdTreaty_static(
-          fabric.metrics.Metric tmp, boolean asyncExtension, double rate,
-          double base, fabric.worker.metrics.StatsMap weakStats) {
-            fabric.worker.metrics.treaties.MetricTreaty t = null;
-            fabric.worker.metrics.treaties.statements.TreatyStatement
-              treatyStatement =
-              new fabric.worker.metrics.treaties.statements.ThresholdStatement(
-                rate, base);
-            if (fabric.worker.transaction.TransactionManager.getInstance().
-                  inTxn()) {
-                t = tmp.get$treatiesBox().get$treaties().get(treatyStatement);
-                if (fabric.lang.Object._Proxy.idEquals(t, null)) {
-                    t =
-                      tmp.get$treatiesBox().get$treaties().create(
-                                                             treatyStatement);
+        public int compareTo(java.lang.Object that) {
+            if (!(fabric.lang.Object._Proxy.
+                    $getProxy(that) instanceof fabric.metrics.Metric)) return 0;
+            fabric.metrics.Metric
+              other =
+              (fabric.metrics.Metric)
+                fabric.lang.Object._Proxy.
+                $getProxy(fabric.lang.WrappedJavaInlineable.$wrap(that));
+            int thisHash = hashCode();
+            int thatHash =
+              ((java.lang.Comparable)
+                 fabric.lang.WrappedJavaInlineable.$unwrap(other)).hashCode();
+            if (thisHash == thatHash) {
+                if (other.equals((fabric.metrics.Metric) this.$getProxy())) {
+                    return 0;
+                }
+                else {
+                    return toString().
+                      compareTo(
+                        ((java.lang.Comparable)
+                           fabric.lang.WrappedJavaInlineable.$unwrap(other)).
+                            toString());
                 }
             }
-            else {
-                {
-                    fabric.worker.metrics.treaties.MetricTreaty t$var229 = t;
-                    fabric.worker.transaction.TransactionManager $tm236 =
-                      fabric.worker.transaction.TransactionManager.getInstance(
-                                                                     );
-                    boolean $backoffEnabled239 =
-                      fabric.worker.Worker.getWorker().config.txRetryBackoff;
-                    int $backoff237 = 1;
-                    boolean $doBackoff238 = true;
-                    boolean $retry232 = true;
-                    boolean $keepReads233 = false;
-                    $label230: for (boolean $commit231 = false; !$commit231; ) {
-                        if ($backoffEnabled239) {
-                            if ($doBackoff238) {
-                                if ($backoff237 > 32) {
-                                    while (true) {
-                                        try {
-                                            java.lang.Thread.
-                                              sleep(
-                                                java.lang.Math.
-                                                    round(
-                                                      java.lang.Math.random() *
-                                                          $backoff237));
-                                            break;
-                                        }
-                                        catch (java.lang.
-                                                 InterruptedException $e234) {
-                                            
-                                        }
-                                    }
-                                }
-                                if ($backoff237 < 5000) $backoff237 *= 2;
-                            }
-                            $doBackoff238 = $backoff237 <= 32 || !$doBackoff238;
-                        }
-                        $commit231 = true;
-                        fabric.worker.transaction.TransactionManager.
-                          getInstance().startTransaction();
-                        try {
-                            try {
-                                t =
-                                  tmp.get$treatiesBox().get$treaties().
-                                    get(treatyStatement);
-                                if (fabric.lang.Object._Proxy.idEquals(t,
-                                                                       null)) {
-                                    t =
-                                      tmp.get$treatiesBox().get$treaties().
-                                        create(treatyStatement);
-                                }
-                            }
-                            catch (final fabric.worker.RetryException $e234) {
-                                throw $e234;
-                            }
-                            catch (final fabric.worker.
-                                     TransactionAbortingException $e234) {
-                                throw $e234;
-                            }
-                            catch (final fabric.worker.
-                                     TransactionRestartingException $e234) {
-                                throw $e234;
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e234) {
-                                throw $e234;
-                            }
-                            catch (final Throwable $e234) {
-                                $tm236.getCurrentLog().checkRetrySignal();
-                                throw $e234;
-                            }
-                        }
-                        catch (final fabric.worker.RetryException $e234) {
-                            $commit231 = false;
-                            continue $label230;
-                        }
-                        catch (fabric.worker.
-                                 TransactionAbortingException $e234) {
-                            $commit231 = false;
-                            $retry232 = false;
-                            $keepReads233 = $e234.keepReads;
-                            if ($tm236.checkForStaleObjects()) {
-                                $retry232 = true;
-                                $keepReads233 = false;
-                                continue $label230;
-                            }
-                            fabric.common.TransactionID $currentTid235 =
-                              $tm236.getCurrentTid();
-                            if ($e234.tid == null ||
-                                  !$e234.tid.isDescendantOf($currentTid235)) {
-                                throw $e234;
-                            }
-                            throw new fabric.worker.UserAbortException($e234);
-                        }
-                        catch (final fabric.worker.
-                                 TransactionRestartingException $e234) {
-                            $commit231 = false;
-                            fabric.common.TransactionID $currentTid235 =
-                              $tm236.getCurrentTid();
-                            if ($e234.tid.isDescendantOf($currentTid235))
-                                continue $label230;
-                            if ($currentTid235.parent != null) {
-                                $retry232 = false;
-                                throw $e234;
-                            }
-                            throw new InternalError(
-                                    "Something is broken with " +
-                                        "transaction management. Got a signal to restart a " +
-                                        "different transaction than the one being managed.");
-                        }
-                        catch (final fabric.worker.metrics.
-                                 LockConflictException $e234) {
-                            $commit231 = false;
-                            if ($tm236.checkForStaleObjects())
-                                continue $label230;
-                            fabric.common.TransactionID $currentTid235 =
-                              $tm236.getCurrentTid();
-                            if ($e234.tid.isDescendantOf($currentTid235)) {
-                                $retry232 = true;
-                            }
-                            else if ($currentTid235.parent != null) {
-                                $retry232 = false;
-                                throw $e234;
-                            }
-                            else {
-                                throw new InternalError(
-                                        "Something is broken with transaction " +
-                                            "management. Got a signal for a lock conflict in a different " +
-                                            "transaction than the one being managed.");
-                            }
-                        }
-                        catch (final Throwable $e234) {
-                            $commit231 = false;
-                            if ($tm236.checkForStaleObjects())
-                                continue $label230;
-                            $retry232 = false;
-                            throw new fabric.worker.AbortException($e234);
-                        }
-                        finally {
-                            if ($commit231) {
-                                fabric.common.TransactionID $currentTid235 =
-                                  $tm236.getCurrentTid();
-                                try {
-                                    fabric.worker.transaction.TransactionManager.
-                                      getInstance().commitTransaction();
-                                }
-                                catch (final fabric.worker.
-                                         AbortException $e234) {
-                                    $commit231 = false;
-                                }
-                                catch (final fabric.worker.
-                                         TransactionAbortingException $e234) {
-                                    $commit231 = false;
-                                    $retry232 = false;
-                                    $keepReads233 = $e234.keepReads;
-                                    if ($tm236.checkForStaleObjects()) {
-                                        $retry232 = true;
-                                        $keepReads233 = false;
-                                        continue $label230;
-                                    }
-                                    if ($e234.tid ==
-                                          null ||
-                                          !$e234.tid.isDescendantOf(
-                                                       $currentTid235))
-                                        throw $e234;
-                                    throw new fabric.worker.UserAbortException(
-                                            $e234);
-                                }
-                                catch (final fabric.worker.
-                                         TransactionRestartingException $e234) {
-                                    $commit231 = false;
-                                    $currentTid235 = $tm236.getCurrentTid();
-                                    if ($currentTid235 != null) {
-                                        if ($e234.tid.equals($currentTid235) ||
-                                              !$e234.tid.isDescendantOf(
-                                                           $currentTid235)) {
-                                            throw $e234;
-                                        }
-                                    }
-                                }
-                            }
-                            else if ($keepReads233) {
-                                fabric.worker.transaction.TransactionManager.
-                                  getInstance().abortTransactionUpdates();
-                            }
-                            else {
-                                fabric.worker.transaction.TransactionManager.
-                                  getInstance().abortTransaction();
-                            }
-                            if (!$commit231) {
-                                { t = t$var229; }
-                                if ($retry232) { continue $label230; }
-                            }
-                        }
-                    }
-                }
-            }
-            t.update(asyncExtension, weakStats);
-        }
-        
-        public void refreshThresholdTreaty(
-          boolean asyncExtension, double rate, double base,
-          fabric.worker.metrics.StatsMap weakStats) {
-            fabric.metrics.Metric._Impl.refreshThresholdTreaty_static(
-                                          (fabric.metrics.Metric)
-                                            this.$getProxy(), asyncExtension,
-                                          rate, base, weakStats);
-        }
-        
-        public fabric.worker.metrics.ImmutableObserverSet handleUpdates(
-          boolean includesObserver, java.util.SortedSet treaties) {
-            java.util.SortedSet treatiesToProcess =
-              new java.util.TreeSet(treaties);
-            fabric.worker.metrics.ImmutableObserverSet affected =
-              fabric.worker.metrics.ImmutableObserverSet.emptySet();
-            if (includesObserver) {
-                affected = affected.addAll(handleDirectUpdates());
-                treatiesToProcess.addAll(
-                                    affected.getTreaties((fabric.metrics.Metric)
-                                                           this.$getProxy()));
-            }
-            for (java.util.Iterator iter = treatiesToProcess.iterator();
-                 iter.hasNext(); ) {
-                long treatyId = ((java.lang.Long) iter.next()).longValue();
-                fabric.worker.metrics.treaties.MetricTreaty treaty =
-                  this.get$treatiesBox().get$treaties().get(treatyId);
-                if (fabric.lang.Object._Proxy.idEquals(treaty, null)) continue;
-                fabric.common.Logging.METRICS_LOGGER.
-                  log(
-                    java.util.logging.Level.FINER,
-                    "HANDLING TREATY {0} IN {1}",
-                    new java.lang.Object[] { treaty,
-                      fabric.worker.transaction.TransactionManager.getInstance(
-                                                                     ).
-                        getCurrentTid() });
-                fabric.common.util.Pair treatyUpdate =
-                  treaty.update(false,
-                                fabric.worker.metrics.StatsMap.emptyStats());
-                affected =
-                  affected.addAll((fabric.worker.metrics.ImmutableObserverSet)
-                                    treatyUpdate.second);
-                affected = affected.remove((fabric.metrics.Metric)
-                                             this.$getProxy(), treaty.getId());
-            }
-            return affected;
-        }
-        
-        /**
-   * Handle an update where the metric itself is observing.
-   */
-        public abstract fabric.worker.metrics.ImmutableObserverSet
-          handleDirectUpdates();
-        
-        /**
-   * Given a treaty bound that must hold as a post condition, apply the given
-   * update if the bound will still hold on this metric afterwards.
-   *
-   * TODO Bound is static for now, in the future maybe we can support dynamic
-   * bounds.
-   *
-   * TODO: Might be worth allowing multiple bounds to apply relative to the
-   * updates in a static method.
-   */
-        public boolean updateWithPostcondition(
-          double bound, fabric.worker.metrics.MetricUpdate[] updates) {
-            fabric.worker.metrics.treaties.MetricTreaty existingTreaty =
-              this.get$treatiesBox().get$treaties().
-              get(
-                new fabric.worker.metrics.treaties.statements.ThresholdStatement(
-                  0, bound, 0));
-            if (!fabric.lang.Object._Proxy.idEquals(existingTreaty, null) &&
-                  existingTreaty.valid()) {
-                boolean success = true;
-                for (int i = 0; i < updates.length; i++) {
-                    if (updates[i].violatesExistingTreaties()) {
-                        success = false;
-                        break;
-                    }
-                }
-                if (success) {
-                    for (int i = 0; i < updates.length; i++) {
-                        updates[i].applyUpdate();
-                    }
-                    return true;
-                }
-            }
-            fabric.worker.metrics.StatsMap substituted =
-              fabric.worker.metrics.StatsMap.emptyStats();
-            for (int i = 0; i < updates.length; i++) {
-                substituted = substituted.put(updates[i].m, updates[i].newVal,
-                                              0, 0, 1, 0, 1);
-            }
-            if (value(substituted) > bound) {
-                for (int i = 0; i < updates.length; i++) {
-                    updates[i].applyUpdate();
-                }
-                fabric.worker.transaction.TransactionManager.getInstance().
-                  resolveObservations();
-                createAndActivateTreaty(
-                  new fabric.worker.metrics.treaties.statements.ThresholdStatement(
-                    0, bound, 0), true);
-                return true;
-            }
-            return false;
+            return thisHash - thatHash;
         }
         
         /**
@@ -4417,15 +4005,16 @@ public interface Metric
         public void createAndActivateTreaty(
           fabric.worker.metrics.treaties.statements.TreatyStatement stmt,
           boolean proactive) {
-            if (stmt instanceof fabric.worker.metrics.treaties.statements.ThresholdStatement) {
+            if (fabric.lang.Object._Proxy.
+                  $getProxy(
+                    stmt) instanceof fabric.worker.metrics.treaties.statements.ThresholdStatement) {
                 double rate =
                   ((fabric.worker.metrics.treaties.statements.ThresholdStatement)
-                     stmt).rate;
+                     stmt).rate();
                 double base =
                   ((fabric.worker.metrics.treaties.statements.ThresholdStatement)
-                     stmt).base;
-                createThresholdTreaty(rate, base, 0).
-                  update(false, fabric.worker.metrics.StatsMap.emptyStats());
+                     stmt).base();
+                createThresholdTreaty(rate, base, 0);
                 if (proactive) {
                     for (java.util.Iterator iter =
                            this.get$proxies().entrySet().iterator();
@@ -4439,18 +4028,17 @@ public interface Metric
                              fabric.lang.WrappedJavaInlineable.$wrap(
                                                                  entry.getValue(
                                                                          )))).
-                          createThresholdTreaty(rate, base, 0).
-                          update(false,
-                                 fabric.worker.metrics.StatsMap.emptyStats());
+                          createThresholdTreaty(rate, base, 0);
                     }
                 }
             }
-            else if (stmt instanceof fabric.worker.metrics.treaties.statements.EqualityStatement) {
+            else if (fabric.lang.Object._Proxy.
+                       $getProxy(
+                         stmt) instanceof fabric.worker.metrics.treaties.statements.EqualityStatement) {
                 double value =
                   ((fabric.worker.metrics.treaties.statements.EqualityStatement)
-                     stmt).value;
-                createEqualityTreaty(value).
-                  update(false, fabric.worker.metrics.StatsMap.emptyStats());
+                     stmt).value();
+                createEqualityTreaty(value);
                 if (proactive) {
                     for (java.util.Iterator iter =
                            this.get$proxies().entrySet().iterator();
@@ -4464,9 +4052,7 @@ public interface Metric
                              fabric.lang.WrappedJavaInlineable.$wrap(
                                                                  entry.getValue(
                                                                          )))).
-                          createEqualityTreaty(value).
-                          update(false,
-                                 fabric.worker.metrics.StatsMap.emptyStats());
+                          createEqualityTreaty(value);
                     }
                 }
             }
@@ -4474,7 +4060,7 @@ public interface Metric
         
         public void assertPostcondition(
           fabric.worker.metrics.treaties.statements.TreatyStatement stmt) {
-            fabric.worker.metrics.treaties.MetricTreaty existing =
+            fabric.metrics.treaties.Treaty existing =
               this.get$treatiesBox().get$treaties().get(stmt);
             if (!fabric.lang.Object._Proxy.idEquals(existing, null) &&
                   !existing.invalid()) {
@@ -4486,34 +4072,6 @@ public interface Metric
                   addUntreatiedPostcondition((fabric.metrics.Metric)
                                                this.$getProxy(), stmt);
             }
-        }
-        
-        public void addObserver(fabric.metrics.util.Observer o) {
-            this.get$treatiesBox().addObserver(o);
-        }
-        
-        public void addObserver(fabric.metrics.util.Observer o, long id) {
-            this.get$treatiesBox().addObserver(o, id);
-        }
-        
-        public void removeObserver(fabric.metrics.util.Observer o) {
-            this.get$treatiesBox().removeObserver(o);
-        }
-        
-        public void removeObserver(fabric.metrics.util.Observer o, long id) {
-            this.get$treatiesBox().removeObserver(o, id);
-        }
-        
-        public boolean observedBy(fabric.metrics.util.Observer o) {
-            return this.get$treatiesBox().observedBy(o);
-        }
-        
-        public boolean isObserved() {
-            return this.get$treatiesBox().isObserved();
-        }
-        
-        public fabric.worker.metrics.ImmutableObserverSet getObservers() {
-            return this.get$treatiesBox().getObservers();
         }
         
         public _Impl(fabric.worker.Store $location) { super($location); }
@@ -4629,11 +4187,11 @@ public interface Metric
         
     }
     
-    public static final byte[] $classHash = new byte[] { -46, 71, -60, -101, 1,
-    -104, -103, 101, -42, 24, 110, -5, 54, 18, -7, 2, 36, -8, -106, -18, -114,
-    12, -123, 76, 78, -99, 43, 89, 106, -29, -86, 90 };
+    public static final byte[] $classHash = new byte[] { -57, 112, 114, 66, 24,
+    79, 53, 113, -11, -100, 18, -39, -30, 7, 40, -74, -86, -76, -127, 54, 121,
+    58, -49, 95, -110, -91, -58, -3, -66, -45, 69, 52 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1548621387000L;
+    public static final long jlc$SourceLastModified$fabil = 1549233147000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

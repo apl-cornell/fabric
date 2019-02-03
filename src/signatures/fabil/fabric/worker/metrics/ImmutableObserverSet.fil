@@ -1,22 +1,19 @@
 package fabric.worker.metrics;
 
-import fabric.metrics.util.Observer;
 import java.util.Iterator;
 import java.util.SortedSet;
+import fabric.metrics.util.Observer;
 
 /**
  * Utility class to easily express an immutable vector of items.
  */
-public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Triple<Observer, Boolean, LongSet>>*/ {
+public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Observer>*/ {
 
   /** @return the length. */
   public native int size();
 
   /** @return a new set with the given item added. */
   public native ImmutableObserverSet add(Observer obs);
-
-  /** @return a new set with the given item's treaty added. */
-  public native ImmutableObserverSet add(Observer obs, long id);
 
   /**
    * Add all items in the given ImmutableObserverSet.
@@ -27,9 +24,6 @@ public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Triple<O
   /** @return a new set with the given item removed. */
   public native ImmutableObserverSet remove(Observer obs);
 
-  /** @return a new set with the given item's treaty removed. */
-  public native ImmutableObserverSet remove(Observer obs, long id);
-
   /**
    * Remove all items in the given ImmutableObserverSet.
    * @return the updated observer set.
@@ -39,14 +33,8 @@ public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Triple<O
   /** @return true iff the given observer is in the set */
   public native boolean contains(Observer obs);
 
-  /** @return true iff the given observer's treaty is in the set */
-  public native boolean contains(Observer obs, long id);
-
   /** @return true iff the given set is fully contained in this set */
   public native boolean containsAll(ImmutableObserverSet other);
-
-  /** @return the treaties for a given obs */
-  public native SortedSet/*<Long>*/ getTreaties(Observer obs);
 
   /** @return true iff the set is empty */
   public native boolean isEmpty();
@@ -55,5 +43,5 @@ public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Triple<O
   public static native ImmutableObserverSet emptySet();
 
   /*@Override*/
-  public native Iterator/*<Triple<Observer, Boolean, LongSet>>*/ iterator();
+  public native Iterator/*<Observer>*/ iterator();
 }

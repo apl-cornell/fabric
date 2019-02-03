@@ -12,7 +12,6 @@ import fabric.metrics.util.Subject;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.metrics.StatsMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
@@ -177,8 +176,6 @@ public class ScaledMetric extends DerivedMetric {
         if (term(0) instanceof SampledMetric)
             return DirectPolicy.singleton;
 
-        MetricTreaty witness = null;
-
         long currentTime = System.currentTimeMillis();
         double baseNow = Bound.value(rate, base, currentTime);
 
@@ -200,8 +197,8 @@ public class ScaledMetric extends DerivedMetric {
             rate = -rate;
         }
         Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
-        witnesses.put(m, new ThresholdStatement(rate, baseNow, currentTime));
-        return new WitnessPolicy(witnesses);
+        witnesses.put(m, ThresholdStatement.create(rate, baseNow, currentTime));
+        return WitnessPolicy.create(witnesses);
     }
 
     /*@Override*/

@@ -3,26 +3,43 @@ package fabric.worker.metrics.treaties.statements;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 import fabric.metrics.Metric;
+import fabric.metrics.treaties.Treaty;
 import fabric.worker.Store;
 import fabric.worker.metrics.StatsMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 
 /**
  * {@link TreatyStatement} for equality bounds.
  */
-public class EqualityStatement extends TreatyStatement {
-  public final double value;
+public class EqualityStatement extends TreatyStatement implements Serializable {
+  private double value;
 
   public EqualityStatement(double value) {
-    super(TreatyStatement.Kind.EQUALITY);
     this.value = value;
   }
 
   public EqualityStatement(DataInput in) throws IOException {
     this(in.readDouble());
+  }
+
+  /**
+   * Utility factory method because signatures don't allow native constructors.
+   */
+  public static EqualityStatement create(double value) {
+    return new EqualityStatement(value);
+  }
+
+  public double value() {
+    return value;
+  }
+
+  @Override
+  public void writeStatementKind(DataOutput out) throws IOException {
+    out.writeByte(Kind.EQUALITY.ordinal());
   }
 
   @Override
@@ -74,7 +91,7 @@ public class EqualityStatement extends TreatyStatement {
   }
 
   @Override
-  public MetricTreaty getProxy(Metric m, Store s) {
+  public Treaty getProxy(Metric m, Store s) {
     return m.getProxy(s).getEqualityTreaty(value);
   }
 
@@ -90,5 +107,18 @@ public class EqualityStatement extends TreatyStatement {
   @Override
   public boolean check(Metric m) {
     return m.value() == value;
+  }
+
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    out.writeDouble(this.value);
+  }
+
+  private void readObject(java.io.ObjectInputStream in) throws IOException {
+    this.value = in.readDouble();
+  }
+
+  private void readObjectNoData() {
+    // This shouldn't happen.
+    this.value = 0;
   }
 }

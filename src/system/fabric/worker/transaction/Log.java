@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
@@ -46,10 +45,13 @@ import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
+import fabric.metrics.DerivedMetric;
 import fabric.metrics.Metric;
+import fabric.metrics.treaties.Treaty;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
+import fabric.metrics.util.TreatiesBox;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
@@ -57,8 +59,6 @@ import fabric.worker.TransactionAbortingException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
-import fabric.worker.metrics.treaties.MetricTreaty;
-import fabric.worker.metrics.treaties.TreatyRef;
 import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.metrics.treaties.statements.EqualityStatement;
 import fabric.worker.metrics.treaties.statements.ThresholdStatement;
@@ -210,7 +210,7 @@ public final class Log {
    * Collection of checks that aren't currently treatied and should be checked
    * before the transaction finishes (aborting writes if they fail).
    */
-  protected final Map<TreatyRef, Triple<Metric._Proxy, TreatyStatement, Long>> treatiedUpdateChecks;
+  protected final OidKeyHashMap<Triple<Metric._Proxy, TreatyStatement, Long>> treatiedUpdateChecks;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -356,9 +356,9 @@ public final class Log {
               if (b instanceof ThresholdStatement) {
                 ThresholdStatement aT = (ThresholdStatement) a;
                 ThresholdStatement bT = (ThresholdStatement) b;
-                int rateComp = Double.compare(aT.rate, bT.rate);
+                int rateComp = Double.compare(aT.rate(), bT.rate());
                 if (rateComp != 0) return rateComp;
-                return Double.compare(aT.base, bT.base);
+                return Double.compare(aT.base(), bT.base());
               } else {
                 return 1;
               }
@@ -366,23 +366,14 @@ public final class Log {
               if (b instanceof ThresholdStatement) {
                 EqualityStatement aT = (EqualityStatement) a;
                 EqualityStatement bT = (EqualityStatement) b;
-                return Double.compare(aT.value, bT.value);
+                return Double.compare(aT.value(), bT.value());
               } else {
                 return -1;
               }
             }
           }
         });
-    this.treatiedUpdateChecks = new TreeMap<>(new Comparator<TreatyRef>() {
-      @Override
-      public int compare(TreatyRef a, TreatyRef b) {
-        int storeComp = a.objRef.objStoreName.compareTo(b.objRef.objStoreName);
-        if (storeComp != 0) return storeComp;
-        int objComp = Long.compare(a.objRef.objOnum, b.objRef.objOnum);
-        if (objComp != 0) return objComp;
-        return Long.compare(a.treatyId, b.treatyId);
-      }
-    });
+    this.treatiedUpdateChecks = new OidKeyHashMap<>();
 
     if (parent != null) {
       this.unobservedSamples.putAll(parent.unobservedSamples);
@@ -907,7 +898,7 @@ public final class Log {
 
   /**
    * Resolve unobserved subjects, either before attempting to commit at the top
-   * level or before using a {@link MetricTreaty}.
+   * level or before using a {@link Treaty}.
    */
   public void resolveObservations() {
     // Skip if there's nothing to handle or if this was called in the middle of
@@ -932,10 +923,10 @@ public final class Log {
     untreatiedUpdateChecks.put((Metric._Proxy) m.$getProxy(), stmt);
   }
 
-  public void addTreatiedPostcondition(TreatyRef t) {
+  public void addTreatiedPostcondition(Treaty t) {
     treatiedUpdateChecks.put(t,
-        new Triple<>((Metric._Proxy) t.get().getMetric().$getProxy(),
-            t.get().statement, t.get().expiry));
+        new Triple<>((Metric._Proxy) t.get$metric().$getProxy(),
+            t.get$predicate(), t.get$$expiry()));
   }
 
   private boolean finalResolve = false;
@@ -944,7 +935,7 @@ public final class Log {
    * Check if a treaty deactivation violates a treaty update check, throwing an
    * TransactionAbortingException if it does.
    */
-  public void checkTreatyDeactivation(MetricTreaty t) {
+  public void checkTreatyDeactivation(Treaty t) {
     //if (finalResolve) {
     //  TreatyRef r = new TreatyRef(t);
     //  if (treatiedUpdateChecks.containsKey(r)) {
@@ -985,22 +976,24 @@ public final class Log {
       // Check treaties still exist.
       Logging.METRICS_LOGGER.fine("CHECKING TREATIED POSTCONDITIONS IN "
           + Thread.currentThread() + ":" + tid);
-      for (Map.Entry<TreatyRef, Triple<Metric._Proxy, TreatyStatement, Long>> entry : treatiedUpdateChecks
-          .entrySet()) {
-        TreatyRef t = entry.getKey();
-        Triple<Metric._Proxy, TreatyStatement, Long> trpl = entry.getValue();
-        if (t.get() == null || !t.get().valid()) {
-          if (trpl.second.check(trpl.first)) {
-            trpl.first.createAndActivateTreaty(trpl.second, true);
-          } else {
-            Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
-                + Thread.currentThread() + ":" + tid);
-            throw new TransactionAbortingException(tid, true);
+      for (Store store : treatiedUpdateChecks.storeSet()) {
+        for (LongKeyMap.Entry<Triple<Metric._Proxy, TreatyStatement, Long>> entry : treatiedUpdateChecks
+            .get(store).entrySet()) {
+          Treaty t = new Treaty._Proxy(store, entry.getKey());
+          Triple<Metric._Proxy, TreatyStatement, Long> trpl = entry.getValue();
+          if (!t.valid()) {
+            if (trpl.second.check(trpl.first)) {
+              trpl.first.createAndActivateTreaty(trpl.second, true);
+            } else {
+              Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
+                  + Thread.currentThread() + ":" + tid);
+              throw new TransactionAbortingException(tid, true);
+            }
+          } else if (Worker.getWorker().config.aggressiveRebalancing
+              && storesTouched.containsAll(storesForMetric(t.get$metric()))) {
+            // Rebalance if we're touching all of the stores already.
+            t.rebalance();
           }
-        } else if (Worker.getWorker().config.aggressiveRebalancing
-            && storesTouched.containsAll(t.get().storesForMetric())) {
-          // Rebalance if we're touching all of the stores already.
-          t.get().rebalance();
         }
       }
     } finally {
@@ -1009,6 +1002,29 @@ public final class Log {
       untreatiedUpdateChecks.clear();
       treatiedUpdateChecks.clear();
     }
+  }
+
+  /**
+   * Utility for getting the set of stores that the associated metric spans in
+   * its subtree.
+   * This operation may fetch some items but it should not produce any new reads
+   * in the current transaction.
+   */
+  private Set<Store> storesForMetric(Metric metric) {
+    Set<Store> results = new HashSet<>();
+    Queue<Metric> q = new LinkedList<>();
+    q.add(metric);
+    while (!q.isEmpty()) {
+      Metric m = (Metric) q.poll().fetch();
+      results.add(m.$getStore());
+      if (m instanceof DerivedMetric) {
+        DerivedMetric dm = (DerivedMetric) m;
+        for (Metric sub : dm.get$terms().array()) {
+          q.add(sub);
+        }
+      }
+    }
+    return results;
   }
 
   /**
@@ -1124,15 +1140,13 @@ public final class Log {
           // transaction's write lock.
           obj.$history = obj.$history.$history;
           if (extendedTreaties.containsKey(obj)) {
-            // TODO
-            //extendedTreaties.get(obj).treaties.flattenUpdates();
             // Make sure that we don't lose "subextensions"
             if (!parent.extendedTreaties.containsKey(obj))
               obj.$expiry = extendedTreaties.get(obj).expiry;
-          } else {
-            // TODO
-            //obj.$treaties.flattenUpdates();
           }
+          // Flatten any changes to the treatyset, if necessary.
+          if (obj instanceof TreatiesBox)
+            ((TreatiesBox) obj).get$treaties().flattenUpdates();
         } else {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
@@ -1158,15 +1172,13 @@ public final class Log {
           // transaction's write lock.
           obj.$history = obj.$history.$history;
           if (extendedTreaties.containsKey(obj)) {
-            // TODO
-            //extendedTreaties.get(obj).treaties.flattenUpdates();
             // Make sure we don't lose "subextensions"
             if (!parent.extendedTreaties.containsKey(obj))
               obj.$expiry = extendedTreaties.get(obj).expiry;
-          } else {
-            // TODO
-            //obj.$treaties.flattenUpdates();
           }
+          // Flatten any changes to the treatyset, if necessary.
+          if (obj instanceof TreatiesBox)
+            ((TreatiesBox) obj).get$treaties().flattenUpdates();
         } else {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
@@ -1305,8 +1317,9 @@ public final class Log {
         obj.$history = obj.$history.$history;
 
         long expiry = getFinalExpiry(obj);
-        // TODO
-        //treaties.flattenUpdates();
+        // Flatten any changes to the treatyset, if necessary.
+        if (obj instanceof TreatiesBox)
+          ((TreatiesBox) obj).get$treaties().flattenUpdates();
         obj.$expiry = expiry;
         // Don't increment the version if it's only extending treaties
         if (!extendedTreaties.containsKey(obj)) {

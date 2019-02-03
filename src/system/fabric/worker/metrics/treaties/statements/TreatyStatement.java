@@ -3,18 +3,20 @@ package fabric.worker.metrics.treaties.statements;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 
 import fabric.common.FastSerializable;
 import fabric.metrics.Metric;
+import fabric.metrics.treaties.Treaty;
 import fabric.worker.Store;
 import fabric.worker.metrics.StatsMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 
 /**
  * A statement treaties can express on a metric
  */
-public abstract class TreatyStatement implements FastSerializable {
+public abstract class TreatyStatement
+    implements FastSerializable, Serializable {
 
   /**
    * Utility enum for differentiating kinds of TreatyStatement in serialized
@@ -40,12 +42,6 @@ public abstract class TreatyStatement implements FastSerializable {
     protected abstract TreatyStatement read(DataInput in) throws IOException;
   }
 
-  private final Kind kind;
-
-  public TreatyStatement(Kind kind) {
-    this.kind = kind;
-  }
-
   /**
    * @param m the metric we want a direct expiry relative to.
    * @return the expiry to be used as determined by the value of m
@@ -67,6 +63,11 @@ public abstract class TreatyStatement implements FastSerializable {
   public abstract long trueExpiry(double v);
 
   /**
+   * Write out the byte specifying the statement kind.
+   */
+  public abstract void writeStatementKind(DataOutput out) throws IOException;
+
+  /**
    * Write out the specifics of the statement type.
    */
   public abstract void writeStatementData(DataOutput out) throws IOException;
@@ -84,7 +85,7 @@ public abstract class TreatyStatement implements FastSerializable {
   /**
    * Get a proxy treaty for the same statement on the given store.
    */
-  public abstract MetricTreaty getProxy(Metric m, Store s);
+  public abstract Treaty getProxy(Metric m, Store s);
 
   /**
    * Utility to read a TreatyStatement off a DataInput (for example, when
@@ -96,7 +97,7 @@ public abstract class TreatyStatement implements FastSerializable {
 
   @Override
   public final void write(DataOutput out) throws IOException {
-    out.writeByte(kind.ordinal());
+    writeStatementKind(out);
     writeStatementData(out);
   }
 

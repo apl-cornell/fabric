@@ -8,73 +8,39 @@ import java.io.Serializable;
 
 import fabric.lang.WrappedJavaInlineable;
 import fabric.metrics.contracts.warranties.WarrantyComp;
+import fabric.metrics.treaties.Treaty;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-import fabric.worker.metrics.treaties.MetricTreaty;
-import fabric.worker.metrics.treaties.TreatyRef;
 
 /**
  * A utility class for tracking {@link WarrantyComp} results and associated
- * {@link MetricTreaty}s implying their validity.
+ * {@link Treaty}s implying their validity.
  */
+@SuppressWarnings("serial")
 public class WarrantyValue implements Serializable {
 
   /** The result value. */
   public fabric.lang.Object value;
 
   /**
-   * A {@link TreatyRef} which, when valid, implies the value is current.
+   * A {@link Treaty} which, when valid, implies the value is current.
    */
-  public TreatyRef treaty;
-
-  /**
-   * A set of weak statistics to use if activating the treaty for the first
-   * time.
-   */
-  public StatsMap weakStats;
+  public Treaty treaty;
 
   /**
    * @param value
    *        the return value we're bundling in this {@link WarrantyValue}
    * @param treaty
-   *        the value's associated {@link MetricTreaty}
+   *        the value's associated {@link Treaty}
    */
-  public WarrantyValue(fabric.lang.Object value, TreatyRef treaty,
-      StatsMap weakStats) {
+  public WarrantyValue(fabric.lang.Object value, Treaty treaty) {
     this.value = value;
     this.treaty = treaty;
-    this.weakStats = weakStats;
-  }
-
-  /**
-   * @param value
-   *        the return value we're bundling in this {@link WarrantyValue}
-   * @param treaty
-   *        the value's associated {@link MetricTreaty}
-   */
-  public WarrantyValue(fabric.lang.Object value, MetricTreaty treaty,
-      StatsMap weakStats) {
-    this(value, treaty == null ? null : new TreatyRef(treaty), weakStats);
   }
 
   public static WarrantyValue newValue(fabric.lang.Object value,
-      TreatyRef treaty) {
-    return new WarrantyValue(value, treaty, StatsMap.emptyStats());
-  }
-
-  public static WarrantyValue newValue(fabric.lang.Object value,
-      MetricTreaty treaty) {
-    return new WarrantyValue(value, treaty, StatsMap.emptyStats());
-  }
-
-  public static WarrantyValue newValue(fabric.lang.Object value,
-      TreatyRef treaty, StatsMap weakStats) {
-    return new WarrantyValue(value, treaty, weakStats);
-  }
-
-  public static WarrantyValue newValue(fabric.lang.Object value,
-      MetricTreaty treaty, StatsMap weakStats) {
-    return new WarrantyValue(value, treaty, weakStats);
+      Treaty treaty) {
+    return new WarrantyValue(value, treaty);
   }
 
   @Override
@@ -100,11 +66,11 @@ public class WarrantyValue implements Serializable {
     }
     if (treaty != null) {
       out.writeBoolean(true);
-      treaty.write(out);
+      out.writeUTF(treaty.$getStore().name());
+      out.writeLong(treaty.$getOnum());
     } else {
       out.writeBoolean(false);
     }
-    weakStats.write(out);
   }
 
   private void readObject(ObjectInputStream in)
@@ -118,14 +84,13 @@ public class WarrantyValue implements Serializable {
       }
     }
     if (in.readBoolean()) {
-      treaty = new TreatyRef(in);
+      Store s = Worker.getWorker().getStore(in.readUTF());
+      treaty = new Treaty._Proxy(s, in.readLong());
     }
-    weakStats = new StatsMap(in);
   }
 
   private void readObjectNoData() throws ObjectStreamException {
     value = null;
     treaty = null;
-    weakStats = StatsMap.emptyStats();
   }
 }

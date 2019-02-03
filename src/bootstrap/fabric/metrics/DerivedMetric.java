@@ -20,7 +20,6 @@ import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.RunningMetricStats;
 import fabric.worker.metrics.StatsMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.NoPolicy;
@@ -49,8 +48,8 @@ import java.io.PrintWriter;
  * <li>construct the {@link #value()}, {@link #velocity()}, and {@link #noise()}
  * from its terms</li>
  * <li>provide a {@link EnforcementPolicy} to enforce a
- * {@link MetricTreaty} on it given the {@link Bound}, typically using
- * a {@link WitnessPolicy} using {@link MetricTreaty}s on the terms it is
+ * {@link Treaty} on it given the {@link Bound}, typically using
+ * a {@link WitnessPolicy} using {@link Treaty}s on the terms it is
  * derived from.</li>
  * </ul>
  */
@@ -185,7 +184,7 @@ public interface DerivedMetric
    */
     public void initialize();
     
-    public fabric.worker.metrics.ImmutableObserverSet handleDirectUpdates();
+    public fabric.worker.metrics.ImmutableObserverSet handleUpdates();
     
     public double value(fabric.worker.metrics.StatsMap weakStats);
     
@@ -217,16 +216,6 @@ public interface DerivedMetric
    * of its terms.
    */
     public void addObserver(fabric.metrics.util.Observer obs);
-    
-    /**
-   * {@inheritDoc}
-   *
-   * If this is the first observer, then this metric is being monitored for
-   * changes and so it stops computing on demand and instead caches the last
-   * updated value (computed on checks). This metric then becomes an observer
-   * of its terms.
-   */
-    public void addObserver(fabric.metrics.util.Observer obs, long id);
     
     /**
    * {@inheritDoc}
@@ -488,14 +477,14 @@ public interface DerivedMetric
             
         }
         
-        public static final byte[] $classHash = new byte[] { -24, -19, 125, 92,
-        28, -5, 97, -44, -12, 112, -10, 51, -92, -68, -25, 107, -8, -105, -78,
-        114, -104, 75, 78, -39, -46, 78, 80, -105, 13, 89, 54, -17 };
+        public static final byte[] $classHash = new byte[] { 72, -121, -4, 51,
+        78, -100, 117, -54, -45, 118, 18, 33, -109, 126, 125, -19, -61, -11,
+        -116, -77, -9, -14, 9, -91, -13, -61, -95, -65, -64, 54, -75, 20 };
         public static final java.lang.String jlc$CompilerVersion$fabil =
           "0.3.0";
-        public static final long jlc$SourceLastModified$fabil = 1548260582000L;
+        public static final long jlc$SourceLastModified$fabil = 1549232325000L;
         public static final java.lang.String jlc$ClassType$fabil =
-          "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";
+          "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";
     }
     
     public fabric.worker.metrics.StatsMap refreshWeakEstimates(
@@ -762,6 +751,10 @@ public interface DerivedMetric
         
         public void initialize() {
             ((fabric.metrics.DerivedMetric) fetch()).initialize();
+        }
+        
+        public fabric.worker.metrics.ImmutableObserverSet handleUpdates() {
+            return ((fabric.metrics.DerivedMetric) fetch()).handleUpdates();
         }
         
         public fabric.metrics.Metric term(int arg1) {
@@ -1222,8 +1215,7 @@ public interface DerivedMetric
                                                                leafMetricsArr));
         }
         
-        public fabric.worker.metrics.ImmutableObserverSet handleDirectUpdates(
-          ) {
+        public fabric.worker.metrics.ImmutableObserverSet handleUpdates() {
             fabric.worker.metrics.ImmutableObserverSet affected =
               fabric.worker.metrics.ImmutableObserverSet.emptySet();
             double newValue =
@@ -1328,10 +1320,6 @@ public interface DerivedMetric
                                          TransactionRestartingException $e36) {
                                     throw $e36;
                                 }
-                                catch (final fabric.worker.metrics.
-                                         LockConflictException $e36) {
-                                    throw $e36;
-                                }
                                 catch (final Throwable $e36) {
                                     $tm38.getCurrentLog().checkRetrySignal();
                                     throw $e36;
@@ -1375,27 +1363,6 @@ public interface DerivedMetric
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e36) {
-                                $commit33 = false;
-                                if ($tm38.checkForStaleObjects())
-                                    continue $label32;
-                                fabric.common.TransactionID $currentTid37 =
-                                  $tm38.getCurrentTid();
-                                if ($e36.tid.isDescendantOf($currentTid37)) {
-                                    $retry34 = true;
-                                }
-                                else if ($currentTid37.parent != null) {
-                                    $retry34 = false;
-                                    throw $e36;
-                                }
-                                else {
-                                    throw new InternalError(
-                                            "Something is broken with transaction " +
-                                                "management. Got a signal for a lock conflict in a different " +
-                                                "transaction than the one being managed.");
-                                }
                             }
                             catch (final Throwable $e36) {
                                 $commit33 = false;
@@ -1540,10 +1507,6 @@ public interface DerivedMetric
                                          TransactionRestartingException $e47) {
                                     throw $e47;
                                 }
-                                catch (final fabric.worker.metrics.
-                                         LockConflictException $e47) {
-                                    throw $e47;
-                                }
                                 catch (final Throwable $e47) {
                                     $tm49.getCurrentLog().checkRetrySignal();
                                     throw $e47;
@@ -1587,27 +1550,6 @@ public interface DerivedMetric
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e47) {
-                                $commit44 = false;
-                                if ($tm49.checkForStaleObjects())
-                                    continue $label43;
-                                fabric.common.TransactionID $currentTid48 =
-                                  $tm49.getCurrentTid();
-                                if ($e47.tid.isDescendantOf($currentTid48)) {
-                                    $retry45 = true;
-                                }
-                                else if ($currentTid48.parent != null) {
-                                    $retry45 = false;
-                                    throw $e47;
-                                }
-                                else {
-                                    throw new InternalError(
-                                            "Something is broken with transaction " +
-                                                "management. Got a signal for a lock conflict in a different " +
-                                                "transaction than the one being managed.");
-                                }
                             }
                             catch (final Throwable $e47) {
                                 $commit44 = false;
@@ -1760,10 +1702,6 @@ public interface DerivedMetric
                                          TransactionRestartingException $e58) {
                                     throw $e58;
                                 }
-                                catch (final fabric.worker.metrics.
-                                         LockConflictException $e58) {
-                                    throw $e58;
-                                }
                                 catch (final Throwable $e58) {
                                     $tm60.getCurrentLog().checkRetrySignal();
                                     throw $e58;
@@ -1807,27 +1745,6 @@ public interface DerivedMetric
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e58) {
-                                $commit55 = false;
-                                if ($tm60.checkForStaleObjects())
-                                    continue $label54;
-                                fabric.common.TransactionID $currentTid59 =
-                                  $tm60.getCurrentTid();
-                                if ($e58.tid.isDescendantOf($currentTid59)) {
-                                    $retry56 = true;
-                                }
-                                else if ($currentTid59.parent != null) {
-                                    $retry56 = false;
-                                    throw $e58;
-                                }
-                                else {
-                                    throw new InternalError(
-                                            "Something is broken with transaction " +
-                                                "management. Got a signal for a lock conflict in a different " +
-                                                "transaction than the one being managed.");
-                                }
                             }
                             catch (final Throwable $e58) {
                                 $commit55 = false;
@@ -1983,10 +1900,6 @@ public interface DerivedMetric
                                          TransactionRestartingException $e69) {
                                     throw $e69;
                                 }
-                                catch (final fabric.worker.metrics.
-                                         LockConflictException $e69) {
-                                    throw $e69;
-                                }
                                 catch (final Throwable $e69) {
                                     $tm71.getCurrentLog().checkRetrySignal();
                                     throw $e69;
@@ -2030,27 +1943,6 @@ public interface DerivedMetric
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e69) {
-                                $commit66 = false;
-                                if ($tm71.checkForStaleObjects())
-                                    continue $label65;
-                                fabric.common.TransactionID $currentTid70 =
-                                  $tm71.getCurrentTid();
-                                if ($e69.tid.isDescendantOf($currentTid70)) {
-                                    $retry67 = true;
-                                }
-                                else if ($currentTid70.parent != null) {
-                                    $retry67 = false;
-                                    throw $e69;
-                                }
-                                else {
-                                    throw new InternalError(
-                                            "Something is broken with transaction " +
-                                                "management. Got a signal for a lock conflict in a different " +
-                                                "transaction than the one being managed.");
-                                }
                             }
                             catch (final Throwable $e69) {
                                 $commit66 = false;
@@ -2224,46 +2116,6 @@ public interface DerivedMetric
         /**
    * {@inheritDoc}
    *
-   * If this is the first observer, then this metric is being monitored for
-   * changes and so it stops computing on demand and instead caches the last
-   * updated value (computed on checks). This metric then becomes an observer
-   * of its terms.
-   */
-        public void addObserver(fabric.metrics.util.Observer obs, long id) {
-            if (!isObserved()) {
-                for (int i = 0; i < this.get$terms().length(); i++) {
-                    term(i).addObserver((fabric.metrics.DerivedMetric)
-                                          this.$getProxy());
-                }
-                this.set$cachedValue(
-                       (double)
-                         computeValue(
-                           fabric.worker.metrics.StatsMap.emptyStats()));
-                this.set$cachedVelocity(
-                       (double)
-                         computeVelocity(
-                           fabric.worker.metrics.StatsMap.emptyStats()));
-                this.set$cachedNoise(
-                       (double)
-                         computeNoise(
-                           fabric.worker.metrics.StatsMap.emptyStats()));
-                this.set$cachedSamples(
-                       (long)
-                         computeSamples(
-                           fabric.worker.metrics.StatsMap.emptyStats()));
-                this.set$cachedLastUpdate(
-                       (long) java.lang.System.currentTimeMillis());
-                this.set$cachedUpdateInterval(
-                       (double)
-                         computeUpdateInterval(
-                           fabric.worker.metrics.StatsMap.emptyStats()));
-            }
-            super.addObserver(obs, id);
-        }
-        
-        /**
-   * {@inheritDoc}
-   *
    * If there are no observers after removing the given one, this metric stops
    * acting as an observer of its terms (and goes back to computing on demand
    * rather than caching the last updated value).
@@ -2394,10 +2246,6 @@ public interface DerivedMetric
                                          TransactionRestartingException $e81) {
                                     throw $e81;
                                 }
-                                catch (final fabric.worker.metrics.
-                                         LockConflictException $e81) {
-                                    throw $e81;
-                                }
                                 catch (final Throwable $e81) {
                                     $tm83.getCurrentLog().checkRetrySignal();
                                     throw $e81;
@@ -2441,27 +2289,6 @@ public interface DerivedMetric
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e81) {
-                                $commit78 = false;
-                                if ($tm83.checkForStaleObjects())
-                                    continue $label77;
-                                fabric.common.TransactionID $currentTid82 =
-                                  $tm83.getCurrentTid();
-                                if ($e81.tid.isDescendantOf($currentTid82)) {
-                                    $retry79 = true;
-                                }
-                                else if ($currentTid82.parent != null) {
-                                    $retry79 = false;
-                                    throw $e81;
-                                }
-                                else {
-                                    throw new InternalError(
-                                            "Something is broken with transaction " +
-                                                "management. Got a signal for a lock conflict in a different " +
-                                                "transaction than the one being managed.");
-                                }
                             }
                             catch (final Throwable $e81) {
                                 $commit78 = false;
@@ -2612,11 +2439,11 @@ public interface DerivedMetric
                             (java.lang.Object)
                               fabric.lang.WrappedJavaInlineable.$unwrap(
                                                                   term(i)),
-                            new fabric.worker.metrics.treaties.statements.EqualityStatement(
-                              term(i).value(weakStats)));
+                            fabric.worker.metrics.treaties.statements.EqualityStatement.
+                                create(term(i).value(weakStats)));
                     }
-                    return new fabric.worker.metrics.treaties.enforcement.WitnessPolicy(
-                             witnesses);
+                    return fabric.worker.metrics.treaties.enforcement.WitnessPolicy.
+                      create(witnesses);
                 } else {
                     return fabric.worker.metrics.treaties.enforcement.DirectPolicy.singleton;
                 }
@@ -2920,10 +2747,6 @@ public interface DerivedMetric
                                          TransactionRestartingException $e91) {
                                     throw $e91;
                                 }
-                                catch (final fabric.worker.metrics.
-                                         LockConflictException $e91) {
-                                    throw $e91;
-                                }
                                 catch (final Throwable $e91) {
                                     $tm93.getCurrentLog().checkRetrySignal();
                                     throw $e91;
@@ -2967,27 +2790,6 @@ public interface DerivedMetric
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
-                            }
-                            catch (final fabric.worker.metrics.
-                                     LockConflictException $e91) {
-                                $commit88 = false;
-                                if ($tm93.checkForStaleObjects())
-                                    continue $label87;
-                                fabric.common.TransactionID $currentTid92 =
-                                  $tm93.getCurrentTid();
-                                if ($e91.tid.isDescendantOf($currentTid92)) {
-                                    $retry89 = true;
-                                }
-                                else if ($currentTid92.parent != null) {
-                                    $retry89 = false;
-                                    throw $e91;
-                                }
-                                else {
-                                    throw new InternalError(
-                                            "Something is broken with transaction " +
-                                                "management. Got a signal for a lock conflict in a different " +
-                                                "transaction than the one being managed.");
-                                }
                             }
                             catch (final Throwable $e91) {
                                 $commit88 = false;
@@ -3057,11 +2859,11 @@ public interface DerivedMetric
         
     }
     
-    public static final byte[] $classHash = new byte[] { 9, -62, 55, -81, 4,
-    -31, -59, -47, 32, 83, 71, 100, 46, -119, 66, -115, -95, 101, 119, -49, 65,
-    -37, -4, -113, 116, 55, -52, -11, -56, 81, 10, -22 };
+    public static final byte[] $classHash = new byte[] { 122, 30, -48, 38, -30,
+    78, 71, 125, -38, 34, 49, -18, 65, 6, -81, -32, 61, -113, -3, 53, -34, 0,
+    54, -107, 41, -51, 63, 51, 59, -10, -113, 28 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1548260582000L;
+    public static final long jlc$SourceLastModified$fabil = 1549232325000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

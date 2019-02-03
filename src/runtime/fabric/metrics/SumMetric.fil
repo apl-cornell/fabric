@@ -15,7 +15,6 @@ import fabric.worker.transaction.TransactionManager;
 
 import fabric.worker.metrics.SumStrategy;
 import fabric.worker.metrics.StatsMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.WitnessPolicy;
@@ -316,7 +315,7 @@ public class SumMetric extends DerivedMetric {
           // updated much less frequently than the other values in the sum.
           double b = scaledX - ((m.getPresetB() / getPresetB()) * (totalValue - baseNow));
 
-          TreatyStatement newStmt = new ThresholdStatement(r, b, currentTime);
+          TreatyStatement newStmt = ThresholdStatement.create(r, b, currentTime);
           boolean implied = false;
           for (Iterator/*<TreatyStatement>*/ iter = witnesses.get(m).iterator(); iter.hasNext();) {
             TreatyStatement stmt = (TreatyStatement) iter.next();
@@ -330,7 +329,7 @@ public class SumMetric extends DerivedMetric {
           }
         }
 
-        return new WitnessPolicy(witnesses);
+        return WitnessPolicy.create(witnesses);
       } else {
         // TODO: Make the samples cutoff configurable.
         //double baseFactor = totalSamples > 10 ? 0.0 / Math.sqrt(totalSamples) : 1.0;
@@ -384,7 +383,7 @@ public class SumMetric extends DerivedMetric {
           // updated much less frequently than the other values in the sum.
           double b = scaledX - staticSlacks[j];
 
-          ThresholdStatement newStmt = new ThresholdStatement(r, b, currentTime);
+          ThresholdStatement newStmt = ThresholdStatement.create(r, b, currentTime);
           boolean implied = false;
           for (Iterator/*<TreatyStatement>*/ iter = staticWitnesses.get(m).iterator(); iter.hasNext();) {
             TreatyStatement stmt = (TreatyStatement) iter.next();
@@ -396,7 +395,7 @@ public class SumMetric extends DerivedMetric {
           if (!implied) {
             staticWitnesses.put(m, newStmt);
             // Update the timeout estimate.
-            staticTimeout = Math.min(staticTimeout, ThresholdStatement.hedgedEstimate(m, newStmt.rate, newStmt.base, currentTime, weakStats));
+            staticTimeout = Math.min(staticTimeout, ThresholdStatement.hedgedEstimate(m, newStmt.rate(), newStmt.base(), currentTime, weakStats));
           }
         }
 
@@ -428,7 +427,7 @@ public class SumMetric extends DerivedMetric {
             // updated much less frequently than the other values in the sum.
             double b = scaledX - adaptiveSlacks[j];
 
-            ThresholdStatement newStmt = new ThresholdStatement(r, b, currentTime);
+            ThresholdStatement newStmt = ThresholdStatement.create(r, b, currentTime);
             boolean implied = false;
             for (Iterator/*<TreatyStatement>*/ iter = adaptiveWitnesses.get(m).iterator(); iter.hasNext();) {
               TreatyStatement stmt = (TreatyStatement) iter.next();
@@ -440,8 +439,8 @@ public class SumMetric extends DerivedMetric {
             if (!implied) {
               adaptiveWitnesses.put(m, newStmt);
               // Update the timeout estimate.
-              adaptiveTimeout = Math.min(adaptiveTimeout, ThresholdStatement.hedgedEstimate(m, newStmt.rate, newStmt.base, currentTime, weakStats));
-              adaptiveRealTimeout = Math.min(adaptiveRealTimeout, ThresholdStatement.hedgedExpiry(m, newStmt.rate, newStmt.base, currentTime, weakStats));
+              adaptiveTimeout = Math.min(adaptiveTimeout, ThresholdStatement.hedgedEstimate(m, newStmt.rate(), newStmt.base(), currentTime, weakStats));
+              adaptiveRealTimeout = Math.min(adaptiveRealTimeout, ThresholdStatement.hedgedExpiry(m, newStmt.rate(), newStmt.base(), currentTime, weakStats));
             }
           }
 
@@ -462,7 +461,7 @@ public class SumMetric extends DerivedMetric {
           }
         }
 
-        return new WitnessPolicy(finalWitnesses);
+        return WitnessPolicy.create(finalWitnesses);
       }
     }
 

@@ -1,32 +1,25 @@
 package fabric.metrics.contracts.warranties;
 
-import fabric.util.ArrayList;
-
 import fabric.metrics.Metric;
-import fabric.metrics.SampledMetric;
-import fabric.metrics.util.AbstractSubject;
+import fabric.metrics.treaties.Treaty;
 import fabric.metrics.util.Observer;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.WarrantyProposal;
 import fabric.worker.metrics.WarrantyValue;
 import fabric.worker.metrics.proxies.ProxyMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
-import fabric.worker.metrics.treaties.TreatyRef;
 import fabric.worker.transaction.TransactionManager;
 
 import java.util.Iterator;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import fabric.common.Logging;
-import fabric.common.util.Pair;
 
 /**
- * A computation that uses {@link MetricTreaty}s to cache and reuse results.
+ * A computation that uses {@link Treaty}s to cache and reuse results.
  * <p>
- * Acts as an {@link Observer} of the currently associated {@link MetricTreaty}.
- * This helps to ensure that the {@link MetricTreaty} implying the currently cached
+ * Acts as an {@link Observer} of the currently associated {@link Treaty}.
+ * This helps to ensure that the {@link Treaty} implying the currently cached
  * result is correct doesn't get deactivated prematurely by the API
  * implementation.
  */
@@ -36,7 +29,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   protected /*T*/ Object curVal;
 
   /** The currently cached result. */
-  protected TreatyRef curTreaty;
+  protected Treaty curTreaty;
 
   // TODO: Consider keeping a cache of per-store proxies?
   /** The set of proxy computations for this computation. */
@@ -57,13 +50,13 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   protected final boolean proactive;
 
   /**
-   * Create a new updated result paired with a treaty that would enforce it
-   * after this call.
+   * Create a new updated proposed result (including a proposed {@link Metric}
+   * and {@link TreatyStatement}).
    *
    * @param time
    *            the current time we're running a new update at.
    */
-  protected abstract WarrantyValue updatedVal(long time);
+  protected abstract WarrantyProposal updatedVal(long time);
 
   /**
    * Run this warranty computation at the given time.
@@ -109,7 +102,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
           WarrantyComp proxy = (WarrantyComp) iter.next();
           if (!static_dropOldValue(proxy)) {
             Object newVal = proxy.curVal;
-            TreatyRef newTreaty = proxy.curTreaty;
+            Treaty newTreaty = proxy.curTreaty;
             //Logging.METRICS_LOGGER.log(Level.INFO, "USING RESULT FROM " + proxy + " IN " + Thread.currentThread());
             // Try the value.  If we're handling updates, it's possible the proxy
             // value is not good, despite appearances, so don't consider it done
@@ -125,28 +118,25 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       if (tmp.curTreaty == null) {
         Logging.METRICS_LOGGER.log(Level.FINE, "GENERATING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         // Nobody had the result memoized, do it the old fashioned way.
-        WarrantyValue computed = tmp.updatedVal(System.currentTimeMillis());
+        WarrantyProposal computed = tmp.updatedVal(System.currentTimeMillis());
 
         // If newVal's treaty is null, tmp indicates that the programmer
         // doesn't want to memoize the result with a treaty.
-        if (computed.treaty == null) {
+        if (computed.metric == null) {
           TransactionManager.getInstance().stats.addMsg("Memoized: false");
-          return computed;
+          return WarrantyValue.newValue(computed.value, null);
         }
 
         // Otherwise, updatedVal doesn't return the treaty refreshed, so
         // refresh it now.
         Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATING RESULT FOR " + tmp + " IN " + Thread.currentThread());
-        // TODO: figure out remote call functionality for this.
-        String treatyStoreName = computed.treaty.get().getMetric().$getStore().name();
-        RemoteWorker w = Worker.getWorker().getWorker(treatyStoreName);
+        RemoteWorker w = Worker.getWorker().getWorker(computed.metric.$getStore().name());
+        Treaty activatedTreaty = null;
         if (TransactionManager.getInstance().inTxn()) {
-          computed.treaty.get().getMetric().refreshTreaty(false, computed.treaty.get().getId(), computed.weakStats);
+          activatedTreaty = computed.metric.createTreaty(computed.predicate, computed.weakStats);
         } else {
-          computed.treaty.get().getMetric().refreshTreaty_remote@w(null, false, computed.treaty.get().getId(), computed.weakStats);
+          activatedTreaty = computed.metric.createTreaty_remote@w(null, computed.predicate, computed.weakStats);
         }
-        // Reference is now for an activated treaty.
-        TreatyRef activatedTreaty = computed.treaty;
 
         Logging.METRICS_LOGGER.log(Level.FINE, "SETTING RESULT FOR " + tmp + " IN " + Thread.currentThread());
         static_setNewValue(tmp, computed.value, activatedTreaty);
@@ -182,15 +172,15 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
 
   private boolean dropOldValue() {
     if (this.curTreaty != null) {
-      if (this.curTreaty.get() == null || !this.curTreaty.get().valid()) {
-        if (this.curTreaty.get() != null) this.curTreaty.get().removeObserver(this);
+      if (this.curTreaty == null || !this.curTreaty.valid()) {
+        if (this.curTreaty != null) this.curTreaty.removeObserver(this);
         this.curTreaty = null;
       }
     }
     return this.curTreaty == null;
   }
 
-  private static void static_setNewValue(WarrantyComp tmp, Object newVal, TreatyRef newTreaty) {
+  private static void static_setNewValue(WarrantyComp tmp, Object newVal, Treaty newTreaty) {
     if (TransactionManager.getInstance().inTxn()) {
       tmp.setNewValue(newVal, newTreaty);
     } else {
@@ -200,31 +190,28 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     }
   }
 
-  private void setNewValue(Object newVal, TreatyRef newTreaty) {
-    if (this.dropOldValue() && newTreaty != null && newTreaty.get() != null && newTreaty.get().valid()) {
+  private void setNewValue(Object newVal, Treaty newTreaty) {
+    if (this.dropOldValue() && newTreaty != null && newTreaty.valid()) {
       this.curVal = newVal;
-      this.curTreaty = TreatyRef.createRef(newTreaty.get()
-          .getProxyTreaty(this.$getStore())
-          .addObserver(this));
+      this.curTreaty = newTreaty.getProxy(this.$getStore());
+      this.curTreaty.addObserver(this);
     }
   }
 
   /*@Override*/
   public ImmutableMetricsVector/*<SampledMetric>*/ getLeafSubjects() {
-    if (curTreaty != null && curTreaty.get() != null)
-      return curTreaty.get().getLeafSubjects();
+    if (curTreaty != null)
+      return curTreaty.getLeafSubjects();
     return ImmutableMetricsVector.emptyVector();
   }
 
   /*@Override*/
-  public ImmutableObserverSet handleUpdates(boolean includesObserver, SortedSet/*<Long>*/ treaties) {
+  public ImmutableObserverSet handleUpdates() {
     ImmutableObserverSet affected = ImmutableObserverSet.emptySet();
-    if (includesObserver) {
-      if (this.dropOldValue()) {
-        // try to get a new value
-        if (recomputeOnInvalidation)
-          apply(System.currentTimeMillis(), false);
-      }
+    if (this.dropOldValue()) {
+      // try to get a new value
+      if (recomputeOnInvalidation)
+        apply(System.currentTimeMillis(), false);
     }
     return affected;
   }
@@ -328,7 +315,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     }
 
     /*@Override*/
-    protected WarrantyValue updatedVal(long time) {
+    protected WarrantyProposal updatedVal(long time) {
       return this.baseComputation.updatedVal(time);
     }
   }

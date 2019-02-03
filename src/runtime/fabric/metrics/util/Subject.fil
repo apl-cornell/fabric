@@ -23,34 +23,12 @@ public interface Subject {
   public void addObserver(Observer o);
 
   /**
-   * Adds an observer to the set of observers for this object. Nothing is done
-   * if the given observer {@link #equals(Object) equals} an existing
-   * observer.
-   *
-   * @param o
-   *        {@link Observer} to add
-   * @param id
-   *        id of a treaty in the observer.
-   */
-  public void addObserver(Observer o, long id);
-
-  /**
    * Removes an observer from the set of observers of this object.
    *
    * @param o
    *        {@link Observer} to remove
    */
   public void removeObserver(Observer o);
-
-  /**
-   * Removes an observer from the set of observers of this object.
-   *
-   * @param o
-   *        {@link Observer} to remove
-   * @param id
-   *        id of a treaty in the observer.
-   */
-  public void removeObserver(Observer o, long id);
 
   /**
    * @param o

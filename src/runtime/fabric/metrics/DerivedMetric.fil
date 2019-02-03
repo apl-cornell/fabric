@@ -17,7 +17,6 @@ import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.RunningMetricStats;
 import fabric.worker.metrics.StatsMap;
-import fabric.worker.metrics.treaties.MetricTreaty;
 import fabric.worker.metrics.treaties.enforcement.DirectPolicy;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.NoPolicy;
@@ -47,8 +46,8 @@ import java.io.PrintWriter;
  * <li>construct the {@link #value()}, {@link #velocity()}, and {@link #noise()}
  * from its terms</li>
  * <li>provide a {@link EnforcementPolicy} to enforce a
- * {@link MetricTreaty} on it given the {@link Bound}, typically using
- * a {@link WitnessPolicy} using {@link MetricTreaty}s on the terms it is
+ * {@link Treaty} on it given the {@link Bound}, typically using
+ * a {@link WitnessPolicy} using {@link Treaty}s on the terms it is
  * derived from.</li>
  * </ul>
  */
@@ -175,7 +174,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   /*@Override*/
-  public ImmutableObserverSet handleDirectUpdates() {
+  public ImmutableObserverSet handleUpdates() {
     ImmutableObserverSet affected = ImmutableObserverSet.emptySet();
     double newValue = computeValue(StatsMap.emptyStats());
     if (newValue != cachedValue) {
@@ -395,31 +394,6 @@ public abstract class DerivedMetric extends Metric implements Observer {
   /**
    * {@inheritDoc}
    *
-   * If this is the first observer, then this metric is being monitored for
-   * changes and so it stops computing on demand and instead caches the last
-   * updated value (computed on checks). This metric then becomes an observer
-   * of its terms.
-   */
-  /*@Override*/
-  public void addObserver(Observer obs, long id) {
-    if (!isObserved()) {
-      // Start tracking terms if this is now used by a treaty directly.
-      for (int i = 0; i < terms.length(); i++) {
-        term(i).addObserver(this);
-      }
-      cachedValue = computeValue(StatsMap.emptyStats());
-      cachedVelocity = computeVelocity(StatsMap.emptyStats());
-      cachedNoise = computeNoise(StatsMap.emptyStats());
-      cachedSamples = computeSamples(StatsMap.emptyStats());
-      cachedLastUpdate = System.currentTimeMillis();
-      cachedUpdateInterval = computeUpdateInterval(StatsMap.emptyStats());
-    }
-    super.addObserver(obs, id);
-  }
-
-  /**
-   * {@inheritDoc}
-   *
    * If there are no observers after removing the given one, this metric stops
    * acting as an observer of its terms (and goes back to computing on demand
    * rather than caching the last updated value).
@@ -545,9 +519,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
         // Defend each term against the current value that supposedly make this
         // derived metric equal the given value.
         for (int i = 0; i < terms.length(); i++) {
-          witnesses.put(term(i), new EqualityStatement(term(i).value(weakStats)));
+          witnesses.put(term(i), EqualityStatement.create(term(i).value(weakStats)));
         }
-        return new WitnessPolicy(witnesses);
+        return WitnessPolicy.create(witnesses);
       } else {
         return DirectPolicy.singleton;
       }

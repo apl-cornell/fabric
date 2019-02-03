@@ -1,0 +1,36 @@
+package fabric.worker.metrics.treaties.statements;
+
+import java.io.Serializable;
+
+import fabric.metrics.Metric;
+import fabric.metrics.treaties.Treaty;
+import fabric.worker.Store;
+import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
+
+/**
+ * {@link TreatyStatement} for equality bounds.
+ */
+public class EqualityStatement extends TreatyStatement implements Serializable, fabric.lang.JavaInlineable {
+
+  public native double value();
+
+  /**
+   * Utility factory method because signatures don't allow native constructors.
+   */
+  public static native EqualityStatement create(double value);
+
+  public native long directExpiry(Metric m, StatsMap weakStats);
+
+  public native long trueExpiry(Metric m, StatsMap weakStats);
+
+  public native long trueExpiry(double v);
+
+  public native boolean implies(TreatyStatement stmt);
+
+  public native EnforcementPolicy getNewPolicy(Metric m, StatsMap weakStats);
+
+  public native Treaty getProxy(Metric m, Store s);
+
+  public native boolean check(Metric m);
+}
