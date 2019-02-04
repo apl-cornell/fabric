@@ -18,7 +18,6 @@ public class ObserversBox {
 
   public final Subject owner;
 
-  // Remember to resolve this later...
   public ImmutableObserverSet observers;
 
   public ObserversBox fabric$metrics$util$ObserversBox$(Subject owner) {

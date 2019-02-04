@@ -21,7 +21,6 @@ public class TreatiesBox implements Iterable/*<Treaty>*/ {
 
   public final Metric owner;
 
-  // Remember to resolve this later...
   private TreatySet treaties;
 
   public TreatiesBox fabric$metrics$util$TreatiesBox$(Metric m) {
