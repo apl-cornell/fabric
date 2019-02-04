@@ -3,6 +3,9 @@ package fabric.worker.metrics.treaties;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -27,34 +30,39 @@ import fabric.worker.transaction.TransactionManager;
  * Base class for a set of treaties (time limited logical statements) on a
  * Fabric object.
  */
-public class TreatySet implements FastSerializable, Iterable<Treaty._Proxy> {
+public class TreatySet
+    implements FastSerializable, Iterable<Treaty._Proxy>, Serializable {
 
   private TreatiesBox._Proxy owner;
   private Map<TreatyStatement, Oid> statementMap;
 
   /** @return a value to use for an empty vector */
-  public static TreatySet emptySet(fabric.lang.Object owner) {
-    if (owner instanceof TreatiesBox) return new TreatySet((TreatiesBox) owner);
-    // TODO
-    return null;
+  public static TreatySet emptySet(TreatiesBox owner) {
+    return new TreatySet(owner);
+  }
+
+  private void readObject(ObjectInputStream in) throws IOException {
+    Store ownerStore = Worker.getWorker().getStore(in.readUTF());
+    this.owner = new TreatiesBox._Proxy(ownerStore, in.readLong());
+    int size = in.readInt();
+    this.statementMap = new HashMap<>(size);
+    for (int i = 0; i < size; i++) {
+      // Keys aren't serialized separately, it's already in the treaty.
+      TreatyStatement stmt = TreatyStatement.read(in);
+      Store s = Worker.getWorker().getStore(in.readUTF());
+      long onum = in.readLong();
+      Oid t = new Oid(s, onum);
+      this.statementMap.put(stmt, t);
+    }
+  }
+
+  private void readObjectNoData() {
+    throw new InternalError("This shouldn't happen");
   }
 
   /** Deserializer */
   public static TreatySet read(DataInput in) throws IOException {
     return new TreatySet(in);
-  }
-
-  @Override
-  public final void write(DataOutput out) throws IOException {
-    out.writeUTF(owner.$getStore().name());
-    out.writeLong(owner.$getOnum());
-    out.writeInt(this.statementMap.size());
-    // Don't bother writing out the keys, it's already included in the values.
-    for (Map.Entry<TreatyStatement, Oid> entry : this.statementMap.entrySet()) {
-      entry.getKey().write(out);
-      out.writeUTF(entry.getValue().store.name());
-      out.writeLong(entry.getValue().onum);
-    }
   }
 
   public TreatySet(DataInput in) throws IOException {
@@ -69,6 +77,23 @@ public class TreatySet implements FastSerializable, Iterable<Treaty._Proxy> {
       long onum = in.readLong();
       Oid t = new Oid(s, onum);
       this.statementMap.put(stmt, t);
+    }
+  }
+
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    write(out);
+  }
+
+  @Override
+  public final void write(DataOutput out) throws IOException {
+    out.writeUTF(owner.$getStore().name());
+    out.writeLong(owner.$getOnum());
+    out.writeInt(this.statementMap.size());
+    // Don't bother writing out the keys, it's already included in the values.
+    for (Map.Entry<TreatyStatement, Oid> entry : this.statementMap.entrySet()) {
+      entry.getKey().write(out);
+      out.writeUTF(entry.getValue().store.name());
+      out.writeLong(entry.getValue().onum);
     }
   }
 
@@ -105,11 +130,6 @@ public class TreatySet implements FastSerializable, Iterable<Treaty._Proxy> {
     };
   }
 
-  /** @return a value to use for an empty vector */
-  public static TreatySet emptySet(TreatiesBox owner) {
-    return new TreatySet(owner);
-  }
-
   @Override
   public boolean equals(Object obj) {
     return this == obj || (obj instanceof TreatySet
@@ -133,7 +153,7 @@ public class TreatySet implements FastSerializable, Iterable<Treaty._Proxy> {
   // lock for.
   private static TreatySet getAssociatedTreaties(
       fabric.lang.Object._Impl impl) {
-    return ((fabric.metrics.util.TreatiesBox._Impl) impl).treaties;
+    return ((fabric.metrics.util.TreatiesBox._Impl) impl).get$treaties();
   }
 
   public void remove(Treaty treaty) {

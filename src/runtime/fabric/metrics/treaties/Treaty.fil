@@ -224,7 +224,7 @@ public class Treaty extends AbstractSubject implements Observer {
       this.$expiry = 0;
       this.policy = NoPolicy.singleton;
       oldPolicy.unapply(this);
-      this.metric.treatiesBox.treaties.remove(this);
+      this.metric.treatiesBox.remove(this);
     } else {
       atomic {
         this.$expiry = 0;
@@ -232,7 +232,7 @@ public class Treaty extends AbstractSubject implements Observer {
       }
       oldPolicy.unapply(this);
       atomic {
-        this.metric.treatiesBox.treaties.remove(this);
+        this.metric.treatiesBox.remove(this);
       }
     }
   }

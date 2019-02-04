@@ -1,11 +1,14 @@
 package fabric.metrics.util;
 
 import fabric.metrics.Metric;
+import fabric.metrics.treaties.Treaty;
 import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.TreatySet;
-import java.util.SortedSet;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
+import java.util.Iterator;
 
 /**
  * Utility to make treaties and observers exist outside of metrics for the
@@ -14,12 +17,12 @@ import java.util.SortedSet;
  * This acts as a proxy for the Metric's treaties and observers.
  * TODO: Should this still be a proxy?
  */
-public class TreatiesBox {
+public class TreatiesBox implements Iterable/*<Treaty>*/ {
 
   public final Metric owner;
 
   // Remember to resolve this later...
-  public transient TreatySet treaties;
+  private TreatySet treaties;
 
   public TreatiesBox fabric$metrics$util$TreatiesBox$(Metric m) {
     this.owner = m;
@@ -28,5 +31,25 @@ public class TreatiesBox {
     // TODO: add treaties as associates as they get added.
     this.treaties = TreatySet.emptySet(this);
     return this;
+  }
+
+  public int size() {
+    return treaties.size();
+  }
+
+  public Iterator/*<Treaty>*/ iterator() {
+    return treaties.iterator();
+  }
+
+  public void remove(Treaty treaty) {
+    treaties.remove(treaty);
+  }
+
+  public Treaty get(TreatyStatement stmt) {
+    return treaties.get(stmt);
+  }
+
+  public Treaty create(TreatyStatement stmt, StatsMap statsMap) {
+    return treaties.create(stmt, statsMap);
   }
 }

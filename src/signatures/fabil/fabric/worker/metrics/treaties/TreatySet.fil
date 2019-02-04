@@ -1,0 +1,44 @@
+package fabric.worker.metrics.treaties;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+
+import fabric.common.FastSerializable;
+import fabric.common.Logging;
+import fabric.common.util.DeltaMap;
+import fabric.common.util.Oid;
+import fabric.metrics.treaties.Treaty;
+import fabric.metrics.util.TreatiesBox;
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
+import fabric.worker.transaction.Log;
+import fabric.worker.transaction.TransactionManager;
+
+/**
+ * Base class for a set of treaties (time limited logical statements) on a
+ * Fabric object.
+ */
+public class TreatySet implements Iterable/*<Treaty._Proxy>*/, JavaInlineable {
+
+  /** @return a value to use for an empty vector */
+  public static native TreatySet emptySet(TreatiesBox owner);
+
+  /** @return the number of treaties. */
+  public native int size();
+
+  public native void remove(Treaty treaty);
+
+  public native Treaty get(TreatyStatement stmt);
+
+  public native Treaty create(TreatyStatement stmt, StatsMap statsMap);
+
+  public native Iterator/*<Treaty._Proxy>*/ iterator();
+}

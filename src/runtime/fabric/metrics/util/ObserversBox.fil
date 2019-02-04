@@ -1,0 +1,52 @@
+package fabric.metrics.util;
+
+import fabric.metrics.Metric;
+import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableObjectSet;
+import fabric.worker.metrics.ImmutableObserverSet;
+import fabric.worker.metrics.treaties.TreatySet;
+import java.util.SortedSet;
+
+/**
+ * Utility to make observers exist outside of metrics for the purposes of
+ * managing contention and conflicts between transactions.
+ *
+ * This acts as a proxy for the Metric's treaties and observers.
+ * TODO: Should this still be a proxy?
+ */
+public class ObserversBox {
+
+  public final Subject owner;
+
+  // Remember to resolve this later...
+  public ImmutableObserverSet observers;
+
+  public ObserversBox fabric$metrics$util$ObserversBox$(Subject owner) {
+    this.owner = owner;
+    fabric$lang$Object$();
+    this.$associates = ImmutableObjectSet.emptySet().add(owner);
+    // TODO: add treaties as associates as they get added.
+    this.observers = ImmutableObserverSet.emptySet();
+    return this;
+  }
+
+  public boolean contains(Observer o) {
+    return this.observers.contains(o);
+  }
+
+  public void add(Observer o) {
+    this.observers = this.observers.add(o);
+  }
+
+  public void remove(Observer o) {
+    this.observers = this.observers.remove(o);
+  }
+
+  public boolean isEmpty() {
+    return this.observers.isEmpty();
+  }
+
+  public ImmutableObserverSet getObservers() {
+    return observers;
+  }
+}
