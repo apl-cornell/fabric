@@ -5,6 +5,7 @@ import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.treaties.TreatySet;
+import fabric.worker.transaction.TransactionManager;
 import java.util.SortedSet;
 
 /**
@@ -24,7 +25,6 @@ public class ObserversBox {
     this.owner = owner;
     fabric$lang$Object$();
     this.$associates = ImmutableObjectSet.emptySet().add(owner);
-    // TODO: add treaties as associates as they get added.
     this.observers = ImmutableObserverSet.emptySet();
     return this;
   }
@@ -35,10 +35,14 @@ public class ObserversBox {
 
   public void add(Observer o) {
     this.observers = this.observers.add(o);
+    if (TransactionManager.usingPrefetching())
+      this.$associates = this.$associates.add(o);
   }
 
   public void remove(Observer o) {
     this.observers = this.observers.remove(o);
+    if (TransactionManager.usingPrefetching())
+      this.$associates = this.$associates.remove(o);
   }
 
   public boolean isEmpty() {

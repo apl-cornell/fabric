@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 
+import fabric.common.ConfigProperties;
 import fabric.common.FabricThread;
 import fabric.common.Logging;
 import fabric.common.Threading;
@@ -1505,5 +1506,13 @@ public final class TransactionManager {
    */
   public void addUntreatiedPostcondition(Metric m, TreatyStatement stmt) {
     if (current != null) current.addUntreatiedPostcondition(m, stmt);
+  }
+
+  /**
+   * Check if associates are being used.
+   */
+  public static boolean usingPrefetching() {
+    ConfigProperties config = Worker.getWorker().config;
+    return config.usePrefetching;
   }
 }

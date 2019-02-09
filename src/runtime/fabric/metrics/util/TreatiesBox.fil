@@ -8,6 +8,7 @@ import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
+import fabric.worker.transaction.TransactionManager;
 import java.util.Iterator;
 
 /**
@@ -27,7 +28,6 @@ public class TreatiesBox implements Iterable/*<Treaty>*/ {
     this.owner = m;
     fabric$lang$Object$();
     this.$associates = ImmutableObjectSet.emptySet().add(m);
-    // TODO: add treaties as associates as they get added.
     this.treaties = TreatySet.emptySet(this);
     return this;
   }

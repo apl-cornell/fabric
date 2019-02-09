@@ -7,6 +7,7 @@ import fabric.metrics.SampledMetric;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableObjectSet;
 import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
@@ -42,7 +43,7 @@ public class Treaty extends AbstractSubject implements Observer {
     } else {
       deactivate();
     }
-    // TODO: add any appropriate associated objects.
+    this.$associates = ImmutableObjectSet.emptySet().add(metric);
     return this;
   }
 

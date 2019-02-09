@@ -247,6 +247,8 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
       if (w == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
           "A witness treaty was null applying to {0}", t);
       w.addObserver(t);
+      if (TransactionManager.usingPrefetching())
+        t.set$$associates(t.get$$associates().add(w));
     }
   }
 
@@ -261,6 +263,8 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
       Treaty w = witness.getKey().get$treaties().get(witness.getValue());
       if (w == null) continue;
       w.removeObserver(t);
+      if (TransactionManager.usingPrefetching())
+        t.set$$associates(t.get$$associates().remove(w));
     }
   }
 
@@ -276,6 +280,8 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
         Treaty w = e.getKey().get$treaties().get(e.getValue());
         if (w == null) continue;
         w.removeObserver(t);
+        if (TransactionManager.usingPrefetching())
+          t.set$$associates(t.get$$associates().remove(w));
       }
 
       Set<Map.Entry<TreatiesBox._Proxy, TreatyStatement>> toBeAdded =
@@ -286,6 +292,8 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
         if (w == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
             "A witness treaty was null applying to {0}", t);
         w.addObserver(t);
+        if (TransactionManager.usingPrefetching())
+          t.set$$associates(t.get$$associates().add(w));
       }
     } else {
       // Do the normal thing.

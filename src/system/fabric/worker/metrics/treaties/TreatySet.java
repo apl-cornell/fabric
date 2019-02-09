@@ -175,11 +175,15 @@ public class TreatySet
       // extension.
       statementMap.remove(treaty.get$predicate(), new Oid(treaty));
       owner.set$treaties(this);
+      if (TransactionManager.usingPrefetching())
+        owner.set$$associates(owner.get$$associates().remove(treaty));
     } else {
       // TODO check that it's a proper garbage collection?
       TreatySet updated = new TreatySet(this);
       updated.statementMap.remove(treaty.get$predicate(), new Oid(treaty));
       owner.set$treaties(updated);
+      if (TransactionManager.usingPrefetching())
+        owner.set$$associates(owner.get$$associates().remove(treaty));
     }
   }
 
@@ -204,6 +208,8 @@ public class TreatySet
           Treaty._Impl.newTreaty(owner.get$owner(), stmt, statsMap);
       statementMap.put(stmt, new Oid(newTreaty));
       owner.set$treaties(this);
+      if (TransactionManager.usingPrefetching())
+        owner.set$$associates(owner.get$$associates().add(newTreaty));
       return newTreaty;
     } else {
       TreatySet updated = new TreatySet(this);
@@ -211,6 +217,8 @@ public class TreatySet
           Treaty._Impl.newTreaty(owner.get$owner(), stmt, statsMap);
       updated.statementMap.put(stmt, new Oid(newTreaty));
       owner.set$treaties(updated);
+      if (TransactionManager.usingPrefetching())
+        owner.set$$associates(owner.get$$associates().add(newTreaty));
       return newTreaty;
     }
   }
