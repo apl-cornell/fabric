@@ -746,7 +746,8 @@ public interface Object {
       TransactionManager tm = TransactionManager.getInstance();
       ExpiryExtension ex = tm.getPendingExtension(this);
       long current = ex == null ? this.$expiry : ex.expiry;
-      boolean transactionCreated = tm.registerWrite(this);
+      boolean transactionCreated =
+          tm.registerExpiryWrite(this, current, expiry);
       long rtn = expiry;
       if (expiry >= current && tm.getPendingExtension(this) != null) {
         tm.getPendingExtension(this).expiry = expiry;
