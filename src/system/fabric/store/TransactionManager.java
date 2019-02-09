@@ -2,6 +2,8 @@ package fabric.store;
 
 import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,7 +12,10 @@ import java.util.Set;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 
+import com.sleepycat.je.LockConflictException;
+
 import fabric.common.AuthorizationUtil;
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -25,11 +30,14 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Triple;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
+import fabric.metrics.treaties.Treaty;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
+import fabric.worker.AbortException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -399,56 +407,47 @@ public class TransactionManager {
   }
 
   public void queueExtension(long onum) {
-    //long expiry = 0;
-    //try {
-    //  MetricTreaty treaty = database.getTreaties(onum).get(treatyId);
-    //  if (treaty != null) {
-    //    expiry = treaty.expiry;
-    //  } else {
-    //    return; // Nothing to do, we've never heard of this treaty.
-    //  }
-    //} catch (AccessException e) {
-    //  // This shouldn't happen.
-    //  throw new InternalError("Tried to extend a nonexistent onum!");
-    //}
-    //DelayedExtension de =
-    //    new DelayedExtension(expiry - EXTENSION_WINDOW, onum, treatyId);
-    //synchronized (de) {
-    //  // Keep trying until we're sure we've consistently updated the extension
-    //  // for this onum.
-    //  while (true) {
-    //    unresolvedExtensions.putIfAbsent(de.onum,
-    //        new ConcurrentLongKeyHashMap<>());
-    //    DelayedExtension existing =
-    //        unresolvedExtensions.get(de.onum).putIfAbsent(de.treatyId, de);
-    //    if (existing == null) {
-    //      waitingExtensions.add(de);
-    //      //Logging.METRICS_LOGGER.log(Level.INFO,
-    //      //    "QUEUED EXTENSION OF {0}/{1} FOR {2}",
-    //      //    new Object[] { onum, treatyId, de.time });
-    //      break;
-    //    } else {
-    //      synchronized (existing) {
-    //        // Don't do anything if there's an earlier extension queued
-    //        // already and the extension isn't currently being handled.
-    //        if (waitingExtensions.contains(de) && existing.compareTo(de) <= 0) {
-    //          break;
-    //        }
-    //        // Update to this event.  This would mean the old extension was
-    //        // using an outdated expiration time.
-    //        if (unresolvedExtensions.get(de.onum).replace(de.treatyId, existing,
-    //            de)) {
-    //          waitingExtensions.remove(existing);
-    //          waitingExtensions.add(de);
-    //          //Logging.METRICS_LOGGER.log(Level.INFO,
-    //          //    "QUEUED EXTENSION OF {0}/{1} FOR {2}",
-    //          //    new Object[] { onum, treatyId, de.time });
-    //          break;
-    //        }
-    //      }
-    //    }
-    //  }
-    //}
+    long expiry = 0;
+    try {
+      expiry = database.getExpiry(onum);
+    } catch (AccessException e) {
+      // This shouldn't happen.
+      throw new InternalError("Tried to extend a nonexistent onum!");
+    }
+    DelayedExtension de = new DelayedExtension(expiry - EXTENSION_WINDOW, onum);
+    synchronized (de) {
+      // Keep trying until we're sure we've consistently updated the extension
+      // for this onum.
+      while (true) {
+        DelayedExtension existing =
+            unresolvedExtensions.putIfAbsent(de.onum, de);
+        if (existing == null) {
+          waitingExtensions.add(de);
+          //Logging.METRICS_LOGGER.log(Level.INFO,
+          //    "QUEUED EXTENSION OF {0}/{1} FOR {2}",
+          //    new Object[] { onum, treatyId, de.time });
+          break;
+        } else {
+          synchronized (existing) {
+            // Don't do anything if there's an earlier extension queued
+            // already and the extension isn't currently being handled.
+            if (waitingExtensions.contains(de) && existing.compareTo(de) <= 0) {
+              break;
+            }
+            // Update to this event.  This would mean the old extension was
+            // using an outdated expiration time.
+            if (unresolvedExtensions.replace(de.onum, existing, de)) {
+              waitingExtensions.remove(existing);
+              waitingExtensions.add(de);
+              //Logging.METRICS_LOGGER.log(Level.INFO,
+              //    "QUEUED EXTENSION OF {0}/{1} FOR {2}",
+              //    new Object[] { onum, treatyId, de.time });
+              break;
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -456,7 +455,7 @@ public class TransactionManager {
    * replace the request with a new (to be handled earlier) request, if
    * necessary.
    */
-  private final ConcurrentLongKeyMap<ConcurrentLongKeyMap<DelayedExtension>> unresolvedExtensions =
+  private final ConcurrentLongKeyMap<DelayedExtension> unresolvedExtensions =
       new ConcurrentLongKeyHashMap<>();
 
   /**
@@ -478,147 +477,125 @@ public class TransactionManager {
       new Threading.NamedRunnable("Extensions runner") {
         @Override
         protected void runImpl() {
-          //try {
-          while (true) {
-            //
-            //// Get the next delayed extension item.
-            //// XXX: In an ideal world, the extension item isn't taken off the
-            //// queue until we've synchronized on it.  However, this doesn't
-            //// hurt correctness although its a little inefficient.
-            ////
-            //// I'm not too worried about this because the stars would have to
-            //// align so that:
-            ////   - The second request comes in between those lines
-            ////   - The second request is marked to be handled before the
-            ////   current request
-            //// At worst, this causes two requests to be handled when on would
-            //// have been sufficient and that second request is unlikely to be
-            //// very expensive to process.
-            //final DelayedExtension extension = waitingExtensions.take();
-            ////Logging.METRICS_LOGGER.log(Level.INFO,
-            ////    "DEQUEUED EXTENSION OF {0}", extension.onum);
-            //long curTime = System.currentTimeMillis();
-            //long exp = extension.time + EXTENSION_WINDOW;
-            //try {
-            //  // Change to the actual expiry
-            //  MetricTreaty treaty = database.getTreaties(extension.onum)
-            //      .get(extension.treatyId);
-            //  if (treaty != null) {
-            //    exp = treaty.expiry;
-            //  } else {
-            //    synchronized (extension) {
-            //      unresolvedExtensions.remove(extension.onum, extension);
-            //    }
-            //    continue; // Nothing to do, treaty's dead.
-            //  }
-            //} catch (AccessException ae) {
-            //  // If this happens, it suggests we're trying to extend a
-            //  // nonexistent value.
-            //  System.err.println("Bad onum for extension! " + extension.onum);
-            //  ae.printStackTrace();
-            //  synchronized (extension) {
-            //    unresolvedExtensions.remove(extension.onum, extension);
-            //  }
-            //  continue;
-            //}
-            //if (exp - curTime <= EXTENSION_WINDOW
-            //[>&& exp >= curTime - EXTENSION_WINDOW<]) {
-            //  Threading.getPool().submit(new Threading.NamedRunnable(
-            //      "Extension of " + extension.onum) {
-            //    @Override
-            //    protected void runImpl() {
-            //      // Don't want new extensions to walk away after this is
-            //      // done before we remove the mapping.
-            //      // Run a transaction handling updates
-            //      boolean success = true;
-            //      long start = System.currentTimeMillis();
-            //      Logging.METRICS_LOGGER.log(Level.INFO,
-            //          "STARTED EXTENSION OF {0}", extension.onum);
-            //      Triple<String, Long, Long> nameAndNewExpiry = null;
-            //      Logging.METRICS_LOGGER.log(Level.FINER,
-            //          "SYNCHRONIZED EXTENSION OF {0}", extension.onum);
-            //      try {
-            //        fabric.worker.transaction.TransactionManager
-            //            .getInstance().stats.reset();
-            //        nameAndNewExpiry = Worker.runInTopLevelTransaction(
-            //            new Code<Triple<String, Long, Long>>() {
-            //              @Override
-            //              public Triple<String, Long, Long> run() {
-            //                Store store = Worker.getWorker()
-            //                    .getStore(database.getName());
-            //                final TreatiesBox._Proxy target =
-            //                    (TreatiesBox._Proxy) new TreatiesBox._Proxy(
-            //                        store, extension.onum).fetch()
-            //                            .$getProxy();
-            //                MetricTreaty orig = target.get$$treaties()
-            //                    .get(extension.treatyId);
-            //                if (orig != null) {
-            //                  long oldExpiry = orig.expiry;
-            //                  orig.update(true, StatsMap.emptyStats());
-            //                  MetricTreaty updated = target.get$$treaties()
-            //                      .get(extension.treatyId);
-            //                  return new Triple<>(
-            //                      target.toString() + ": " + orig + " => "
-            //                          + updated,
-            //                      oldExpiry,
-            //                      updated == null ? 0 : updated.expiry);
-            //                }
-            //                // Treaty was removed.
-            //                return new Triple<>(target.toString(), 0l, 0l);
-            //              }
-            //            }, true);
-            //      } catch (AbortException e) {
-            //        success = false;
-            //        StringWriter sw = new StringWriter();
-            //        PrintWriter pw = new PrintWriter(sw);
-            //        e.printStackTrace(pw);
-            //        Logging.METRICS_LOGGER.log(Level.INFO,
-            //            "FAILED EXTENSION OF {0} WITH {1}\n{2}",
-            //            new Object[] { Long.valueOf(extension.onum), e,
-            //                sw, });
-            //      } catch (LockConflictException e) {
-            //        success = false;
-            //        StringWriter sw = new StringWriter();
-            //        PrintWriter pw = new PrintWriter(sw);
-            //        e.printStackTrace(pw);
-            //        Logging.METRICS_LOGGER.log(Level.INFO,
-            //            "FAILED EXTENSION OF {0} WITH {1}\n{2}",
-            //            new Object[] { Long.valueOf(extension.onum), e,
-            //                sw, });
-            //      }
-            //      synchronized (extension) {
-            //        unresolvedExtensions.remove(extension.onum, extension);
-            //      }
-            //      if (nameAndNewExpiry != null) {
-            //        Logging.METRICS_LOGGER.log(Level.INFO,
-            //            "FINISHED EXTENSION OF {0} IN {1}ms by {4} (in {6}) {5} (success {2}) STATS: {3}",
-            //            new Object[] { Long.valueOf(extension.onum),
-            //                Long.valueOf(System.currentTimeMillis() - start),
-            //                success,
-            //                fabric.worker.transaction.TransactionManager
-            //                    .getInstance().stats,
-            //                nameAndNewExpiry.third - nameAndNewExpiry.second,
-            //                nameAndNewExpiry.first, nameAndNewExpiry.third
-            //                    - System.currentTimeMillis(), });
-            //      }
-            //    }
-            //  });
-            //} else {
-            //  synchronized (extension) {
-            //    unresolvedExtensions.remove(extension.onum, extension);
-            //  }
-            //  // If too early, requeue it.
-            //  if (exp > curTime)
-            //    queueExtension(extension.onum, extension.treatyId);
-            //  else Logging.METRICS_LOGGER.log(Level.INFO,
-            //      "SKIPPED EXTENSION OF {0}", Long.valueOf(extension.onum));
-            //}
+          try {
+            while (true) {
+
+              // Get the next delayed extension item.
+              // XXX: In an ideal world, the extension item isn't taken off the
+              // queue until we've synchronized on it.  However, this doesn't
+              // hurt correctness although its a little inefficient.
+              //
+              // I'm not too worried about this because the stars would have to
+              // align so that:
+              //   - The second request comes in between those lines
+              //   - The second request is marked to be handled before the
+              //   current request
+              // At worst, this causes two requests to be handled when on would
+              // have been sufficient and that second request is unlikely to be
+              // very expensive to process.
+              final DelayedExtension extension = waitingExtensions.take();
+              //Logging.METRICS_LOGGER.log(Level.INFO,
+              //    "DEQUEUED EXTENSION OF {0}", extension.onum);
+              long curTime = System.currentTimeMillis();
+              long exp = extension.time + EXTENSION_WINDOW;
+              try {
+                // Change to the actual expiry
+                exp = database.getExpiry(extension.onum);
+              } catch (AccessException ae) {
+                // If this happens, it suggests we're trying to extend a
+                // nonexistent value.
+                System.err.println("Bad onum for extension! " + extension.onum);
+                ae.printStackTrace();
+                synchronized (extension) {
+                  unresolvedExtensions.remove(extension.onum, extension);
+                }
+                continue;
+              }
+              if (exp - curTime <= EXTENSION_WINDOW
+              /*&& exp >= curTime - EXTENSION_WINDOW*/) {
+                Threading.getPool().submit(new Threading.NamedRunnable(
+                    "Extension of " + extension.onum) {
+                  @Override
+                  protected void runImpl() {
+                    // Don't want new extensions to walk away after this is
+                    // done before we remove the mapping.
+                    // Run a transaction handling updates
+                    boolean success = true;
+                    long start = System.currentTimeMillis();
+                    Logging.METRICS_LOGGER.log(Level.INFO,
+                        "STARTED EXTENSION OF {0}", extension.onum);
+                    Triple<String, Long, Long> nameAndNewExpiry = null;
+                    Logging.METRICS_LOGGER.log(Level.FINER,
+                        "SYNCHRONIZED EXTENSION OF {0}", extension.onum);
+                    try {
+                      fabric.worker.transaction.TransactionManager
+                          .getInstance().stats.reset();
+                      nameAndNewExpiry = Worker.runInTopLevelTransaction(
+                          new Code<Triple<String, Long, Long>>() {
+                            @Override
+                            public Triple<String, Long, Long> run() {
+                              Store store = Worker.getWorker()
+                                  .getStore(database.getName());
+                              Treaty treaty =
+                                  new Treaty._Proxy(store, extension.onum);
+                              long oldExpiry = treaty.get$$expiry();
+                              treaty.backgroundExtension();
+                              return new Triple<>(treaty.toString(), oldExpiry,
+                                  treaty.get$$expiry());
+                            }
+                          }, true);
+                    } catch (AbortException e) {
+                      success = false;
+                      StringWriter sw = new StringWriter();
+                      PrintWriter pw = new PrintWriter(sw);
+                      e.printStackTrace(pw);
+                      Logging.METRICS_LOGGER.log(Level.INFO,
+                          "FAILED EXTENSION OF {0} WITH {1}\n{2}",
+                          new Object[] { Long.valueOf(extension.onum), e,
+                              sw, });
+                    } catch (LockConflictException e) {
+                      success = false;
+                      StringWriter sw = new StringWriter();
+                      PrintWriter pw = new PrintWriter(sw);
+                      e.printStackTrace(pw);
+                      Logging.METRICS_LOGGER.log(Level.INFO,
+                          "FAILED EXTENSION OF {0} WITH {1}\n{2}",
+                          new Object[] { Long.valueOf(extension.onum), e,
+                              sw, });
+                    }
+                    synchronized (extension) {
+                      unresolvedExtensions.remove(extension.onum, extension);
+                    }
+                    if (nameAndNewExpiry != null) {
+                      Logging.METRICS_LOGGER.log(Level.INFO,
+                          "FINISHED EXTENSION OF {0} IN {1}ms by {4} (in {6}) {5} (success {2}) STATS: {3}",
+                          new Object[] { Long.valueOf(extension.onum),
+                              Long.valueOf(System.currentTimeMillis() - start),
+                              success,
+                              fabric.worker.transaction.TransactionManager
+                                  .getInstance().stats,
+                              nameAndNewExpiry.third - nameAndNewExpiry.second,
+                              nameAndNewExpiry.first, nameAndNewExpiry.third
+                                  - System.currentTimeMillis(), });
+                    }
+                  }
+                });
+              } else {
+                synchronized (extension) {
+                  unresolvedExtensions.remove(extension.onum, extension);
+                }
+                // If too early, requeue it.
+                if (exp > curTime)
+                  queueExtension(extension.onum);
+                else Logging.METRICS_LOGGER.log(Level.INFO,
+                    "SKIPPED EXTENSION OF {0}", Long.valueOf(extension.onum));
+              }
+            }
+          } catch (InterruptedException e) {
+            System.err.println("Extension thread interrupted!");
+            e.printStackTrace();
+            Logging.logIgnoredInterruptedException(e);
           }
-          //} catch (InterruptedException e) {
-          //  System.err.println("Extension thread interrupted!");
-          //  e.printStackTrace();
-          //  Logging.logIgnoredInterruptedException(e);
-          //}
         }
       };
 

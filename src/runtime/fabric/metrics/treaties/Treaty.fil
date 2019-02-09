@@ -1,5 +1,6 @@
 package fabric.metrics.treaties;
 
+import java.util.Iterator;
 import java.util.SortedSet;
 import fabric.metrics.Metric;
 import fabric.metrics.DerivedMetric;
@@ -163,6 +164,14 @@ public class Treaty extends AbstractSubject implements Observer {
     if (this.$expiry < oldExpiry) {
       return getObservers();
     } else {
+      // Register triggered possible extensions.
+      if (this.$expiry > oldExpiry) {
+        for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
+          java.lang.Object o = iter.next();
+          if (o instanceof Treaty)
+            TransactionManager.getInstance().registerDelayedExtension((Treaty) iter.next(), this);
+        }
+      }
       return ImmutableObserverSet.emptySet();
     }
   }
@@ -195,6 +204,15 @@ public class Treaty extends AbstractSubject implements Observer {
         // Don't extend eagerly outside update window, mark for future
         // extension.
         TransactionManager.getInstance().registerDelayedExtension(this);
+      }
+    }
+
+    // Register triggered possible extensions.
+    if (this.$expiry > oldExpiry) {
+      for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
+        java.lang.Object o = iter.next();
+        if (o instanceof Treaty)
+          TransactionManager.getInstance().registerDelayedExtension((Treaty) iter.next(), this);
       }
     }
   }
