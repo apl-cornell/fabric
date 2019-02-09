@@ -371,6 +371,7 @@ public class SumMetric extends DerivedMetric {
         // bound set across the rows
         Multimap/*<Metric, TreatyStatement>*/ staticWitnesses = HashMultimap/*<>*/.create();
         long staticTimeout = Long.MAX_VALUE;
+        long staticRealTimeout = Long.MAX_VALUE;
         for (int j = 0; j < numTerms; j++) {
           Metric m = term(j);
           double scaledX = m.value(weakStats);
@@ -396,6 +397,7 @@ public class SumMetric extends DerivedMetric {
             staticWitnesses.put(m, newStmt);
             // Update the timeout estimate.
             staticTimeout = Math.min(staticTimeout, ThresholdStatement.hedgedEstimate(m, newStmt.rate(), newStmt.base(), currentTime, weakStats));
+            staticRealTimeout = Math.min(staticRealTimeout, ThresholdStatement.hedgedExpiry(m, newStmt.rate(), newStmt.base(), currentTime, weakStats));
           }
         }
 
@@ -447,17 +449,28 @@ public class SumMetric extends DerivedMetric {
           // TODO: there should be some dynamic growth of MIN_ADAPTIVE_EXPIRY to
           // account for absurdly long transaction times.
           //if (adaptiveTimeout > staticTimeout && adaptiveRealTimeout >= System.currentTimeMillis() + MIN_ADAPTIVE_EXPIRY) {
-          if (adaptiveTimeout > staticTimeout && adaptiveRealTimeout >= System.currentTimeMillis() + TransactionManager.getInstance().getCurrentTreatyTimeout()) {
+          if (adaptiveTimeout > staticTimeout /*&& adaptiveRealTimeout >= System.currentTimeMillis() + TransactionManager.getInstance().getCurrentTreatyTimeout()*/) {
             if (adaptiveTimeout != Long.MAX_VALUE)
               Logging.METRICS_LOGGER.log(Level.FINE,
-                  "Using adaptive strategy for {0} with adaptive {1} vs static {2} and expected {3}",
+                  "Using adaptive strategy for {0} with adaptive {1} vs static {2} and expected adaptive {3} vs expected static {4}",
                   new java.lang.Object native[] {
                     this,
                     Long.valueOf(adaptiveTimeout),
                     Long.valueOf(staticTimeout),
                     Long.valueOf(adaptiveRealTimeout),
+                    Long.valueOf(staticRealTimeout),
                   });
             finalWitnesses = adaptiveWitnesses;
+          } else {
+              Logging.METRICS_LOGGER.log(Level.FINE,
+                  "Using nonadaptive strategy for {0} with adaptive {1} vs static {2} and expected adaptive {3} vs expected static {4}",
+                  new java.lang.Object native[] {
+                    this,
+                    Long.valueOf(adaptiveTimeout),
+                    Long.valueOf(staticTimeout),
+                    Long.valueOf(adaptiveRealTimeout),
+                    Long.valueOf(staticRealTimeout),
+                  });
           }
         }
 

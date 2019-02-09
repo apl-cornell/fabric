@@ -468,7 +468,7 @@ public class TransactionManager {
   private final DelayQueue<DelayedExtension> waitingExtensions =
       new DelayQueue<>();
 
-  private final int EXTENSION_WINDOW = 2500;
+  private final int EXTENSION_WINDOW = 1000;
 
   /**
    * A thread that goes through the extensions queue, waiting until the next
