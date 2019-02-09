@@ -392,16 +392,13 @@ public class TransactionManager {
    * a later time than the new request, the new {@link DelayedExtension} is
    * added to the queue, and the onum-request mapping is updated.
    */
-  public void queueExtensions(LongKeyMap<LongSet> extensions) {
-    for (LongKeyMap.Entry<LongSet> e : extensions.entrySet()) {
-      long onum = e.getKey();
-      for (LongIterator iter = e.getValue().iterator(); iter.hasNext();) {
-        queueExtension(onum, iter.next());
-      }
+  public void queueExtensions(LongSet extensions) {
+    for (LongIterator iter = extensions.iterator(); iter.hasNext();) {
+      queueExtension(iter.next());
     }
   }
 
-  public void queueExtension(long onum, long treatyId) {
+  public void queueExtension(long onum) {
     //long expiry = 0;
     //try {
     //  MetricTreaty treaty = database.getTreaties(onum).get(treatyId);

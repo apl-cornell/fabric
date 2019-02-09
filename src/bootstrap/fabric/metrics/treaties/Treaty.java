@@ -26,22 +26,22 @@ import fabric.worker.transaction.TransactionManager;
 public interface Treaty
   extends fabric.metrics.util.Observer, fabric.metrics.util.AbstractSubject {
     public fabric.metrics.Metric get$metric();
-    
+
     public fabric.metrics.Metric set$metric(fabric.metrics.Metric val);
-    
+
     public fabric.worker.metrics.treaties.statements.TreatyStatement
       get$predicate();
-    
+
     public fabric.worker.metrics.treaties.statements.TreatyStatement
       set$predicate(
       fabric.worker.metrics.treaties.statements.TreatyStatement val);
-    
+
     public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
       get$policy();
-    
+
     public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
       set$policy(fabric.worker.metrics.treaties.enforcement.EnforcementPolicy val);
-    
+
     /**
    * Create a new treaty with a given metric, predicate, and policy.
    *
@@ -51,7 +51,7 @@ public interface Treaty
       fabric.metrics.Metric metric,
       fabric.worker.metrics.treaties.statements.TreatyStatement predicate,
       fabric.worker.metrics.treaties.enforcement.EnforcementPolicy policy, fabric.worker.metrics.StatsMap weakStats);
-    
+
     /**
    * Checks if the treaty is currently valid.
    *
@@ -59,7 +59,7 @@ public interface Treaty
    * checking the commit time.
    */
     public boolean valid();
-    
+
     /**
    * Checks if the treaty is currently invalid.
    *
@@ -69,14 +69,14 @@ public interface Treaty
    * out early if they're already invalid.
    */
     public boolean invalid();
-    
+
     /**
    * Handles an update to some dependency of the current policy for this treaty.
    *
    * @return the observers of this treaty if there was a retraction.
   /*@Override*/
     public fabric.worker.metrics.ImmutableObserverSet handleUpdates();
-    
+
     /**
    * Run a background extension.  This should only result in extending the
    * expiry using the existing policy or waiting further to extend.
@@ -84,25 +84,25 @@ public interface Treaty
    * TODO: Should this be passed a weak read of relevant stats?
    */
     public void backgroundExtension();
-    
+
     /**
    * Force a shift to a new policy.
    */
     public void rebalance();
-    
+
     /**
    * Get a proxy for this treaty stored on the given store.
    */
     public fabric.metrics.treaties.Treaty getProxy(fabric.worker.Store s);
-    
+
     /**
    * Remove an observer.  If this is the last remaining observer, go ahead and
    * retract it to avoid unnecessary monitoring overhead.
    */
     public void removeObserver(fabric.metrics.util.Observer o);
-    
+
     public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects();
-    
+
     public static class _Proxy
     extends fabric.metrics.util.AbstractSubject._Proxy
       implements fabric.metrics.treaties.Treaty {
@@ -110,38 +110,38 @@ public interface Treaty
             return ((fabric.metrics.treaties.Treaty._Impl) fetch()).get$metric(
                                                                       );
         }
-        
+
         public fabric.metrics.Metric set$metric(fabric.metrics.Metric val) {
             return ((fabric.metrics.treaties.Treaty._Impl) fetch()).set$metric(
                                                                       val);
         }
-        
+
         public fabric.worker.metrics.treaties.statements.TreatyStatement
           get$predicate() {
             return ((fabric.metrics.treaties.Treaty._Impl) fetch()).
               get$predicate();
         }
-        
+
         public fabric.worker.metrics.treaties.statements.TreatyStatement
           set$predicate(
           fabric.worker.metrics.treaties.statements.TreatyStatement val) {
             return ((fabric.metrics.treaties.Treaty._Impl) fetch()).
               set$predicate(val);
         }
-        
+
         public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           get$policy() {
             return ((fabric.metrics.treaties.Treaty._Impl) fetch()).get$policy(
                                                                       );
         }
-        
+
         public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           set$policy(
           fabric.worker.metrics.treaties.enforcement.EnforcementPolicy val) {
             return ((fabric.metrics.treaties.Treaty._Impl) fetch()).set$policy(
                                                                       val);
         }
-        
+
         public fabric.metrics.treaties.Treaty fabric$metrics$treaties$Treaty$(
           fabric.metrics.Metric arg1,
           fabric.worker.metrics.treaties.statements.TreatyStatement arg2,
@@ -150,7 +150,7 @@ public interface Treaty
             return ((fabric.metrics.treaties.Treaty) fetch()).
               fabric$metrics$treaties$Treaty$(arg1, arg2, arg3, arg4);
         }
-        
+
         public static fabric.metrics.treaties.Treaty newTreaty(
           fabric.metrics.Metric arg1,
           fabric.worker.metrics.treaties.statements.TreatyStatement arg2,
@@ -158,47 +158,47 @@ public interface Treaty
             return fabric.metrics.treaties.Treaty._Impl.newTreaty(arg1, arg2,
                                                                   arg3);
         }
-        
+
         public boolean valid() {
             return ((fabric.metrics.treaties.Treaty) fetch()).valid();
         }
-        
+
         public boolean invalid() {
             return ((fabric.metrics.treaties.Treaty) fetch()).invalid();
         }
-        
+
         public fabric.worker.metrics.ImmutableObserverSet handleUpdates() {
             return ((fabric.metrics.treaties.Treaty) fetch()).handleUpdates();
         }
-        
+
         public void backgroundExtension() {
             ((fabric.metrics.treaties.Treaty) fetch()).backgroundExtension();
         }
-        
+
         public void rebalance() {
             ((fabric.metrics.treaties.Treaty) fetch()).rebalance();
         }
-        
+
         public fabric.metrics.treaties.Treaty getProxy(
           fabric.worker.Store arg1) {
             return ((fabric.metrics.treaties.Treaty) fetch()).getProxy(arg1);
         }
-        
+
         public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             return ((fabric.metrics.treaties.Treaty) fetch()).getLeafSubjects();
         }
-        
+
         public _Proxy(Treaty._Impl impl) { super(impl); }
-        
+
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }
     }
-    
+
     public static class _Impl extends fabric.metrics.util.AbstractSubject._Impl
       implements fabric.metrics.treaties.Treaty {
         public fabric.metrics.Metric get$metric() { return this.metric; }
-        
+
         public fabric.metrics.Metric set$metric(fabric.metrics.Metric val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
@@ -207,14 +207,14 @@ public interface Treaty
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-        
+
         public fabric.metrics.Metric metric;
-        
+
         public fabric.worker.metrics.treaties.statements.TreatyStatement
           get$predicate() {
             return this.predicate;
         }
-        
+
         public fabric.worker.metrics.treaties.statements.TreatyStatement
           set$predicate(
           fabric.worker.metrics.treaties.statements.TreatyStatement val) {
@@ -225,17 +225,17 @@ public interface Treaty
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-        
+
         public fabric.worker.metrics.treaties.statements.TreatyStatement
           predicate;
-        
+
         public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           get$policy() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
             return this.policy;
         }
-        
+
         public fabric.worker.metrics.treaties.enforcement.EnforcementPolicy
           set$policy(
           fabric.worker.metrics.treaties.enforcement.EnforcementPolicy val) {
@@ -246,9 +246,9 @@ public interface Treaty
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-        
+
         private fabric.worker.metrics.treaties.enforcement.EnforcementPolicy policy;
-        
+
         /**
    * Create a new treaty with a given metric, predicate, and policy.
    *
@@ -279,7 +279,7 @@ public interface Treaty
             }
             return (fabric.metrics.treaties.Treaty) this.$getProxy();
         }
-        
+
         /**
    * Perform a not-necessarily-atomic creation of an active treaty.
    *
@@ -332,7 +332,7 @@ public interface Treaty
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e468) {
-                                            
+
                                         }
                                     }
                                 }
@@ -476,7 +476,7 @@ public interface Treaty
             }
             return treaty;
         }
-        
+
         /**
    * Checks if the treaty is currently valid.
    *
@@ -492,7 +492,7 @@ public interface Treaty
             if (result) tm.registerExpiryUse(this.get$$expiry());
             return result;
         }
-        
+
         /**
    * Checks if the treaty is currently invalid.
    *
@@ -504,7 +504,7 @@ public interface Treaty
         public boolean invalid() {
             return this.get$$expiry() < java.lang.System.currentTimeMillis();
         }
-        
+
         /**
    * Create and activate a new enforcement policy.
    */
@@ -518,7 +518,7 @@ public interface Treaty
             newPolicy.activate(weakStats);
             return newPolicy;
         }
-        
+
         /**
    * Handles an update to some dependency of the current policy for this treaty.
    *
@@ -543,7 +543,7 @@ public interface Treaty
                 else {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerDelayedExtension((fabric.metrics.treaties.Treaty)
-                                                 this.$getProxy(), 0);
+                                                 this.$getProxy());
                 }
             }
             else {
@@ -575,7 +575,7 @@ public interface Treaty
                 return fabric.worker.metrics.ImmutableObserverSet.emptySet();
             }
         }
-        
+
         /**
    * Run a background extension.  This should only result in extending the
    * expiry using the existing policy or waiting further to extend.
@@ -602,11 +602,11 @@ public interface Treaty
                 else {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       registerDelayedExtension((fabric.metrics.treaties.Treaty)
-                                                 this.$getProxy(), 0);
+                                                 this.$getProxy());
                 }
             }
         }
-        
+
         /**
    * Force a shift to a new policy.
    */
@@ -628,7 +628,7 @@ public interface Treaty
             newPolicy.shiftPolicies((fabric.metrics.treaties.Treaty)
                                       this.$getProxy(), oldPolicy);
         }
-        
+
         /**
    * Perform a "deactivation," a forced retraction to 0 and no continued
    * enforcement.
@@ -675,7 +675,7 @@ public interface Treaty
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e478) {
-                                            
+
                                         }
                                     }
                                 }
@@ -841,7 +841,7 @@ public interface Treaty
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e488) {
-                                            
+
                                         }
                                     }
                                 }
@@ -979,7 +979,7 @@ public interface Treaty
                 }
             }
         }
-        
+
         /**
    * Get a proxy for this treaty stored on the given store.
    */
@@ -988,7 +988,7 @@ public interface Treaty
                 return (fabric.metrics.treaties.Treaty) this.$getProxy();
             return this.get$predicate().getProxy(this.get$metric(), s);
         }
-        
+
         /**
    * Remove an observer.  If this is the last remaining observer, go ahead and
    * retract it to avoid unnecessary monitoring overhead.
@@ -999,7 +999,7 @@ public interface Treaty
                 ((fabric.metrics.treaties.Treaty._Impl) this.fetch()).
                   deactivate();
         }
-        
+
         public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             if (fabric.lang.Object._Proxy.
                   $getProxy(
@@ -1038,13 +1038,13 @@ public interface Treaty
                                                               this.get$metric(
                                                                      ))));
         }
-        
+
         public _Impl(fabric.worker.Store $location) { super($location); }
-        
+
         protected fabric.lang.Object._Proxy $makeProxy() {
             return new fabric.metrics.treaties.Treaty._Proxy(this);
         }
-        
+
         public void $serialize(java.io.ObjectOutput out,
                                java.util.List refTypes,
                                java.util.List intraStoreRefs,
@@ -1056,7 +1056,7 @@ public interface Treaty
             $writeInline(out, this.predicate);
             $writeInline(out, this.policy);
         }
-        
+
         public _Impl(fabric.worker.Store store, long onum, int version,
                      fabric.worker.metrics.ImmutableObjectSet associates,
                      long expiry, fabric.worker.Store labelStore,
@@ -1082,7 +1082,7 @@ public interface Treaty
               (fabric.worker.metrics.treaties.enforcement.EnforcementPolicy)
                 in.readObject();
         }
-        
+
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
             super.$copyAppStateFrom(other);
             fabric.metrics.treaties.Treaty._Impl src =
@@ -1092,49 +1092,49 @@ public interface Treaty
             this.policy = src.policy;
         }
     }
-    
+
     interface _Static extends fabric.lang.Object, Cloneable {
         public long get$UPDATE_THRESHOLD();
-        
+
         public long set$UPDATE_THRESHOLD(long val);
-        
+
         public long postInc$UPDATE_THRESHOLD();
-        
+
         public long postDec$UPDATE_THRESHOLD();
-        
+
         final class _Proxy extends fabric.lang.Object._Proxy
           implements fabric.metrics.treaties.Treaty._Static {
             public long get$UPDATE_THRESHOLD() {
                 return ((fabric.metrics.treaties.Treaty._Static._Impl) fetch()).
                   get$UPDATE_THRESHOLD();
             }
-            
+
             public long set$UPDATE_THRESHOLD(long val) {
                 return ((fabric.metrics.treaties.Treaty._Static._Impl) fetch()).
                   set$UPDATE_THRESHOLD(val);
             }
-            
+
             public long postInc$UPDATE_THRESHOLD() {
                 return ((fabric.metrics.treaties.Treaty._Static._Impl) fetch()).
                   postInc$UPDATE_THRESHOLD();
             }
-            
+
             public long postDec$UPDATE_THRESHOLD() {
                 return ((fabric.metrics.treaties.Treaty._Static._Impl) fetch()).
                   postDec$UPDATE_THRESHOLD();
             }
-            
+
             public _Proxy(fabric.metrics.treaties.Treaty._Static._Impl impl) {
                 super(impl);
             }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
-            
+
             public static final fabric.metrics.treaties.Treaty._Static
               $instance;
-            
+
             static {
                 fabric.
                   metrics.
@@ -1152,11 +1152,11 @@ public interface Treaty
                 impl.$init();
             }
         }
-        
+
         class _Impl extends fabric.lang.Object._Impl
           implements fabric.metrics.treaties.Treaty._Static {
             public long get$UPDATE_THRESHOLD() { return this.UPDATE_THRESHOLD; }
-            
+
             public long set$UPDATE_THRESHOLD(long val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -1165,21 +1165,21 @@ public interface Treaty
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public long postInc$UPDATE_THRESHOLD() {
                 long tmp = this.get$UPDATE_THRESHOLD();
                 this.set$UPDATE_THRESHOLD((long) (tmp + 1));
                 return tmp;
             }
-            
+
             public long postDec$UPDATE_THRESHOLD() {
                 long tmp = this.get$UPDATE_THRESHOLD();
                 this.set$UPDATE_THRESHOLD((long) (tmp - 1));
                 return tmp;
             }
-            
+
             public long UPDATE_THRESHOLD;
-            
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -1188,7 +1188,7 @@ public interface Treaty
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
                 out.writeLong(this.UPDATE_THRESHOLD);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
                          fabric.worker.metrics.ImmutableObjectSet associates,
                          long expiry, fabric.worker.Store labelStore,
@@ -1204,13 +1204,13 @@ public interface Treaty
                       refTypes, intraStoreRefs, interStoreRefs);
                 this.UPDATE_THRESHOLD = in.readLong();
             }
-            
+
             public _Impl(fabric.worker.Store store) { super(store); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.metrics.treaties.Treaty._Static._Proxy(this);
             }
-            
+
             private void $init() {
                 {
                     {
@@ -1242,7 +1242,7 @@ public interface Treaty
                                             }
                                             catch (java.lang.
                                                      InterruptedException $e498) {
-                                                
+
                                             }
                                         }
                                     }
@@ -1385,9 +1385,9 @@ public interface Treaty
                 }
             }
         }
-        
+
     }
-    
+
     public static final byte[] $classHash = new byte[] { -53, -32, 120, -98, 15,
     124, 121, 21, 111, -83, 27, -95, -107, 11, -26, -18, 32, 95, 20, 80, 32, 62,
     9, 115, 18, -25, 26, -21, -35, 52, -112, -106 };

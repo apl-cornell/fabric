@@ -41,6 +41,7 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.OidHashSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.NodePrincipal;
@@ -495,8 +496,7 @@ class Store extends MessageToStoreHandler {
       Collection<SerializedObject> serializedWrites,
       LongKeyMap<VersionAndExpiry> reads,
       Collection<ExpiryExtension> extensions,
-      LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
-      LongKeyMap<LongSet> delayedExtensions)
+      LongKeyMap<OidHashSet> extensionsTriggered, LongSet delayedExtensions)
       throws TransactionPrepareFailedException {
 
     PrepareRequest req =

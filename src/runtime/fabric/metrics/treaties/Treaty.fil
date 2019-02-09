@@ -138,8 +138,7 @@ public class Treaty extends AbstractSubject implements Observer {
       } else {
         // Don't extend eagerly outside update window, mark for future
         // extension.
-        // TODO: this call interface will change
-        TransactionManager.getInstance().registerDelayedExtension(this, 0);
+        TransactionManager.getInstance().registerDelayedExtension(this);
       }
     } else {
       // Try a new policy
@@ -195,8 +194,7 @@ public class Treaty extends AbstractSubject implements Observer {
       } else {
         // Don't extend eagerly outside update window, mark for future
         // extension.
-        // TODO: this call interface will change
-        TransactionManager.getInstance().registerDelayedExtension(this, 0);
+        TransactionManager.getInstance().registerDelayedExtension(this);
       }
     }
   }

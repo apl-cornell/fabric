@@ -1137,11 +1137,11 @@ public final class TransactionManager {
    * enables this extension.
    */
   public void registerDelayedExtension(fabric.lang.Object toBeExtended,
-      long treatyId, fabric.lang.Object extendingObject) {
+      fabric.lang.Object extendingObject) {
     _Impl obj = (_Impl) toBeExtended.fetch();
     synchronized (obj) {
       synchronized (current.delayedExtensions) {
-        current.addDelayedExtension(toBeExtended, treatyId, extendingObject);
+        current.addDelayedExtension(toBeExtended, extendingObject);
       }
     }
   }
@@ -1151,21 +1151,13 @@ public final class TransactionManager {
    * expiration.  This will be done by sending an extension message after the
    * transaction completes.
    */
-  public void registerDelayedExtension(fabric.lang.Object toBeExtended,
-      long treatyId) {
+  public void registerDelayedExtension(fabric.lang.Object toBeExtended) {
     _Impl obj = (_Impl) toBeExtended.fetch();
     synchronized (obj) {
       synchronized (current.delayedExtensions) {
-        current.addDelayedExtension(toBeExtended, treatyId);
+        current.addDelayedExtension(toBeExtended);
       }
     }
-  }
-
-  /**
-   * Register a treaty as being created.
-   */
-  public void registerTreatyUpdate(fabric.lang.Object owner, long treatyId) {
-    if (current != null) current.markTreatyUpdate(owner, treatyId);
   }
 
   /**

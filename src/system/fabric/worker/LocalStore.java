@@ -20,6 +20,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.OidHashSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
@@ -68,8 +69,8 @@ public final class LocalStore implements Store, Serializable {
       final LongKeyMap<VersionAndExpiry> reads,
       final Collection<Object._Impl> writes,
       final Collection<ExpiryExtension> extensions,
-      final LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
-      final LongKeyMap<LongSet> delayedExtensions) {
+      final LongKeyMap<OidHashSet> extensionsTriggered,
+      final LongSet delayedExtensions) {
     Threading.getPool().submit(new Runnable() {
       @Override
       public void run() {
@@ -171,7 +172,7 @@ public final class LocalStore implements Store, Serializable {
    * added to the queue, and the onum-request mapping is updated.
    */
   @Override
-  public void sendExtensions(LongKeyMap<LongSet> extensions,
+  public void sendExtensions(LongSet extensions,
       java.util.Map<RemoteStore, Collection<SerializedObject>> updates) {
     throw new NotImplementedException(
         "Local stores do not currently support handling extensions");

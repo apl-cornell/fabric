@@ -17,6 +17,7 @@ import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.OidHashSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Principal;
 import fabric.store.db.ObjectDB;
@@ -347,20 +348,19 @@ public final class PrepareRequest {
    * The delayed extensions triggered by this transaction.
    * Maps onums being committed to oids that will be extended.
    */
-  public final LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered;
+  public final LongKeyMap<OidHashSet> extensionsTriggered;
 
   /**
    * The delayed extensions with no trigger that should run at the store after
    * this commits.
    */
-  public final LongKeyMap<LongSet> delayedExtensions;
+  public final LongSet delayedExtensions;
 
   /** Create a PrepareRequest with the provided fields */
   public PrepareRequest(long tid, Collection<SerializedObject> creates,
       Collection<SerializedObject> writes, LongKeyMap<VersionAndExpiry> reads,
       Collection<ExpiryExtension> extensions,
-      LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
-      LongKeyMap<LongSet> delayedExtensions) {
+      LongKeyMap<OidHashSet> extensionsTriggered, LongSet delayedExtensions) {
     this.tid = tid;
     this.reads = reads;
     this.extensions = extensions;

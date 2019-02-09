@@ -31,7 +31,7 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
-import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.OidHashSet;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
@@ -133,8 +133,8 @@ public class RemoteStore extends RemoteNode<RemoteStore>
       boolean readOnly, long expiryToCheck, Collection<Object._Impl> toCreate,
       LongKeyMap<VersionAndExpiry> reads, Collection<Object._Impl> writes,
       Collection<ExpiryExtension> extensions,
-      LongKeyMap<OidKeyHashMap<LongSet>> extensionsTriggered,
-      LongKeyMap<LongSet> delayedExtensions) throws UnreachableNodeException {
+      LongKeyMap<OidHashSet> extensionsTriggered, LongSet delayedExtensions)
+      throws UnreachableNodeException {
     sendAsync(Worker.getWorker().authToStore,
         new PrepareTransactionMessage(tid, singleStore, readOnly, expiryToCheck,
             toCreate, reads, writes, extensions, extensionsTriggered,
@@ -375,7 +375,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   @Override
-  public void sendExtensions(final LongKeyMap<LongSet> extensions,
+  public void sendExtensions(final LongSet extensions,
       final java.util.Map<RemoteStore, Collection<SerializedObject>> updates) {
     sendAsync(Worker.getWorker().authToStore,
         new TreatyExtensionMessage(extensions, updates));
