@@ -21,6 +21,7 @@ import fabric.metrics.treaties.Treaty._Proxy;
 import fabric.metrics.util.TreatiesBox;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.Worker.Code;
 import fabric.worker.metrics.StatsMap;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 import fabric.worker.transaction.Log;
@@ -153,7 +154,7 @@ public class TreatySet
   // lock for.
   private static TreatySet getAssociatedTreaties(
       fabric.lang.Object._Impl impl) {
-    return ((fabric.metrics.util.TreatiesBox._Impl) impl).get$treaties();
+    return ((fabric.metrics.util.TreatiesBox._Impl) impl).get$$treaties();
   }
 
   public void remove(Treaty treaty) {
@@ -174,16 +175,28 @@ public class TreatySet
       // Make sure we clobber an extension if this in-place update isn't an
       // extension.
       statementMap.remove(treaty.get$predicate(), new Oid(treaty));
-      owner.set$treaties(this);
-      if (TransactionManager.usingPrefetching())
-        owner.set$$associates(owner.get$$associates().remove(treaty));
+      Worker.runInSubTransaction(new Code<Void>() {
+        @Override
+        public Void run() {
+          owner.set$$treaties(TreatySet.this);
+          if (TransactionManager.usingPrefetching())
+            owner.set$$associates(owner.get$$associates().remove(treaty));
+          return null;
+        }
+      });
     } else {
       // TODO check that it's a proper garbage collection?
       TreatySet updated = new TreatySet(this);
       updated.statementMap.remove(treaty.get$predicate(), new Oid(treaty));
-      owner.set$treaties(updated);
-      if (TransactionManager.usingPrefetching())
-        owner.set$$associates(owner.get$$associates().remove(treaty));
+      Worker.runInSubTransaction(new Code<Void>() {
+        @Override
+        public Void run() {
+          owner.set$$treaties(updated);
+          if (TransactionManager.usingPrefetching())
+            owner.set$$associates(owner.get$$associates().remove(treaty));
+          return null;
+        }
+      });
     }
   }
 
@@ -207,18 +220,30 @@ public class TreatySet
       Treaty newTreaty =
           Treaty._Impl.newTreaty(owner.get$owner(), stmt, statsMap);
       statementMap.put(stmt, new Oid(newTreaty));
-      owner.set$treaties(this);
-      if (TransactionManager.usingPrefetching())
-        owner.set$$associates(owner.get$$associates().add(newTreaty));
+      Worker.runInSubTransaction(new Code<Void>() {
+        @Override
+        public Void run() {
+          owner.set$$treaties(TreatySet.this);
+          if (TransactionManager.usingPrefetching())
+            owner.set$$associates(owner.get$$associates().add(newTreaty));
+          return null;
+        }
+      });
       return newTreaty;
     } else {
       TreatySet updated = new TreatySet(this);
       Treaty newTreaty =
           Treaty._Impl.newTreaty(owner.get$owner(), stmt, statsMap);
       updated.statementMap.put(stmt, new Oid(newTreaty));
-      owner.set$treaties(updated);
-      if (TransactionManager.usingPrefetching())
-        owner.set$$associates(owner.get$$associates().add(newTreaty));
+      Worker.runInSubTransaction(new Code<Void>() {
+        @Override
+        public Void run() {
+          owner.set$$treaties(updated);
+          if (TransactionManager.usingPrefetching())
+            owner.set$$associates(owner.get$$associates().add(newTreaty));
+          return null;
+        }
+      });
       return newTreaty;
     }
   }

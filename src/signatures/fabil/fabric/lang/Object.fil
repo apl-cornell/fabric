@@ -27,6 +27,11 @@ public class Object extends java.lang.Object {
   protected long $expiry;
 
   /**
+   * The object's TreatySet, primarily for TreatiesBox.
+   */
+  protected TreatySet $treaties;
+
+  /**
    * Initializes the object's update label and access policy.
    */
   public native Object $initLabels();

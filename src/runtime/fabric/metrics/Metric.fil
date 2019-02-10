@@ -169,15 +169,16 @@ public abstract class Metric extends AbstractSubject
   }
 
   private static Treaty static_getEqualityTreaty(Metric tmp, double value) {
-    Treaty mc = null;
-    if (TransactionManager.getInstance().inTxn()) {
-      mc = tmp.createEqualityTreaty(value);
-    } else {
-      atomic {
-        mc = tmp.createEqualityTreaty(value);
-      }
-    }
-    return mc;
+    //Treaty mc = null;
+    //if (TransactionManager.getInstance().inTxn()) {
+    //  mc = tmp.createEqualityTreaty(value);
+    //} else {
+    //  atomic {
+    //    mc = tmp.createEqualityTreaty(value);
+    //  }
+    //}
+    //return mc;
+    return tmp.createEqualityTreaty(value);
   }
 
   /**
@@ -202,15 +203,16 @@ public abstract class Metric extends AbstractSubject
   }
 
   private static Treaty static_getThresholdTreaty(Metric tmp, double rate, double base, long time) {
-    Treaty mc = null;
-    if (TransactionManager.getInstance().inTxn()) {
-      mc = tmp.createThresholdTreaty(rate, base, time);
-    } else {
-      atomic {
-        mc = tmp.createThresholdTreaty(rate, base, time);
-      }
-    }
-    return mc;
+    //Treaty mc = null;
+    //if (TransactionManager.getInstance().inTxn()) {
+    //  mc = tmp.createThresholdTreaty(rate, base, time);
+    //} else {
+    //  atomic {
+    //    mc = tmp.createThresholdTreaty(rate, base, time);
+    //  }
+    //}
+    //return mc;
+    return tmp.createThresholdTreaty(rate, base, time);
   }
 
   /**
@@ -711,15 +713,16 @@ public abstract class Metric extends AbstractSubject
   }
 
   public static Treaty createThresholdTreaty_static(Metric tmp, double rate, double base, long time, StatsMap weakStats) {
-    Treaty t = null;
-    if (TransactionManager.getInstance().inTxn()) {
-      t = tmp.treatiesBox.create(ThresholdStatement.create(rate, base, time), weakStats);
-    } else {
-      atomic {
-        t = tmp.treatiesBox.create(ThresholdStatement.create(rate, base, time), weakStats);
-      }
-    }
-    return t;
+    //Treaty t = null;
+    //if (TransactionManager.getInstance().inTxn()) {
+    //  t = tmp.treatiesBox.create(ThresholdStatement.create(rate, base, time), weakStats);
+    //} else {
+    //  atomic {
+    //    t = tmp.treatiesBox.create(ThresholdStatement.create(rate, base, time), weakStats);
+    //  }
+    //}
+    //return t;
+    return tmp.treatiesBox.create(ThresholdStatement.create(rate, base, time), weakStats);
   }
 
   /**
@@ -753,15 +756,16 @@ public abstract class Metric extends AbstractSubject
   }
 
   public static Treaty createEqualityTreaty_static(Metric tmp, double value, StatsMap weakStats) {
-    Treaty t = null;
-    if (TransactionManager.getInstance().inTxn()) {
-      t = tmp.treatiesBox.create(EqualityStatement.create(value), weakStats);
-    } else {
-      atomic {
-        t = tmp.treatiesBox.create(EqualityStatement.create(value), weakStats);
-      }
-    }
-    return t;
+    //Treaty t = null;
+    //if (TransactionManager.getInstance().inTxn()) {
+    //  t = tmp.treatiesBox.create(EqualityStatement.create(value), weakStats);
+    //} else {
+    //  atomic {
+    //    t = tmp.treatiesBox.create(EqualityStatement.create(value), weakStats);
+    //  }
+    //}
+    //return t;
+    return tmp.treatiesBox.create(EqualityStatement.create(value), weakStats);
   }
 
   /*@Override*/

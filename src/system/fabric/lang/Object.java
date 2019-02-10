@@ -24,6 +24,7 @@ import fabric.lang.arrays.internal._InternalArrayImpl;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
+import fabric.metrics.util.TreatiesBox;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.worker.FabricSoftRef;
@@ -33,6 +34,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.ImmutableObjectSet;
+import fabric.worker.metrics.treaties.TreatySet;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.ReadMap;
@@ -62,6 +64,11 @@ public interface Object {
   long get$$expiry();
 
   long set$$expiry(long expiry);
+
+  /** The treaties (if this is a treatiesbox object) */
+  TreatySet get$$treaties();
+
+  TreatySet set$$treaties(TreatySet treaties);
 
   /** The associates of this object. */
   ImmutableObjectSet get$$associates();
@@ -298,6 +305,16 @@ public interface Object {
     @Override
     public final long set$$expiry(long expiry) {
       return fetch().set$$expiry(expiry);
+    }
+
+    @Override
+    public final TreatySet get$$treaties() {
+      return fetch().get$$treaties();
+    }
+
+    @Override
+    public final TreatySet set$$treaties(TreatySet treaties) {
+      return fetch().set$$treaties(treaties);
     }
 
     @Override
@@ -539,6 +556,11 @@ public interface Object {
     public long $expiry;
 
     /**
+     * The treaties (if this is a treatiesbox object).
+     */
+    public TreatySet $treaties;
+
+    /**
      * The associates field, to be used to mark objects that should be
      * prefetched when this object is fetched.
      */
@@ -633,6 +655,11 @@ public interface Object {
       // Register the new object with the transaction manager.
       TransactionManager.getInstance().registerLabelsInitialized(this);
 
+      // Create new treaties
+      this.$treaties =
+          this instanceof TreatiesBox ? TreatySet.emptySet((TreatiesBox) this)
+              : null;
+
       return result;
     }
 
@@ -711,6 +738,7 @@ public interface Object {
      * <code>super.copyAppStateFrom(other)</code>.
      */
     public void $copyAppStateFrom(_Impl other) {
+      $treaties = other.$treaties;
     }
 
     @Override
@@ -756,6 +784,21 @@ public interface Object {
       }
       if (transactionCreated) tm.commitTransaction();
       return rtn;
+    }
+
+    @Override
+    public final TreatySet get$$treaties() {
+      TransactionManager.getInstance().registerRead(this);
+      return $treaties;
+    }
+
+    @Override
+    public final TreatySet set$$treaties(TreatySet treaties) {
+      TransactionManager tm = TransactionManager.getInstance();
+      boolean transactionCreated = tm.registerWrite(this);
+      this.$treaties = treaties;
+      if (transactionCreated) tm.commitTransaction();
+      return $treaties;
     }
 
     @Override
@@ -844,6 +887,8 @@ public interface Object {
         List<Pair<String, Long>> interStoreRefs) throws IOException {
       // Nothing to output here. SerializedObject.write(_Impl, DataOutput) takes
       // care of writing the onum, version, label onum, and type information.
+      // Actually, one thing: handle treaties.
+      $writeInline(serializedOutput, this.$treaties);
       return;
     }
 
@@ -893,6 +938,7 @@ public interface Object {
       this.$updateLabel = new Label._Proxy(updateLabelStore, updateLabelOnum);
       this.$accessPolicy =
           new ConfPolicy._Proxy(accessPolicyStore, accessPolicyOnum);
+      this.$treaties = (TreatySet) serializedInput.readObject();
     }
 
     /**

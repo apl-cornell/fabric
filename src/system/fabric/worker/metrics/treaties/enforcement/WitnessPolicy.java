@@ -129,7 +129,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
     for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> witness : witnesses
         .entries()) {
       Treaty witnessTreaty =
-          witness.getKey().get$treaties().get(witness.getValue());
+          witness.getKey().get$$treaties().get(witness.getValue());
       calculated = Math.min(calculated,
           witnessTreaty == null ? 0 : witnessTreaty.get$$expiry());
     }
@@ -142,7 +142,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
     for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> witness : witnesses
         .entries()) {
       Treaty witnessTreaty =
-          witness.getKey().get$treaties().get(witness.getValue());
+          witness.getKey().get$$treaties().get(witness.getValue());
       calculated = Math.min(calculated,
           witnessTreaty == null ? 0 : witnessTreaty.get$$expiry());
     }
@@ -193,7 +193,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
         }
         // Small optimization to give up once we know this policy isn't going
         // anywhere.
-        Treaty w = witnessMetric.get$treaties().get(witness.getValue());
+        Treaty w = witnessMetric.get$$treaties().get(witness.getValue());
         if (w == null || w.invalid()) break;
       }
     } else {
@@ -243,7 +243,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
     // Observe the witnesses
     for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> witness : witnesses
         .entries()) {
-      Treaty w = witness.getKey().get$treaties().get(witness.getValue());
+      Treaty w = witness.getKey().get$$treaties().get(witness.getValue());
       if (w == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
           "A witness treaty was null applying to {0}", t);
       w.addObserver(t);
@@ -260,7 +260,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
         .entries()) {
       // Don't worry about missing witnesses, it's possible they were cleared
       // out anticipating this.
-      Treaty w = witness.getKey().get$treaties().get(witness.getValue());
+      Treaty w = witness.getKey().get$$treaties().get(witness.getValue());
       if (w == null) continue;
       w.removeObserver(t);
       if (TransactionManager.usingPrefetching())
@@ -277,7 +277,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
           new HashSet<>(witnesses.entries());
       toBeRemoved.removeAll(nextPol.witnesses.entries());
       for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> e : toBeRemoved) {
-        Treaty w = e.getKey().get$treaties().get(e.getValue());
+        Treaty w = e.getKey().get$$treaties().get(e.getValue());
         if (w == null) continue;
         w.removeObserver(t);
         if (TransactionManager.usingPrefetching())
@@ -288,7 +288,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
           new HashSet<>(nextPol.witnesses.entries());
       toBeRemoved.removeAll(witnesses.entries());
       for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> e : toBeAdded) {
-        Treaty w = e.getKey().get$treaties().get(e.getValue());
+        Treaty w = e.getKey().get$$treaties().get(e.getValue());
         if (w == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
             "A witness treaty was null applying to {0}", t);
         w.addObserver(t);
