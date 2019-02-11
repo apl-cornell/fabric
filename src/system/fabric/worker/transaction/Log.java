@@ -820,7 +820,12 @@ public final class Log {
       // Release read locks.
       for (LongKeyMap<ReadMap.Entry> submap : reads) {
         for (ReadMap.Entry entry : submap.values()) {
-          parent.transferReadLock(this, entry);
+          // Drop read locks for creates.
+          if (creates.containsKey(entry.getRef().store, entry.getRef().onum)) {
+            entry.releaseLock(this);
+          } else {
+            parent.transferReadLock(this, entry);
+          }
         }
       }
 
