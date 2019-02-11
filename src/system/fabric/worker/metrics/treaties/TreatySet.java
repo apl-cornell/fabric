@@ -175,28 +175,40 @@ public class TreatySet
       // Make sure we clobber an extension if this in-place update isn't an
       // extension.
       statementMap.remove(treaty.get$predicate(), new Oid(treaty));
-      Worker.runInSubTransaction(new Code<Void>() {
-        @Override
-        public Void run() {
-          owner.set$$treaties(TreatySet.this);
-          if (TransactionManager.usingPrefetching())
-            owner.set$$associates(owner.get$$associates().remove(treaty));
-          return null;
-        }
-      });
+      if (TransactionManager.getInstance().inTxn()) {
+        owner.set$$treaties(this);
+        if (TransactionManager.usingPrefetching())
+          owner.set$$associates(owner.get$$associates().remove(treaty));
+      } else {
+        Worker.runInSubTransaction(new Code<Void>() {
+          @Override
+          public Void run() {
+            owner.set$$treaties(TreatySet.this);
+            if (TransactionManager.usingPrefetching())
+              owner.set$$associates(owner.get$$associates().remove(treaty));
+            return null;
+          }
+        });
+      }
     } else {
       // TODO check that it's a proper garbage collection?
       TreatySet updated = new TreatySet(this);
       updated.statementMap.remove(treaty.get$predicate(), new Oid(treaty));
-      Worker.runInSubTransaction(new Code<Void>() {
-        @Override
-        public Void run() {
-          owner.set$$treaties(updated);
-          if (TransactionManager.usingPrefetching())
-            owner.set$$associates(owner.get$$associates().remove(treaty));
-          return null;
-        }
-      });
+      if (TransactionManager.getInstance().inTxn()) {
+        owner.set$$treaties(updated);
+        if (TransactionManager.usingPrefetching())
+          owner.set$$associates(owner.get$$associates().remove(treaty));
+      } else {
+        Worker.runInSubTransaction(new Code<Void>() {
+          @Override
+          public Void run() {
+            owner.set$$treaties(updated);
+            if (TransactionManager.usingPrefetching())
+              owner.set$$associates(owner.get$$associates().remove(treaty));
+            return null;
+          }
+        });
+      }
     }
   }
 
@@ -220,30 +232,42 @@ public class TreatySet
       Treaty newTreaty =
           Treaty._Impl.newTreaty(owner.get$owner(), stmt, statsMap);
       statementMap.put(stmt, new Oid(newTreaty));
-      Worker.runInSubTransaction(new Code<Void>() {
-        @Override
-        public Void run() {
-          owner.set$$treaties(TreatySet.this);
-          if (TransactionManager.usingPrefetching())
-            owner.set$$associates(owner.get$$associates().add(newTreaty));
-          return null;
-        }
-      });
+      if (TransactionManager.getInstance().inTxn()) {
+        owner.set$$treaties(this);
+        if (TransactionManager.usingPrefetching())
+          owner.set$$associates(owner.get$$associates().add(newTreaty));
+      } else {
+        Worker.runInSubTransaction(new Code<Void>() {
+          @Override
+          public Void run() {
+            owner.set$$treaties(TreatySet.this);
+            if (TransactionManager.usingPrefetching())
+              owner.set$$associates(owner.get$$associates().add(newTreaty));
+            return null;
+          }
+        });
+      }
       return newTreaty;
     } else {
       TreatySet updated = new TreatySet(this);
       Treaty newTreaty =
           Treaty._Impl.newTreaty(owner.get$owner(), stmt, statsMap);
       updated.statementMap.put(stmt, new Oid(newTreaty));
-      Worker.runInSubTransaction(new Code<Void>() {
-        @Override
-        public Void run() {
-          owner.set$$treaties(updated);
-          if (TransactionManager.usingPrefetching())
-            owner.set$$associates(owner.get$$associates().add(newTreaty));
-          return null;
-        }
-      });
+      if (TransactionManager.getInstance().inTxn()) {
+        owner.set$$treaties(updated);
+        if (TransactionManager.usingPrefetching())
+          owner.set$$associates(owner.get$$associates().add(newTreaty));
+      } else {
+        Worker.runInSubTransaction(new Code<Void>() {
+          @Override
+          public Void run() {
+            owner.set$$treaties(updated);
+            if (TransactionManager.usingPrefetching())
+              owner.set$$associates(owner.get$$associates().add(newTreaty));
+            return null;
+          }
+        });
+      }
       return newTreaty;
     }
   }
