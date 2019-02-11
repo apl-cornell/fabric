@@ -38,6 +38,7 @@ public class Treaty extends AbstractSubject implements Observer {
     this.metric = metric;
     this.predicate = predicate;
     fabric$metrics$util$AbstractSubject$();
+    this.policy = NoPolicy.singleton;
     this.$expiry = policy.calculateExpiry(this, weakStats);
     if (valid()) {
       this.policy = policy;
@@ -248,7 +249,7 @@ public class Treaty extends AbstractSubject implements Observer {
       this.$expiry = 0;
       Logging.METRICS_LOGGER.fine("UPDATED TREATY " + metric.$getOnum() + " " + predicate + " until " + this.$expiry);
       this.policy = NoPolicy.singleton;
-      oldPolicy.unapply(this);
+      oldPolicy.shiftPolicies(this, this.policy);
       this.metric.treatiesBox.remove(this);
     } else {
       atomic {
@@ -256,7 +257,7 @@ public class Treaty extends AbstractSubject implements Observer {
         Logging.METRICS_LOGGER.fine("UPDATED TREATY " + metric.$getOnum() + " " + predicate + " until " + this.$expiry);
         this.policy = NoPolicy.singleton;
       }
-      oldPolicy.unapply(this);
+      oldPolicy.shiftPolicies(this, this.policy);
       atomic {
         this.metric.treatiesBox.remove(this);
       }
