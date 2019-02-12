@@ -72,4 +72,8 @@ public class NoPolicy extends EnforcementPolicy {
   protected void writeKind(DataOutput out) throws IOException {
     out.writeByte(Kind.NONE.ordinal());
   }
+
+  private NoPolicy readResolve() {
+    return singleton;
+  }
 }

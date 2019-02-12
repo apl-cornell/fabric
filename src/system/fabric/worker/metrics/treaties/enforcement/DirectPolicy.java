@@ -95,4 +95,8 @@ public class DirectPolicy extends EnforcementPolicy {
   protected void writeKind(DataOutput out) throws IOException {
     out.writeByte(Kind.DIRECT.ordinal());
   }
+
+  private DirectPolicy readResolve() {
+    return singleton;
+  }
 }
