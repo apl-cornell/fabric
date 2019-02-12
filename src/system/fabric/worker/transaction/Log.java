@@ -1320,8 +1320,7 @@ public final class Log {
         extensionTriggers.get((fabric.lang.Object) null);
 
     if (extensionsToSend != null) {
-      for (String sName : extensionsToSend.storeNameSet()) {
-        Store s = Worker.getWorker().getStore(sName);
+      for (Store s : extensionsToSend.storeSet()) {
         if (alreadyContacted.contains(s)) continue;
         s.sendExtensions(extensionsToSend.get(s),
             new HashMap<RemoteStore, Collection<SerializedObject>>());

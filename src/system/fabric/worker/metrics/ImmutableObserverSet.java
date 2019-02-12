@@ -7,6 +7,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,16 +29,22 @@ import fabric.worker.Worker;
 public class ImmutableObserverSet implements FastSerializable, Serializable,
     Iterable<fabric.metrics.util.Observer._Proxy> {
 
-  // store name -> onums
-  private SortedMap<String, SortedSet<Long>> map;
+  private static Comparator<Store> comparator = new Comparator<Store>() {
+    @Override
+    public int compare(Store s1, Store s2) {
+      return s1.name().compareTo(s2.name());
+    }
+  };
+
+  private SortedMap<Store, SortedSet<Long>> map;
 
   private ImmutableObserverSet() {
-    this.map = new TreeMap<>();
+    this.map = new TreeMap<>(comparator);
   }
 
   private ImmutableObserverSet(ImmutableObserverSet orig) {
-    this.map = new TreeMap<>();
-    for (Map.Entry<String, SortedSet<Long>> e : orig.map.entrySet()) {
+    this.map = new TreeMap<>(comparator);
+    for (Map.Entry<Store, SortedSet<Long>> e : orig.map.entrySet()) {
       this.map.put(e.getKey(), new TreeSet<>(e.getValue()));
     }
   }
@@ -58,10 +65,10 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     ImmutableObserverSet updated = new ImmutableObserverSet(this);
 
     // Get or Add onum set
-    SortedSet<Long> subset = updated.map.get(o.$getStore().name());
+    SortedSet<Long> subset = updated.map.get(o.$getStore());
     if (subset == null) {
       subset = new TreeSet<>();
-      updated.map.put(o.$getStore().name(), subset);
+      updated.map.put(o.$getStore(), subset);
     }
     // Add onum
     subset.add(o.$getOnum());
@@ -88,13 +95,13 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     ImmutableObserverSet updated = new ImmutableObserverSet(this);
 
     // Get onums
-    SortedSet<Long> subset = updated.map.get(o.$getStore().name());
+    SortedSet<Long> subset = updated.map.get(o.$getStore());
 
     // Remove or Update onums
     subset.remove(o.$getOnum());
 
     // Clear set if it's now empty.
-    if (subset.isEmpty()) updated.map.remove(o.$getStore().name());
+    if (subset.isEmpty()) updated.map.remove(o.$getStore());
 
     return updated;
   }
@@ -113,15 +120,15 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
 
   /** @return true iff the given object is in the set */
   public boolean contains(fabric.metrics.util.Observer obs) {
-    return map.containsKey(obs.$getStore().name())
-        && map.get(obs.$getStore().name()).contains(obs.$getOnum());
+    return map.containsKey(obs.$getStore())
+        && map.get(obs.$getStore()).contains(obs.$getOnum());
   }
 
   /** @return true iff the given set is fully contained in this set */
   public boolean containsAll(ImmutableObserverSet other) {
     // Superset of stores
     if (!map.keySet().containsAll(other.map.keySet())) return false;
-    for (Map.Entry<String, SortedSet<Long>> e : other.map.entrySet()) {
+    for (Map.Entry<Store, SortedSet<Long>> e : other.map.entrySet()) {
       // Superset of onums for store
       if (!map.get(e.getKey()).containsAll(e.getValue())) return false;
     }
@@ -136,7 +143,7 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   @Override
   public Iterator<fabric.metrics.util.Observer._Proxy> iterator() {
     return new Iterator<fabric.metrics.util.Observer._Proxy>() {
-      Iterator<Map.Entry<String, SortedSet<Long>>> topIter =
+      Iterator<Map.Entry<Store, SortedSet<Long>>> topIter =
           map.entrySet().iterator();
       Store curStore = null;
       Iterator<Long> subIter = null;
@@ -149,8 +156,8 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
       @Override
       public fabric.metrics.util.Observer._Proxy next() {
         if (subIter == null || !subIter.hasNext()) {
-          Map.Entry<String, SortedSet<Long>> nextBunch = topIter.next();
-          curStore = Worker.getWorker().getStore(nextBunch.getKey());
+          Map.Entry<Store, SortedSet<Long>> nextBunch = topIter.next();
+          curStore = nextBunch.getKey();
           subIter = nextBunch.getValue().iterator();
         }
         long nextItem = subIter.next();
@@ -170,16 +177,17 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
 
   public ImmutableObserverSet(DataInput in) throws IOException {
     int size1 = in.readInt();
-    this.map = new TreeMap<>();
+    this.map = new TreeMap<>(comparator);
     for (int i = 0; i < size1; i++) {
       String storeName = in.readUTF();
+      Store store = Worker.getWorker().getStore(storeName);
       int size2 = in.readInt();
       SortedSet<Long> subset = new TreeSet<>();
       for (int j = 0; j < size2; j++) {
         long onum = in.readLong();
         subset.add(onum);
       }
-      this.map.put(storeName, subset);
+      this.map.put(store, subset);
     }
   }
 
@@ -190,21 +198,22 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   private void readObject(ObjectInputStream in)
       throws IOException, ClassNotFoundException {
     int size1 = in.readInt();
-    this.map = new TreeMap<>();
+    this.map = new TreeMap<>(comparator);
     for (int i = 0; i < size1; i++) {
       String storeName = in.readUTF();
+      Store store = Worker.getWorker().getStore(storeName);
       int size2 = in.readInt();
       SortedSet<Long> subset = new TreeSet<>();
       for (int j = 0; j < size2; j++) {
         long onum = in.readLong();
         subset.add(onum);
       }
-      this.map.put(storeName, subset);
+      this.map.put(store, subset);
     }
   }
 
   private void readObjectNoData() throws ObjectStreamException {
-    map = new TreeMap<>();
+    map = new TreeMap<>(comparator);
   }
 
   @Override
@@ -221,8 +230,8 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(map.size());
-    for (Map.Entry<String, SortedSet<Long>> e : map.entrySet()) {
-      out.writeUTF(e.getKey());
+    for (Map.Entry<Store, SortedSet<Long>> e : map.entrySet()) {
+      out.writeUTF(e.getKey().name());
       out.writeInt(e.getValue().size());
       for (long onum : e.getValue()) {
         out.writeLong(onum);
@@ -236,10 +245,6 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   }
 
   public Set<Long> onumsForStore(Store s) {
-    return onumsForStore(s.name());
-  }
-
-  public Set<Long> onumsForStore(String s) {
     return map.get(s);
   }
 
@@ -249,9 +254,9 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   public Map<Store, Set<Long>> prefetch(Store triggeringStore) {
     // Hack to prefetch objects into cache.
     Map<Store, Set<Long>> result = new HashMap<>();
-    for (final Map.Entry<String, SortedSet<Long>> e : map.entrySet()) {
-      if (e.getKey().equals(triggeringStore.name())) continue;
-      Store s = Worker.getWorker().getStore(e.getKey());
+    for (final Map.Entry<Store, SortedSet<Long>> e : map.entrySet()) {
+      if (e.getKey().equals(triggeringStore)) continue;
+      Store s = e.getKey();
       //Logging.METRICS_LOGGER.log(Level.INFO,
       //    "PREFETCHING ASSOCIATES FROM {0}: {1}",
       //    new Object[] { s, e.getValue() });

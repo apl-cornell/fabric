@@ -21,7 +21,7 @@ import fabric.worker.Worker;
 public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   // Using strings to avoid trying to get the store object before the worker is
   // initialized (while deserializing objects from disk).
-  HashMap<String, LongHashSet> map;
+  HashMap<Store, LongHashSet> map;
 
   public OidHashSet() {
     map = new HashMap<>();
@@ -35,9 +35,10 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
     map = new HashMap<>();
     for (int i = 0; i < size; i++) {
       String s = in.readUTF();
+      Store store = Worker.getWorker().getStore(s);
       int size2 = in.readInt();
       LongHashSet submap = new LongHashSet(size2);
-      map.put(s, submap);
+      map.put(store, submap);
       for (int j = 0; j < size2; j++) {
         submap.add(in.readLong());
       }
@@ -50,17 +51,13 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   public OidHashSet(OidHashSet other) {
     this();
 
-    for (Map.Entry<String, LongHashSet> entry : other.map.entrySet()) {
+    for (Map.Entry<Store, LongHashSet> entry : other.map.entrySet()) {
       this.map.put(entry.getKey(), new LongHashSet(entry.getValue()));
     }
   }
 
   public LongSet get(Store store) {
-    return map.get(store.name());
-  }
-
-  public LongSet get(String storeName) {
-    return map.get(storeName);
+    return map.get(store);
   }
 
   public void clear() {
@@ -72,20 +69,16 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
       throw new InternalError("Surrogates should not be passed to OidHashSet");
     }
 
-    return obj != null && contains(obj.$getStore().name(), obj.$getOnum());
-  }
-
-  public boolean contains(String storeName, long onum) {
-    LongHashSet submap = map.get(storeName);
-    return submap != null && submap.contains(onum);
+    return obj != null && contains(obj.$getStore(), obj.$getOnum());
   }
 
   public boolean contains(Store store, long onum) {
-    return contains(store.name(), onum);
+    LongHashSet submap = map.get(store);
+    return submap != null && submap.contains(onum);
   }
 
   public boolean contains(Oid oid) {
-    return contains(oid.store.name(), oid.onum);
+    return contains(oid.store, oid.onum);
   }
 
   public boolean add(Object obj) {
@@ -100,17 +93,13 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
     return add(obj.$getStore(), obj.$getOnum());
   }
 
-  public boolean add(String storeName, long onum) {
-    LongHashSet submap = map.get(storeName);
+  public boolean add(Store store, long onum) {
+    LongHashSet submap = map.get(store);
     if (submap == null) {
       submap = new LongHashSet();
-      map.put(storeName, submap);
+      map.put(store, submap);
     }
     return submap.add(onum);
-  }
-
-  public boolean add(Store store, long onum) {
-    return add(store.name(), onum);
   }
 
   public boolean add(Oid oid) {
@@ -129,24 +118,20 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
     return remove(obj.$getStore(), obj.$getOnum());
   }
 
-  public boolean remove(String storeName, long onum) {
-    LongHashSet submap = map.get(storeName);
+  public boolean remove(Store store, long onum) {
+    LongHashSet submap = map.get(store);
     boolean result = submap != null && submap.remove(onum);
     if (result && submap.isEmpty()) {
-      map.remove(storeName);
+      map.remove(store);
     }
     return result;
-  }
-
-  public boolean remove(Store store, long onum) {
-    return remove(store.name(), onum);
   }
 
   public boolean remove(Oid oid) {
     return remove(oid.store, oid.onum);
   }
 
-  public Set<String> storeNameSet() {
+  public Set<Store> storeSet() {
     return map.keySet();
   }
 
@@ -154,7 +139,7 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   public Iterator<Oid> iterator() {
     return new Iterator<Oid>() {
       private Store curStore = null;
-      private Iterator<String> storeIter = map.keySet().iterator();
+      private Iterator<Store> storeIter = map.keySet().iterator();
       private LongIterator subIter = null;
 
       /**
@@ -164,8 +149,8 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
        */
       private void advance() {
         while (subIter == null && storeIter.hasNext()) {
-          curStore = Worker.getWorker().getStore(storeIter.next());
-          subIter = map.get(curStore.name()).iterator();
+          curStore = storeIter.next();
+          subIter = map.get(curStore).iterator();
           if (!subIter.hasNext()) subIter = null;
         }
       }
@@ -206,8 +191,8 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   }
 
   public void addAll(OidHashSet m) {
-    for (Map.Entry<String, LongHashSet> entry : m.map.entrySet()) {
-      String store = entry.getKey();
+    for (Map.Entry<Store, LongHashSet> entry : m.map.entrySet()) {
+      Store store = entry.getKey();
 
       if (map.containsKey(store)) {
         map.get(store).addAll(entry.getValue());
@@ -218,8 +203,8 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   }
 
   public boolean containsAll(OidHashSet m) {
-    for (Map.Entry<String, LongHashSet> entry : m.map.entrySet()) {
-      String store = entry.getKey();
+    for (Map.Entry<Store, LongHashSet> entry : m.map.entrySet()) {
+      Store store = entry.getKey();
 
       if (!map.containsKey(store)
           || !map.get(store).containsAll(entry.getValue()))
@@ -234,10 +219,10 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
       return false;
     }
     OidHashSet map2 = (OidHashSet) other;
-    if (!storeNameSet().equals(map2.storeNameSet())) {
+    if (!storeSet().equals(map2.storeSet())) {
       return false;
     }
-    for (String s : storeNameSet()) {
+    for (Store s : storeSet()) {
       if (!get(s).equals(map2.get(s))) {
         return false;
       }
@@ -248,8 +233,8 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(map.size());
-    for (Map.Entry<String, LongHashSet> e : map.entrySet()) {
-      out.writeUTF(e.getKey());
+    for (Map.Entry<Store, LongHashSet> e : map.entrySet()) {
+      out.writeUTF(e.getKey().name());
       out.writeInt(e.getValue().size());
       for (LongIterator iter = e.getValue().iterator(); iter.hasNext();) {
         out.writeLong(iter.next());
@@ -261,8 +246,8 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
   public String toString() {
     boolean first = true;
     String result = "[";
-    for (Map.Entry<String, LongHashSet> e : map.entrySet()) {
-      String storeName = e.getKey();
+    for (Map.Entry<Store, LongHashSet> e : map.entrySet()) {
+      Store store = e.getKey();
       for (LongIterator iter = e.getValue().iterator(); iter.hasNext();) {
         long onum = iter.next();
         if (first) {
@@ -270,7 +255,7 @@ public final class OidHashSet implements Iterable<Oid>, FastSerializable {
         } else {
           result += ", ";
         }
-        result += "<" + storeName + "#" + onum + ">";
+        result += "<" + store.name() + "#" + onum + ">";
       }
     }
     return result + "]";

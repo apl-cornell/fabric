@@ -205,10 +205,9 @@ public class PrepareTransactionMessage extends AsyncMessage {
       out.writeInt(extensionsTriggered.size());
       for (LongKeyMap.Entry<OidHashSet> e : extensionsTriggered.entrySet()) {
         out.writeLong(e.getKey());
-        out.writeInt(e.getValue().storeNameSet().size());
-        for (String sName : e.getValue().storeNameSet()) {
-          out.writeUTF(sName);
-          Store s = Worker.getWorker().getStore(sName);
+        out.writeInt(e.getValue().storeSet().size());
+        for (Store s : e.getValue().storeSet()) {
+          out.writeUTF(s.name());
           out.writeInt(e.getValue().get(s).size());
           for (LongIterator iter = e.getValue().get(s).iterator(); iter
               .hasNext();) {

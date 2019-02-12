@@ -15,7 +15,9 @@ import java.util.logging.Level;
 import fabric.common.FastSerializable;
 import fabric.common.Logging;
 import fabric.common.util.DeltaMap;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.Oid;
+import fabric.common.util.OidKeyHashMap;
 import fabric.metrics.treaties.Treaty;
 import fabric.metrics.treaties.Treaty._Proxy;
 import fabric.metrics.util.TreatiesBox;
@@ -47,13 +49,16 @@ public class TreatySet
     this.owner = new TreatiesBox._Proxy(ownerStore, in.readLong());
     int size = in.readInt();
     this.statementMap = new HashMap<>(size);
-    for (int i = 0; i < size; i++) {
-      // Keys aren't serialized separately, it's already in the treaty.
-      TreatyStatement stmt = TreatyStatement.read(in);
+    int numStores = in.readInt();
+    for (int i = 0; i < numStores; i++) {
       Store s = Worker.getWorker().getStore(in.readUTF());
-      long onum = in.readLong();
-      Oid t = new Oid(s, onum);
-      this.statementMap.put(stmt, t);
+      int count = in.readInt();
+      for (int j = 0; j < count; j++) {
+        long onum = in.readLong();
+        TreatyStatement stmt = TreatyStatement.read(in);
+        Oid t = new Oid(s, onum);
+        this.statementMap.put(stmt, t);
+      }
     }
   }
 
@@ -71,13 +76,16 @@ public class TreatySet
     this.owner = new TreatiesBox._Proxy(ownerStore, in.readLong());
     int size = in.readInt();
     this.statementMap = new HashMap<>(size);
-    for (int i = 0; i < size; i++) {
-      // Keys aren't serialized separately, it's already in the treaty.
-      TreatyStatement stmt = TreatyStatement.read(in);
+    int numStores = in.readInt();
+    for (int i = 0; i < numStores; i++) {
       Store s = Worker.getWorker().getStore(in.readUTF());
-      long onum = in.readLong();
-      Oid t = new Oid(s, onum);
-      this.statementMap.put(stmt, t);
+      int count = in.readInt();
+      for (int j = 0; j < count; j++) {
+        long onum = in.readLong();
+        TreatyStatement stmt = TreatyStatement.read(in);
+        Oid t = new Oid(s, onum);
+        this.statementMap.put(stmt, t);
+      }
     }
   }
 
@@ -90,11 +98,20 @@ public class TreatySet
     out.writeUTF(owner.$getStore().name());
     out.writeLong(owner.$getOnum());
     out.writeInt(this.statementMap.size());
-    // Don't bother writing out the keys, it's already included in the values.
+    // For a more compressed representation, we're going to serialize in the
+    // reverse to avoid duplicated store names.
+    OidKeyHashMap<TreatyStatement> reverse = new OidKeyHashMap<>();
     for (Map.Entry<TreatyStatement, Oid> entry : this.statementMap.entrySet()) {
-      entry.getKey().write(out);
-      out.writeUTF(entry.getValue().store.name());
-      out.writeLong(entry.getValue().onum);
+      reverse.put(entry.getValue(), entry.getKey());
+    }
+    out.writeInt(reverse.storeSet().size());
+    for (Store s : reverse.storeSet()) {
+      out.writeUTF(s.name());
+      out.writeInt(reverse.get(s).size());
+      for (LongKeyMap.Entry<TreatyStatement> e : reverse.get(s).entrySet()) {
+        out.writeLong(e.getKey());
+        e.getValue().write(out);
+      }
     }
   }
 
