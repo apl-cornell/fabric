@@ -274,7 +274,7 @@ public class WitnessPolicy extends EnforcementPolicy {
 
       Set<Map.Entry<TreatiesBoxRef, TreatyStatement>> toBeAdded =
           new HashSet<>(nextPol.witnesses.entries());
-      toBeRemoved.removeAll(witnesses.entries());
+      toBeAdded.removeAll(witnesses.entries());
       for (Map.Entry<TreatiesBoxRef, TreatyStatement> e : toBeAdded) {
         Metric m = e.getKey().get();
         if (m == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
