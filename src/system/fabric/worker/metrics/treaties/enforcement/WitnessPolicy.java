@@ -286,7 +286,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
 
       Set<Map.Entry<TreatiesBox._Proxy, TreatyStatement>> toBeAdded =
           new HashSet<>(nextPol.witnesses.entries());
-      toBeRemoved.removeAll(witnesses.entries());
+      toBeAdded.removeAll(witnesses.entries());
       for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> e : toBeAdded) {
         Treaty w = e.getKey().get$$treaties().get(e.getValue());
         if (w == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
