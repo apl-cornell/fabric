@@ -37,7 +37,7 @@ public class EqualityStatement extends TreatyStatement {
 
   @Override
   public long trueExpiry(Metric m, StatsMap weakStats) {
-    if (m.value() < value) {
+    if (m.value() != value) {
       return 0;
     } else {
       return Long.MAX_VALUE;
@@ -80,7 +80,7 @@ public class EqualityStatement extends TreatyStatement {
 
   @Override
   public long trueExpiry(double v) {
-    if (v < value) {
+    if (v != value) {
       return 0;
     } else {
       return Long.MAX_VALUE;
