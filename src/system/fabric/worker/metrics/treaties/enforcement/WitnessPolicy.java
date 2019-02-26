@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
@@ -129,7 +130,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
     for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> witness : witnesses
         .entries()) {
       Treaty witnessTreaty =
-          witness.getKey().get$$treaties().get(witness.getValue());
+          witness.getKey().get(witness.getValue());
       calculated = Math.min(calculated,
           witnessTreaty == null ? 0 : witnessTreaty.get$$expiry());
     }
@@ -142,7 +143,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
     for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> witness : witnesses
         .entries()) {
       Treaty witnessTreaty =
-          witness.getKey().get$$treaties().get(witness.getValue());
+          witness.getKey().get(witness.getValue());
       calculated = Math.min(calculated,
           witnessTreaty == null ? 0 : witnessTreaty.get$$expiry());
     }
@@ -193,7 +194,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
         }
         // Small optimization to give up once we know this policy isn't going
         // anywhere.
-        Treaty w = witnessMetric.get$$treaties().get(witness.getValue());
+        Treaty w = witnessMetric.get(witness.getValue());
         if (w == null || w.invalid()) break;
       }
     } else {
@@ -243,9 +244,10 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
     // Observe the witnesses
     for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> witness : witnesses
         .entries()) {
-      Treaty w = witness.getKey().get$$treaties().get(witness.getValue());
+      Treaty w = witness.getKey().get(witness.getValue());
       if (w == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
-          "A witness treaty was null applying to {0}", t);
+          "A witness treaty was null applying to {0} for {2} {1}",
+          new Object[] { t, witness.getValue(), witness.getKey() });
       w.addObserver(t);
       if (TransactionManager.usingPrefetching())
         t.set$$associates(t.get$$associates().add(w));
@@ -256,13 +258,18 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
   public void unapply(Treaty t) {
     // TODO: make this async where applicable.
     // Stop observing the metric.
+    boolean wasGood = t.get$$expiry() == 0;
     for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> witness : witnesses
         .entries()) {
       // Don't worry about missing witnesses, it's possible they were cleared
       // out anticipating this.
-      Treaty w = witness.getKey().get$$treaties().get(witness.getValue());
+      Treaty w = witness.getKey().get(witness.getValue());
       if (w == null) continue;
       w.removeObserver(t);
+      if (t.get$$expiry() != 0 && wasGood) {
+        TransactionManager.getInstance().stats.addMsg("Wat? " + w + " " + t);
+        wasGood = false;
+      }
       if (TransactionManager.usingPrefetching())
         t.set$$associates(t.get$$associates().remove(w));
     }
@@ -274,10 +281,45 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
       WitnessPolicy nextPol = (WitnessPolicy) newPolicy;
       // Only add and remove nonoverlapping witnesses
       Set<Map.Entry<TreatiesBox._Proxy, TreatyStatement>> toBeRemoved =
-          new HashSet<>(witnesses.entries());
+          new TreeSet<>(new Comparator<Map.Entry<TreatiesBox._Proxy, TreatyStatement>>() {
+        @Override
+        public int compare(Map.Entry<TreatiesBox._Proxy, TreatyStatement> a, Map.Entry<TreatiesBox._Proxy, TreatyStatement> b) {
+          // Try keys
+          TreatiesBox._Proxy a1 = a.getKey();
+          TreatiesBox._Proxy b1 = b.getKey();
+          int storeComp = a1.$getStore().name().compareTo(b1.$getStore().name());
+          if (storeComp != 0) return storeComp;
+          int onumComp = Long.compare(a1.$getOnum(), b1.$getOnum());
+          if (onumComp != 0) return onumComp;
+
+          // Try values
+          TreatyStatement a2 = a.getValue();
+          TreatyStatement b2 = b.getValue();
+          if (a2 instanceof ThresholdStatement) {
+            if (b2 instanceof ThresholdStatement) {
+              ThresholdStatement aT = (ThresholdStatement) a2;
+              ThresholdStatement bT = (ThresholdStatement) b2;
+              int rateComp = Double.compare(aT.rate(), bT.rate());
+              if (rateComp != 0) return rateComp;
+              return Double.compare(aT.base(), bT.base());
+            } else {
+              return 1;
+            }
+          } else {
+            if (b2 instanceof ThresholdStatement) {
+              EqualityStatement aT = (EqualityStatement) a2;
+              EqualityStatement bT = (EqualityStatement) b2;
+              return Double.compare(aT.value(), bT.value());
+            } else {
+              return -1;
+            }
+          }
+        }
+      });
+      toBeRemoved.addAll(witnesses.entries());
       toBeRemoved.removeAll(nextPol.witnesses.entries());
       for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> e : toBeRemoved) {
-        Treaty w = e.getKey().get$$treaties().get(e.getValue());
+        Treaty w = e.getKey().get(e.getValue());
         if (w == null) continue;
         w.removeObserver(t);
         if (TransactionManager.usingPrefetching())
@@ -285,12 +327,48 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
       }
 
       Set<Map.Entry<TreatiesBox._Proxy, TreatyStatement>> toBeAdded =
-          new HashSet<>(nextPol.witnesses.entries());
+          new TreeSet<>(new Comparator<Map.Entry<TreatiesBox._Proxy, TreatyStatement>>() {
+        @Override
+        public int compare(Map.Entry<TreatiesBox._Proxy, TreatyStatement> a, Map.Entry<TreatiesBox._Proxy, TreatyStatement> b) {
+          // Try keys
+          TreatiesBox._Proxy a1 = a.getKey();
+          TreatiesBox._Proxy b1 = b.getKey();
+          int storeComp = a1.$getStore().name().compareTo(b1.$getStore().name());
+          if (storeComp != 0) return storeComp;
+          int onumComp = Long.compare(a1.$getOnum(), b1.$getOnum());
+          if (onumComp != 0) return onumComp;
+
+          // Try values
+          TreatyStatement a2 = a.getValue();
+          TreatyStatement b2 = b.getValue();
+          if (a2 instanceof ThresholdStatement) {
+            if (b2 instanceof ThresholdStatement) {
+              ThresholdStatement aT = (ThresholdStatement) a2;
+              ThresholdStatement bT = (ThresholdStatement) b2;
+              int rateComp = Double.compare(aT.rate(), bT.rate());
+              if (rateComp != 0) return rateComp;
+              return Double.compare(aT.base(), bT.base());
+            } else {
+              return 1;
+            }
+          } else {
+            if (b2 instanceof ThresholdStatement) {
+              EqualityStatement aT = (EqualityStatement) a2;
+              EqualityStatement bT = (EqualityStatement) b2;
+              return Double.compare(aT.value(), bT.value());
+            } else {
+              return -1;
+            }
+          }
+        }
+      });
+      toBeAdded.addAll(nextPol.witnesses.entries());
       toBeAdded.removeAll(witnesses.entries());
       for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> e : toBeAdded) {
-        Treaty w = e.getKey().get$$treaties().get(e.getValue());
+        Treaty w = e.getKey().get(e.getValue());
         if (w == null) Logging.METRICS_LOGGER.log(Level.SEVERE,
-            "A witness treaty was null applying to {0}", t);
+            "A witness treaty was null applying to {0} for {2} {1}",
+            new Object[] { t, e.getValue(), e.getKey() });
         w.addObserver(t);
         if (TransactionManager.usingPrefetching())
           t.set$$associates(t.get$$associates().add(w));

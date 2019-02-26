@@ -73,7 +73,7 @@ public class NoPolicy extends EnforcementPolicy {
     out.writeByte(Kind.NONE.ordinal());
   }
 
-  private NoPolicy readResolve() {
+  private Object readResolve() {
     return singleton;
   }
 }

@@ -96,7 +96,7 @@ public class DirectPolicy extends EnforcementPolicy {
     out.writeByte(Kind.DIRECT.ordinal());
   }
 
-  private DirectPolicy readResolve() {
+  private Object readResolve() {
     return singleton;
   }
 }
