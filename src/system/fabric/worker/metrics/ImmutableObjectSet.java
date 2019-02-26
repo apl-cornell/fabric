@@ -96,6 +96,7 @@ public class ImmutableObjectSet implements FastSerializable, Serializable,
     // Clear set if it's now empty.
     if (subset.isEmpty()) updated.map.remove(o.$getStore().name());
 
+    if (updated.isEmpty()) return EMPTY;
     return updated;
   }
 
@@ -108,6 +109,7 @@ public class ImmutableObjectSet implements FastSerializable, Serializable,
     for (fabric.lang.Object._Proxy item : other) {
       result = result.remove(item);
     }
+    if (result.isEmpty()) return EMPTY;
     return result;
   }
 
@@ -205,6 +207,11 @@ public class ImmutableObjectSet implements FastSerializable, Serializable,
 
   private void readObjectNoData() throws ObjectStreamException {
     map = new TreeMap<>();
+  }
+
+  private Object readResolve() {
+    if (isEmpty()) return EMPTY;
+    return this;
   }
 
   @Override

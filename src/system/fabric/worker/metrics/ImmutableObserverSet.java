@@ -27,7 +27,7 @@ import fabric.worker.Worker;
  */
 @SuppressWarnings("serial")
 public class ImmutableObserverSet implements FastSerializable, Serializable,
-    Iterable<fabric.metrics.util.Observer._Proxy> {
+    Iterable<fabric.metrics.util.Observer> {
 
   private static Comparator<Store> comparator = new Comparator<Store>() {
     @Override
@@ -82,7 +82,7 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
    */
   public ImmutableObserverSet addAll(ImmutableObserverSet other) {
     ImmutableObserverSet result = this;
-    for (fabric.metrics.util.Observer._Proxy item : other) {
+    for (fabric.metrics.util.Observer item : other) {
       result = result.add(item);
     }
     return result;
@@ -103,6 +103,7 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
     // Clear set if it's now empty.
     if (subset.isEmpty()) updated.map.remove(o.$getStore());
 
+    if (updated.isEmpty()) return EMPTY;
     return updated;
   }
 
@@ -112,9 +113,10 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
    */
   public ImmutableObserverSet removeAll(ImmutableObserverSet other) {
     ImmutableObserverSet result = this;
-    for (fabric.metrics.util.Observer._Proxy item : other) {
+    for (fabric.metrics.util.Observer item : other) {
       result = result.remove(item);
     }
+    if (result.isEmpty()) return EMPTY;
     return result;
   }
 
@@ -141,8 +143,8 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
   }
 
   @Override
-  public Iterator<fabric.metrics.util.Observer._Proxy> iterator() {
-    return new Iterator<fabric.metrics.util.Observer._Proxy>() {
+  public Iterator<fabric.metrics.util.Observer> iterator() {
+    return new Iterator<fabric.metrics.util.Observer>() {
       Iterator<Map.Entry<Store, SortedSet<Long>>> topIter =
           map.entrySet().iterator();
       Store curStore = null;
@@ -154,7 +156,7 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
       }
 
       @Override
-      public fabric.metrics.util.Observer._Proxy next() {
+      public fabric.metrics.util.Observer next() {
         if (subIter == null || !subIter.hasNext()) {
           Map.Entry<Store, SortedSet<Long>> nextBunch = topIter.next();
           curStore = nextBunch.getKey();
@@ -214,6 +216,11 @@ public class ImmutableObserverSet implements FastSerializable, Serializable,
 
   private void readObjectNoData() throws ObjectStreamException {
     map = new TreeMap<>(comparator);
+  }
+
+  private Object readResolve() {
+    if (isEmpty()) return EMPTY;
+    return this;
   }
 
   @Override

@@ -21,6 +21,7 @@ public class ImmutableMetricsVector implements Serializable {
    * signatures
    */
   public static ImmutableMetricsVector createVector(Metric[] items) {
+    if (items.length == 0) return EMPTY;
     return new ImmutableMetricsVector(items);
   }
 
@@ -90,6 +91,11 @@ public class ImmutableMetricsVector implements Serializable {
 
   private void readObjectNoData() {
     items = new Metric._Proxy[0];
+  }
+
+  private Object readResolve() {
+    if (length() == 0) return EMPTY;
+    return this;
   }
 
   @Override
