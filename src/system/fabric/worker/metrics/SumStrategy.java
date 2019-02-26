@@ -215,9 +215,9 @@ public class SumStrategy {
       }
       result[result.length - 1] = slackRemaining;
     }
-    if (METRICS_LOGGER.isLoggable(Level.FINE)) {
+    if (METRICS_LOGGER.isLoggable(Level.FINER)) {
       METRICS_LOGGER
-          .fine("Optimization running with " + Arrays.toString(velocities)
+          .finer("Optimization running with " + Arrays.toString(velocities)
               + ", " + Arrays.toString(rates) + ", " + Arrays.toString(noises)
               + ", " + slack + " got " + Arrays.toString(result));
     }
@@ -317,9 +317,9 @@ public class SumStrategy {
       }
       result[result.length - 1] = slackRemaining;
     }
-    if (METRICS_LOGGER.isLoggable(Level.FINE)) {
+    if (METRICS_LOGGER.isLoggable(Level.FINER)) {
       METRICS_LOGGER
-          .fine("Optimization running with " + Arrays.toString(velocities)
+          .finer("Optimization running with " + Arrays.toString(velocities)
               + ", " + Arrays.toString(rates) + ", " + Arrays.toString(noises)
               + ", " + slack + " got " + Arrays.toString(result));
     }
