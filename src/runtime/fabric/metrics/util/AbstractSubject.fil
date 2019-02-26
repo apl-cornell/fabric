@@ -45,8 +45,6 @@ public abstract class AbstractSubject implements Subject {
   }
 
   private static void static_addObserver(AbstractSubject tmp, Observer o) {
-    //Logging.METRICS_LOGGER.finer("ADD OBSERVER " + o + " FOR " + tmp + " IN " +
-    //    TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
       if (!tmp.observers.contains(o))
         tmp.observers.add(o);
@@ -64,8 +62,6 @@ public abstract class AbstractSubject implements Subject {
   }
 
   public static void static_removeObserver(AbstractSubject tmp, Observer o) {
-    //Logging.METRICS_LOGGER.finer("REMOVE OBSERVER " + o + " FOR " + tmp + " IN "
-    //    + TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.observers.contains(o))
         tmp.observers.remove(o);
@@ -105,9 +101,9 @@ public abstract class AbstractSubject implements Subject {
     // Items that should be handled and need to be checked again later after
     // other children are processed.
     LinkedList/*<Observer>*/ delayed = new LinkedList/*<>*/();
+
     while (!unobserved.isEmpty()) {
       SampledMetric sm = (SampledMetric) unobserved.poll();
-      //Logging.METRICS_LOGGER.log(Level.FINER, "HANDLING OBSERVATION OF " + sm);
       ImmutableObserverSet obs = sm.getObservers();
       for (Iterator iter = obs.iterator(); iter.hasNext();) {
         queue.add(iter.next());
@@ -127,33 +123,31 @@ public abstract class AbstractSubject implements Subject {
             break;
           }
         }
-        // If this has no other pending sampled events, process it.
+
         if (!needToWait) {
-          Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVER {0} IN {1}", new java.lang.Object native [] {unhandled, TransactionManager.getInstance().getCurrentTid()});
           ImmutableObserverSet parentsToCheck = unhandled.handleUpdates();
           for (Iterator iter = parentsToCheck.iterator(); iter.hasNext();) {
             queue.add(iter.next());
           }
         } else {
           // mark as delayed for later processing
-          Logging.METRICS_LOGGER.log(Level.FINE, "DELAYED HANDLING OBSERVER {0} IN {1}", new java.lang.Object native [] {unhandled, TransactionManager.getInstance().getCurrentTid()});
           delayed.add(unhandled);
         }
-        // If there's nothing more, let's get back to delayed items that
-        // are now worth looking at before moving on.
+
         if (queue.isEmpty()) {
-          Iterator delayedIter = delayed.iterator();
-          while (delayedIter.hasNext()) {
+          // See if any delayed items are now enabled.
+          for (Iterator delayedIter = delayed.iterator(); delayedIter.hasNext();) {
             Observer withheld = (Observer) delayedIter.next();
 
-            boolean doneWaiting = true;
             ImmutableMetricsVector/*<SampledMetric>*/ withheldLeaves = withheld.getLeafSubjects();
+            boolean doneWaiting = true;
             for (int i = 0; i < withheldLeaves.length(); i++) {
               if (unobserved.contains(withheldLeaves.get(i))) {
                 doneWaiting = false;
                 break;
               }
             }
+
             if (doneWaiting) {
               queue.add(withheld);
             }
