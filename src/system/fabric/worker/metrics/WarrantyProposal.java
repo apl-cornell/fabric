@@ -121,7 +121,7 @@ public class WarrantyProposal implements Serializable {
     if (in.readBoolean()) {
       predicate = TreatyStatement.read(in);
     }
-    weakStats = new StatsMap(in);
+    weakStats = (StatsMap) in.readObject();
   }
 
   private void readObjectNoData() throws ObjectStreamException {
