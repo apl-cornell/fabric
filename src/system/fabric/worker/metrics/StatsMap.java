@@ -142,6 +142,11 @@ public class StatsMap implements FastSerializable, Serializable {
     this.table = new OidKeyHashMap<>();
   }
 
+  private Object readResolve() {
+    if (this.table.isEmpty()) return EMPTY;
+    return this;
+  }
+
   private static final StatsMap EMPTY = new StatsMap();
 
   /**
@@ -243,6 +248,7 @@ public class StatsMap implements FastSerializable, Serializable {
     StatsMap updated = new StatsMap(this);
     updated.table.putAll(other.table);
     Logging.METRICS_LOGGER.finest("Updated weak stats to " + updated);
+    if (updated.table.isEmpty()) return EMPTY;
     return updated;
   }
 }
