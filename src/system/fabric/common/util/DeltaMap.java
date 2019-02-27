@@ -65,9 +65,10 @@ public class DeltaMap<K, V> implements Map<K, V> {
 
   @Override
   public boolean containsValue(Object value) {
-    if (updates.containsValue(value)) return true;
+    if (updates.containsValue(value) || adds.containsValue(value)) return true;
     for (Map.Entry<K, V> entry : backingMap.entrySet()) {
-      if (removedKeys.contains(entry.getKey())) continue;
+      if (removedKeys.contains(entry.getKey()) ||
+          updates.containsKey(entry.getKey())) continue;
       if (value == null && entry.getValue() == null)
         return true;
       else if (value != null && value.equals(entry.getValue())) return true;
