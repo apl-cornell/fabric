@@ -955,7 +955,7 @@ public final class Log {
       // resolve observations and, in the process, check treaties.
       resolveObservations();
       // Check untreatied checks.
-      Logging.METRICS_LOGGER.fine("CHECKING UNTREATIED POSTCONDITIONS IN "
+      Logging.METRICS_LOGGER.finer("CHECKING UNTREATIED POSTCONDITIONS IN "
           + Thread.currentThread() + ":" + tid);
       for (Map.Entry<Metric._Proxy, TreatyStatement> entry : untreatiedUpdateChecks
           .entries()) {
@@ -968,7 +968,7 @@ public final class Log {
       }
       Set<Store> storesTouched = storesToContact();
       // Check treaties still exist.
-      Logging.METRICS_LOGGER.fine("CHECKING TREATIED POSTCONDITIONS IN "
+      Logging.METRICS_LOGGER.finer("CHECKING TREATIED POSTCONDITIONS IN "
           + Thread.currentThread() + ":" + tid);
       for (Store store : treatiedUpdateChecks.storeSet()) {
         for (LongKeyMap.Entry<Triple<Metric._Proxy, TreatyStatement, Long>> entry : treatiedUpdateChecks
