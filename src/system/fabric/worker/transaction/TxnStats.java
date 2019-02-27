@@ -20,6 +20,7 @@ public class TxnStats {
   private List<String> msgs = new ArrayList<>();
   private List<String> fetched = new ArrayList<>();
   private List<String> versionConflicts = new ArrayList<>();
+  private boolean enableMessages = false;
 
   public TxnStats() {
   }
@@ -30,11 +31,20 @@ public class TxnStats {
     tid = 0;
     coordinated = false;
     locksUsed = false;
+    enableMessages = false;
     fetches = 0;
     fetchWaits = 0;
     msgs.clear();
     fetched.clear();
     versionConflicts.clear();
+  }
+
+  public void enableMsgs() {
+    enableMessages = true;
+  }
+
+  public void disableMsgs() {
+    enableMessages = false;
   }
 
   /**
@@ -147,7 +157,7 @@ public class TxnStats {
    * Add a custom message.
    */
   public void addMsg(String msg) {
-    this.msgs.add(msg);
+    if (enableMessages) this.msgs.add(msg);
   }
 
   /**
