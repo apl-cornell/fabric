@@ -254,12 +254,18 @@ public final class ObjectCache {
       }
       if (impl != null) {
         int ver = impl.$version;
-        _Impl curImpl = impl;
-        // Run through history and update as well.
-        while (curImpl != null && curImpl.$version == ver) {
-          if (newExpiry > curImpl.$expiry) curImpl.$expiry = newExpiry;
-          curImpl.$readMapEntry.extendExpiry(newExpiry);
-          curImpl = curImpl.$history;
+        synchronized (impl) {
+          _Impl curImpl = impl;
+          // Run through history and update as well.
+          while (curImpl != null && curImpl.$version == ver) {
+            // Ensure the non-written values get the new expiry so any current
+            // writing transactions see it on retry.  Don't bother with updating
+            // for current optimistic copies, let them run with the outdated
+            // value for now.
+            if (curImpl.$writeLockHolder == null && newExpiry > curImpl.$expiry) curImpl.$expiry = newExpiry;
+            curImpl.$readMapEntry.extendExpiry(newExpiry);
+            curImpl = curImpl.$history;
+          }
         }
         return;
       }
