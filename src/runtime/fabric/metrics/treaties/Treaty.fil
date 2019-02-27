@@ -26,7 +26,7 @@ public class Treaty extends AbstractSubject implements Observer {
 
   public final Metric metric;
   public final TreatyStatement predicate;
-  private EnforcementPolicy policy;
+  protected EnforcementPolicy policy;
 
   /**
    * Create a new treaty with a given metric, predicate, and policy.
@@ -38,24 +38,26 @@ public class Treaty extends AbstractSubject implements Observer {
     this.metric = metric;
     this.predicate = predicate;
     fabric$metrics$util$AbstractSubject$();
+    this.$associates = ImmutableObjectSet.emptySet().add(metric);
     this.policy = NoPolicy.singleton;
-    this.$expiry = policy.calculateExpiry(this, weakStats);
-    if (valid()) {
+    this.$expiry = 0;
+
+    // And activate immediately
+    long policyExpiry = policy.calculateExpiry(this, weakStats);
+    if (policyExpiry > System.currentTimeMillis()) {
+      this.policy.shiftPolicies(this, policy);
       this.policy = policy;
-      // Move to this from no policy
-      NoPolicy.singleton.shiftPolicies(this, policy);
+      this.$expiry = policyExpiry;
     } else {
+      // Garbage collect abandoned policy
+      policy.unapply(this);
       deactivate();
     }
-    this.$associates = ImmutableObjectSet.emptySet().add(metric);
-    Logging.METRICS_LOGGER.fine("CREATED TREATY " + metric.$getOnum() + " " + predicate + " until " + this.$expiry);
     return this;
   }
 
   /**
    * Perform a not-necessarily-atomic creation of an active treaty.
-   *
-   * TODO: maybe move this interface into Metric?
    */
   public static Treaty newTreaty(Metric metric, TreatyStatement predicate, StatsMap weakStats) {
     final Store s = metric.$getStore();
@@ -104,9 +106,30 @@ public class Treaty extends AbstractSubject implements Observer {
   }
 
   /**
+   * Perform a "deactivation," a forced retraction to 0 and no continued
+   * enforcement.  Garbage collects observer relationships with old policy and
+   * removes this treaty from the metric's set of available treaties.
+   */
+  protected void deactivate() {
+    if (TransactionManager.getInstance().inTxn()) {
+      this.policy.shiftPolicies(this, NoPolicy.singleton);
+      this.policy = NoPolicy.singleton;
+      this.$expiry = 0;
+      this.metric.treatiesBox.remove(this);
+    } else {
+      this.policy.shiftPolicies(this, NoPolicy.singleton);
+      atomic {
+        this.policy = NoPolicy.singleton;
+        this.$expiry = 0;
+        this.metric.treatiesBox.remove(this);
+      }
+    }
+  }
+
+  /**
    * Create and activate a new enforcement policy.
    */
-  private static EnforcementPolicy newActivatedPolicy(Metric metric,
+  protected static EnforcementPolicy newActivatedPolicy(Metric metric,
       TreatyStatement predicate, StatsMap weakStats) {
     EnforcementPolicy newPolicy = predicate.getNewPolicy(metric, weakStats);
     newPolicy.activate(weakStats);
@@ -122,100 +145,33 @@ public class Treaty extends AbstractSubject implements Observer {
   public static final long UPDATE_THRESHOLD = 1000;
 
   /**
-   * Handles an update to some dependency of the current policy for this treaty.
-   *
-   * @return the observers of this treaty if there was a retraction.
-  /*@Override*/
-  public ImmutableObserverSet handleUpdates() {
-    // Note: This always happens within the context of a transaction.
-    long oldExpiry = this.$expiry;
-
-    // Check old policy
+   * Run an update using the current expiry.  Factored out here since it's used
+   * by both handleUpdates() and backgroundExtension().
+   * @return true iff the current policy is still viable.
+   */
+  protected boolean updateWithCurPolicy() {
     long updatedCurExpiry = policy.updatedExpiry(this, StatsMap.emptyStats());
-
     if (updatedCurExpiry > System.currentTimeMillis()) {
-      // Keep current policy.
-      if (updatedCurExpiry < oldExpiry || this.$expiry -
+      if (updatedCurExpiry < this.$expiry || this.$expiry -
           System.currentTimeMillis() <= UPDATE_THRESHOLD) {
-        // Update the expiry if this is a retraction or we're within the
-        // extension window.
         this.$expiry = updatedCurExpiry;
-        Logging.METRICS_LOGGER.fine("UPDATED TREATY " + metric.$getOnum() + " " + predicate + " until " + this.$expiry);
-      } else {
-        // Don't extend eagerly outside update window, mark for future
-        // extension.
+      } else if (updatedCurExpiry > this.$expiry) {
+        // Mark for future extension.
         TransactionManager.getInstance().registerDelayedExtension(this);
       }
-    } else {
-      // Try a new policy
-      EnforcementPolicy oldPolicy = this.policy;
-      // Note: this activates a policy that we might ditch.  It's worth
-      // considering if this should be avoided (this is what was done in the
-      // pre-redesign version).
-      EnforcementPolicy newPolicy = newActivatedPolicy(metric, predicate, StatsMap.emptyStats());
-
-      long newPolicyExpiry = newPolicy.calculateExpiry(this, StatsMap.emptyStats());
-      this.$expiry = newPolicyExpiry;
-      Logging.METRICS_LOGGER.fine("UPDATED TREATY " + metric.$getOnum() + " " + predicate + " until " + this.$expiry);
-      if (valid()) {
-        // Move to this from old policy.
-        this.policy = newPolicy;
-        oldPolicy.shiftPolicies(this, newPolicy);
-      } else {
-        deactivate();
-      }
+      return true;
     }
-
-    // Indicate if observers need to handle a retraction.
-    if (this.$expiry < oldExpiry) {
-      return getObservers();
-    } else {
-      // Register triggered possible extensions.
-      if (this.$expiry > oldExpiry) {
-        for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
-          java.lang.Object o = iter.next();
-          if (o instanceof Treaty)
-            TransactionManager.getInstance().registerDelayedExtension((Treaty) o, this);
-        }
-      }
-      return ImmutableObserverSet.emptySet();
-    }
+    return false;
   }
 
   /**
-   * Run a background extension.  This should only result in extending the
-   * expiry using the existing policy or waiting further to extend.
-   *
-   * TODO: Should this be passed a weak read of relevant stats?
+   * Register potentially enabled extensions for observers given the expiry
+   * relative to the original (given) expiry.  Factored out here since it's used
+   * by both handleUpdates() and backgroundExtension().
    */
-  public void backgroundExtension() {
-    // Note: This always happens within the context of a transaction.
-    long oldExpiry = this.$expiry;
-
-    // Check old policy
-    long updatedCurExpiry = policy.updatedExpiry(this, StatsMap.emptyStats());
-
-    if (updatedCurExpiry > System.currentTimeMillis()) {
-      // Keep current policy.  Update time.
-      if (updatedCurExpiry < oldExpiry) {
-        // This shouldn't be possible.  Retractions should only be caused by an
-        // update to some dependency of the policy and handled in the same
-        // transaction.
-        throw new InternalError("Somehow had a retraction during a background extension");
-      } else if (updatedCurExpiry > oldExpiry && this.$expiry -
-          System.currentTimeMillis() <= UPDATE_THRESHOLD) {
-        // Update the expiry if we're within the extension window.
-        this.$expiry = updatedCurExpiry;
-        Logging.METRICS_LOGGER.fine("UPDATED TREATY " + metric.$getOnum() + " " + predicate + " until " + this.$expiry);
-      } else {
-        // Don't extend eagerly outside update window, mark for future
-        // extension.
-        TransactionManager.getInstance().registerDelayedExtension(this);
-      }
-    }
-
-    // Register triggered possible extensions.
+  protected void registerPotentialExtensions(long oldExpiry) {
     if (this.$expiry > oldExpiry) {
+      // Note possible triggered extensions.
       for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
         java.lang.Object o = iter.next();
         if (o instanceof Treaty)
@@ -225,43 +181,72 @@ public class Treaty extends AbstractSubject implements Observer {
   }
 
   /**
-   * Force a shift to a new policy.
-   */
-  public void rebalance() {
-    // Note: this assumes we're in a transaction already.
-    EnforcementPolicy oldPolicy = this.policy;
-    EnforcementPolicy newPolicy = newActivatedPolicy(metric, predicate, StatsMap.emptyStats());
-    this.$expiry = newPolicy.calculateExpiry(this, StatsMap.emptyStats());
-    Logging.METRICS_LOGGER.fine("UPDATED TREATY " + metric.$getOnum() + " " + predicate + " until " + this.$expiry);
-    this.policy = newPolicy;
-    oldPolicy.shiftPolicies(this, newPolicy);
+   * Handles an update to some dependency of the current policy for this treaty.
+   *
+   * @return the observers of this treaty if there was a retraction.
+  /*@Override*/
+  public ImmutableObserverSet handleUpdates() {
+    // Note: This always happens within the context of a transaction.
+    long oldExpiry = this.$expiry;
+
+    if (!updateWithCurPolicy()) {
+      // Try a new policy
+      // XXX: It's worth considering if we should avoid activating new policy in
+      // case we also ditch?
+      EnforcementPolicy newPolicy = newActivatedPolicy(metric, predicate, StatsMap.emptyStats());
+      long newPolicyExpiry = newPolicy.calculateExpiry(this, StatsMap.emptyStats());
+      if (newPolicyExpiry > System.currentTimeMillis()) {
+        this.policy.shiftPolicies(this, newPolicy);
+        this.policy = newPolicy;
+        this.$expiry = newPolicyExpiry;
+      } else {
+        // Garbage collect abandoned policy
+        newPolicy.unapply(this);
+        deactivate();
+      }
+    }
+
+    if (this.$expiry < oldExpiry) {
+      // Observers need to be handled
+      return getObservers();
+    }
+
+    registerPotentialExtensions(oldExpiry);
+    return ImmutableObserverSet.emptySet();
   }
 
   /**
-   * Perform a "deactivation," a forced retraction to 0 and no continued
-   * enforcement.
+   * Run a background extension.  This should only result in extending the
+   * expiry using the existing policy or waiting further to extend.
    */
-  private void deactivate() {
-    // Set the expiry to 0 and ensure cleanup of underlying treaties, this
-    // treaty is dead.
-    EnforcementPolicy oldPolicy = this.policy;
-    if (TransactionManager.getInstance().inTxn()) {
-      this.$expiry = 0;
-      Logging.METRICS_LOGGER.fine("UPDATED TREATY " + metric.$getOnum() + " " + predicate + " until " + this.$expiry);
-      this.policy = NoPolicy.singleton;
-      oldPolicy.shiftPolicies(this, this.policy);
-      this.metric.treatiesBox.remove(this);
-    } else {
-      atomic {
-        this.$expiry = 0;
-        Logging.METRICS_LOGGER.fine("UPDATED TREATY " + metric.$getOnum() + " " + predicate + " until " + this.$expiry);
-        this.policy = NoPolicy.singleton;
-      }
-      oldPolicy.shiftPolicies(this, this.policy);
-      atomic {
-        this.metric.treatiesBox.remove(this);
-      }
+  public void backgroundExtension() {
+    // Note: This always happens within the context of a transaction.
+    long oldExpiry = this.$expiry;
+
+    // Only bother with attempting using the current policy.
+    boolean policyLive = updateWithCurPolicy();
+
+    if (this.$expiry < oldExpiry) {
+      // This shouldn't be possible.  Retractions should only be caused by an
+      // update to some dependency of the policy and handled in the same
+      // transaction.
+      if (TransactionManager.getInstance().checkForStaleObjects()) retry;
+      throw new InternalError("Somehow had a retraction during a background extension: " + oldExpiry + " to " + this.$expiry);
     }
+
+    registerPotentialExtensions(oldExpiry);
+  }
+
+  /**
+   * Force a shift to a new policy.
+   */
+  public void rebalance() {
+    // TODO: this assumes we're in a transaction already.
+    // TODO: Is this pontentially going to backslide?
+    EnforcementPolicy newPolicy = newActivatedPolicy(metric, predicate, StatsMap.emptyStats());
+    this.policy.shiftPolicies(this, newPolicy);
+    this.policy = newPolicy;
+    this.$expiry = newPolicy.calculateExpiry(this, StatsMap.emptyStats());
   }
 
   /**
@@ -291,5 +276,10 @@ public class Treaty extends AbstractSubject implements Observer {
       return ImmutableMetricsVector.createVector(new Metric native[] { metric });
     }
     throw new InternalError("Unknown metric type: " + metric.getClass() + " " + metric);
+  }
+
+  /*@Override*/
+  public String toString() {
+    return "(" + $getStore().name() + "/" + $getOnum() + "): " + metric.toString() + " " + predicate + " until " + $expiry + " [" + policy + " and observed by " + getObservers() + "]";
   }
 }
