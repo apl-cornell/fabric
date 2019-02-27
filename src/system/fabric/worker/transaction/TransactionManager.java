@@ -905,7 +905,7 @@ public final class TransactionManager {
       // extension.
       if (!alreadyWritten && extending) {
         synchronized (current.extendedTreaties) {
-          current.extendedTreaties.put(obj, new ExpiryExtension(obj));
+          current.extendedTreaties.put(obj, new ExpiryExtension(obj.$getOnum(), obj.$version, newExpiry));
         }
       }
 

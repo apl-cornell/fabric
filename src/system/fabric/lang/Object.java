@@ -771,19 +771,14 @@ public interface Object {
 
     @Override
     public final long set$$expiry(long expiry) {
-      TransactionManager tm = TransactionManager.getInstance();
-      ExpiryExtension ex = tm.getPendingExtension(this);
-      long current = ex == null ? this.$expiry : ex.expiry;
-      boolean transactionCreated =
-          tm.registerExpiryWrite(this, current, expiry);
-      long rtn = expiry;
-      if (expiry >= current && tm.getPendingExtension(this) != null) {
-        tm.getPendingExtension(this).expiry = expiry;
-      } else {
-        this.$expiry = expiry;
+      if (expiry != get$$expiry()) {
+        TransactionManager tm = TransactionManager.getInstance();
+        boolean transactionCreated =
+            tm.registerExpiryWrite(this, this.$expiry, expiry);
+        if (tm.getPendingExtension(this) == null) this.$expiry = expiry;
+        if (transactionCreated) tm.commitTransaction();
       }
-      if (transactionCreated) tm.commitTransaction();
-      return rtn;
+      return expiry;
     }
 
     @Override

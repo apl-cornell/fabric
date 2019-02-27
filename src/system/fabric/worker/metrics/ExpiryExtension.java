@@ -16,7 +16,7 @@ public class ExpiryExtension implements FastSerializable {
   /** Version of the extended object. */
   public final int version;
   /** The new expiry of the extended object. */
-  public long expiry;
+  public final long expiry;
 
   /** Create extension using values. */
   public ExpiryExtension(long onum, int version, long expiry) {
@@ -44,5 +44,20 @@ public class ExpiryExtension implements FastSerializable {
     onum = in.readLong();
     version = in.readInt();
     expiry = in.readLong();
+  }
+
+  @Override
+  public int hashCode() {
+    return Long.hashCode(this.onum) ^ Long.hashCode(this.expiry) ^ version;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o instanceof ExpiryExtension) {
+      ExpiryExtension other = (ExpiryExtension) o;
+      return other.onum == this.onum && other.version == this.version &&
+        other.expiry == this.expiry;
+    }
+    return false;
   }
 }
