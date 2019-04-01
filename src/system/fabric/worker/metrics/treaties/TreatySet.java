@@ -160,7 +160,7 @@ public class TreatySet
   // lock for.
   private static TreatySet getAssociatedTreaties(
       fabric.lang.Object._Impl impl) {
-    return ((fabric.metrics.util.TreatiesBox._Impl) impl).get$$treaties();
+    return ((fabric.metrics.util.TreatiesBox._Impl) impl).$treaties;
   }
 
   public void remove(Treaty treaty) {
@@ -190,8 +190,8 @@ public class TreatySet
     resultSet.statementMap.remove(treaty.get$predicate(), new Oid(treaty));
     if (TransactionManager.getInstance().inTxn()) {
       resultSet.owner.set$$treaties(resultSet);
-      if (TransactionManager.usingPrefetching())
-        resultSet.owner.set$$associates(resultSet.owner.get$$associates().remove(treaty));
+      if (TransactionManager.usingPrefetching()) resultSet.owner
+          .set$$associates(resultSet.owner.get$$associates().remove(treaty));
     } else {
       TreatySet resultSetCopy = resultSet;
       Worker.runInSubTransaction(new Code<Void>() {
@@ -199,7 +199,8 @@ public class TreatySet
         public Void run() {
           resultSetCopy.owner.set$$treaties(resultSetCopy);
           if (TransactionManager.usingPrefetching())
-            resultSetCopy.owner.set$$associates(resultSetCopy.owner.get$$associates().remove(treaty));
+            resultSetCopy.owner.set$$associates(
+                resultSetCopy.owner.get$$associates().remove(treaty));
           return null;
         }
       });
@@ -238,8 +239,8 @@ public class TreatySet
     resultSet.statementMap.put(stmt, new Oid(newTreaty));
     if (TransactionManager.getInstance().inTxn()) {
       resultSet.owner.set$$treaties(resultSet);
-      if (TransactionManager.usingPrefetching())
-        resultSet.owner.set$$associates(resultSet.owner.get$$associates().add(newTreaty));
+      if (TransactionManager.usingPrefetching()) resultSet.owner
+          .set$$associates(resultSet.owner.get$$associates().add(newTreaty));
     } else {
       TreatySet resultSetCopy = resultSet;
       Worker.runInSubTransaction(new Code<Void>() {
@@ -247,7 +248,8 @@ public class TreatySet
         public Void run() {
           resultSetCopy.owner.set$$treaties(resultSetCopy);
           if (TransactionManager.usingPrefetching())
-            resultSetCopy.owner.set$$associates(resultSetCopy.owner.get$$associates().add(newTreaty));
+            resultSetCopy.owner.set$$associates(
+                resultSetCopy.owner.get$$associates().add(newTreaty));
           return null;
         }
       });
@@ -269,8 +271,8 @@ public class TreatySet
     return result;
   }
 
-  public void flattenUpdates() {
-    TreatiesBox._Impl historyObj = (TreatiesBox._Impl) owner.fetch().$history;
+  public void flattenUpdates(TreatiesBox._Impl ownerImpl) {
+    TreatiesBox._Impl historyObj = (TreatiesBox._Impl) ownerImpl.$history;
     if (historyObj != null) {
       TreatySet historyMap = getAssociatedTreaties(historyObj);
       // Merge changes to statementMap

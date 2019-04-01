@@ -230,8 +230,9 @@ public class Treaty extends AbstractSubject implements Observer {
       // This shouldn't be possible.  Retractions should only be caused by an
       // update to some dependency of the policy and handled in the same
       // transaction.
-      if (TransactionManager.getInstance().checkForStaleObjects()) retry;
-      throw new InternalError("Somehow had a retraction during a background extension: " + oldExpiry + " to " + this.$expiry);
+      retry;
+      //if (TransactionManager.getInstance().checkForStaleObjects()) retry;
+      //throw new InternalError("Somehow had a retraction during a background extension: " + oldExpiry + " to " + this.$expiry);
     }
 
     registerPotentialExtensions(oldExpiry);

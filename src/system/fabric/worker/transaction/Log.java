@@ -51,6 +51,7 @@ import fabric.metrics.treaties.Treaty;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
+import fabric.metrics.util.TreatiesBox;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
@@ -1122,7 +1123,8 @@ public final class Log {
               obj.$expiry = extendedTreaties.get(obj).expiry;
           }
           // Flatten any changes to the treatyset, if necessary.
-          if (obj.$treaties != null) obj.$treaties.flattenUpdates();
+          if (obj.$treaties != null)
+            obj.$treaties.flattenUpdates((TreatiesBox._Impl) obj);
         } else {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
@@ -1153,7 +1155,8 @@ public final class Log {
               obj.$expiry = extendedTreaties.get(obj).expiry;
           }
           // Flatten any changes to the treatyset, if necessary.
-          if (obj.$treaties != null) obj.$treaties.flattenUpdates();
+          if (obj.$treaties != null)
+            obj.$treaties.flattenUpdates((TreatiesBox._Impl) obj);
         } else {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
@@ -1293,7 +1296,8 @@ public final class Log {
 
         long expiry = getFinalExpiry(obj);
         // Flatten any changes to the treatyset, if necessary.
-        if (obj.$treaties != null) obj.$treaties.flattenUpdates();
+        if (obj.$treaties != null)
+          obj.$treaties.flattenUpdates((TreatiesBox._Impl) obj);
         obj.$expiry = expiry;
         // Don't increment the version if it's only extending treaties
         if (!extendedTreaties.containsKey(obj)) {
