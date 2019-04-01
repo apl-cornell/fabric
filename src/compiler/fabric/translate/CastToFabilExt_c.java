@@ -3,6 +3,13 @@ package fabric.translate;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabil.ast.FabILNodeFactory;
+
+import fabric.types.FabricClassType;
+import fabric.types.FabricSubstType;
+import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
+
 import jif.extension.JifCastDel;
 import jif.translate.CastToJavaExt_c;
 import jif.translate.ClassDeclToJavaExt_c;
@@ -10,17 +17,13 @@ import jif.translate.JifToJavaRewriter;
 import jif.types.JifPolyType;
 import jif.types.JifSubst;
 import jif.types.ParamInstance;
+
 import polyglot.ast.Cast;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import fabil.ast.FabILNodeFactory;
-import fabric.types.FabricClassType;
-import fabric.types.FabricSubstType;
-import fabric.types.FabricTypeSystem;
-import fabric.visit.FabricToFabilRewriter;
 
 public class CastToFabilExt_c extends CastToJavaExt_c {
 
@@ -32,14 +35,15 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
     FabricTypeSystem ts = (FabricTypeSystem) ffrw.jif_ts();
     FabILNodeFactory nf = (FabILNodeFactory) ffrw.java_nf();
     if (ts.isPrincipal(castType)
-        && (ts.typeEquals(ts.Worker(), exprType) || ts.typeEquals(
-            ts.RemoteWorker(), exprType))
+        && (ts.typeEquals(ts.Worker(), exprType)
+            || ts.typeEquals(ts.RemoteWorker(), exprType))
         || ts.typeEquals(ts.Store(), exprType)) {
       return nf.Call(c.position(), c.expr(),
           nf.Id(Position.compilerGenerated(), "getPrincipal"));
     }
 
-    if (castType.isPrimitive() || !ts.isFabricClass(castType)) {
+    if (castType.isPrimitive() || (!ts.isFabricClass(castType)
+        && !ts.needsDynamicTypeMethods(castType))) {
       return rw.java_nf().Cast(c.position(), c.castType(), c.expr());
     }
 
