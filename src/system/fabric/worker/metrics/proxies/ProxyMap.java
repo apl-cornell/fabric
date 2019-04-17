@@ -168,6 +168,11 @@ public class ProxyMap implements FastSerializable, Serializable {
     map = new HashMap<>();
   }
 
+  private Object readResolve() {
+    if (size() == 0) return EMPTY;
+    return this;
+  }
+
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(map.size());
