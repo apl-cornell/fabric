@@ -170,7 +170,7 @@ public final class ObjectCache {
     /**
      * Determines whether this entry is <b>evicted</b>.
      */
-    private synchronized boolean isEvicted() {
+    public synchronized boolean isEvicted() {
       if (next != null) {
         if (!next.isEvicted()) return false;
 
@@ -262,7 +262,8 @@ public final class ObjectCache {
             // writing transactions see it on retry.  Don't bother with updating
             // for current optimistic copies, let them run with the outdated
             // value for now.
-            if (curImpl.$writeLockHolder == null && newExpiry > curImpl.$expiry) curImpl.$expiry = newExpiry;
+            if (curImpl.$writeLockHolder == null && newExpiry > curImpl.$expiry)
+              curImpl.$expiry = newExpiry;
             curImpl.$readMapEntry.extendExpiry(newExpiry);
             curImpl = curImpl.$history;
           }
@@ -570,14 +571,12 @@ public final class ObjectCache {
                     && curEntry.getExpiry() >= update.getExpiry()))
               return curEntry;
 
-            /*
-            // I'm fairly convinced this doesn't play well with the delta maps
-            if (curEntry.getVersion() == update.getVersion() && update
-                .getTreaties().isStrictExtensionOf(curEntry.getTreaties())) {
-              curEntry.extendTreaties(update.getTreaties());
+            // Update in place, if possible.
+            if (curEntry.getVersion() == update.getVersion()
+                && update.getExpiry() > curEntry.getExpiry()) {
+              curEntry.extendExpiry(update.getExpiry());
               return curEntry;
             }
-            */
 
             curEntry.evict();
           }
