@@ -162,10 +162,6 @@ public class RunningMetricStats implements Serializable {
         Worker.getWorker().config.useEstimation);
   }
 
-  private double getCurAlpha() {
-    return getAlpha(samples);
-  }
-
   private static double getAlpha(long samples) {
     return Math.max(Worker.getWorker().config.alpha,
         1.0 / Math.max(1, samples));
