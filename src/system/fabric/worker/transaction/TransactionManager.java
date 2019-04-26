@@ -653,6 +653,8 @@ public final class TransactionManager {
     // Make sure we're not supposed to abort/retry.
     checkRetrySignal();
 
+    current.checkReadClobber(obj);
+
     // Check read condition: wait until all writers are in our ancestry.
     boolean hadToWait = false;
     try {
@@ -743,6 +745,8 @@ public final class TransactionManager {
 
     // Make sure we're not supposed to abort/retry.
     checkRetrySignal();
+
+    current.checkWriteClobber(obj);
 
     // Check write condition: wait until writer is in our ancestry and all
     // readers are in our ancestry.
@@ -838,7 +842,7 @@ public final class TransactionManager {
       }
     } else {
       synchronized (current.writes) {
-        current.writes.add(obj);
+        current.writes.put(obj, obj);
       }
     }
 
@@ -889,7 +893,7 @@ public final class TransactionManager {
         }
       } else {
         synchronized (current.creates) {
-          current.creates.add(obj);
+          current.creates.put(obj, obj);
         }
       }
     }

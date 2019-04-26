@@ -167,7 +167,7 @@ public final class ObjectCache {
     /**
      * Determines whether this entry is <b>evicted</b>.
      */
-    private synchronized boolean isEvicted() {
+    public synchronized boolean isEvicted() {
       if (next != null) {
         if (!next.isEvicted()) return false;
 

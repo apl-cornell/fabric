@@ -23,6 +23,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.FabricSoftRef;
@@ -111,8 +112,10 @@ public final class Log {
    * sub-transactions. Objects created in running or aborted sub-transactions
    * don't count here. To keep them from being pinned, objects on local store
    * are not tracked here.
+   *
+   * Using an OidKeyHashMap for quick inclusion checking.
    */
-  protected final List<_Impl> creates;
+  protected final OidKeyHashMap<_Impl> creates;
 
   /**
    * Tracks objects created on local store. See <code>creates</code>.
@@ -124,8 +127,10 @@ public final class Log {
    * sub-transactions. Objects modified in running or aborted sub-transactions
    * don't count here. To keep them from being pinned, objects on local store
    * are not tracked here.
+   *
+   * Using an OidKeyHashMap for quick inclusion checking.
    */
-  protected final List<_Impl> writes;
+  protected final OidKeyHashMap<_Impl> writes;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -231,9 +236,9 @@ public final class Log {
     this.retryCause = parent == null ? null : parent.retryCause;
     this.reads = new OidKeyHashMap<>();
     this.readsReadByParent = new ArrayList<>();
-    this.creates = new ArrayList<>();
+    this.creates = new OidKeyHashMap<>();
     this.localStoreCreates = new WeakReferenceArrayList<>();
-    this.writes = new ArrayList<>();
+    this.writes = new OidKeyHashMap<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
     this.commitHooks = new ArrayList<>();
@@ -313,11 +318,11 @@ public final class Log {
 
     result.addAll(reads.storeSet());
 
-    for (_Impl obj : writes) {
+    for (_Impl obj : writes.values()) {
       if (obj.$isOwned) result.add(obj.$getStore());
     }
 
-    for (_Impl obj : creates) {
+    for (_Impl obj : creates.values()) {
       if (obj.$isOwned) result.add(obj.$getStore());
     }
 
@@ -378,8 +383,10 @@ public final class Log {
           result.remove(write.$getOnum());
       } else {
         Iterable<_Impl> writesToExclude =
-            includeModified ? Collections.<_Impl> emptyList() : curLog.writes;
-        Iterable<_Impl> chain = SysUtil.chain(writesToExclude, curLog.creates);
+            includeModified ? Collections.<_Impl> emptyList()
+                : curLog.writes.values();
+        Iterable<_Impl> chain =
+            SysUtil.chain(writesToExclude, curLog.creates.values());
         for (_Impl write : chain)
           if (write.$getStore() == store) result.remove(write.$getOnum());
       }
@@ -407,11 +414,11 @@ public final class Log {
         result.remove(create.$getOnum());
       }
     } else {
-      for (_Impl obj : writes)
+      for (_Impl obj : writes.values())
         if (obj.$getStore() == store && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
 
-      for (_Impl create : creates)
+      for (_Impl create : creates.values())
         if (create.$getStore() == store) result.remove(create.$getOnum());
     }
 
@@ -431,7 +438,7 @@ public final class Log {
         result.put(obj.$getOnum(), obj);
       }
     } else {
-      for (_Impl obj : creates)
+      for (_Impl obj : creates.values())
         if (obj.$getStore() == store && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
     }
@@ -515,7 +522,7 @@ public final class Log {
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
-    Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
+    Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
         if (write.$writeLockHolder == this) {
@@ -594,8 +601,8 @@ public final class Log {
     }
 
     // Merge writes and transfer write locks.
-    List<_Impl> parentWrites = parent.writes;
-    for (_Impl obj : writes) {
+    OidKeyHashMap<_Impl> parentWrites = parent.writes;
+    for (_Impl obj : writes.values()) {
       synchronized (obj) {
         if (obj.$history.$writeLockHolder == parent) {
           // The parent transaction already wrote to the object. Discard one
@@ -606,7 +613,7 @@ public final class Log {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
           synchronized (parentWrites) {
-            parentWrites.add(obj);
+            parentWrites.put(obj, obj);
           }
         }
         obj.$writer = null;
@@ -642,10 +649,10 @@ public final class Log {
     }
 
     // Merge creates and transfer write locks.
-    List<_Impl> parentCreates = parent.creates;
+    OidKeyHashMap<_Impl> parentCreates = parent.creates;
     synchronized (parentCreates) {
-      for (_Impl obj : creates) {
-        parentCreates.add(obj);
+      for (_Impl obj : creates.values()) {
+        parentCreates.put(obj, obj);
         obj.$writeLockHolder = parent;
       }
     }
@@ -695,7 +702,7 @@ public final class Log {
     // XXX TRM 3/9/18: Do this before reads and writes so that nobody gets a
     // reference to the creates before we've released the writer locks on
     // creates.
-    Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
+    Iterable<_Impl> chain2 = SysUtil.chain(creates.values(), localStoreCreates);
     for (_Impl obj : chain2) {
       if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
         Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
@@ -731,7 +738,7 @@ public final class Log {
       throw new InternalError("something was read by a non-existent parent");
 
     // Release write locks and ownerships; update version numbers.
-    Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
+    Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
     for (_Impl obj : chain) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
@@ -944,5 +951,64 @@ public final class Log {
   @Override
   public String toString() {
     return "[" + tid + "]";
+  }
+
+  /**
+   * Dumb hack to check we aren't clobbering an existing write of a different
+   * _Impl copy.  Aborts up to the furthest ancestor with a different _Impl for
+   * the obj.
+   */
+  public void checkWriteClobber(fabric.lang.Object._Impl o) {
+    // Walk from top level down.
+    Log cur = this;
+    while (cur.parent != null)
+      cur = cur.parent;
+    while (cur != null) {
+      if (cur.writes.containsKey(o) && cur.writes.get(o) != o) {
+        throw new TransactionRestartingException(cur.tid);
+      }
+      cur = cur.child;
+    }
+  }
+
+  /**
+   * Dumb hack to check we aren't clobbering an existing read of a different
+   * copy.  Aborts up to the furthest ancestor with a different read for the
+   * obj.
+   */
+  public void checkReadClobber(fabric.lang.Object._Impl o) {
+    // Walk from top level down.
+    Log cur = this;
+    while (cur.parent != null)
+      cur = cur.parent;
+    while (cur != null) {
+      if (!o.$readMapEntry.getReaders().contains(cur)
+          && cur.reads.containsKey(o)) {
+        throw new TransactionRestartingException(cur.tid);
+      }
+      cur = cur.child;
+    }
+  }
+
+  /**
+   * Get the impl already seen by this transaction.
+   */
+  public _Impl getImpl(_Proxy p) {
+    if (parent != null) {
+      _Impl result = parent.getImpl(p);
+      if (result != null) return result;
+    }
+    if (writes.containsKey(p)) {
+      _Impl result = writes.get(p);
+      if (result.$cacheEntry.isEvicted())
+        throw new TransactionRestartingException(tid);
+      return result;
+    }
+    if (creates.containsKey(p)) {
+      _Impl result = creates.get(p);
+      if (result.$cacheEntry.isEvicted())
+        throw new TransactionRestartingException(tid);
+      return result;
+    } else return null;
   }
 }
