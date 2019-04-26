@@ -619,8 +619,8 @@ public final class TransactionManager {
   }
 
   public void registerLabelsInitialized(_Impl obj) {
-    current.writerMap.put(obj.$getProxy(), Worker.getWorker().getLocalWorker());
-    current.writerMap.put(obj.$getProxy(), obj.get$$updateLabel());
+    current.writerMap.put(obj, Worker.getWorker().getLocalWorker());
+    current.writerMap.put(obj, obj.get$$updateLabel());
   }
 
   public void registerRead(_Impl obj) {
@@ -878,8 +878,7 @@ public final class TransactionManager {
     // Add the object to the writer map, but only do so if the object's labels
     // are initialized.
     if (obj.$version != 0 || obj.get$$updateLabel() != null) {
-      current.writerMap.put(obj.$getProxy(),
-          Worker.getWorker().getLocalWorker());
+      current.writerMap.put(obj, Worker.getWorker().getLocalWorker());
     }
 
     // If the object is fresh, add it to our set of creates.
