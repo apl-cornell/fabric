@@ -470,8 +470,8 @@ public abstract class ObjectDB {
     /**
      * Add an extension.
      */
-    public void addExtension(ObjectDB db, ExpiryExtension extension)
-        throws TransactionPrepareFailedException {
+    public synchronized void addExtension(ObjectDB db,
+        ExpiryExtension extension) throws TransactionPrepareFailedException {
       // First, lock the object.
       try {
         db.rwLocks.acquireSoftWriteLock(extension.onum, this);
@@ -501,7 +501,8 @@ public abstract class ObjectDB {
     /**
      * Downgrade an extension to a read.
      */
-    public void downgradeExtension(ObjectDB db, ExpiryExtension extension) {
+    public synchronized void downgradeExtension(ObjectDB db,
+        ExpiryExtension extension) {
       boolean removed;
       synchronized (this) {
         removed = extensions.remove(extension);
@@ -577,6 +578,35 @@ public abstract class ObjectDB {
      */
     public Map<Store, Pair<LongSet, LongSet>> getExtensionsTriggered() {
       return extensionsTriggered;
+    }
+
+    /**
+     * Sends extension messages that were triggered by a successful commit.
+     *
+     * @param db
+     *    the db to grab the updated values from
+     */
+    public void sendTriggeredExtensions(ObjectDB db) {
+      for (final Map.Entry<Store, Pair<LongSet, LongSet>> e : extensionsTriggered
+          .entrySet()) {
+        Store s = e.getKey();
+        LongSet delayedTreaties = e.getValue().first;
+        LongSet updatedOnums = e.getValue().second;
+        Map<RemoteStore, Collection<SerializedObject>> updates =
+            new HashMap<>();
+        if (!(s instanceof InProcessStore) && !(s instanceof LocalStore)) {
+          // Only bother to package things up when it's going to a
+          // distinct node.
+          List<SerializedObject> updateVals =
+              new ArrayList<>(updatedOnums.size());
+          for (LongIterator it = updatedOnums.iterator(); it.hasNext();) {
+            updateVals.add(db.read(it.next()));
+          }
+          updates.put(Worker.getWorker().getStore(Worker.getWorkerName()),
+              updateVals);
+        }
+        s.sendExtensions(delayedTreaties, updates);
+      }
     }
   }
 
@@ -1037,40 +1067,6 @@ public abstract class ObjectDB {
     if (Worker.getWorker().config.useSubscriptions) {
       // Notify the subscription manager that the group has been updated.
       sm.notifyUpdate(groupOnums, worker);
-    }
-  }
-
-  /**
-   * Sends extension messages that were triggered by a successful commit.
-   *
-   * @param tid
-   *    tid to send triggered extensions for.
-   */
-  protected final void sendTriggeredExtensions(long tid) {
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    synchronized (submap) {
-      for (PendingTransaction p : submap.values()) {
-        for (final Map.Entry<Store, Pair<LongSet, LongSet>> e : p.extensionsTriggered
-            .entrySet()) {
-          Store s = e.getKey();
-          LongSet delayedTreaties = e.getValue().first;
-          LongSet updatedOnums = e.getValue().second;
-          Map<RemoteStore, Collection<SerializedObject>> updates =
-              new HashMap<>();
-          if (!(s instanceof InProcessStore) && !(s instanceof LocalStore)) {
-            // Only bother to package things up when it's going to a
-            // distinct node.
-            List<SerializedObject> updateVals =
-                new ArrayList<>(updatedOnums.size());
-            for (LongIterator it = updatedOnums.iterator(); it.hasNext();) {
-              updateVals.add(read(it.next()));
-            }
-            updates.put(Worker.getWorker().getStore(Worker.getWorkerName()),
-                updateVals);
-          }
-          s.sendExtensions(delayedTreaties, updates);
-        }
-      }
     }
   }
 

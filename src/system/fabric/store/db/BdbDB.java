@@ -335,7 +335,7 @@ public class BdbDB extends ObjectDB {
     // Remove any cached globs containing the old version of this object.
     notifyCommittedUpdates(sm, writtenOnums, workerIdentity.node);
 
-    sendTriggeredExtensions(tid);
+    pending.sendTriggeredExtensions(this);
 
     STORE_DB_LOGGER.log(Level.FINER, "Bdb commit success tid {0}", tid);
   }

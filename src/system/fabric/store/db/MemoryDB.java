@@ -156,7 +156,7 @@ public class MemoryDB extends ObjectDB {
     // notify subscribed workers.
     notifyCommittedUpdates(sm, writtenOnums, workerIdentity.node);
 
-    sendTriggeredExtensions(tid);
+    tx.sendTriggeredExtensions(this);
 
     remove(workerIdentity.principal, tid);
   }
