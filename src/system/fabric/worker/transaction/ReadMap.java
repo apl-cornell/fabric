@@ -213,7 +213,7 @@ public final class ReadMap {
         synchronized (this) {
           if (defunct) return false;
 
-          if (versionNumber != impl.$version) {
+          if (versionNumber != impl.$version || expiry != impl.$expiry) {
             // Version numbers don't match. Retry all other transactions.
             // XXX What if we were given an older copy of the object?
             abortReaders("updating " + impl.$getStore() + "/" + impl.$getOnum()
