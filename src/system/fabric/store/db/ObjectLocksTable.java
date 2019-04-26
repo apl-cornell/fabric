@@ -58,13 +58,21 @@ final class ObjectLocksTable {
    */
   public boolean isLocked(long onum) {
     ObjectLocks locks;
-    synchronized (locks = getLocks(onum)) {
-      try {
-        return locks.isLocked();
-      } finally {
-        if (!locks.inUse()) table.remove(onum, locks);
+    boolean result = false;
+    boolean done = false;
+    while (!done) {
+      synchronized (locks = getLocks(onum)) {
+        if (table.get(onum) != locks) continue;
+        done = true;
+        try {
+          result = locks.isLocked();
+          break;
+        } finally {
+          if (!locks.inUse()) table.remove(onum, locks);
+        }
       }
     }
+    return result;
   }
 
   /**
@@ -77,11 +85,16 @@ final class ObjectLocksTable {
   public void acquireWriteLock(long onum, PendingTransaction tx)
       throws UnableToLockException {
     ObjectLocks locks;
-    synchronized (locks = getLocks(onum)) {
-      try {
-        locks.lockForWrite(tx);
-      } finally {
-        if (!locks.inUse()) table.remove(onum, locks);
+    boolean done = false;
+    while (!done) {
+      synchronized (locks = getLocks(onum)) {
+        if (table.get(onum) != locks) continue;
+        done = true;
+        try {
+          locks.lockForWrite(tx);
+        } finally {
+          if (!locks.inUse()) table.remove(onum, locks);
+        }
       }
     }
   }
@@ -95,11 +108,16 @@ final class ObjectLocksTable {
    */
   public void releaseWriteLock(long onum, PendingTransaction tx) {
     ObjectLocks locks;
-    synchronized (locks = getLocks(onum)) {
-      try {
-        locks.unlockForWrite(tx);
-      } finally {
-        if (!locks.inUse()) table.remove(onum, locks);
+    boolean done = false;
+    while (!done) {
+      synchronized (locks = getLocks(onum)) {
+        if (table.get(onum) != locks) continue;
+        done = true;
+        try {
+          locks.unlockForWrite(tx);
+        } finally {
+          if (!locks.inUse()) table.remove(onum, locks);
+        }
       }
     }
   }
@@ -114,11 +132,16 @@ final class ObjectLocksTable {
   public void acquireSoftWriteLock(long onum, PendingTransaction tx)
       throws UnableToLockException {
     ObjectLocks locks;
-    synchronized (locks = getLocks(onum)) {
-      try {
-        locks.lockForSoftWrite(tx);
-      } finally {
-        if (!locks.inUse()) table.remove(onum, locks);
+    boolean done = false;
+    while (!done) {
+      synchronized (locks = getLocks(onum)) {
+        if (table.get(onum) != locks) continue;
+        done = true;
+        try {
+          locks.lockForSoftWrite(tx);
+        } finally {
+          if (!locks.inUse()) table.remove(onum, locks);
+        }
       }
     }
   }
@@ -132,11 +155,16 @@ final class ObjectLocksTable {
    */
   public void releaseSoftWriteLock(long onum, PendingTransaction tx) {
     ObjectLocks locks;
-    synchronized (locks = getLocks(onum)) {
-      try {
-        locks.unlockForSoftWrite(tx);
-      } finally {
-        if (!locks.inUse()) table.remove(onum, locks);
+    boolean done = false;
+    while (!done) {
+      synchronized (locks = getLocks(onum)) {
+        if (table.get(onum) != locks) continue;
+        done = true;
+        try {
+          locks.unlockForSoftWrite(tx);
+        } finally {
+          if (!locks.inUse()) table.remove(onum, locks);
+        }
       }
     }
   }
@@ -151,11 +179,16 @@ final class ObjectLocksTable {
   public void acquireReadLock(long onum, PendingTransaction tx)
       throws UnableToLockException {
     ObjectLocks locks;
-    synchronized (locks = getLocks(onum)) {
-      try {
-        locks.lockForRead(tx);
-      } finally {
-        if (!locks.inUse()) table.remove(onum, locks);
+    boolean done = false;
+    while (!done) {
+      synchronized (locks = getLocks(onum)) {
+        if (table.get(onum) != locks) continue;
+        done = true;
+        try {
+          locks.lockForRead(tx);
+        } finally {
+          if (!locks.inUse()) table.remove(onum, locks);
+        }
       }
     }
   }
@@ -169,11 +202,16 @@ final class ObjectLocksTable {
    */
   public void releaseReadLock(long onum, PendingTransaction tx) {
     ObjectLocks locks;
-    synchronized (locks = getLocks(onum)) {
-      try {
-        locks.unlockForRead(tx);
-      } finally {
-        if (!locks.inUse()) table.remove(onum, locks);
+    boolean done = false;
+    while (!done) {
+      synchronized (locks = getLocks(onum)) {
+        if (table.get(onum) != locks) continue;
+        done = true;
+        try {
+          locks.unlockForRead(tx);
+        } finally {
+          if (!locks.inUse()) table.remove(onum, locks);
+        }
       }
     }
   }
