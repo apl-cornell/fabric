@@ -745,8 +745,8 @@ public final class TransactionManager {
   }
 
   public void registerLabelsInitialized(_Impl obj) {
-    current.writerMap.put(obj.$getProxy(), Worker.getWorker().getLocalWorker());
-    current.writerMap.put(obj.$getProxy(), obj.get$$updateLabel());
+    current.writerMap.put(obj, Worker.getWorker().getLocalWorker());
+    current.writerMap.put(obj, obj.get$$updateLabel());
   }
 
   public void registerExpiryUse(long exp) {
@@ -782,6 +782,8 @@ public final class TransactionManager {
 
     // Make sure we're not supposed to abort/retry.
     checkRetrySignal();
+
+    current.checkReadClobber(obj);
 
     // Check read condition: wait until all writers are in our ancestry.
     boolean hadToWait = false;
@@ -1073,8 +1075,7 @@ public final class TransactionManager {
     // Add the object to the writer map, but only do so if the object's labels
     // are initialized.
     if (obj.$version != 0 || obj.get$$updateLabel() != null) {
-      current.writerMap.put(obj.$getProxy(),
-          Worker.getWorker().getLocalWorker());
+      current.writerMap.put(obj, Worker.getWorker().getLocalWorker());
     }
 
     // If the object is fresh, add it to our set of creates.
@@ -1194,13 +1195,18 @@ public final class TransactionManager {
               try {
                 if (worker.checkForStaleObjects(checkingLog.tid))
                   nodesWithStaleObjects.add(worker);
+              } catch (UnreachableNodeException e) {
+                // Conservatively assume it had stale objects.
+                nodesWithStaleObjects.add(worker);
+              } catch (Throwable t) {
+                // Conservatively assume it had stale objects.
+                nodesWithStaleObjects.add(worker);
+                throw t;
+              } finally {
                 synchronized (outstandingChecks) {
                   outstandingChecks[0]--;
                   outstandingChecks.notifyAll();
                 }
-              } catch (UnreachableNodeException e) {
-                // Conservatively assume it had stale objects.
-                nodesWithStaleObjects.add(worker);
               }
             }
           };
@@ -1218,11 +1224,18 @@ public final class TransactionManager {
           new NamedRunnable("worker freshness check to " + store.name()) {
             @Override
             public void runImpl() {
-              if (store.checkForStaleObjects(reads))
+              try {
+                if (store.checkForStaleObjects(reads))
+                  nodesWithStaleObjects.add((RemoteNode<?>) store);
+              } catch (Throwable t) {
+                // Conservatively assume it had stale objects.
                 nodesWithStaleObjects.add((RemoteNode<?>) store);
-              synchronized (outstandingChecks) {
-                outstandingChecks[0]--;
-                outstandingChecks.notifyAll();
+                throw t;
+              } finally {
+                synchronized (outstandingChecks) {
+                  outstandingChecks[0]--;
+                  outstandingChecks.notifyAll();
+                }
               }
             }
           };

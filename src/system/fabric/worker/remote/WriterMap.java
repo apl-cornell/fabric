@@ -17,6 +17,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
+import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
@@ -66,7 +67,7 @@ public class WriterMap implements FastSerializable {
   /**
    * Cache for "writers" entries that haven't been encrypted yet.
    */
-  private OidKeyHashMap<Pair<_Proxy, RemoteWorker>> writeCache;
+  private OidKeyHashMap<Pair<_Impl, RemoteWorker>> writeCache;
 
   public int version;
 
@@ -256,25 +257,25 @@ public class WriterMap implements FastSerializable {
     return true;
   }
 
-  public void put(_Proxy proxy, Label keyObject) {
+  public void put(_Impl impl, Label keyObject) {
     // Don't put in entries for global constants or objects on local store.
-    if (ONumConstants.isGlobalConstant(proxy.$getOnum())
-        || proxy.$getStore() instanceof LocalStore)
+    if (ONumConstants.isGlobalConstant(impl.$getOnum())
+        || impl.$getStore() instanceof LocalStore)
       return;
 
     if (keyObject == null)
-      unencryptedCreates.put(proxy, keyObject);
-    else creates.put(hash(proxy), keyObject);
+      unencryptedCreates.put(impl, keyObject);
+    else creates.put(hash(impl), keyObject);
   }
 
-  public void put(_Proxy proxy, RemoteWorker worker) {
+  public void put(_Impl impl, RemoteWorker worker) {
     // Don't put in entries for global constants or objects on local store.
-    if (ONumConstants.isGlobalConstant(proxy.$getOnum())
-        || proxy.$getStore() instanceof LocalStore)
+    if (ONumConstants.isGlobalConstant(impl.$getOnum())
+        || impl.$getStore() instanceof LocalStore)
       return;
 
-    writeCache.put(proxy, new Pair<>(proxy, worker));
-    readCache.put(proxy, worker);
+    writeCache.put(impl, new Pair<>(impl, worker));
+    readCache.put(impl, worker);
   }
 
   /**
@@ -298,8 +299,8 @@ public class WriterMap implements FastSerializable {
   }
 
   private void flushWriteCache() {
-    for (LongKeyMap<Pair<_Proxy, RemoteWorker>> entry : writeCache) {
-      for (Pair<_Proxy, RemoteWorker> val : entry.values()) {
+    for (LongKeyMap<Pair<_Impl, RemoteWorker>> entry : writeCache) {
+      for (Pair<_Impl, RemoteWorker> val : entry.values()) {
         slowPut(val.first, val.second);
       }
     }
@@ -307,14 +308,14 @@ public class WriterMap implements FastSerializable {
     writeCache.clear();
   }
 
-  private void slowPut(_Proxy proxy, RemoteWorker worker) {
+  private void slowPut(_Impl impl, RemoteWorker worker) {
     try {
-      byte[] encryptKey = getKey(proxy);
+      byte[] encryptKey = getKey(impl);
       if (encryptKey == null) {
-        unencryptedWriters.put(proxy, worker);
+        unencryptedWriters.put(impl, worker);
         return;
       }
-      Hash mapKey = hash(proxy, encryptKey);
+      Hash mapKey = hash(impl, encryptKey);
       byte[] iv = Crypto.makeIV();
 
       Cipher cipher =
@@ -327,18 +328,18 @@ public class WriterMap implements FastSerializable {
     }
   }
 
-  private Hash hash(_Proxy proxy) {
-    return hash(proxy, null);
+  private Hash hash(fabric.lang.Object o) {
+    return hash(o, null);
   }
 
   /**
    * Given a proxy and an encryption key, hashes the object location with the
    * transaction ID and the key.
    */
-  private Hash hash(_Proxy proxy, byte[] key) {
+  private Hash hash(fabric.lang.Object o, byte[] key) {
     MessageDigest digest = Crypto.digestInstance();
-    Store store = proxy.$getStore();
-    long onum = proxy.$getOnum();
+    Store store = o.$getStore();
+    long onum = o.$getOnum();
 
     digest.update(store.name().getBytes());
     digest.update((byte) onum);
@@ -368,8 +369,8 @@ public class WriterMap implements FastSerializable {
    * Returns a byte array containing the symmetric encryption key protecting the
    * given object. If the object is public, null is returned.
    */
-  private byte[] getKey(_Proxy proxy) {
-    return getKey(proxy.get$$updateLabel());
+  private byte[] getKey(fabric.lang.Object o) {
+    return getKey(o.get$$updateLabel());
   }
 
   /**

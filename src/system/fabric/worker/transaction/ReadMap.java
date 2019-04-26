@@ -13,6 +13,7 @@ import fabric.lang.Object._Impl;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.ObjectCache;
 import fabric.worker.Store;
+import fabric.worker.TransactionRestartingException;
 
 /**
  * A map from OIDs to Entry objects. An object's Entry records its version
@@ -115,6 +116,10 @@ public final class ReadMap {
      * Adds a lock for the given reader.
      */
     synchronized void addLock(Log reader) {
+      if (defunct) {
+        reader.checkRetrySignal();
+        throw new TransactionRestartingException(reader.tid);
+      }
       readLocks.add(reader);
     }
 

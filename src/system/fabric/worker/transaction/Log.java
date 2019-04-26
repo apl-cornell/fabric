@@ -43,6 +43,7 @@ import fabric.common.util.Pair;
 import fabric.common.util.Triple;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.metrics.DerivedMetric;
@@ -145,6 +146,8 @@ public final class Log {
    * sub-transactions. Objects created in running or aborted sub-transactions
    * don't count here. To keep them from being pinned, objects on local store
    * are not tracked here.
+   *
+   * Using an OidKeyHashMap for quick inclusion checking.
    */
   protected final OidKeyHashMap<_Impl> creates;
 
@@ -158,6 +161,8 @@ public final class Log {
    * sub-transactions. Objects modified in running or aborted sub-transactions
    * don't count here. To keep them from being pinned, objects on local store
    * are not tracked here.
+   *
+   * Using an OidKeyHashMap for quick inclusion checking.
    */
   protected final OidKeyHashMap<_Impl> writes;
 
@@ -706,6 +711,7 @@ public final class Log {
    * transaction. All locks held by this transaction are released.
    */
   void abort() {
+    TransactionManager.getInstance().stats.markTxnAbort();
     Store localStore = Worker.getWorker().getLocalStore();
     Set<Store> stores = storesToContact();
     // Note what we were trying to do before we aborted.
@@ -1700,14 +1706,50 @@ public final class Log {
       cur = cur.parent;
     while (cur != null) {
       if (cur.writes.containsKey(o) && cur.writes.get(o) != o) {
-        Logging.METRICS_LOGGER.log(Level.WARNING,
-            "FOUND DIFFERENT IMPLS FOR {0}/{1}: {2} vs. {3}",
-            new Object[] { o.$getStore(), o.$getOnum(),
-                System.identityHashCode(cur.writes.get(o)),
-                System.identityHashCode(o) });
         throw new TransactionRestartingException(cur.tid);
       }
       cur = cur.child;
     }
+  }
+
+  /**
+   * Dumb hack to check we aren't clobbering an existing read of a different
+   * copy.  Aborts up to the furthest ancestor with a different read for the
+   * obj.
+   */
+  public void checkReadClobber(fabric.lang.Object._Impl o) {
+    // Walk from top level down.
+    Log cur = this;
+    while (cur.parent != null)
+      cur = cur.parent;
+    while (cur != null) {
+      if (!o.$readMapEntry.getReaders().contains(cur)
+          && cur.reads.containsKey(o)) {
+        throw new TransactionRestartingException(cur.tid);
+      }
+      cur = cur.child;
+    }
+  }
+
+  /**
+   * Get the impl already seen by this transaction.
+   */
+  public _Impl getImpl(_Proxy p) {
+    if (parent != null) {
+      _Impl result = parent.getImpl(p);
+      if (result != null) return result;
+    }
+    if (writes.containsKey(p)) {
+      _Impl result = writes.get(p);
+      if (result.$cacheEntry.isEvicted())
+        throw new TransactionRestartingException(tid);
+      return result;
+    }
+    if (creates.containsKey(p)) {
+      _Impl result = creates.get(p);
+      if (result.$cacheEntry.isEvicted())
+        throw new TransactionRestartingException(tid);
+      return result;
+    } else return null;
   }
 }

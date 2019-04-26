@@ -81,7 +81,7 @@ public class AtomicExt_c extends FabILExt_c {
         + " = fabric.worker.transaction.TransactionManager.getInstance();\n"
         + "  boolean " + backoffEnabled
         + " = fabric.worker.Worker.getWorker().config.txRetryBackoff;\n"
-        + "  int " + backoff + " = 1;\n"
+        + "  long " + backoff + " = 1;\n"
         + "  boolean " + doBackoff + " = true;\n"
         + "  boolean " + retryFlag + " = true;\n"
         + "  boolean " + keepReadsFlag + " = false;\n"
@@ -97,7 +97,8 @@ public class AtomicExt_c extends FabILExt_c {
         + "            }\n"
         + "          }\n"
         + "        }\n"
-        + "        if (" + backoff + " < 5000) " + backoff + " *= 2;\n"
+        + "        if (" + backoff + " < fabric.worker.Worker.getWorker().config.maxBackoff)\n"
+        + "          " + backoff + " = java.lang.Math.min(" + backoff + " * 2, fabric.worker.Worker.getWorker().config.maxBackoff);\n"
         + "      }\n"
         + "      " + doBackoff + " = " + backoff + " <= 32 || !" + doBackoff + ";\n"
         + "    }\n"

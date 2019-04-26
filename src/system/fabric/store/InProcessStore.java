@@ -109,26 +109,26 @@ public class InProcessStore extends RemoteStore {
       final Collection<ExpiryExtension> extensions,
       final LongKeyMap<OidHashSet> extensionsTriggered,
       final LongSet delayedExtensions) {
+    final Collection<SerializedObject> serializedCreates =
+        new ArrayList<>(toCreate.size());
+    final Collection<SerializedObject> serializedWrites =
+        new ArrayList<>(writes.size());
+
+    for (_Impl o : toCreate) {
+      @SuppressWarnings("deprecation")
+      SerializedObject serialized = new SerializedObject(o);
+      serializedCreates.add(serialized);
+    }
+
+    for (_Impl o : writes) {
+      @SuppressWarnings("deprecation")
+      SerializedObject serialized = new SerializedObject(o);
+      serializedWrites.add(serialized);
+    }
+
     Threading.getPool().submit(new Runnable() {
       @Override
       public void run() {
-        Collection<SerializedObject> serializedCreates =
-            new ArrayList<>(toCreate.size());
-        Collection<SerializedObject> serializedWrites =
-            new ArrayList<>(writes.size());
-
-        for (_Impl o : toCreate) {
-          @SuppressWarnings("deprecation")
-          SerializedObject serialized = new SerializedObject(o);
-          serializedCreates.add(serialized);
-        }
-
-        for (_Impl o : writes) {
-          @SuppressWarnings("deprecation")
-          SerializedObject serialized = new SerializedObject(o);
-          serializedWrites.add(serialized);
-        }
-
         PrepareRequest req =
             new PrepareRequest(tid, serializedCreates, serializedWrites, reads,
                 extensions, extensionsTriggered, delayedExtensions);
@@ -200,7 +200,7 @@ public class InProcessStore extends RemoteStore {
   protected List<SerializedObject> getStaleObjects(
       LongKeyMap<VersionAndExpiry> reads) {
     try {
-      return tm.checkForStaleObjects(getPrincipal(), reads);
+      return tm.checkForStaleObjects(Worker.getWorker().getPrincipal(), reads);
     } catch (AccessException e) {
       throw new InternalError(e);
     }
