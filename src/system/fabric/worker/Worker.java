@@ -786,20 +786,7 @@ public final class Worker {
       tm.startTransaction();
 
       try {
-        try {
-          return code.run();
-        } catch (RetryException e) {
-          throw e;
-        } catch (TransactionAbortingException e) {
-          throw e;
-        } catch (TransactionRestartingException e) {
-          throw e;
-        } catch (Throwable e) {
-          // First check whether we just missed an abort flag.
-          tm.getCurrentLog().checkRetrySignal();
-          // If retry signal didn't fire, then continue.
-          throw e;
-        }
+        return code.run();
       } catch (RetryException e) {
         success = false;
         continue;
@@ -809,13 +796,6 @@ public final class Worker {
         retry = false;
         // mark if this subtransaction's reads should be kept.
         keepReads = e.keepReads;
-
-        // Retry if the exception was a result of stale objects.
-        if (tm.checkForStaleObjects()) {
-          retry = true;
-          keepReads = false;
-          continue;
-        }
 
         TransactionID currentTid = tm.getCurrentTid();
         if (e.tid == null || !e.tid.isDescendantOf(currentTid)) {
@@ -842,13 +822,11 @@ public final class Worker {
             + "than the one being managed.");
       } catch (Throwable e) {
         success = false;
-
-        // Retry if the exception was a result of stale objects.
-        if (tm.checkForStaleObjects()) continue;
-
-        // Bad state, don't keep retrying.
         retry = false;
-        throw new AbortException(e);
+        if (tm.inNestedTxn()) {
+          keepReads = true;
+        }
+        throw new InternalError("System initiated txn failed with an exception", e);
       } finally {
         if (success) {
           TransactionID tid = tm.getCurrentTid();
@@ -860,16 +838,7 @@ public final class Worker {
             success = false;
             retry = false;
             keepReads = e.keepReads;
-
-            // Retry if the exception was a result of stale objects.
-            if (tm.checkForStaleObjects()) {
-              retry = true;
-              keepReads = false;
-              continue;
-            }
-
-            if (e.tid == null || !e.tid.isDescendantOf(tid))
-              throw e;
+            if (e.tid == null || !e.tid.isDescendantOf(tid)) throw e;
             throw new UserAbortException(e);
           } catch (TransactionRestartingException e) {
             success = false;
@@ -896,10 +865,26 @@ public final class Worker {
 
             // The transaction just we tried to commit will be restarted.
           }
-        } else if (keepReads) {
-          tm.abortTransactionUpdates();
         } else {
-          tm.abortTransaction();
+          if (!tm.inNestedTxn() && tm.checkForStaleObjects()) {
+            retry = true;
+            keepReads = false;
+          }
+          if (keepReads) {
+            try {
+              tm.abortTransactionUpdates();
+            } catch (TransactionRestartingException e) {
+              // This is the TID for the parent of the transaction we just tried to commit.
+              TransactionID currentTid = tm.getCurrentTid();
+              if (currentTid != null && (e.tid.equals(currentTid) || !e.tid.isDescendantOf(currentTid))) {
+                throw e;
+              } else {
+                retry = true;
+              }
+            }
+          } else {
+            tm.abortTransaction();
+          }
         }
 
         // If not successful and should retry, override control flow to run the
