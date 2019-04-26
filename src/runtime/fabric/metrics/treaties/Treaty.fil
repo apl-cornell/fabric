@@ -143,7 +143,6 @@ public class Treaty extends AbstractSubject implements Observer {
   protected static EnforcementPolicy newUnactivatedPolicy(Metric metric,
       TreatyStatement predicate, StatsMap weakStats) {
     EnforcementPolicy newPolicy = predicate.getNewPolicy(metric, weakStats);
-    newPolicy.activate(weakStats);
     return newPolicy;
   }
 
