@@ -7,6 +7,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -27,9 +28,43 @@ public class Threading {
    * create an ExecutorService that creates threads on demand and caches them
    * for one minute.
    */
-  private static ExecutorService newCachedThreadPool() {
+  public static ExecutorService newCachedThreadPool() {
     return new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
         new SynchronousQueue<Runnable>(), new FabricThreadFactory()) {
+      @Override
+      protected void afterExecute(Runnable r, Throwable t) {
+        super.afterExecute(r, t);
+        if (t == null && r instanceof Future<?>) {
+          try {
+            ((Future<?>) r).get();
+          } catch (CancellationException ce) {
+            t = ce;
+          } catch (ExecutionException ee) {
+            t = ee.getCause();
+          } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt(); // ignore/reset
+          }
+        }
+
+        if (t != null) {
+          StringWriter sw = new StringWriter();
+          PrintWriter pw = new PrintWriter(sw);
+          t.printStackTrace(pw);
+          Logging.MISC_LOGGER.log(Level.SEVERE,
+              "Thread exited with exception " + t + " stack:\n" + sw.toString(),
+              t);
+        }
+      }
+    };
+  }
+
+  /**
+   * create an ExecutorService that creates threads on demand and caches them
+   * for one minute.
+   */
+  public static ExecutorService newFixedThreadPool(int n) {
+    return new ThreadPoolExecutor(n, n, 60L, TimeUnit.SECONDS,
+        new LinkedBlockingQueue<Runnable>(), new FabricThreadFactory()) {
       @Override
       protected void afterExecute(Runnable r, Throwable t) {
         super.afterExecute(r, t);
