@@ -503,6 +503,7 @@ public final class Log {
    * transaction. All locks held by this transaction are released.
    */
   void abort() {
+    TransactionManager.getInstance().stats.markTxnAbort();
     // Release read locks.
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
       for (ReadMap.Entry entry : submap.values()) {

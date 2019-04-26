@@ -11,6 +11,7 @@ import fabric.worker.Worker;
  */
 public class TxnStats {
   private int txnAttempts = 0;
+  private int aborts = 0;
   private long tid = 0;
   private boolean coordinated = false;
   private int fetches = 0;
@@ -24,6 +25,7 @@ public class TxnStats {
 
   public void reset() {
     txnAttempts = 0;
+    aborts = 0;
     tid = 0;
     coordinated = false;
     fetches = 0;
@@ -83,6 +85,13 @@ public class TxnStats {
   }
 
   /**
+   * Count a (sub)transaction abort.
+   */
+  public void markTxnAbort() {
+    aborts++;
+  }
+
+  /**
    * Record the final tid.
    */
   public void recordTid(long tid) {
@@ -136,9 +145,10 @@ public class TxnStats {
   @Override
   public String toString() {
     return "[COORDINATED: " + coordinated + " WITH " + txnAttempts
-        + " TXN ATTEMPTS" + " USING " + fetches + " FETCHES " + fetchWaits
-        + " WAITS FOR FETCHES" + " MSGS: " + msgs + " FETCHED: " + fetched
-        + " CONFLICTS: " + versionConflicts + " IN " + Long.toHexString(tid)
-        + "]";
+        + " TXN ATTEMPTS AND " + aborts
+        + " TXN ABORTS USING " + fetches
+        + " FETCHES " + fetchWaits + " WAITS FOR FETCHES MSGS: " + msgs
+        + " FETCHED: " + fetched + " CONFLICTS: " + versionConflicts + " IN "
+        + Long.toHexString(tid) + "]";
   }
 }
