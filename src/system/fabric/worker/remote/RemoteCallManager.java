@@ -176,6 +176,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     // XXX TODO Security checks.
 
     try {
+      TransactionManager.getInstance().associateLog(null);
       TransactionManager.getInstance().startNonAtomicCall();
 
       // Execute the requested method.
