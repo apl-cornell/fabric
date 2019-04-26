@@ -58,6 +58,11 @@ public class ConfigProperties {
   public final boolean txRetryBackoff;
 
   /**
+   * Max wait time for exponential backoff.
+   */
+  public final long maxBackoff;
+
+  /**
    * Whether to use the subscription service.
    */
   public final boolean useSubscriptions;
@@ -124,11 +129,14 @@ public class ConfigProperties {
     this.txRetryBackoff = Boolean
         .parseBoolean(removeProperty(p, "fabric.node.txRetryBackoff", "true"));
 
+    this.maxBackoff =
+        Long.parseLong(removeProperty(p, "fabric.node.maxBackoff", "5000"));
+
     this.useSubscriptions = Boolean.parseBoolean(
         removeProperty(p, "fabric.node.useSubscriptions", "false"));
 
-    this.recordFetched = Boolean.parseBoolean(
-        removeProperty(p, "fabric.node.recordFetched", "false"));
+    this.recordFetched = Boolean
+        .parseBoolean(removeProperty(p, "fabric.node.recordFetched", "false"));
 
     this.recordConflicts = Boolean.parseBoolean(
         removeProperty(p, "fabric.node.recordConflicts", "false"));

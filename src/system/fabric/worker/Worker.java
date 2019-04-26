@@ -758,7 +758,7 @@ public final class Worker {
     // Flag for triggering backoff on alternate retries.
     boolean doBackoff = true;
 
-    int backoff = 1;
+    long backoff = 1;
     while (!success) {
       if (backoffEnabled) {
         if (doBackoff) {
@@ -773,7 +773,8 @@ public final class Worker {
             }
           }
 
-          if (backoff < 5000) backoff *= 2;
+          if (backoff < getWorker().config.maxBackoff)
+            backoff = Math.min(backoff * 2, getWorker().config.maxBackoff);
         }
 
         doBackoff = backoff <= 32 || !doBackoff;
