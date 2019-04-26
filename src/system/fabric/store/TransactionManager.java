@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.DelayQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 
 import com.sleepycat.je.LockConflictException;
@@ -466,6 +467,9 @@ public class TransactionManager {
 
   private final int EXTENSION_WINDOW = 1000;
 
+  private final ExecutorService extensionsPool =
+      Threading.newFixedThreadPool(32);
+
   /**
    * A thread that goes through the extensions queue, waiting until the next
    * DelayedExtension's delay is 0, and updates the expiration time of the
@@ -512,8 +516,12 @@ public class TransactionManager {
                 continue;
               }
               if (exp - curTime <= EXTENSION_WINDOW
-              /*&& exp >= curTime - EXTENSION_WINDOW*/) {
-                Threading.getPool().submit(new Threading.NamedRunnable(
+                  // Let's see if we can skip things that have been retracted
+                  // before this managed to fire.
+                  && exp == extension.time + EXTENSION_WINDOW) {
+                //) {
+                //&& exp >= curTime - EXTENSION_WINDOW) {
+                extensionsPool.submit(new Threading.NamedRunnable(
                     "Extension of " + extension.onum) {
                   @Override
                   protected void runImpl() {
@@ -522,7 +530,7 @@ public class TransactionManager {
                     // Run a transaction handling updates
                     boolean success = true;
                     long start = System.currentTimeMillis();
-                    Logging.METRICS_LOGGER.log(Level.INFO,
+                    Logging.METRICS_LOGGER.log(Level.FINE,
                         "STARTED EXTENSION OF {0}", extension.onum);
                     Triple<String, Long, Long> nameAndNewExpiry = null;
                     Logging.METRICS_LOGGER.log(Level.FINER,
@@ -540,7 +548,8 @@ public class TransactionManager {
                                   new Treaty._Proxy(store, extension.onum);
                               long oldExpiry = treaty.get$$expiry();
                               treaty.backgroundExtension();
-                              return new Triple<>(treaty.toString(), oldExpiry,
+                              return new Triple<>(
+                                  "(Treaty " + extension.onum + ")", oldExpiry,
                                   treaty.get$$expiry());
                             }
                           }, true);

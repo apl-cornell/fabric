@@ -327,7 +327,19 @@ public final class TransactionManager {
     current.waitForThreads();
 
     if (current.prepare != null) current.prepare.abort();
-    current.abortUpdates();
+    try {
+      current.abortUpdates();
+    } catch (TransactionRestartingException e) {
+      // do a real abort if this occurs.
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      e.printStackTrace(pw);
+      METRICS_LOGGER.log(Level.SEVERE,
+          "===============================================2 THIS HAPPENED===============================================\n{0}",
+          sw);
+      abortTransaction();
+      throw e;
+    }
     WORKER_TRANSACTION_LOGGER.log(Level.INFO, "{0} aborted updates", current);
 
     synchronized (current.commitState) {
@@ -388,18 +400,29 @@ public final class TransactionManager {
     try {
       current.runFinalResolution();
     } catch (TransactionAbortingException e) {
-      if (e.keepReads)
+      if (!inNestedTxn() && checkForStaleObjects()) {
+        abortTransaction();
+        throw new TransactionRestartingException(current.tid);
+      } else if (e.keepReads) {
         abortTransactionUpdates();
-      else abortTransaction();
-      throw e;
+        throw e;
+      } else {
+        abortTransaction();
+        throw e;
+      }
     } catch (TransactionRestartingException e) {
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      e.printStackTrace(pw);
+      HOTOS_LOGGER.log(Level.FINE, "RESTARTING WITH {0}", sw);
       abortTransaction();
       throw e;
     } catch (Throwable e) {
       StringWriter sw = new StringWriter();
       PrintWriter pw = new PrintWriter(sw);
       e.printStackTrace(pw);
-      if (checkForStaleObjects()) {
+
+      if (!inNestedTxn() && checkForStaleObjects()) {
         // Ugh. Need to restart.
         TransactionID tid = current.tid;
         METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS " + current
@@ -418,6 +441,7 @@ public final class TransactionManager {
     current.waitForThreads();
 
     TransactionID ignoredRetrySignal = null;
+    RetrySignalException ignoredRetryCause = null;
     if (!ignoreRetrySignal) {
       // Make sure we're not supposed to abort or retry.
       try {
@@ -432,6 +456,7 @@ public final class TransactionManager {
     } else {
       synchronized (current) {
         ignoredRetrySignal = current.retrySignal;
+        ignoredRetryCause = current.retryCause;
       }
     }
 
@@ -470,15 +495,28 @@ public final class TransactionManager {
             }
 
             current.retrySignal = signal;
+            current.retryCause = ignoredRetryCause;
           }
         }
         return;
       } catch (TransactionAbortingException e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        METRICS_LOGGER.log(Level.SEVERE,
+            "===============================================3 THIS HAPPENED===============================================\n{0}",
+            sw);
         if (e.keepReads)
           abortTransactionUpdates();
         else abortTransaction();
         throw e;
       } catch (TransactionRestartingException e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        METRICS_LOGGER.log(Level.SEVERE,
+            "===============================================4 THIS HAPPENED===============================================\n{0}",
+            sw);
         abortTransaction();
         throw e;
       } finally {
@@ -907,7 +945,8 @@ public final class TransactionManager {
       // extension.
       if (!alreadyWritten && extending) {
         synchronized (current.extendedTreaties) {
-          current.extendedTreaties.put(obj, new ExpiryExtension(obj.$getOnum(), obj.$version, newExpiry));
+          current.extendedTreaties.put(obj,
+              new ExpiryExtension(obj.$getOnum(), obj.$version, newExpiry));
         }
       }
 
@@ -1035,6 +1074,8 @@ public final class TransactionManager {
       }
     } else {
       synchronized (current.writes) {
+        if (current.writes.containsKey(obj) && current.writes.get(obj) != obj)
+          throw new TransactionRestartingException(current.tid);
         current.writes.put(obj, obj);
       }
     }
@@ -1519,5 +1560,10 @@ public final class TransactionManager {
   public static boolean usingPrefetching() {
     ConfigProperties config = Worker.getWorker().config;
     return config.usePrefetching;
+  }
+
+  public boolean shouldRebalance(Treaty t) {
+    return Worker.getWorker().config.aggressiveRebalancing && current
+        .storesToContact().containsAll(current.storesForMetric(t.get$metric()));
   }
 }

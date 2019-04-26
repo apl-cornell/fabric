@@ -312,8 +312,14 @@ public final class Log {
     if (tid == null) {
       if (parent == null) {
         this.tid = new TransactionID();
+        this.retrySignal = null;
+        this.retryCause = null;
       } else {
         this.tid = new TransactionID(parent.tid);
+        synchronized (parent) {
+          this.retrySignal = parent.retrySignal;
+          this.retryCause = parent.retryCause;
+        }
       }
     } else {
       this.tid = tid;
@@ -321,8 +327,6 @@ public final class Log {
 
     this.child = null;
     this.thread = Thread.currentThread();
-    this.retrySignal = parent == null ? null : parent.retrySignal;
-    this.retryCause = parent == null ? null : parent.retryCause;
     this.reads = new OidKeyHashMap<>();
     this.readsReadByParent = new ArrayList<>();
     this.creates = new OidKeyHashMap<>();
@@ -618,19 +622,24 @@ public final class Log {
    * Check if this transaction has been told to abort and retry.
    * @throws TransactionRestartingException if a retry was flagged.
    */
-  public void checkRetrySignal() throws TransactionRestartingException {
+  public synchronized void checkRetrySignal()
+      throws TransactionRestartingException {
     if (this.retrySignal != null) {
-      synchronized (this) {
+      if (retryCause != null) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         this.retryCause.printStackTrace(pw);
         WORKER_TRANSACTION_LOGGER.log(Level.INFO,
             "{0} got retry signal up to {1} for {2}\n{3}",
             new Object[] { this, this.retrySignal, this.retryCause, sw });
-
-        throw new TransactionRestartingException(this.retrySignal,
-            this.retryCause);
+      } else {
+        WORKER_TRANSACTION_LOGGER.log(Level.INFO,
+            "{0} got retry signal up to {1}, unknown cause",
+            new Object[] { this, this.retrySignal });
       }
+
+      throw new TransactionRestartingException(this.retrySignal,
+          this.retryCause);
     }
   }
 
@@ -711,112 +720,19 @@ public final class Log {
    * transaction. All locks held by this transaction are released.
    */
   void abort() {
-    TransactionManager.getInstance().stats.markTxnAbort();
-    Store localStore = Worker.getWorker().getLocalStore();
-    Set<Store> stores = storesToContact();
-    // Note what we were trying to do before we aborted.
-    Logging.log(HOTOS_LOGGER, Level.FINE,
-        "aborted tid {0} ({1} stores, {2} extensions, {3} delayed extensions)",
-        tid, stores.size() - (stores.contains(localStore) ? 1 : 0),
-        extendedTreaties.size(), delayedExtensions.size());
-    // Release read locks.
-    for (LongKeyMap<ReadMap.Entry> submap : reads) {
-      for (ReadMap.Entry entry : submap.values()) {
-        entry.releaseLock(this);
-      }
-    }
-
-    for (ReadMap.Entry entry : readsReadByParent)
-      entry.releaseLock(this);
-
-    // Roll back writes and release write locks.
-    Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
-    for (_Impl write : chain) {
-      synchronized (write) {
-        if (write.$writeLockHolder != null
-            && write.$writeLockHolder.isDescendantOf(this)) {
-          if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
-            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-                "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
-                this, write.$getStore(), write.$getOnum(), write.getClass(),
-                System.identityHashCode(write), Thread.currentThread());
-          }
-          write.$copyStateFrom(write.$history);
-        }
-        // Signal any waiting readers/writers.
-        if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
-          write.notifyAll();
-      }
-    }
-    // Reset the expiry to check.
-    expiryToCheck = Long.MAX_VALUE;
-
-    prepare = null;
-
-    if (parent != null && parent.tid.equals(tid.parent)) {
-      // The parent frame represents the parent transaction. Null out its child.
-      synchronized (parent) {
-        parent.child = null;
-      }
-    } else {
-      // This frame will be reused to represent the parent transaction. Clear
-      // out the log data structures.
-      reads.clear();
-      readsReadByParent.clear();
-      creates.clear();
-      localStoreCreates.clear();
-      writes.clear();
-      unobservedSamples.clear();
-      extendedTreaties.clear();
-      delayedExtensions.clear();
-      extensionTriggers.clear();
-      localStoreWrites.clear();
-      workersCalled.clear();
-      securityCache.reset();
-      commitHooks.clear();
-      untreatiedUpdateChecks.clear();
-      treatiedUpdateChecks.clear();
-
-      if (parent != null) {
-        writerMap = new WriterMap(parent.writerMap);
-        unobservedSamples.putAll(parent.unobservedSamples);
-        resolving = parent.resolving;
-      } else {
-        writerMap = new WriterMap(tid.topTid);
-      }
-
-      if (retrySignal != null) {
-        synchronized (this) {
-          retrySignal = null;
-          retryCause = null;
-        }
-      }
-    }
-  }
-
-  /**
-   * Updates logs and data structures in <code>_Impl</code>s to abort this
-   * transaction's updates, while merging the reads into the parent transaction.
-   * All write locks held by this transaction are released.
-   */
-  void abortUpdates() {
-    if (parent != null && parent.tid.equals(tid.parent)) {
+    try {
+      TransactionManager.getInstance().stats.markTxnAbort();
       Store localStore = Worker.getWorker().getLocalStore();
       Set<Store> stores = storesToContact();
       // Note what we were trying to do before we aborted.
       Logging.log(HOTOS_LOGGER, Level.FINE,
-          "aborted writes of tid {0} ({1} stores, {2} extensions, {3} delayed extensions)",
+          "aborted tid {0} ({1} stores, {2} extensions, {3} delayed extensions)",
           tid, stores.size() - (stores.contains(localStore) ? 1 : 0),
           extendedTreaties.size(), delayedExtensions.size());
       // Release read locks.
       for (LongKeyMap<ReadMap.Entry> submap : reads) {
         for (ReadMap.Entry entry : submap.values()) {
-          // Drop read locks for creates.
-          if (creates.containsKey(entry.getRef().store, entry.getRef().onum)) {
-            entry.releaseLock(this);
-          } else {
-            parent.transferReadLock(this, entry);
-          }
+          entry.releaseLock(this);
         }
       }
 
@@ -842,15 +758,11 @@ public final class Log {
             write.notifyAll();
         }
       }
-      // Update the expiry time and drop this child, this acts like a read.
-      synchronized (parent) {
-        parent.expiryToCheck = Math.min(expiryToCheck, parent.expiryToCheck);
-        parent.child = null;
-      }
+      // Reset the expiry to check.
+      expiryToCheck = Long.MAX_VALUE;
 
       prepare = null;
 
-      // The parent frame represents the parent transaction. Null out its child.
       if (parent != null && parent.tid.equals(tid.parent)) {
         // The parent frame represents the parent transaction. Null out its child.
         synchronized (parent) {
@@ -890,10 +802,155 @@ public final class Log {
           }
         }
       }
-    } else {
-      // XXX TODO XXX TODO Not sure what to do here? Do we allow committing the
-      // reads at the stores?
-      throw new NotImplementedException();
+    } catch (Throwable t) {
+      Logging.METRICS_LOGGER.log(Level.SEVERE, "Unclean exit from abort {0}",
+          t);
+      throw t;
+    }
+  }
+
+  /**
+   * Updates logs and data structures in <code>_Impl</code>s to abort this
+   * transaction's updates, while merging the reads into the parent transaction.
+   * All write locks held by this transaction are released.
+   */
+  void abortUpdates() {
+    try {
+      if (parent != null && parent.tid.equals(tid.parent)) {
+        Store localStore = Worker.getWorker().getLocalStore();
+        Set<Store> stores = storesToContact();
+        // Note what we were trying to do before we aborted.
+        Logging.log(HOTOS_LOGGER, Level.FINE,
+            "aborted writes of tid {0} ({1} stores, {2} extensions, {3} delayed extensions)",
+            tid, stores.size() - (stores.contains(localStore) ? 1 : 0),
+            extendedTreaties.size(), delayedExtensions.size());
+        // Release read locks.
+        for (LongKeyMap<ReadMap.Entry> submap : reads) {
+          for (LongKeyMap.Entry<ReadMap.Entry> e : submap.entrySet()) {
+            ReadMap.Entry entry = e.getValue();
+            long onum = e.getKey();
+            parent.transferReadLock(this, entry);
+            if (entry.getVersionNumber() == 0
+                && !entry.getStore().isLocalStore()
+                && !creates.containsKey(entry.getStore(), onum)) {
+              throw new InternalError("WTF");
+            }
+          }
+        }
+
+        for (ReadMap.Entry entry : readsReadByParent)
+          entry.releaseLock(this);
+
+        // Roll back writes and release write locks.
+        Iterable<_Impl> chain =
+            SysUtil.chain(writes.values(), localStoreWrites);
+        for (_Impl write : chain) {
+          synchronized (write) {
+            if (write.$writeLockHolder != null
+                && write.$writeLockHolder.isDescendantOf(this)) {
+              if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+                Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                    "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
+                    this, write.$getStore(), write.$getOnum(), write.getClass(),
+                    System.identityHashCode(write), Thread.currentThread());
+              }
+              write.$copyStateFrom(write.$history);
+            }
+            // Signal any waiting readers/writers.
+            if (write.$numWaiting > 0
+                && !isDescendantOf(write.$writeLockHolder))
+              write.notifyAll();
+          }
+        }
+
+        // Merge creates and transfer write locks.
+        OidKeyHashMap<_Impl> parentCreates = parent.creates;
+        synchronized (parentCreates) {
+          for (_Impl obj : creates.values()) {
+            parentCreates.put(obj, obj);
+            obj.$writeLockHolder = parent;
+          }
+        }
+
+        WeakReferenceArrayList<_Impl> parentLocalStoreCreates =
+            parent.localStoreCreates;
+        synchronized (parentLocalStoreCreates) {
+          for (_Impl obj : localStoreCreates) {
+            parentLocalStoreCreates.add(obj);
+            obj.$writeLockHolder = parent;
+          }
+        }
+
+        // Merge the set of workers that have been called.
+        synchronized (parent.workersCalled) {
+          for (RemoteWorker worker : workersCalled) {
+            if (!parent.workersCalled.contains(worker))
+              parent.workersCalled.add(worker);
+          }
+        }
+
+        // Merge the writer map.
+        synchronized (parent.writerMap) {
+          parent.writerMap.putAllReadsAndCreates(writerMap);
+        }
+
+        // Update the expiry time and drop this child, this acts like a read.
+        synchronized (parent) {
+          parent.expiryToCheck = Math.min(expiryToCheck, parent.expiryToCheck);
+          parent.child = null;
+        }
+
+        prepare = null;
+
+        // The parent frame represents the parent transaction. Null out its child.
+        if (parent != null && parent.tid.equals(tid.parent)) {
+          // The parent frame represents the parent transaction. Null out its child.
+          synchronized (parent) {
+            parent.child = null;
+          }
+        } else {
+          // This frame will be reused to represent the parent transaction. Clear
+          // out the log data structures.
+          reads.clear();
+          readsReadByParent.clear();
+          creates.clear();
+          localStoreCreates.clear();
+          writes.clear();
+          unobservedSamples.clear();
+          extendedTreaties.clear();
+          delayedExtensions.clear();
+          extensionTriggers.clear();
+          localStoreWrites.clear();
+          workersCalled.clear();
+          securityCache.reset();
+          commitHooks.clear();
+          untreatiedUpdateChecks.clear();
+          treatiedUpdateChecks.clear();
+
+          if (parent != null) {
+            writerMap = new WriterMap(parent.writerMap);
+            unobservedSamples.putAll(parent.unobservedSamples);
+            resolving = parent.resolving;
+          } else {
+            writerMap = new WriterMap(tid.topTid);
+          }
+
+          if (retrySignal != null) {
+            synchronized (this) {
+              retrySignal = null;
+              retryCause = null;
+            }
+          }
+        }
+      } else {
+        // XXX TODO XXX TODO Not sure what to do here? Do we allow committing the
+        // reads at the stores?
+        throw new NotImplementedException();
+      }
+    } catch (Throwable t) {
+      Logging.METRICS_LOGGER.log(Level.SEVERE,
+          "Unclean exit from abortUpdates {0}", t);
+      throw t;
     }
   }
 
@@ -930,34 +987,10 @@ public final class Log {
             t.get$predicate(), t.get$$expiry()));
   }
 
-  private boolean finalResolve = false;
-
-  /**
-   * Check if a treaty deactivation violates a treaty update check, throwing an
-   * TransactionAbortingException if it does.
-   */
-  public void checkTreatyDeactivation(Treaty t) {
-    //if (finalResolve) {
-    //  TreatyRef r = new TreatyRef(t);
-    //  if (treatiedUpdateChecks.containsKey(r)) {
-    //    Logging.METRICS_LOGGER.fine("ABORTING FOR POSTCONDITION IN "
-    //        + Thread.currentThread() + ":" + tid);
-    //    if (treatiedUpdateChecks.get(r).third.longValue() >= System
-    //        .currentTimeMillis())
-    //      throw new TransactionAbortingException(tid, true);
-    //    //TransactionManager.getInstance().checkForStaleObjects();
-    //    //checkRetrySignal();
-    //    //// Otherwise, the treaty we wanted to use went stale, so retry.
-    //    //throw new TransactionRestartingException(tid);
-    //  }
-    //}
-  }
-
   /**
    * Run the final observation resolution along with checks for postconditions.
    */
   public void runFinalResolution() {
-    finalResolve = true;
     try {
       // resolve observations and, in the process, check treaties.
       resolveObservations();
@@ -973,7 +1006,6 @@ public final class Log {
         }
         entry.getKey().createAndActivateTreaty(entry.getValue(), true);
       }
-      Set<Store> storesTouched = storesToContact();
       // Check treaties still exist.
       Logging.METRICS_LOGGER.finer("CHECKING TREATIED POSTCONDITIONS IN "
           + Thread.currentThread() + ":" + tid);
@@ -990,15 +1022,10 @@ public final class Log {
                   + Thread.currentThread() + ":" + tid);
               throw new TransactionAbortingException(tid, true);
             }
-          } else if (Worker.getWorker().config.aggressiveRebalancing
-              && storesTouched.containsAll(storesForMetric(t.get$metric()))) {
-            // Rebalance if we're touching all of the stores already.
-            t.rebalance();
           }
         }
       }
     } finally {
-      finalResolve = false;
       // Clear out the checks, just in case...
       untreatiedUpdateChecks.clear();
       treatiedUpdateChecks.clear();
@@ -1011,7 +1038,7 @@ public final class Log {
    * This operation may fetch some items but it should not produce any new reads
    * in the current transaction.
    */
-  private Set<Store> storesForMetric(Metric metric) {
+  protected Set<Store> storesForMetric(Metric metric) {
     Set<Store> results = new HashSet<>();
     Queue<Metric> q = new LinkedList<>();
     q.add(metric);
@@ -1049,178 +1076,186 @@ public final class Log {
    * parent.
    */
   void commitNested() {
-    // TODO See if lazy merging of logs helps performance.
+    try {
+      // TODO See if lazy merging of logs helps performance.
 
-    if (parent == null || !parent.tid.equals(tid.parent)) {
-      // Reuse this frame for the parent transaction.
-      return;
-    }
-
-    // Merge reads and transfer read locks.
-    for (LongKeyMap<ReadMap.Entry> submap : reads) {
-      for (ReadMap.Entry entry : submap.values()) {
-        parent.transferReadLock(this, entry);
+      if (parent == null || !parent.tid.equals(tid.parent)) {
+        // Reuse this frame for the parent transaction.
+        return;
       }
-    }
 
-    for (ReadMap.Entry entry : readsReadByParent) {
-      entry.releaseLock(this);
-    }
+      // Merge reads and transfer read locks.
+      for (LongKeyMap<ReadMap.Entry> submap : reads) {
+        for (ReadMap.Entry entry : submap.values()) {
+          parent.transferReadLock(this, entry);
+        }
+      }
 
-    synchronized (parent.unobservedSamples) {
-      parent.unobservedSamples.clear();
-      parent.unobservedSamples.putAll(unobservedSamples);
-    }
+      for (ReadMap.Entry entry : readsReadByParent) {
+        entry.releaseLock(this);
+      }
 
-    // Do this before writes and creates!
-    for (Store s : extendedTreaties.storeSet()) {
-      for (ExpiryExtension obs : extendedTreaties.get(s).values()) {
-        // Check if the parent already plans to extend the treaties, if so,
-        // update the mapping.
-        synchronized (parent.extendedTreaties) {
-          if (parent.extendedTreaties.containsKey(new Oid(s, obs.onum))) {
+      synchronized (parent.unobservedSamples) {
+        parent.unobservedSamples.clear();
+        parent.unobservedSamples.putAll(unobservedSamples);
+      }
+
+      // Do this before writes and creates!
+      for (Store s : extendedTreaties.storeSet()) {
+        for (ExpiryExtension obs : extendedTreaties.get(s).values()) {
+          // Check if the parent already plans to extend the treaties, if so,
+          // update the mapping.
+          synchronized (parent.extendedTreaties) {
+            if (parent.extendedTreaties.containsKey(new Oid(s, obs.onum))) {
+              parent.extendedTreaties.put(new Oid(s, obs.onum), obs);
+              continue;
+            }
+          }
+          synchronized (parent.writes) {
+            if (parent.writes.containsKey(new Oid(s, obs.onum))) continue;
+          }
+          synchronized (parent.creates) {
+            if (parent.creates.containsKey(new Oid(s, obs.onum))) continue;
+          }
+          synchronized (parent.extendedTreaties) {
+            // If not already being written or created, add it to the extensions.
             parent.extendedTreaties.put(new Oid(s, obs.onum), obs);
-            continue;
           }
         }
-        synchronized (parent.writes) {
-          if (parent.writes.containsKey(new Oid(s, obs.onum))) continue;
-        }
-        synchronized (parent.creates) {
-          if (parent.creates.containsKey(new Oid(s, obs.onum))) continue;
-        }
-        synchronized (parent.extendedTreaties) {
-          // If not already being written or created, add it to the extensions.
-          parent.extendedTreaties.put(new Oid(s, obs.onum), obs);
-        }
       }
-    }
 
-    for (Store s : delayedExtensions.storeSet()) {
-      for (LongKeyMap.Entry<OidHashSet> e : delayedExtensions.get(s)
-          .entrySet()) {
-        long onum = e.getKey();
-        Oid oid = new Oid(s, onum);
-        synchronized (parent.delayedExtensions) {
-          OidHashSet triggers = e.getValue();
-          if (triggers.isEmpty()) {
-            parent.addDelayedExtension(oid);
-          } else {
-            for (Oid trigger : triggers) {
-              parent.addDelayedExtension(new Oid(s, onum), trigger);
+      for (Store s : delayedExtensions.storeSet()) {
+        for (LongKeyMap.Entry<OidHashSet> e : delayedExtensions.get(s)
+            .entrySet()) {
+          long onum = e.getKey();
+          Oid oid = new Oid(s, onum);
+          synchronized (parent.delayedExtensions) {
+            OidHashSet triggers = e.getValue();
+            if (triggers.isEmpty()) {
+              parent.addDelayedExtension(oid);
+            } else {
+              for (Oid trigger : triggers) {
+                parent.addDelayedExtension(new Oid(s, onum), trigger);
+              }
             }
           }
         }
       }
-    }
 
-    // Merge writes and transfer write locks.
-    OidKeyHashMap<_Impl> parentWrites = parent.writes;
-    for (_Impl obj : writes.values()) {
-      synchronized (obj) {
-        if (obj.$history.$writeLockHolder == parent) {
-          // The parent transaction already wrote to the object. Discard one
-          // layer of history. In doing so, we also end up releasing this
-          // transaction's write lock.
-          obj.$history = obj.$history.$history;
-          if (extendedTreaties.containsKey(obj)) {
-            // Make sure that we don't lose "subextensions"
-            if (!parent.extendedTreaties.containsKey(obj))
-              obj.$expiry = extendedTreaties.get(obj).expiry;
+      // Merge writes and transfer write locks.
+      OidKeyHashMap<_Impl> parentWrites = parent.writes;
+      for (_Impl obj : writes.values()) {
+        synchronized (obj) {
+          if (obj.$history.$writeLockHolder == parent) {
+            // The parent transaction already wrote to the object. Discard one
+            // layer of history. In doing so, we also end up releasing this
+            // transaction's write lock.
+            obj.$history = obj.$history.$history;
+            if (extendedTreaties.containsKey(obj)) {
+              // Make sure that we don't lose "subextensions"
+              if (!parent.extendedTreaties.containsKey(obj))
+                obj.$expiry = extendedTreaties.get(obj).expiry;
+            }
+            // Flatten any changes to the treatyset, if necessary.
+            if (obj.$treaties != null)
+              obj.$treaties.flattenUpdates((TreatiesBox._Impl) obj);
+          } else {
+            // The parent transaction didn't write to the object. Add write to
+            // parent and transfer our write lock.
+            synchronized (parentWrites) {
+              if (parentWrites.containsKey(obj) && parentWrites.get(obj) != obj)
+                throw new TransactionRestartingException(parent.tid);
+              parentWrites.put(obj, obj);
+            }
           }
-          // Flatten any changes to the treatyset, if necessary.
-          if (obj.$treaties != null)
-            obj.$treaties.flattenUpdates((TreatiesBox._Impl) obj);
-        } else {
-          // The parent transaction didn't write to the object. Add write to
-          // parent and transfer our write lock.
-          synchronized (parentWrites) {
-            parentWrites.put(obj, obj);
-          }
+          obj.$writer = null;
+          obj.$writeLockHolder = parent;
+
+          // Signal any readers/writers.
+          if (obj.$numWaiting > 0) obj.notifyAll();
         }
-        obj.$writer = null;
-        obj.$writeLockHolder = parent;
-
-        // Signal any readers/writers.
-        if (obj.$numWaiting > 0) obj.notifyAll();
       }
-    }
 
-    WeakReferenceArrayList<_Impl> parentLocalStoreWrites =
-        parent.localStoreWrites;
-    for (_Impl obj : localStoreWrites) {
-      synchronized (obj) {
-        if (obj.$history.$writeLockHolder == parent) {
-          // The parent transaction already wrote to the object. Discard one
-          // layer of history. In doing so, we also end up releasing this
-          // transaction's write lock.
-          obj.$history = obj.$history.$history;
-          if (extendedTreaties.containsKey(obj)) {
-            // Make sure we don't lose "subextensions"
-            if (!parent.extendedTreaties.containsKey(obj))
-              obj.$expiry = extendedTreaties.get(obj).expiry;
+      WeakReferenceArrayList<_Impl> parentLocalStoreWrites =
+          parent.localStoreWrites;
+      for (_Impl obj : localStoreWrites) {
+        synchronized (obj) {
+          if (obj.$history.$writeLockHolder == parent) {
+            // The parent transaction already wrote to the object. Discard one
+            // layer of history. In doing so, we also end up releasing this
+            // transaction's write lock.
+            obj.$history = obj.$history.$history;
+            if (extendedTreaties.containsKey(obj)) {
+              // Make sure we don't lose "subextensions"
+              if (!parent.extendedTreaties.containsKey(obj))
+                obj.$expiry = extendedTreaties.get(obj).expiry;
+            }
+            // Flatten any changes to the treatyset, if necessary.
+            if (obj.$treaties != null)
+              obj.$treaties.flattenUpdates((TreatiesBox._Impl) obj);
+          } else {
+            // The parent transaction didn't write to the object. Add write to
+            // parent and transfer our write lock.
+            synchronized (parentLocalStoreWrites) {
+              parentLocalStoreWrites.add(obj);
+            }
           }
-          // Flatten any changes to the treatyset, if necessary.
-          if (obj.$treaties != null)
-            obj.$treaties.flattenUpdates((TreatiesBox._Impl) obj);
-        } else {
-          // The parent transaction didn't write to the object. Add write to
-          // parent and transfer our write lock.
-          synchronized (parentLocalStoreWrites) {
-            parentLocalStoreWrites.add(obj);
-          }
+          obj.$writer = null;
+          obj.$writeLockHolder = parent;
+
+          // Signal any readers/writers.
+          //if (obj.$numWaiting > 0) obj.notifyAll();
         }
-        obj.$writer = null;
-        obj.$writeLockHolder = parent;
-
-        // Signal any readers/writers.
-        //if (obj.$numWaiting > 0) obj.notifyAll();
       }
-    }
 
-    // Merge creates and transfer write locks.
-    OidKeyHashMap<_Impl> parentCreates = parent.creates;
-    synchronized (parentCreates) {
-      for (_Impl obj : creates.values()) {
-        parentCreates.put(obj, obj);
-        obj.$writeLockHolder = parent;
+      // Merge creates and transfer write locks.
+      OidKeyHashMap<_Impl> parentCreates = parent.creates;
+      synchronized (parentCreates) {
+        for (_Impl obj : creates.values()) {
+          parentCreates.put(obj, obj);
+          obj.$writeLockHolder = parent;
+        }
       }
-    }
 
-    WeakReferenceArrayList<_Impl> parentLocalStoreCreates =
-        parent.localStoreCreates;
-    synchronized (parentLocalStoreCreates) {
-      for (_Impl obj : localStoreCreates) {
-        parentLocalStoreCreates.add(obj);
-        obj.$writeLockHolder = parent;
+      WeakReferenceArrayList<_Impl> parentLocalStoreCreates =
+          parent.localStoreCreates;
+      synchronized (parentLocalStoreCreates) {
+        for (_Impl obj : localStoreCreates) {
+          parentLocalStoreCreates.add(obj);
+          obj.$writeLockHolder = parent;
+        }
       }
-    }
 
-    // Merge the set of workers that have been called.
-    synchronized (parent.workersCalled) {
-      for (RemoteWorker worker : workersCalled) {
-        if (!parent.workersCalled.contains(worker))
-          parent.workersCalled.add(worker);
+      // Merge the set of workers that have been called.
+      synchronized (parent.workersCalled) {
+        for (RemoteWorker worker : workersCalled) {
+          if (!parent.workersCalled.contains(worker))
+            parent.workersCalled.add(worker);
+        }
       }
-    }
 
-    // Replace the parent's security cache with the current cache.
-    parent.securityCache.set((SecurityCache) securityCache);
+      // Replace the parent's security cache with the current cache.
+      parent.securityCache.set((SecurityCache) securityCache);
 
-    // Merge the writer map.
-    synchronized (parent.writerMap) {
-      parent.writerMap.putAll(writerMap);
-    }
+      // Merge the writer map.
+      synchronized (parent.writerMap) {
+        parent.writerMap.putAll(writerMap);
+      }
 
-    // Merge hooks.
-    synchronized (parent.commitHooks) {
-      parent.commitHooks.addAll(commitHooks);
-    }
+      // Merge hooks.
+      synchronized (parent.commitHooks) {
+        parent.commitHooks.addAll(commitHooks);
+      }
 
-    // Update the expiry time and drop this child.
-    synchronized (parent) {
-      parent.expiryToCheck = Math.min(expiryToCheck, parent.expiryToCheck);
-      parent.child = null;
+      // Update the expiry time and drop this child.
+      synchronized (parent) {
+        parent.expiryToCheck = Math.min(expiryToCheck, parent.expiryToCheck);
+        parent.child = null;
+      }
+    } catch (Throwable t) {
+      Logging.METRICS_LOGGER.log(Level.SEVERE,
+          "Unclean exit from commitNested {0}", t);
+      throw t;
     }
   }
 
@@ -1233,118 +1268,125 @@ public final class Log {
    * this transaction are released.
    */
   void commitTopLevel() {
-    // Grab the stores already contacted to be checked against below.
-    Set<Store> alreadyContacted = storesToContact();
+    try {
+      // Grab the stores already contacted to be checked against below.
+      Set<Store> alreadyContacted = storesToContact();
 
-    // Release write locks on created objects and set version numbers.
-    // XXX TRM 3/9/18: Do this before reads and writes so that nobody gets a
-    // reference to the creates before we've released the writer locks on
-    // creates.
-    Iterable<_Impl> chain2 = SysUtil.chain(creates.values(), localStoreCreates);
-    for (_Impl obj : chain2) {
-      if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
-        Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-            "{0} in {5} committed and released (created) write lock on {1}/{2} ({3}) ({4})",
-            this, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-            System.identityHashCode(obj), Thread.currentThread());
-      }
-      if (!obj.$isOwned) {
-        // The cached object is out-of-date. Evict it.
-        obj.$ref.evict();
-        continue;
-      }
-
-      // XXX: Should we notify here in case somehow a reference is found in
-      // another transaction in another thread still?
-      obj.$writer = null;
-      obj.$writeLockHolder = null;
-      obj.$writeLockStackTrace = null;
-      obj.$version = 1;
-      long expiry = getFinalExpiry(obj);
-      obj.$readMapEntry.incrementVersionAndUpdateExpiry(expiry);
-      obj.$expiry = expiry;
-      obj.$isOwned = false;
-    }
-
-    // Release read locks.
-    for (LongKeyMap<ReadMap.Entry> submap : reads) {
-      for (LongKeyMap.Entry<ReadMap.Entry> e : submap.entrySet()) {
-        ReadMap.Entry entry = e.getValue();
-        entry.releaseLock(this);
-      }
-    }
-
-    // sanity check
-    if (!readsReadByParent.isEmpty())
-      throw new InternalError("something was read by a non-existent parent");
-
-    // Release write locks and ownerships; update version numbers.
-    Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
-    for (_Impl obj : chain) {
-      if (!obj.$isOwned) {
-        // The cached object is out-of-date. Evict it.
-        obj.$ref.evict();
-        continue;
-      }
-
-      synchronized (obj) {
+      // Release write locks on created objects and set version numbers.
+      // XXX TRM 3/9/18: Do this before reads and writes so that nobody gets a
+      // reference to the creates before we've released the writer locks on
+      // creates.
+      Iterable<_Impl> chain2 =
+          SysUtil.chain(creates.values(), localStoreCreates);
+      for (_Impl obj : chain2) {
         if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
           Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-              "{0} in {5} committed and released write lock on {1}/{2} ({3}) ({4})",
+              "{0} in {5} committed and released (created) write lock on {1}/{2} ({3}) ({4})",
               this, obj.$getStore(), obj.$getOnum(), obj.getClass(),
               System.identityHashCode(obj), Thread.currentThread());
         }
+        if (!obj.$isOwned) {
+          // The cached object is out-of-date. Evict it.
+          obj.$ref.evict();
+          continue;
+        }
+
+        // XXX: Should we notify here in case somehow a reference is found in
+        // another transaction in another thread still?
         obj.$writer = null;
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
-        // Discard one layer of history.
-        obj.$history = obj.$history.$history;
-
+        obj.$version = 1;
         long expiry = getFinalExpiry(obj);
-        // Flatten any changes to the treatyset, if necessary.
-        if (obj.$treaties != null)
-          obj.$treaties.flattenUpdates((TreatiesBox._Impl) obj);
+        obj.$readMapEntry.incrementVersionAndUpdateExpiry(expiry);
         obj.$expiry = expiry;
-        // Don't increment the version if it's only extending treaties
-        if (!extendedTreaties.containsKey(obj)) {
-          obj.$version++;
-          obj.$readMapEntry.incrementVersionAndUpdateExpiry(expiry);
-        } else {
-          obj.$readMapEntry.extendExpiry(expiry);
-        }
         obj.$isOwned = false;
-
-        // Signal any waiting readers/writers.
-        if (obj.$numWaiting > 0) obj.notifyAll();
       }
 
-      // Note writes that committed so they can be flushed at the caller.
-      TransactionManager tm = TransactionManager.getInstance();
-      if (tm.committedWrites != null)
-        tm.committedWrites.put(new Oid(obj), obj.$version);
-    }
-
-    // Queue up extension transactions not triggered by an update and not sent
-    // in the commit message already.
-    OidHashSet extensionsToSend =
-        extensionTriggers.get((fabric.lang.Object) null);
-
-    if (extensionsToSend != null) {
-      for (Store s : extensionsToSend.storeSet()) {
-        if (alreadyContacted.contains(s)) continue;
-        s.sendExtensions(extensionsToSend.get(s),
-            new HashMap<RemoteStore, Collection<SerializedObject>>());
+      // Release read locks.
+      for (LongKeyMap<ReadMap.Entry> submap : reads) {
+        for (LongKeyMap.Entry<ReadMap.Entry> e : submap.entrySet()) {
+          ReadMap.Entry entry = e.getValue();
+          entry.releaseLock(this);
+        }
       }
-    }
 
-    prepare = null;
+      // sanity check
+      if (!readsReadByParent.isEmpty())
+        throw new InternalError("something was read by a non-existent parent");
 
-    // Merge the security cache into the top-level label cache.
-    securityCache.mergeWithTopLevel();
+      // Release write locks and ownerships; update version numbers.
+      Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
+      for (_Impl obj : chain) {
+        if (!obj.$isOwned) {
+          // The cached object is out-of-date. Evict it.
+          obj.$ref.evict();
+          continue;
+        }
 
-    // Run commit hooks.
-    for (Runnable hook : commitHooks) {
-      hook.run();
+        synchronized (obj) {
+          if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                "{0} in {5} committed and released write lock on {1}/{2} ({3}) ({4})",
+                this, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+                System.identityHashCode(obj), Thread.currentThread());
+          }
+          obj.$writer = null;
+          obj.$writeLockHolder = null;
+          obj.$writeLockStackTrace = null;
+          // Discard one layer of history.
+          obj.$history = obj.$history.$history;
+
+          long expiry = getFinalExpiry(obj);
+          // Flatten any changes to the treatyset, if necessary.
+          if (obj.$treaties != null)
+            obj.$treaties.flattenUpdates((TreatiesBox._Impl) obj);
+          obj.$expiry = expiry;
+          // Don't increment the version if it's only extending treaties
+          if (!extendedTreaties.containsKey(obj)) {
+            obj.$version++;
+            obj.$readMapEntry.incrementVersionAndUpdateExpiry(expiry);
+          } else {
+            obj.$readMapEntry.extendExpiry(expiry);
+          }
+          obj.$isOwned = false;
+
+          // Signal any waiting readers/writers.
+          if (obj.$numWaiting > 0) obj.notifyAll();
+        }
+
+        // Note writes that committed so they can be flushed at the caller.
+        TransactionManager tm = TransactionManager.getInstance();
+        if (tm.committedWrites != null)
+          tm.committedWrites.put(new Oid(obj), obj.$version);
+      }
+
+      // Queue up extension transactions not triggered by an update and not sent
+      // in the commit message already.
+      OidHashSet extensionsToSend =
+          extensionTriggers.get((fabric.lang.Object) null);
+
+      if (extensionsToSend != null) {
+        for (Store s : extensionsToSend.storeSet()) {
+          if (alreadyContacted.contains(s)) continue;
+          s.sendExtensions(extensionsToSend.get(s),
+              new HashMap<RemoteStore, Collection<SerializedObject>>());
+        }
+      }
+
+      prepare = null;
+
+      // Merge the security cache into the top-level label cache.
+      securityCache.mergeWithTopLevel();
+
+      // Run commit hooks.
+      for (Runnable hook : commitHooks) {
+        hook.run();
+      }
+    } catch (Throwable t) {
+      Logging.METRICS_LOGGER.log(Level.SEVERE,
+          "Unclean exit from commitTopLevel {0}", t);
+      throw t;
     }
   }
 
@@ -1364,6 +1406,16 @@ public final class Log {
     if (!lockedByAncestor) {
       FabricSoftRef ref = readMapEntry.getRef();
       synchronized (reads) {
+        if (reads.containsKey(ref.store, ref.onum)) {
+          // UHHH
+          //Logging.METRICS_LOGGER.log(Level.SEVERE,
+          //    "1 Read of " + reads.get(ref.store, ref.onum).className + " "
+          //        + ref.store + "/" + ref.onum + " overwriting "
+          //        + reads.get(ref.store, ref.onum).getVersionNumber() + " with "
+          //        + readMapEntry.getVersionNumber());
+          throw new TransactionRestartingException(tid);
+          //checkRetrySignal();
+        }
         reads.put(ref.store, ref.onum, readMapEntry);
       }
     } else {
@@ -1413,6 +1465,16 @@ public final class Log {
     // read this object.
     if (!lockedByAncestor) {
       synchronized (reads) {
+        if (reads.containsKey(obj.$ref.store, obj.$ref.onum)) {
+          // UHHH
+          //checkRetrySignal();
+          //Logging.METRICS_LOGGER.log(Level.SEVERE,
+          //    "2 Read of " + reads.get(obj.$ref.store, obj.$ref.onum).className
+          //        + " " + obj.$ref.store + "/" + obj.$ref.onum + " overwriting "
+          //        + reads.get(obj.$ref.store, obj.$ref.onum).getVersionNumber()
+          //        + " with " + readMapEntry.getVersionNumber() + " Status: " + reads.get(obj.$ref.store, obj.$ref.onum).defunct);
+          throw new TransactionRestartingException(tid);
+        }
         reads.put(obj.$ref.store, obj.$ref.onum, readMapEntry);
       }
     } else {
@@ -1706,6 +1768,11 @@ public final class Log {
       cur = cur.parent;
     while (cur != null) {
       if (cur.writes.containsKey(o) && cur.writes.get(o) != o) {
+        //Logging.METRICS_LOGGER.log(Level.SEVERE,
+        //    "FOUND DIFFERENT IMPLS FOR {0}/{1}: {2} vs. {3}",
+        //    new Object[] { o.$getStore(), o.$getOnum(),
+        //        System.identityHashCode(cur.writes.get(o)),
+        //        System.identityHashCode(o) });
         throw new TransactionRestartingException(cur.tid);
       }
       cur = cur.child;
@@ -1723,8 +1790,12 @@ public final class Log {
     while (cur.parent != null)
       cur = cur.parent;
     while (cur != null) {
-      if (!o.$readMapEntry.getReaders().contains(cur)
-          && cur.reads.containsKey(o)) {
+      if (!o.$readMapEntry.getReaders().contains(cur) && cur.reads.containsKey(o)) {
+        //Logging.METRICS_LOGGER.log(Level.SEVERE,
+        //    "FOUND DIFFERENT IMPLS FOR {0}/{1}: {2} vs. {3}",
+        //    new Object[] { o.$getStore(), o.$getOnum(),
+        //        System.identityHashCode(cur.writes.get(o)),
+        //        System.identityHashCode(o) });
         throw new TransactionRestartingException(cur.tid);
       }
       cur = cur.child;

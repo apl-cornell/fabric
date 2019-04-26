@@ -281,6 +281,20 @@ public class WriterMap implements FastSerializable {
   /**
    * Puts all the entries from the given map into this map.
    */
+  public void putAllReadsAndCreates(WriterMap map) {
+    this.creates.putAll(map.creates);
+    this.unencryptedCreates.putAll(map.unencryptedCreates);
+
+    this.readCache.clear();
+
+    if (map.version > version)
+      version = map.version + 1;
+    else version++;
+  }
+
+  /**
+   * Puts all the entries from the given map into this map.
+   */
   public void putAll(WriterMap map) {
     this.creates.putAll(map.creates);
     this.unencryptedCreates.putAll(map.unencryptedCreates);

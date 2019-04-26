@@ -15,6 +15,7 @@ import fabric.worker.metrics.treaties.enforcement.EnforcementPolicy;
 import fabric.worker.metrics.treaties.enforcement.NoPolicy;
 import fabric.worker.metrics.treaties.statements.TreatyStatement;
 import fabric.worker.transaction.TransactionManager;
+import fabric.worker.Worker;
 import java.util.logging.Level;
 import fabric.common.Logging;
 
@@ -137,24 +138,35 @@ public class Treaty extends AbstractSubject implements Observer {
   }
 
   /**
+   * Create and activate a new enforcement policy.
+   */
+  protected static EnforcementPolicy newUnactivatedPolicy(Metric metric,
+      TreatyStatement predicate, StatsMap weakStats) {
+    EnforcementPolicy newPolicy = predicate.getNewPolicy(metric, weakStats);
+    newPolicy.activate(weakStats);
+    return newPolicy;
+  }
+
+  /**
    * Maximum time in milliseconds before the currently advertised expiry that an
    * extension should be applied within.
    *
    * TODO: Make this a configuration parameter to load in on program start?
    */
-  public static final long UPDATE_THRESHOLD = 1000;
+  public static final long UPDATE_THRESHOLD = 200;
 
   /**
    * Run an update using the current expiry.  Factored out here since it's used
    * by both handleUpdates() and backgroundExtension().
    * @return true iff the current policy is still viable.
    */
-  protected boolean updateWithCurPolicy() {
+  protected boolean updateWithCurPolicy(boolean force) {
     long updatedCurExpiry = policy.updatedExpiry(this, StatsMap.emptyStats());
     if (updatedCurExpiry > System.currentTimeMillis()) {
-      if (updatedCurExpiry < this.$expiry || this.$expiry -
-          System.currentTimeMillis() <= UPDATE_THRESHOLD) {
-        this.$expiry = updatedCurExpiry;
+      if (updatedCurExpiry < this.$expiry || (force || this.$expiry -
+          System.currentTimeMillis() <= UPDATE_THRESHOLD)) {
+        // Only perform the write if it's an actual change.
+        if (this.$expiry != updatedCurExpiry) this.$expiry = updatedCurExpiry;
       } else if (updatedCurExpiry > this.$expiry) {
         // Mark for future extension.
         TransactionManager.getInstance().registerDelayedExtension(this);
@@ -189,21 +201,28 @@ public class Treaty extends AbstractSubject implements Observer {
     // Note: This always happens within the context of a transaction.
     long oldExpiry = this.$expiry;
 
-    if (!updateWithCurPolicy()) {
+    if (!updateWithCurPolicy(false)) {
       // Try a new policy
       // XXX: It's worth considering if we should avoid activating new policy in
       // case we also ditch?
-      EnforcementPolicy newPolicy = newActivatedPolicy(metric, predicate, StatsMap.emptyStats());
-      long newPolicyExpiry = newPolicy.calculateExpiry(this, StatsMap.emptyStats());
-      if (newPolicyExpiry > System.currentTimeMillis()) {
-        this.policy.shiftPolicies(this, newPolicy);
-        this.policy = newPolicy;
-        this.$expiry = newPolicyExpiry;
-      } else {
-        // Garbage collect abandoned policy
-        newPolicy.unapply(this);
+      EnforcementPolicy newPolicy = newUnactivatedPolicy(metric, predicate, StatsMap.emptyStats());
+      if (newPolicy.equals(this.policy)) {
         deactivate();
+      } else {
+        newPolicy.activate(StatsMap.emptyStats());
+        long newPolicyExpiry = newPolicy.calculateExpiry(this, StatsMap.emptyStats());
+        if (newPolicyExpiry > System.currentTimeMillis()) {
+          this.policy.shiftPolicies(this, newPolicy);
+          this.policy = newPolicy;
+          this.$expiry = newPolicyExpiry;
+        } else {
+          // Garbage collect abandoned policy
+          newPolicy.unapply(this);
+          deactivate();
+        }
       }
+    } else if (TransactionManager.getInstance().shouldRebalance(this)) {
+      rebalance(false);
     }
 
     if (this.$expiry < oldExpiry) {
@@ -222,32 +241,51 @@ public class Treaty extends AbstractSubject implements Observer {
   public void backgroundExtension() {
     // Note: This always happens within the context of a transaction.
     long oldExpiry = this.$expiry;
+    // Don't bother if this is a dead treaty.
+    if (oldExpiry != 0) {
 
-    // Only bother with attempting using the current policy.
-    boolean policyLive = updateWithCurPolicy();
+      // Only bother with attempting using the current policy.
+      boolean policyLive = updateWithCurPolicy(true);
 
-    if (this.$expiry < oldExpiry) {
-      // This shouldn't be possible.  Retractions should only be caused by an
-      // update to some dependency of the policy and handled in the same
-      // transaction.
-      retry;
-      //if (TransactionManager.getInstance().checkForStaleObjects()) retry;
-      //throw new InternalError("Somehow had a retraction during a background extension: " + oldExpiry + " to " + this.$expiry);
+      if (this.$expiry < oldExpiry) {
+        // This shouldn't be possible.  Retractions should only be caused by an
+        // update to some dependency of the policy and handled in the same
+        // transaction.
+        retry;
+      } else {
+        if (TransactionManager.getInstance().shouldRebalance(this)) {
+          rebalance(true);
+        }
+        registerPotentialExtensions(oldExpiry);
+      }
     }
-
-    registerPotentialExtensions(oldExpiry);
   }
 
   /**
    * Force a shift to a new policy.
    */
-  public void rebalance() {
-    // TODO: this assumes we're in a transaction already.
-    // TODO: Is this pontentially going to backslide?
-    EnforcementPolicy newPolicy = newActivatedPolicy(metric, predicate, StatsMap.emptyStats());
-    this.policy.shiftPolicies(this, newPolicy);
-    this.policy = newPolicy;
-    this.$expiry = newPolicy.calculateExpiry(this, StatsMap.emptyStats());
+  public void rebalance(boolean force) {
+    long oldExpiry = this.$expiry;
+    // XXX: It's worth considering if we should avoid activating new policy in
+    // case we also ditch?
+    EnforcementPolicy newPolicy = newUnactivatedPolicy(metric, predicate, StatsMap.emptyStats());
+    if (newPolicy.equals(this.policy)) return;
+    newPolicy.activate(StatsMap.emptyStats());
+    long newPolicyExpiry = newPolicy.calculateExpiry(this, StatsMap.emptyStats());
+    if (newPolicyExpiry > oldExpiry) {
+      if (force || oldExpiry - System.currentTimeMillis() <= UPDATE_THRESHOLD) {
+        this.policy.shiftPolicies(this, newPolicy);
+        this.policy = newPolicy;
+        this.$expiry = newPolicyExpiry;
+        registerPotentialExtensions(oldExpiry);
+      } else {
+        newPolicy.shiftPolicies(this, this.policy);
+        TransactionManager.getInstance().registerDelayedExtension(this);
+      }
+    } else if (!this.policy.equals(newPolicy)) {
+      // Garbage collect abandoned policy
+      newPolicy.shiftPolicies(this, this.policy);
+    }
   }
 
   /**
