@@ -946,13 +946,18 @@ public final class TransactionManager {
               try {
                 if (worker.checkForStaleObjects(checkingLog.tid))
                   nodesWithStaleObjects.add(worker);
+              } catch (UnreachableNodeException e) {
+                // Conservatively assume it had stale objects.
+                nodesWithStaleObjects.add(worker);
+              } catch (Throwable t) {
+                // Conservatively assume it had stale objects.
+                nodesWithStaleObjects.add(worker);
+                throw t;
+              } finally {
                 synchronized (outstandingChecks) {
                   outstandingChecks[0]--;
                   outstandingChecks.notifyAll();
                 }
-              } catch (UnreachableNodeException e) {
-                // Conservatively assume it had stale objects.
-                nodesWithStaleObjects.add(worker);
               }
             }
           };
@@ -971,11 +976,18 @@ public final class TransactionManager {
           new NamedRunnable("worker freshness check to " + store.name()) {
             @Override
             public void runImpl() {
-              if (store.checkForStaleObjects(reads))
+              try {
+                if (store.checkForStaleObjects(reads))
+                  nodesWithStaleObjects.add((RemoteNode<?>) store);
+              } catch (Throwable t) {
+                // Conservatively assume it had stale objects.
                 nodesWithStaleObjects.add((RemoteNode<?>) store);
-              synchronized (outstandingChecks) {
-                outstandingChecks[0]--;
-                outstandingChecks.notifyAll();
+                throw t;
+              } finally {
+                synchronized (outstandingChecks) {
+                  outstandingChecks[0]--;
+                  outstandingChecks.notifyAll();
+                }
               }
             }
           };
