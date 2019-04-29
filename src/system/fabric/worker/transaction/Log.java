@@ -134,12 +134,12 @@ public final class Log {
   // Proxy objects aren't used for keys here because doing so would result in
   // calls to hashcode() and equals() on such objects, resulting in fetching the
   // corresponding Impls from the store.
-  protected final OidKeyHashMap<ReadMap.Entry> reads;
+  protected final OidKeyHashMap<Pair<ReadMap.Entry, Boolean>> reads;
 
   /**
    * Reads on objects that have been read by an ancestor transaction.
    */
-  protected final List<ReadMap.Entry> readsReadByParent;
+  protected final List<Pair<ReadMap.Entry, Boolean>> readsReadByParent;
 
   /**
    * A collection of all objects created in this transaction or completed
@@ -472,8 +472,8 @@ public final class Log {
   Set<Store> storesToCheckFreshness() {
     Set<Store> result = new HashSet<>();
     result.addAll(reads.storeSet());
-    for (ReadMap.Entry entry : readsReadByParent) {
-      result.add(entry.getStore());
+    for (Pair<ReadMap.Entry, Boolean> entry : readsReadByParent) {
+      result.add(entry.first.getStore());
     }
 
     return result;
@@ -489,20 +489,23 @@ public final class Log {
   LongKeyMap<ReadVersion> getReadsForStore(Store store,
       boolean includeModified) {
     LongKeyMap<ReadVersion> result = new LongKeyHashMap<>();
-    LongKeyMap<ReadMap.Entry> submap = reads.get(store);
+    LongKeyMap<Pair<ReadMap.Entry, Boolean>> submap = reads.get(store);
     if (submap == null) return result;
 
-    for (LongKeyMap.Entry<ReadMap.Entry> entry : submap.entrySet()) {
-      result.put(entry.getKey(), new ReadVersion(
-          entry.getValue().getVersionNumber(), entry.getValue().getExpiry()));
+    for (LongKeyMap.Entry<Pair<ReadMap.Entry, Boolean>> entry : submap
+        .entrySet()) {
+      result.put(entry.getKey(),
+          new ReadVersion(entry.getValue().first.getVersionNumber(),
+              entry.getValue().first.getExpiry(), entry.getValue().second));
     }
 
     if (parent != null) {
-      for (ReadMap.Entry entry : readsReadByParent) {
-        FabricSoftRef entryRef = entry.getRef();
+      for (Pair<ReadMap.Entry, Boolean> entry : readsReadByParent) {
+        FabricSoftRef entryRef = entry.first.getRef();
         if (store.equals(entryRef.store)) {
           result.put(entryRef.onum,
-              new ReadVersion(entry.getVersionNumber(), entry.getExpiry()));
+              new ReadVersion(entry.first.getVersionNumber(),
+                  entry.first.getExpiry(), entry.second));
         }
       }
     }
@@ -730,14 +733,14 @@ public final class Log {
           tid, stores.size() - (stores.contains(localStore) ? 1 : 0),
           extendedTreaties.size(), delayedExtensions.size());
       // Release read locks.
-      for (LongKeyMap<ReadMap.Entry> submap : reads) {
-        for (ReadMap.Entry entry : submap.values()) {
-          entry.releaseLock(this);
+      for (LongKeyMap<Pair<ReadMap.Entry, Boolean>> submap : reads) {
+        for (Pair<ReadMap.Entry, Boolean> entry : submap.values()) {
+          entry.first.releaseLock(this);
         }
       }
 
-      for (ReadMap.Entry entry : readsReadByParent)
-        entry.releaseLock(this);
+      for (Pair<ReadMap.Entry, Boolean> entry : readsReadByParent)
+        entry.first.releaseLock(this);
 
       // Roll back writes and release write locks.
       Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
@@ -825,21 +828,22 @@ public final class Log {
             tid, stores.size() - (stores.contains(localStore) ? 1 : 0),
             extendedTreaties.size(), delayedExtensions.size());
         // Release read locks.
-        for (LongKeyMap<ReadMap.Entry> submap : reads) {
-          for (LongKeyMap.Entry<ReadMap.Entry> e : submap.entrySet()) {
-            ReadMap.Entry entry = e.getValue();
+        for (LongKeyMap<Pair<ReadMap.Entry, Boolean>> submap : reads) {
+          for (LongKeyMap.Entry<Pair<ReadMap.Entry, Boolean>> e : submap
+              .entrySet()) {
+            Pair<ReadMap.Entry, Boolean> entry = e.getValue();
             long onum = e.getKey();
             parent.transferReadLock(this, entry);
-            if (entry.getVersionNumber() == 0
-                && !entry.getStore().isLocalStore()
-                && !creates.containsKey(entry.getStore(), onum)) {
+            if (entry.first.getVersionNumber() == 0
+                && !entry.first.getStore().isLocalStore()
+                && !creates.containsKey(entry.first.getStore(), onum)) {
               throw new InternalError("WTF");
             }
           }
         }
 
-        for (ReadMap.Entry entry : readsReadByParent)
-          entry.releaseLock(this);
+        for (Pair<ReadMap.Entry, Boolean> entry : readsReadByParent)
+          entry.first.releaseLock(this);
 
         // Roll back writes and release write locks.
         Iterable<_Impl> chain =
@@ -1085,14 +1089,14 @@ public final class Log {
       }
 
       // Merge reads and transfer read locks.
-      for (LongKeyMap<ReadMap.Entry> submap : reads) {
-        for (ReadMap.Entry entry : submap.values()) {
+      for (LongKeyMap<Pair<ReadMap.Entry, Boolean>> submap : reads) {
+        for (Pair<ReadMap.Entry, Boolean> entry : submap.values()) {
           parent.transferReadLock(this, entry);
         }
       }
 
-      for (ReadMap.Entry entry : readsReadByParent) {
-        entry.releaseLock(this);
+      for (Pair<ReadMap.Entry, Boolean> entry : readsReadByParent) {
+        entry.first.releaseLock(this);
       }
 
       synchronized (parent.unobservedSamples) {
@@ -1304,9 +1308,10 @@ public final class Log {
       }
 
       // Release read locks.
-      for (LongKeyMap<ReadMap.Entry> submap : reads) {
-        for (LongKeyMap.Entry<ReadMap.Entry> e : submap.entrySet()) {
-          ReadMap.Entry entry = e.getValue();
+      for (LongKeyMap<Pair<ReadMap.Entry, Boolean>> submap : reads) {
+        for (LongKeyMap.Entry<Pair<ReadMap.Entry, Boolean>> e : submap
+            .entrySet()) {
+          ReadMap.Entry entry = e.getValue().first;
           entry.releaseLock(this);
         }
       }
@@ -1393,9 +1398,10 @@ public final class Log {
   /**
    * Transfers a read lock from a child transaction.
    */
-  private void transferReadLock(Log child, ReadMap.Entry readMapEntry) {
+  private void transferReadLock(Log child,
+      Pair<ReadMap.Entry, Boolean> readMapEntry) {
     // If we already have a read lock, return; otherwise, register a read lock.
-    Boolean lockedByAncestor = readMapEntry.transferLockToParent(child);
+    Boolean lockedByAncestor = readMapEntry.first.transferLockToParent(child);
     if (lockedByAncestor == null) {
       // We already had a lock; nothing to do.
       return;
@@ -1404,9 +1410,10 @@ public final class Log {
     // Only record the read in this transaction if none of our ancestors have
     // read this object.
     if (!lockedByAncestor) {
-      FabricSoftRef ref = readMapEntry.getRef();
+      FabricSoftRef ref = readMapEntry.first.getRef();
       synchronized (reads) {
-        if (reads.containsKey(ref.store, ref.onum)) {
+        if (reads.containsKey(ref.store, ref.onum)
+            && reads.get(ref.store, ref.onum).first != readMapEntry.first) {
           // UHHH
           //Logging.METRICS_LOGGER.log(Level.SEVERE,
           //    "1 Read of " + reads.get(ref.store, ref.onum).className + " "
@@ -1423,19 +1430,20 @@ public final class Log {
     }
 
     // Signal any readers/writers and clear the $reader stamp.
-    readMapEntry.signalObject();
+    readMapEntry.first.signalObject();
   }
 
   /**
    * Grabs a read lock for the given object.
    */
-  void acquireReadLock(_Impl obj) {
+  void acquireReadLock(_Impl obj, boolean strict) {
     // If we already have a read lock, return; otherwise, register a read
     // lock.
     ReadMap.Entry readMapEntry = obj.$readMapEntry;
     boolean lockedByAncestor = false;
     synchronized (readMapEntry) {
-      Set<Log> readers = readMapEntry.getReaders();
+      Set<Log> readers =
+          strict ? readMapEntry.getStrictReaders() : readMapEntry.getReaders();
       if (readers.contains(this)) {
         // We already have a lock; nothing to do.
         return;
@@ -1445,6 +1453,8 @@ public final class Log {
       Log curAncestor = parent;
       while (curAncestor != null) {
         if (readers.contains(curAncestor)) {
+          strict =
+              !strict && readMapEntry.getStrictReaders().contains(curAncestor);
           lockedByAncestor = true;
           break;
         }
@@ -1452,7 +1462,9 @@ public final class Log {
         curAncestor = curAncestor.parent;
       }
 
-      readMapEntry.addLock(this);
+      if (strict)
+        readMapEntry.addStrictLock(this);
+      else readMapEntry.addLock(this);
     }
 
     if (obj.$writer != this) {
@@ -1465,7 +1477,9 @@ public final class Log {
     // read this object.
     if (!lockedByAncestor) {
       synchronized (reads) {
-        if (reads.containsKey(obj.$ref.store, obj.$ref.onum)) {
+        if (reads.containsKey(obj.$ref.store, obj.$ref.onum)
+            && (reads.get(obj.$ref.store, obj.$ref.onum).first != readMapEntry
+                || reads.get(obj.$ref.store, obj.$ref.onum).second == strict)) {
           // UHHH
           //checkRetrySignal();
           //Logging.METRICS_LOGGER.log(Level.SEVERE,
@@ -1475,10 +1489,13 @@ public final class Log {
           //        + " with " + readMapEntry.getVersionNumber() + " Status: " + reads.get(obj.$ref.store, obj.$ref.onum).defunct);
           throw new TransactionRestartingException(tid);
         }
-        reads.put(obj.$ref.store, obj.$ref.onum, readMapEntry);
+        reads.put(obj.$ref.store, obj.$ref.onum,
+            new Pair<>(readMapEntry, strict));
+        // If this is a strict read, make sure any nonstrict reads are dropped.
+        if (strict) readsReadByParent.remove(new Pair<>(readMapEntry, false));
       }
     } else {
-      readsReadByParent.add(readMapEntry);
+      readsReadByParent.add(new Pair<>(readMapEntry, strict));
     }
   }
 
@@ -1584,7 +1601,7 @@ public final class Log {
    */
   @Deprecated
   public void renumberObject(Store store, long onum, long newOnum) {
-    ReadMap.Entry entry = reads.remove(store, onum);
+    Pair<ReadMap.Entry, Boolean> entry = reads.remove(store, onum);
     if (entry != null) {
       reads.put(store, newOnum, entry);
     }

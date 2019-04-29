@@ -15,10 +15,10 @@ public class ReadVersion implements FastSerializable {
   // Flag indicating if stale expiry is acceptable.
   public final boolean strict;
 
-  public ReadVersion(int version, long expiry) {
+  public ReadVersion(int version, long expiry, boolean strict) {
     this.version = version;
     this.expiry = expiry;
-    this.strict = false;
+    this.strict = strict;
   }
 
   public ReadVersion(DataInput in) throws IOException {

@@ -97,6 +97,11 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   }
 
   @Override
+  public long $getExpiryStrict() {
+    throw new InternalError("WrappedJavaInlineables don't have expiries.");
+  }
+
+  @Override
   public TreatySet get$$treaties() {
     throw new InternalError("WrappedJavaInlineables don't have treaty sets.");
   }

@@ -91,6 +91,7 @@ public class Treaty extends AbstractSubject implements Observer {
     boolean result = this.$expiry >= System.currentTimeMillis();
     // Make sure time still works by the end of the current transaction.
     if (result) tm.registerExpiryUse(this.$expiry);
+    else this.$getExpiryStrict(); // Force strictness on invalid result.
     return result;
   }
 
@@ -104,7 +105,10 @@ public class Treaty extends AbstractSubject implements Observer {
    */
   public boolean invalid() {
     // TODO: Adjust for clock skew tolerance.
-    return this.$expiry < System.currentTimeMillis();
+    boolean result = this.$expiry < System.currentTimeMillis();
+    // Strict here to ensure we're not seeing invalid due to some stale value.
+    if (result) this.$getExpiryStrict();
+    return result;
   }
 
   /**

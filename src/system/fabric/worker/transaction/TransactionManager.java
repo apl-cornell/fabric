@@ -171,6 +171,10 @@ public final class TransactionManager {
     readMap.abortReaders(store, onum, reason);
   }
 
+  public static void abortStrictReaders(Store store, long onum, String reason) {
+    readMap.abortStrictReaders(store, onum, reason);
+  }
+
   public static ReadMap.Entry getReadMapEntry(_Impl impl) {
     return readMap.getEntry(impl);
   }
@@ -802,7 +806,26 @@ public final class TransactionManager {
 
       Timing.TXLOG.begin();
       try {
-        ensureReadLock(obj);
+        ensureReadLock(obj, false);
+        ensureObjectUpToDate(obj);
+      } finally {
+        Timing.TXLOG.end();
+      }
+    }
+  }
+
+  public void registerStrictRead(_Impl obj) {
+    synchronized (obj) {
+      //if (obj.$reader == current
+      //    && obj.writerMapVersion == current.writerMap.version)
+      //  return;
+      //
+      //// Nothing to do if we're not in a transaction.
+      //if (current == null) return;
+
+      Timing.TXLOG.begin();
+      try {
+        ensureReadLock(obj, true);
         ensureObjectUpToDate(obj);
       } finally {
         Timing.TXLOG.end();
@@ -815,8 +838,11 @@ public final class TransactionManager {
    * blocking if necessary. This method assumes we are synchronized on the
    * object.
    */
-  private void ensureReadLock(_Impl obj) {
-    if (obj.$reader == current) return;
+  private void ensureReadLock(_Impl obj, boolean strict) {
+    if (obj.$reader == current) {
+      if (strict) current.acquireReadLock(obj, strict);
+      return;
+    }
 
     // Make sure we're not supposed to abort/retry.
     checkRetrySignal();
@@ -863,7 +889,7 @@ public final class TransactionManager {
     // Reset the object's update-map version stamp.
     obj.writerMapVersion = -1;
 
-    current.acquireReadLock(obj);
+    current.acquireReadLock(obj, strict);
     if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
       Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
           "{0} in {5} got read lock on {1}/{2} ({3}) ({4})", current,
@@ -1092,7 +1118,7 @@ public final class TransactionManager {
       obj.$reader = Log.NO_READER;
     }
     // Also grab a read lock so we can be preempted if the cache is updated.
-    ensureReadLock(obj);
+    ensureReadLock(obj, false);
   }
 
   /**

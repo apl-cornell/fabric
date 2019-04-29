@@ -65,6 +65,9 @@ public interface Object {
 
   long set$$expiry(long expiry);
 
+  /** The expiry with the requirement that it's not stale (if this is a treaty object) */
+  long $getExpiryStrict();
+
   /** The treaties (if this is a treatiesbox object) */
   TreatySet get$$treaties();
 
@@ -313,6 +316,11 @@ public interface Object {
     @Override
     public final long set$$expiry(long expiry) {
       return fetch().set$$expiry(expiry);
+    }
+
+    @Override
+    public final long $getExpiryStrict() {
+      return fetch().$getExpiryStrict();
     }
 
     @Override
@@ -787,6 +795,15 @@ public interface Object {
         if (transactionCreated) tm.commitTransaction();
       }
       return expiry;
+    }
+
+    @Override
+    public final long $getExpiryStrict() {
+      TransactionManager tm = TransactionManager.getInstance();
+      tm.registerStrictRead(this);
+      ExpiryExtension ex = tm.getPendingExtension(this);
+      if (ex != null) return ex.expiry;
+      return $expiry;
     }
 
     @Override
