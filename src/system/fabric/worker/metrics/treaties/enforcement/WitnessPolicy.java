@@ -130,7 +130,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
         .entries()) {
       Treaty witnessTreaty = witness.getKey().get(witness.getValue());
       calculated = Math.min(calculated,
-          witnessTreaty == null ? 0 : witnessTreaty.get$$expiry());
+          witnessTreaty == null ? 0 : witnessTreaty.$getExpiryStrict());
     }
     return calculated;
   }
@@ -142,7 +142,7 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
         .entries()) {
       Treaty witnessTreaty = witness.getKey().get(witness.getValue());
       calculated = Math.min(calculated,
-          witnessTreaty == null ? 0 : witnessTreaty.get$$expiry());
+          witnessTreaty == null ? 0 : witnessTreaty.$getExpiryStrict());
     }
     return calculated;
   }

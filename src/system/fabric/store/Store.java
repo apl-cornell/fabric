@@ -18,9 +18,9 @@ import fabric.common.Crypto;
 import fabric.common.KeyMaterial;
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
+import fabric.common.ReadVersion;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
-import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.InternalError;
@@ -455,7 +455,7 @@ class Store extends MessageToStoreHandler {
         "Handling Staleness Check Message from {0}", nameOf(client.principal));
 
     return new StalenessCheckMessage.Response(
-        tm.checkForStaleObjects(client.principal, message.versionsAndExpiries));
+        tm.checkForStaleObjects(client.principal, message.versions));
   }
 
   /**
@@ -494,8 +494,7 @@ class Store extends MessageToStoreHandler {
   private OidKeyHashMap<Long> prepareTransaction(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites,
-      LongKeyMap<VersionAndExpiry> reads,
-      Collection<ExpiryExtension> extensions,
+      LongKeyMap<ReadVersion> reads, Collection<ExpiryExtension> extensions,
       LongKeyMap<OidHashSet> extensionsTriggered, LongSet delayedExtensions)
       throws TransactionPrepareFailedException {
 

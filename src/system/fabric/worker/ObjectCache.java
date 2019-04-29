@@ -561,25 +561,34 @@ public final class ObjectCache {
           return null;
         }
 
-        synchronized (curEntry) {
-          if (replaceOnly && curEntry.isEvicted()) return null;
+        boolean expUpdate = false;
+        try {
+          synchronized (curEntry) {
+            if (replaceOnly && curEntry.isEvicted()) return null;
 
-          if (!curEntry.isEvicted()) {
-            // Check if object in current entry is an older version.
-            if (curEntry.getVersion() > update.getVersion()
-                || (curEntry.getVersion() == update.getVersion()
-                    && curEntry.getExpiry() >= update.getExpiry()))
-              return curEntry;
+            if (!curEntry.isEvicted()) {
+              // Check if object in current entry is an older version.
+              if (curEntry.getVersion() > update.getVersion()
+                  || (curEntry.getVersion() == update.getVersion()
+                      && curEntry.getExpiry() >= update.getExpiry()))
+                return curEntry;
 
-            // Update in place, if possible.
-            if (curEntry.getVersion() == update.getVersion()
-                && update.getExpiry() > curEntry.getExpiry()) {
-              curEntry.extendExpiry(update.getExpiry());
-              return curEntry;
+              // Update in place, if possible.
+              if (curEntry.getVersion() == update.getVersion()
+                  && update.getExpiry() > curEntry.getExpiry()) {
+                curEntry.extendExpiry(update.getExpiry());
+                expUpdate = true;
+                return curEntry;
+              }
+
+              curEntry.evict();
             }
-
-            curEntry.evict();
           }
+        } finally {
+          // abort pre-existing strict readers.
+          if (expUpdate)
+            TransactionManager.abortStrictReaders(store, update.getOnum(),
+                "cache update of " + store + "/" + update.getOnum());
         }
 
         // abort pre-existing readers.

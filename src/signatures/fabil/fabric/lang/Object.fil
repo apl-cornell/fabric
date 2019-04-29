@@ -27,6 +27,11 @@ public class Object extends java.lang.Object {
   protected long $expiry;
 
   /**
+   * The object's expiry, requiring a strict match.
+   */
+  protected native long $getExpiryStrict();
+
+  /**
    * The object's TreatySet, primarily for TreatiesBox.
    */
   protected TreatySet $treaties;

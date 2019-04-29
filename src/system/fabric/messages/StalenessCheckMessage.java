@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabric.common.ReadVersion;
 import fabric.common.SerializedObject;
-import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
@@ -26,12 +26,11 @@ public final class StalenessCheckMessage
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
 
-  public final LongKeyMap<VersionAndExpiry> versionsAndExpiries;
+  public final LongKeyMap<ReadVersion> versions;
 
-  public StalenessCheckMessage(
-      LongKeyMap<VersionAndExpiry> versionsAndExpiries) {
+  public StalenessCheckMessage(LongKeyMap<ReadVersion> versions) {
     super(MessageType.STALENESS_CHECK, AccessException.class);
-    this.versionsAndExpiries = versionsAndExpiries;
+    this.versions = versions;
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -62,9 +61,8 @@ public final class StalenessCheckMessage
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
-    out.writeInt(versionsAndExpiries.size());
-    for (LongKeyMap.Entry<VersionAndExpiry> entry : versionsAndExpiries
-        .entrySet()) {
+    out.writeInt(versions.size());
+    for (LongKeyMap.Entry<ReadVersion> entry : versions.entrySet()) {
       out.writeLong(entry.getKey());
       entry.getValue().write(out);
     }
@@ -76,12 +74,12 @@ public final class StalenessCheckMessage
   }
 
   /* helper method for deserialization constructor */
-  private static LongKeyHashMap<VersionAndExpiry> readMap(DataInput in)
+  private static LongKeyHashMap<ReadVersion> readMap(DataInput in)
       throws IOException {
     int size = in.readInt();
-    LongKeyHashMap<VersionAndExpiry> versions = new LongKeyHashMap<>(size);
+    LongKeyHashMap<ReadVersion> versions = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++)
-      versions.put(in.readLong(), new VersionAndExpiry(in));
+      versions.put(in.readLong(), new ReadVersion(in));
 
     return versions;
   }

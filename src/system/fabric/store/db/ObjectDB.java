@@ -16,6 +16,7 @@ import javax.security.auth.x500.X500Principal;
 
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
+import fabric.common.ReadVersion;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
 import fabric.common.exceptions.AccessException;
@@ -689,8 +690,7 @@ public abstract class ObjectDB {
    *          to this map, binding the object's onum to its current version.
    */
   public final void prepareRead(long tid, Principal worker, long onum,
-      int version, long expiry,
-      OidKeyHashMap<SerializedObject> versionConflicts,
+      ReadVersion readInfo, OidKeyHashMap<SerializedObject> versionConflicts,
       OidKeyHashMap<Long> longerTreaties)
       throws TransactionPrepareFailedException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
@@ -723,10 +723,11 @@ public abstract class ObjectDB {
           longerTreaties, e.getMessage());
     }
 
-    if (curVersion != version) {
+    if (curVersion != readInfo.version
+        || (readInfo.strict && readInfo.expiry != curExpiry)) {
       versionConflicts.put(Worker.getWorker().getStore(getName()), onum,
           read(onum));
-    } else if (curExpiry > expiry) {
+    } else if (curExpiry > readInfo.expiry) {
       longerTreaties.put(Worker.getWorker().getStore(getName()), onum,
           curExpiry);
     }

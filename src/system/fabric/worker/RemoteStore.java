@@ -18,10 +18,10 @@ import fabric.common.Crypto;
 import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
+import fabric.common.ReadVersion;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.TransactionID;
-import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.FabricRuntimeException;
@@ -131,7 +131,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   @Override
   public void prepareTransaction(long tid, boolean singleStore,
       boolean readOnly, long expiryToCheck, Collection<Object._Impl> toCreate,
-      LongKeyMap<VersionAndExpiry> reads, Collection<Object._Impl> writes,
+      LongKeyMap<ReadVersion> reads, Collection<Object._Impl> writes,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<OidHashSet> extensionsTriggered, LongSet delayedExtensions)
       throws UnreachableNodeException {
@@ -352,7 +352,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   @Override
-  public boolean checkForStaleObjects(LongKeyMap<VersionAndExpiry> reads) {
+  public boolean checkForStaleObjects(LongKeyMap<ReadVersion> reads) {
     List<SerializedObject> staleObjects = getStaleObjects(reads);
 
     for (SerializedObject obj : staleObjects)
@@ -365,7 +365,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    * Helper for checkForStaleObjects.
    */
   protected List<SerializedObject> getStaleObjects(
-      LongKeyMap<VersionAndExpiry> reads) {
+      LongKeyMap<ReadVersion> reads) {
     try {
       return send(Worker.getWorker().authToStore,
           new StalenessCheckMessage(reads)).staleObjects;

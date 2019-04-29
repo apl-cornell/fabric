@@ -44,6 +44,12 @@ public final class ReadMap {
     private final Set<Log> readLocks;
 
     /**
+     * The set of transaction logs that have read locks on the object
+     * represented by this entry that are _strict_ (requires exact expiry).
+     */
+    private final Set<Log> strictReadLocks;
+
+    /**
      * The version number on the object represented by this entry.
      */
     private int versionNumber;
@@ -64,6 +70,7 @@ public final class ReadMap {
       this.outer = outer;
       this.obj = obj.$ref;
       this.readLocks = new HashSet<>();
+      this.strictReadLocks = new HashSet<>();
       this.versionNumber = obj.$version;
       this.expiry = obj.$expiry;
       this.pinCount = 1;
@@ -112,6 +119,10 @@ public final class ReadMap {
       return Collections.unmodifiableSet(readLocks);
     }
 
+    synchronized Set<Log> getStrictReaders() {
+      return Collections.unmodifiableSet(strictReadLocks);
+    }
+
     /**
      * Adds a lock for the given reader.
      */
@@ -121,6 +132,18 @@ public final class ReadMap {
         throw new TransactionRestartingException(reader.tid);
       }
       readLocks.add(reader);
+    }
+
+    /**
+     * Adds a lock for the given reader.
+     */
+    synchronized void addStrictLock(Log reader) {
+      if (defunct) {
+        reader.checkRetrySignal();
+        throw new TransactionRestartingException(reader.tid);
+      }
+      readLocks.add(reader);
+      strictReadLocks.add(reader);
     }
 
     /**
@@ -138,6 +161,7 @@ public final class ReadMap {
           }
         }
         readLocks.remove(reader);
+        strictReadLocks.remove(reader);
         attemptGC();
       }
 
@@ -160,19 +184,23 @@ public final class ReadMap {
 
       // Release child's read lock.
       readLocks.remove(child);
+      boolean strict = strictReadLocks.remove(child);
 
-      if (readLocks.contains(parent)) {
-        // Parent already has a lock. Nothing to do.
+      if (readLocks.contains(parent)
+          && (!strict || strictReadLocks.contains(parent))) {
+        // Parent already has the same lock. Nothing to do.
         return null;
       }
 
       // Transfer the read lock to the parent.
       readLocks.add(parent);
+      if (strict) strictReadLocks.add(parent);
 
       // Check if any of the parent's ancestors already has a read lock.
       Log curAncestor = parent.parent;
       while (curAncestor != null) {
-        if (readLocks.contains(curAncestor)) {
+        if (readLocks.contains(curAncestor)
+            && (!strict || strictReadLocks.contains(parent))) {
           return true;
         }
 
@@ -190,6 +218,21 @@ public final class ReadMap {
         if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
           Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
               "Cache updated for {0}, aborting reader {1}", obj.onum, reader);
+        }
+        reader.flagRetry(reason);
+      }
+    }
+
+    /**
+     * Aborts all transactions that have this entry in their logs and requires
+     * strictness.
+     */
+    synchronized void abortStrictReaders(String reason) {
+      for (Log reader : strictReadLocks) {
+        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+              "Cache updated for {0}, aborting strict reader {1}", obj.onum,
+              reader);
         }
         reader.flagRetry(reason);
       }
@@ -299,6 +342,14 @@ public final class ReadMap {
   void abortReaders(Store store, long onum, String reason) {
     Entry entry = map.get(store, onum);
     if (entry != null) entry.abortReaders(reason);
+  }
+
+  /**
+   * Sends abort signals to all transactions that have read the given OID.
+   */
+  void abortStrictReaders(Store store, long onum, String reason) {
+    Entry entry = map.get(store, onum);
+    if (entry != null) entry.abortStrictReaders(reason);
   }
 
   /**

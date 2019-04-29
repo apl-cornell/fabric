@@ -12,8 +12,8 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 
 import fabric.common.ONumConstants;
+import fabric.common.ReadVersion;
 import fabric.common.SerializedObject;
-import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
@@ -167,13 +167,11 @@ public final class PrepareRequest {
    */
   public class ReadPrepare extends ItemPrepare {
     private final long onum;
-    private final int version;
-    private final long expiry;
+    private final ReadVersion readInfo;
 
-    public ReadPrepare(long onum, int version, long expiry) {
+    public ReadPrepare(long onum, ReadVersion readInfo) {
       this.onum = onum;
-      this.version = version;
-      this.expiry = expiry;
+      this.readInfo = readInfo;
     }
 
     @Override
@@ -181,7 +179,7 @@ public final class PrepareRequest {
         OidKeyHashMap<SerializedObject> versionConflicts,
         OidKeyHashMap<Long> longerTreaties)
         throws TransactionPrepareFailedException {
-      database.prepareRead(tid, worker, onum, version, expiry, versionConflicts,
+      database.prepareRead(tid, worker, onum, readInfo, versionConflicts,
           longerTreaties);
     }
 
@@ -192,12 +190,12 @@ public final class PrepareRequest {
 
     @Override
     public long getExpiry() {
-      return expiry;
+      return readInfo.expiry;
     }
 
     @Override
     public int getVersion() {
-      return version;
+      return readInfo.version;
     }
 
     @Override
@@ -337,7 +335,7 @@ public final class PrepareRequest {
   public final Collection<SerializedObject> writes;
 
   /** The object numbers, version numbers, and treaties of the read objects */
-  public final LongKeyMap<VersionAndExpiry> reads;
+  public final LongKeyMap<ReadVersion> reads;
 
   /**
    * The collection of extensions
@@ -358,7 +356,7 @@ public final class PrepareRequest {
 
   /** Create a PrepareRequest with the provided fields */
   public PrepareRequest(long tid, Collection<SerializedObject> creates,
-      Collection<SerializedObject> writes, LongKeyMap<VersionAndExpiry> reads,
+      Collection<SerializedObject> writes, LongKeyMap<ReadVersion> reads,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<OidHashSet> extensionsTriggered, LongSet delayedExtensions) {
     this.tid = tid;
@@ -405,9 +403,8 @@ public final class PrepareRequest {
 
       // Sort the objects being prepared.
       SortedSet<ItemPrepare> prepares = new TreeSet<>();
-      for (LongKeyMap.Entry<VersionAndExpiry> read : reads.entrySet()) {
-        prepares.add(new ReadPrepare(read.getKey(), read.getValue().version,
-            read.getValue().expiry));
+      for (LongKeyMap.Entry<ReadVersion> read : reads.entrySet()) {
+        prepares.add(new ReadPrepare(read.getKey(), read.getValue()));
       }
       for (ExpiryExtension extension : extensions) {
         prepares.add(new ExtensionPrepare(extension));

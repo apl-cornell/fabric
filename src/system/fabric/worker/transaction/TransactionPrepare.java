@@ -10,9 +10,9 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
+import fabric.common.ReadVersion;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
-import fabric.common.VersionAndExpiry;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidHashSet;
@@ -292,8 +292,7 @@ public class TransactionPrepare {
     // Send prepares to stores.
     for (Store store : outstandingStores.keySet()) {
       Collection<_Impl> creates = txnLog.getCreatesForStore(store);
-      LongKeyMap<VersionAndExpiry> reads =
-          txnLog.getReadsForStore(store, false);
+      LongKeyMap<ReadVersion> reads = txnLog.getReadsForStore(store, false);
       Collection<_Impl> writes = txnLog.getWritesForStore(store);
       Collection<ExpiryExtension> extensions =
           txnLog.getExtensionsForStore(store);
