@@ -277,13 +277,13 @@ public class SumMetric extends DerivedMetric {
     //public static final long MIN_ADAPTIVE_EXPIRY = 60000;
 
     /*@Override*/
-    public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
+    public EnforcementPolicy thresholdPolicy(double rate, double base, long currentTime, StatsMap weakStats, final Store s) {
       // Don't do this if we want to avoid conflicts between local concurrent
       // operations on different metrics in a derived metric...
       //if (isSingleStore())
       //    return DirectPolicy.singleton;
 
-      long currentTime = System.currentTimeMillis();
+      ThresholdStatement topStmt = ThresholdStatement.create(rate, base, currentTime);
       double baseNow = Bound.value(rate, base, currentTime);
 
       // Defend all rows against the bound individually, using the strictest
@@ -370,8 +370,6 @@ public class SumMetric extends DerivedMetric {
         // For each term, update the associated bounds to be the tightest
         // bound set across the rows
         Multimap/*<Metric, TreatyStatement>*/ staticWitnesses = HashMultimap/*<>*/.create();
-        long staticTimeout = Long.MAX_VALUE;
-        long staticRealTimeout = Long.MAX_VALUE;
         for (int j = 0; j < numTerms; j++) {
           Metric m = term(j);
           double scaledX = m.value(weakStats);
@@ -395,14 +393,11 @@ public class SumMetric extends DerivedMetric {
           }
           if (!implied) {
             staticWitnesses.put(m, newStmt);
-            // Update the timeout estimate.
-            staticTimeout = Math.min(staticTimeout, ThresholdStatement.hedgedEstimate(m, newStmt.rate(), newStmt.base(), currentTime, weakStats));
-            staticRealTimeout = Math.min(staticRealTimeout, ThresholdStatement.hedgedExpiry(m, newStmt.rate(), newStmt.base(), currentTime, weakStats));
           }
         }
 
         // Size should be the same for either option.
-        Multimap/*<Metric, TreatyStatement>*/ finalWitnesses = staticWitnesses;
+        WitnessPolicy/*<Metric, TreatyStatement>*/ finalPolicy = WitnessPolicy.create(staticWitnesses);
 
         // It's only worth using an adaptive strategy if we have a term that
         // will generate slack and either this is multi-store (and therefore
@@ -413,8 +408,6 @@ public class SumMetric extends DerivedMetric {
           double native [] adaptiveSlacks = SumStrategy.getSplitEqualVelocity(velocities, noises, adaptiveRates, (totalValue - baseNow));
 
           Multimap/*<Metric, TreatyStatement>*/ adaptiveWitnesses = HashMultimap/*<>*/.create();
-          long adaptiveTimeout = Long.MAX_VALUE;
-          long adaptiveRealTimeout = Long.MAX_VALUE;
           for (int j = 0; j < numTerms; j++) {
             Metric m = term(j);
             double scaledX = m.value(weakStats);
@@ -440,42 +433,27 @@ public class SumMetric extends DerivedMetric {
             }
             if (!implied) {
               adaptiveWitnesses.put(m, newStmt);
-              // Update the timeout estimate.
-              adaptiveTimeout = Math.min(adaptiveTimeout, ThresholdStatement.hedgedEstimate(m, newStmt.rate(), newStmt.base(), currentTime, weakStats));
-              adaptiveRealTimeout = Math.min(adaptiveRealTimeout, ThresholdStatement.hedgedExpiry(m, newStmt.rate(), newStmt.base(), currentTime, weakStats));
             }
           }
 
-          // TODO: there should be some dynamic growth of MIN_ADAPTIVE_EXPIRY to
-          // account for absurdly long transaction times.
-          //if (adaptiveTimeout > staticTimeout && adaptiveRealTimeout >= System.currentTimeMillis() + MIN_ADAPTIVE_EXPIRY) {
-          //if (adaptiveTimeout > staticTimeout [>&& adaptiveRealTimeout >= System.currentTimeMillis() + TransactionManager.getInstance().getCurrentTreatyTimeout()<]) {
-          if (adaptiveTimeout > staticTimeout && adaptiveRealTimeout > updateInterval(weakStats)/*&& adaptiveRealTimeout >= System.currentTimeMillis() + TransactionManager.getInstance().getCurrentTreatyTimeout()*/) {
-            if (adaptiveTimeout != Long.MAX_VALUE)
-              Logging.METRICS_LOGGER.log(Level.FINE,
-                  "Using adaptive strategy for {0} with adaptive {1} vs static {2} and expected adaptive {3} vs expected static {4}",
-                  new java.lang.Object native[] {
-                    this,
-                    Long.valueOf(adaptiveTimeout),
-                    Long.valueOf(staticTimeout),
-                    Long.valueOf(adaptiveRealTimeout),
-                    Long.valueOf(staticRealTimeout),
-                  });
-            finalWitnesses = adaptiveWitnesses;
-          } else {
-              Logging.METRICS_LOGGER.log(Level.FINE,
-                  "Using nonadaptive strategy for {0} with adaptive {1} vs static {2} and expected adaptive {3} vs expected static {4}",
-                  new java.lang.Object native[] {
-                    this,
-                    Long.valueOf(adaptiveTimeout),
-                    Long.valueOf(staticTimeout),
-                    Long.valueOf(adaptiveRealTimeout),
-                    Long.valueOf(staticRealTimeout),
-                  });
+          WitnessPolicy adaptivePolicy = WitnessPolicy.create(adaptiveWitnesses);
+          long adaptiveEstimate = adaptivePolicy.estimatedTrueExpiry(this, topStmt, currentTime, weakStats);
+          long adaptiveActual = adaptivePolicy.estimatedHedgedExpiry(this, topStmt, currentTime, weakStats);
+          long staticEstimate = finalPolicy.estimatedTrueExpiry(this, topStmt, currentTime, weakStats);
+          //if (adaptiveEstimate != staticEstimate) {
+          //  Logging.METRICS_LOGGER.log(Level.INFO,
+          //      "Adaptive - Static: {0}, {1}",
+          //      new java.lang.Object native[] {
+          //        Long.valueOf(adaptiveEstimate - staticEstimate),
+          //        this,
+          //      });
+          //}
+          if (adaptiveEstimate > staticEstimate && adaptiveActual > (lastUpdate(weakStats) + 3 * updateInterval(weakStats))) {
+            finalPolicy = adaptivePolicy;
           }
         }
 
-        return WitnessPolicy.create(finalWitnesses);
+        return finalPolicy;
       }
     }
 

@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import fabric.common.FastSerializable;
+import fabric.metrics.Metric;
 import fabric.metrics.treaties.Treaty;
 import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 /**
  * Method of enforcement for a treaty.
@@ -64,8 +66,7 @@ public abstract class EnforcementPolicy
    * Utility for getting the policy determined expiration, assuming this is an
    * update from a state already using this policy.
    */
-  public abstract long updatedExpiry(Treaty oldTreaty,
-      StatsMap weakStats);
+  public abstract long updatedExpiry(Treaty oldTreaty, StatsMap weakStats);
 
   /**
    * Activate anything that needs activation for this policy to work.
@@ -87,6 +88,26 @@ public abstract class EnforcementPolicy
   /**
    * Shift from this policy to the given policy on the given Treaty.
    */
-  public abstract void shiftPolicies(Treaty t,
-      EnforcementPolicy newPolicy);
+  public abstract void shiftPolicies(Treaty t, EnforcementPolicy newPolicy);
+
+  /**
+   * Abandon this policy without removing t as an observer for the given
+   * policy's shared witnesses.
+   */
+  public abstract void abandonPolicy(Treaty t,
+      EnforcementPolicy existingPolicy);
+
+  /**
+   * Give the estimate (using weakstats if present, otherwise grabbing stats) of
+   * how long this policy will last if activated.
+   */
+  public abstract long estimatedTrueExpiry(Metric m, TreatyStatement s,
+      long currentTime, StatsMap weakStats);
+
+  /**
+   * Give the estimate (using weakstats if present, otherwise grabbing stats) of
+   * the expiry that will be used if activated.
+   */
+  public abstract long estimatedHedgedExpiry(Metric m, TreatyStatement s,
+      long currentTime, StatsMap weakStats);
 }

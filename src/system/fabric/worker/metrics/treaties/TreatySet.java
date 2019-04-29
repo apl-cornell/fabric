@@ -164,43 +164,45 @@ public class TreatySet
   }
 
   public void remove(Treaty treaty) {
-    // Don't do anything if there's no actual change.
-    if (!statementMap.containsValue(new Oid(treaty))) return;
-
     Logging.METRICS_LOGGER.log(Level.FINEST, "REMOVING TREATY {0} IN {1} {2}",
         new Object[] { treaty, TransactionManager.getInstance().getCurrentTid(),
             Thread.currentThread() });
 
-    Log curLog = TransactionManager.getInstance().getCurrentLog();
-    TreatiesBox._Impl curBox = (TreatiesBox._Impl) owner.fetch();
-    TreatiesBox._Impl boxHistory = (TreatiesBox._Impl) owner.fetch().$history;
-    TreatySet resultSet = this;
-    // Make sure we clobber an extension if this in-place update isn't an
-    // extension.
-    if (curLog != null && curBox.$writeLockHolder == curLog
-        && boxHistory != null && this != getAssociatedTreaties(boxHistory)) {
-      if (boxHistory != null && this == getAssociatedTreaties(boxHistory))
-        throw new IllegalStateException(
-            "Somehow modifying the history's treatyset...");
-    } else {
-      // TODO check that it's a proper garbage collection?
-      resultSet = new TreatySet(this);
-    }
-
-    resultSet.statementMap.remove(treaty.get$predicate(), new Oid(treaty));
     if (TransactionManager.getInstance().inTxn()) {
-      resultSet.owner.set$$treaties(resultSet);
-      if (TransactionManager.usingPrefetching()) resultSet.owner
-          .set$$associates(resultSet.owner.get$$associates().remove(treaty));
+      // Don't do anything if there's no actual change.
+      if (!statementMap.containsValue(new Oid(treaty))) return;
+
+      Log curLog = TransactionManager.getInstance().getCurrentLog();
+      TreatiesBox._Impl curBox = (TreatiesBox._Impl) owner.fetch();
+      TreatiesBox._Impl boxHistory = (TreatiesBox._Impl) owner.fetch().$history;
+      TreatySet resultSet = this;
+      // Make sure we clobber an extension if this in-place update isn't an
+      // extension.
+      if (curLog == null || curBox.$writeLockHolder != curLog
+          || boxHistory == null || this == getAssociatedTreaties(boxHistory)) {
+        // TODO check that it's a proper garbage collection?
+        resultSet = new TreatySet(this);
+      }
+
+      resultSet.statementMap.remove(treaty.get$predicate(), new Oid(treaty));
+      owner.set$$treaties(resultSet);
+      if (TransactionManager.usingPrefetching())
+        owner.set$$associates(owner.get$$associates().remove(treaty));
     } else {
-      TreatySet resultSetCopy = resultSet;
       Worker.runInSubTransaction(new Code<Void>() {
         @Override
         public Void run() {
-          resultSetCopy.owner.set$$treaties(resultSetCopy);
+          // Don't do anything if there's no actual change.
+          if (!owner.get$$treaties().statementMap
+              .containsValue(new Oid(treaty)))
+            return null;
+
+          TreatySet resultSet = new TreatySet(owner.get$$treaties());
+          resultSet.statementMap.remove(treaty.get$predicate(),
+              new Oid(treaty));
+          owner.set$$treaties(resultSet);
           if (TransactionManager.usingPrefetching())
-            resultSetCopy.owner.set$$associates(
-                resultSetCopy.owner.get$$associates().remove(treaty));
+            owner.set$$associates(owner.get$$associates().remove(treaty));
           return null;
         }
       });
@@ -214,48 +216,58 @@ public class TreatySet
   }
 
   public Treaty create(TreatyStatement stmt, StatsMap statsMap) {
-    // Returning a preexisting treaty, if there is one.
-    if (statementMap.containsKey(stmt)) return get(stmt);
-
-    // Make a new delta if this is the first time we've written it in the
-    // current transaction.
-    Log curLog = TransactionManager.getInstance().getCurrentLog();
-    TreatiesBox._Impl curBox = (TreatiesBox._Impl) owner.fetch();
-    TreatiesBox._Impl boxHistory = (TreatiesBox._Impl) owner.fetch().$history;
-    TreatySet resultSet = this;
-    if (curLog != null && curBox.$writeLockHolder == curLog
-        && boxHistory != null && this != getAssociatedTreaties(boxHistory)) {
-      if (boxHistory != null && this == getAssociatedTreaties(boxHistory))
-        throw new IllegalStateException(
-            "Somehow modifying the history's treatyset...");
-    } else {
-      resultSet = new TreatySet(this);
-    }
-
-    // Make the treaty
-    Treaty newTreaty =
-        Treaty._Impl.newTreaty(resultSet.owner.get$owner(), stmt, statsMap);
-
-    resultSet.statementMap.put(stmt, new Oid(newTreaty));
     if (TransactionManager.getInstance().inTxn()) {
+      // Returning a preexisting treaty, if there is one.
+      if (statementMap.containsKey(stmt)) return get(stmt);
+
+      // Make a new delta if this is the first time we've written it in the
+      // current transaction.
+      Log curLog = TransactionManager.getInstance().getCurrentLog();
+      TreatiesBox._Impl curBox = (TreatiesBox._Impl) owner.fetch();
+      TreatiesBox._Impl boxHistory = (TreatiesBox._Impl) owner.fetch().$history;
+      TreatySet resultSet = this;
+      if (curLog == null || curBox.$writeLockHolder != curLog
+          || boxHistory == null || this == getAssociatedTreaties(boxHistory)) {
+        resultSet = new TreatySet(this);
+      }
+
+      // Make the treaty
+      Treaty newTreaty =
+          Treaty._Impl.newTreaty(resultSet.owner.get$owner(), stmt, statsMap);
+
+      resultSet.statementMap.put(stmt, new Oid(newTreaty));
       resultSet.owner.set$$treaties(resultSet);
       if (TransactionManager.usingPrefetching()) resultSet.owner
           .set$$associates(resultSet.owner.get$$associates().add(newTreaty));
+      return newTreaty;
     } else {
-      TreatySet resultSetCopy = resultSet;
-      Worker.runInSubTransaction(new Code<Void>() {
+      Treaty result = Worker.runInSubTransaction(new Code<Treaty>() {
         @Override
-        public Void run() {
-          resultSetCopy.owner.set$$treaties(resultSetCopy);
-          if (TransactionManager.usingPrefetching())
-            resultSetCopy.owner.set$$associates(
-                resultSetCopy.owner.get$$associates().add(newTreaty));
+        public Treaty run() {
+          // Returning a preexisting treaty, if there is one.
+          if (owner.get$$treaties().statementMap.containsKey(stmt))
+            return owner.get$$treaties().get(stmt);
           return null;
         }
       });
-    }
+      if (result != null) return result;
 
-    return newTreaty;
+      // Make the treaty
+      Treaty newTreaty =
+          Treaty._Impl.newTreaty(owner.get$owner(), stmt, statsMap);
+
+      return Worker.runInSubTransaction(new Code<Treaty>() {
+        @Override
+        public Treaty run() {
+          // Returning a preexisting treaty, if there is one.
+          TreatySet resultSet = new TreatySet(owner.get$$treaties());
+          owner.set$$treaties(resultSet);
+          if (TransactionManager.usingPrefetching())
+            owner.set$$associates(owner.get$$associates().add(newTreaty));
+          return newTreaty;
+        }
+      });
+    }
   }
 
   public Map<Store, Set<Long>> prefetch(Store triggeringStore) {
@@ -271,6 +283,10 @@ public class TreatySet
     return result;
   }
 
+  /**
+   * Commits all changes until this map is a direct delta of the given object's
+   * history or, if there's no history, a non-delta map.
+   */
   public void flattenUpdates(TreatiesBox._Impl ownerImpl) {
     TreatiesBox._Impl historyObj = (TreatiesBox._Impl) ownerImpl.$history;
     if (historyObj != null) {
@@ -287,11 +303,5 @@ public class TreatySet
         statementMap =
             ((DeltaMap<TreatyStatement, Oid>) statementMap).commitChanges();
     }
-  }
-
-  public TreatySet makeCopy() {
-    TreatySet copy = new TreatySet(owner);
-    copy.statementMap.putAll(statementMap);
-    return copy;
   }
 }

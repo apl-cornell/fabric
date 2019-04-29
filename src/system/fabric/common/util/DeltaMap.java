@@ -205,16 +205,21 @@ public class DeltaMap<K, V> implements Map<K, V> {
     if (key == null || value == null) throw new IllegalArgumentException(
         "Null keys and values are not supported.");
     if (removedKeys.contains(key)) {
+      // putting a key that pre-existed and was removed in this delta.
       removedKeys.remove(key);
       updates.put(key, value);
       return null;
     } else if (updates.containsKey(key)) {
+      // putting a key that pre-existed and was previously updated in this
+      // delta.
       return updates.put(key, value);
     } else if (backingMap.containsKey(key)) {
+      // putting a key that pre-existed
       V oldValue = backingMap.get(key);
       updates.put(key, value);
       return oldValue;
     } else {
+      // putting a key that didn't exist before.
       return adds.put(key, value);
     }
   }
@@ -228,17 +233,18 @@ public class DeltaMap<K, V> implements Map<K, V> {
 
   @Override
   public V remove(Object key) {
+    // Already removed
     if (removedKeys.contains(key)) return null;
+
+    // Removed a key added in this delta
     V existing = adds.remove(key);
-    if (existing == null) {
-      existing = updates.remove(key);
-      if (existing == null) {
-        existing = backingMap.get(key);
-      }
-      if (existing != null) {
-        removedKeys.add((K) key);
-      }
-    }
+    if (existing != null) return existing;
+
+    // Removed an updated pre-existing key.
+    existing = updates.remove(key);
+    if (existing == null) existing = backingMap.get(key);
+    if (existing != null) removedKeys.add((K) key);
+
     return existing;
   }
 

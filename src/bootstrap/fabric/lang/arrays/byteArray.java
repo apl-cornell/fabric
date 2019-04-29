@@ -860,7 +860,7 @@ public interface byteArray extends fabric.lang.Object {
                         boolean $backoffEnabled29 =
                           fabric.worker.Worker.getWorker(
                                                  ).config.txRetryBackoff;
-                        int $backoff27 = 1;
+                        long $backoff27 = 1;
                         boolean $doBackoff28 = true;
                         boolean $retry22 = true;
                         boolean $keepReads23 = false;
@@ -886,7 +886,17 @@ public interface byteArray extends fabric.lang.Object {
                                             }
                                         }
                                     }
-                                    if ($backoff27 < 5000) $backoff27 *= 2;
+                                    if ($backoff27 <
+                                          fabric.worker.Worker.getWorker().
+                                            config.
+                                            maxBackoff)
+                                        $backoff27 =
+                                          java.lang.Math.
+                                            min(
+                                              $backoff27 * 2,
+                                              fabric.worker.Worker.getWorker().
+                                                config.
+                                                maxBackoff);
                                 }
                                 $doBackoff28 = $backoff27 <= 32 ||
                                                  !$doBackoff28;
@@ -895,27 +905,9 @@ public interface byteArray extends fabric.lang.Object {
                             fabric.worker.transaction.TransactionManager.
                               getInstance().startTransaction();
                             try {
-                                try {
-                                    fabric.lang.arrays.byteArray._Static._Proxy.
-                                      $instance.
-                                      set$DEFAULT_VALUE((byte) 0);
-                                }
-                                catch (final fabric.worker.
-                                         RetryException $e24) {
-                                    throw $e24;
-                                }
-                                catch (final fabric.worker.
-                                         TransactionAbortingException $e24) {
-                                    throw $e24;
-                                }
-                                catch (final fabric.worker.
-                                         TransactionRestartingException $e24) {
-                                    throw $e24;
-                                }
-                                catch (final Throwable $e24) {
-                                    $tm26.getCurrentLog().checkRetrySignal();
-                                    throw $e24;
-                                }
+                                fabric.lang.arrays.byteArray._Static._Proxy.
+                                  $instance.
+                                  set$DEFAULT_VALUE((byte) 0);
                             }
                             catch (final fabric.worker.RetryException $e24) {
                                 $commit21 = false;
@@ -926,11 +918,6 @@ public interface byteArray extends fabric.lang.Object {
                                 $commit21 = false;
                                 $retry22 = false;
                                 $keepReads23 = $e24.keepReads;
-                                if ($tm26.checkForStaleObjects()) {
-                                    $retry22 = true;
-                                    $keepReads23 = false;
-                                    continue $label20;
-                                }
                                 fabric.common.TransactionID $currentTid25 =
                                   $tm26.getCurrentTid();
                                 if ($e24.tid == null ||
@@ -958,15 +945,16 @@ public interface byteArray extends fabric.lang.Object {
                             }
                             catch (final Throwable $e24) {
                                 $commit21 = false;
-                                if ($tm26.checkForStaleObjects())
-                                    continue $label20;
                                 $retry22 = false;
-                                throw new fabric.worker.AbortException($e24);
+                                if ($tm26.inNestedTxn()) {
+                                    $keepReads23 = true;
+                                }
+                                throw $e24;
                             }
                             finally {
+                                fabric.common.TransactionID $currentTid25 =
+                                  $tm26.getCurrentTid();
                                 if ($commit21) {
-                                    fabric.common.TransactionID $currentTid25 =
-                                      $tm26.getCurrentTid();
                                     try {
                                         fabric.worker.transaction.TransactionManager.
                                           getInstance().commitTransaction();
@@ -980,11 +968,6 @@ public interface byteArray extends fabric.lang.Object {
                                         $commit21 = false;
                                         $retry22 = false;
                                         $keepReads23 = $e24.keepReads;
-                                        if ($tm26.checkForStaleObjects()) {
-                                            $retry22 = true;
-                                            $keepReads23 = false;
-                                            continue $label20;
-                                        }
                                         if ($e24.tid ==
                                               null ||
                                               !$e24.tid.isDescendantOf(
@@ -1006,10 +989,28 @@ public interface byteArray extends fabric.lang.Object {
                                             }
                                         }
                                     }
-                                } else if ($keepReads23) {
-                                    fabric.worker.transaction.TransactionManager.getInstance().abortTransactionUpdates();
                                 } else {
-                                    fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
+                                    if (!$tm26.inNestedTxn() &&
+                                          $tm26.checkForStaleObjects()) {
+                                        $retry22 = true;
+                                        $keepReads23 = false;
+                                    }
+                                    if ($keepReads23) {
+                                        try {
+                                            fabric.worker.transaction.TransactionManager.getInstance().abortTransactionUpdates();
+                                        }
+                                        catch (final fabric.worker.TransactionRestartingException $e24) {
+                                            $currentTid25 = $tm26.getCurrentTid();
+                                            if ($currentTid25 != null &&
+                                                  ($e24.tid.equals($currentTid25) || !$e24.tid.isDescendantOf($currentTid25))) {
+                                                throw $e24;
+                                            } else {
+                                                $retry22 = true;
+                                            }
+                                        }
+                                    } else {
+                                        fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
+                                    }
                                 }
                                 if (!$commit21) {
                                     {  }

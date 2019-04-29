@@ -860,7 +860,7 @@ public interface charArray extends fabric.lang.Object {
                         boolean $backoffEnabled39 =
                           fabric.worker.Worker.getWorker(
                                                  ).config.txRetryBackoff;
-                        int $backoff37 = 1;
+                        long $backoff37 = 1;
                         boolean $doBackoff38 = true;
                         boolean $retry32 = true;
                         boolean $keepReads33 = false;
@@ -886,7 +886,17 @@ public interface charArray extends fabric.lang.Object {
                                             }
                                         }
                                     }
-                                    if ($backoff37 < 5000) $backoff37 *= 2;
+                                    if ($backoff37 <
+                                          fabric.worker.Worker.getWorker().
+                                            config.
+                                            maxBackoff)
+                                        $backoff37 =
+                                          java.lang.Math.
+                                            min(
+                                              $backoff37 * 2,
+                                              fabric.worker.Worker.getWorker().
+                                                config.
+                                                maxBackoff);
                                 }
                                 $doBackoff38 = $backoff37 <= 32 ||
                                                  !$doBackoff38;
@@ -895,27 +905,9 @@ public interface charArray extends fabric.lang.Object {
                             fabric.worker.transaction.TransactionManager.
                               getInstance().startTransaction();
                             try {
-                                try {
-                                    fabric.lang.arrays.charArray._Static._Proxy.
-                                      $instance.
-                                      set$DEFAULT_VALUE((char) 0);
-                                }
-                                catch (final fabric.worker.
-                                         RetryException $e34) {
-                                    throw $e34;
-                                }
-                                catch (final fabric.worker.
-                                         TransactionAbortingException $e34) {
-                                    throw $e34;
-                                }
-                                catch (final fabric.worker.
-                                         TransactionRestartingException $e34) {
-                                    throw $e34;
-                                }
-                                catch (final Throwable $e34) {
-                                    $tm36.getCurrentLog().checkRetrySignal();
-                                    throw $e34;
-                                }
+                                fabric.lang.arrays.charArray._Static._Proxy.
+                                  $instance.
+                                  set$DEFAULT_VALUE((char) 0);
                             }
                             catch (final fabric.worker.RetryException $e34) {
                                 $commit31 = false;
@@ -926,11 +918,6 @@ public interface charArray extends fabric.lang.Object {
                                 $commit31 = false;
                                 $retry32 = false;
                                 $keepReads33 = $e34.keepReads;
-                                if ($tm36.checkForStaleObjects()) {
-                                    $retry32 = true;
-                                    $keepReads33 = false;
-                                    continue $label30;
-                                }
                                 fabric.common.TransactionID $currentTid35 =
                                   $tm36.getCurrentTid();
                                 if ($e34.tid == null ||
@@ -958,15 +945,16 @@ public interface charArray extends fabric.lang.Object {
                             }
                             catch (final Throwable $e34) {
                                 $commit31 = false;
-                                if ($tm36.checkForStaleObjects())
-                                    continue $label30;
                                 $retry32 = false;
-                                throw new fabric.worker.AbortException($e34);
+                                if ($tm36.inNestedTxn()) {
+                                    $keepReads33 = true;
+                                }
+                                throw $e34;
                             }
                             finally {
+                                fabric.common.TransactionID $currentTid35 =
+                                  $tm36.getCurrentTid();
                                 if ($commit31) {
-                                    fabric.common.TransactionID $currentTid35 =
-                                      $tm36.getCurrentTid();
                                     try {
                                         fabric.worker.transaction.TransactionManager.
                                           getInstance().commitTransaction();
@@ -980,11 +968,6 @@ public interface charArray extends fabric.lang.Object {
                                         $commit31 = false;
                                         $retry32 = false;
                                         $keepReads33 = $e34.keepReads;
-                                        if ($tm36.checkForStaleObjects()) {
-                                            $retry32 = true;
-                                            $keepReads33 = false;
-                                            continue $label30;
-                                        }
                                         if ($e34.tid ==
                                               null ||
                                               !$e34.tid.isDescendantOf(
@@ -1006,10 +989,28 @@ public interface charArray extends fabric.lang.Object {
                                             }
                                         }
                                     }
-                                } else if ($keepReads33) {
-                                    fabric.worker.transaction.TransactionManager.getInstance().abortTransactionUpdates();
                                 } else {
-                                    fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
+                                    if (!$tm36.inNestedTxn() &&
+                                          $tm36.checkForStaleObjects()) {
+                                        $retry32 = true;
+                                        $keepReads33 = false;
+                                    }
+                                    if ($keepReads33) {
+                                        try {
+                                            fabric.worker.transaction.TransactionManager.getInstance().abortTransactionUpdates();
+                                        }
+                                        catch (final fabric.worker.TransactionRestartingException $e34) {
+                                            $currentTid35 = $tm36.getCurrentTid();
+                                            if ($currentTid35 != null &&
+                                                  ($e34.tid.equals($currentTid35) || !$e34.tid.isDescendantOf($currentTid35))) {
+                                                throw $e34;
+                                            } else {
+                                                $retry32 = true;
+                                            }
+                                        }
+                                    } else {
+                                        fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
+                                    }
                                 }
                                 if (!$commit31) {
                                     {  }

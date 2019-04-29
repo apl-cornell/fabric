@@ -5,6 +5,7 @@ import java.util.SortedSet;
 import fabric.metrics.Metric;
 import fabric.metrics.DerivedMetric;
 import fabric.metrics.SampledMetric;
+import fabric.metrics.SumMetric;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.worker.metrics.ImmutableMetricsVector;
@@ -204,22 +205,26 @@ public class Treaty extends AbstractSubject implements Observer {
       // Try a new policy
       // XXX: It's worth considering if we should avoid activating new policy in
       // case we also ditch?
-      EnforcementPolicy newPolicy = newUnactivatedPolicy(metric, predicate, StatsMap.emptyStats());
-      if (newPolicy.equals(this.policy)) {
-        deactivate();
-      } else {
-        newPolicy.activate(StatsMap.emptyStats());
-        long newPolicyExpiry = newPolicy.calculateExpiry(this, StatsMap.emptyStats());
-        if (newPolicyExpiry > System.currentTimeMillis()) {
-          this.policy.shiftPolicies(this, newPolicy);
-          this.policy = newPolicy;
-          this.$expiry = newPolicyExpiry;
-        } else {
-          // Garbage collect abandoned policy
-          newPolicy.unapply(this);
+      //if (predicate.check(metric)) {
+        EnforcementPolicy newPolicy = newUnactivatedPolicy(metric, predicate, StatsMap.emptyStats());
+        if (newPolicy.equals(this.policy)) {
           deactivate();
+        } else {
+          newPolicy.activate(StatsMap.emptyStats());
+          long newPolicyExpiry = newPolicy.calculateExpiry(this, StatsMap.emptyStats());
+          if (newPolicyExpiry > System.currentTimeMillis()) {
+            this.policy.shiftPolicies(this, newPolicy);
+            this.policy = newPolicy;
+            this.$expiry = newPolicyExpiry;
+          } else {
+            // Garbage collect abandoned policy
+            newPolicy.unapply(this);
+            deactivate();
+          }
         }
-      }
+      //} else {
+      //  deactivate();
+      //}
     } else if (TransactionManager.getInstance().shouldRebalance(this)) {
       rebalance(false);
     }
@@ -278,12 +283,51 @@ public class Treaty extends AbstractSubject implements Observer {
         this.$expiry = newPolicyExpiry;
         registerPotentialExtensions(oldExpiry);
       } else {
-        newPolicy.shiftPolicies(this, this.policy);
+        newPolicy.abandonPolicy(this, this.policy);
         TransactionManager.getInstance().registerDelayedExtension(this);
       }
     } else if (!this.policy.equals(newPolicy)) {
       // Garbage collect abandoned policy
-      newPolicy.shiftPolicies(this, this.policy);
+      newPolicy.abandonPolicy(this, this.policy);
+    }
+  }
+
+  /**
+   * Force a shift to a new policy.
+   */
+  public static void rebalance_async(Treaty tmp) {
+    atomic {
+      if (!(tmp.metric instanceof SumMetric)) return;
+    }
+    // Collect stats
+    StatsMap weakStats = StatsMap.emptyStats();
+    if (tmp.metric.$getStore().name().equals(Worker.getWorkerName())) {
+      weakStats = tmp.metric.refreshWeakEstimates(weakStats);
+    } else {
+      RemoteWorker w = Worker.getWorker().getWorker(tmp.metric.$getStore().name());
+      weakStats = tmp.metric.refreshWeakEstimates_remote@w(null, weakStats);
+    }
+
+    // Form a plan
+    EnforcementPolicy newPolicy = newUnactivatedPolicy(tmp.metric, tmp.predicate, weakStats);
+    atomic {
+      // Skip if this isn't a new plan anymore.
+      if (newPolicy.equals(tmp.policy)) return;
+    }
+    newPolicy.activate(weakStats);
+
+    // Switch to it, if it's better.
+    atomic {
+      long newPolicyExpiry = newPolicy.calculateExpiry(tmp, weakStats);
+      if (newPolicyExpiry > tmp.$expiry) {
+        tmp.policy.shiftPolicies(tmp, newPolicy);
+        tmp.policy = newPolicy;
+        tmp.$expiry = newPolicyExpiry;
+        tmp.registerPotentialExtensions(tmp.$expiry);
+      } else if (!tmp.policy.equals(newPolicy)) {
+        // Garbage collect abandoned policy
+        newPolicy.abandonPolicy(tmp, tmp.policy);
+      }
     }
   }
 

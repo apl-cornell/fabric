@@ -49,7 +49,8 @@ public class ThresholdStatement extends TreatyStatement
   /**
    * Utility factory method because signatures don't allow native constructors.
    */
-  public static ThresholdStatement create(double rate, double base, long startTime) {
+  public static ThresholdStatement create(double rate, double base,
+      long startTime) {
     return new ThresholdStatement(rate, base, startTime);
   }
 
@@ -380,8 +381,9 @@ public class ThresholdStatement extends TreatyStatement
   }
 
   @Override
-  public EnforcementPolicy getNewPolicy(Metric m, StatsMap weakStats) {
-    return m.thresholdPolicy(rate, base, weakStats, m.$getStore());
+  public EnforcementPolicy getNewPolicy(Metric m, long currentTime,
+      StatsMap weakStats) {
+    return m.thresholdPolicy(rate, base, currentTime, weakStats, m.$getStore());
   }
 
   @Override
@@ -419,5 +421,15 @@ public class ThresholdStatement extends TreatyStatement
     // This shouldn't happen.
     this.rate = 0;
     this.base = 0;
+  }
+
+  @Override
+  public long hedgedEstimate(Metric m, long currentTime, StatsMap weakStats) {
+    return hedgedEstimate(m, this.rate, this.base, currentTime, weakStats);
+  }
+
+  @Override
+  public long hedgedExpiry(Metric m, long currentTime, StatsMap weakStats) {
+    return hedgedExpiry(m, this.rate, this.base, currentTime, weakStats);
   }
 }
