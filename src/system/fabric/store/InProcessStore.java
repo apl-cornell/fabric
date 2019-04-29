@@ -9,10 +9,10 @@ import java.util.Set;
 
 import fabric.common.ConfigProperties;
 import fabric.common.ObjectGroup;
+import fabric.common.ReadVersion;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.TransactionID;
-import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
@@ -104,8 +104,8 @@ public class InProcessStore extends RemoteStore {
   @Override
   public void prepareTransaction(final long tid, final boolean singleStore,
       final boolean readOnly, final long expiryToCheck,
-      final Collection<_Impl> toCreate,
-      final LongKeyMap<VersionAndExpiry> reads, final Collection<_Impl> writes,
+      final Collection<_Impl> toCreate, final LongKeyMap<ReadVersion> reads,
+      final Collection<_Impl> writes,
       final Collection<ExpiryExtension> extensions,
       final LongKeyMap<OidHashSet> extensionsTriggered,
       final LongSet delayedExtensions) {
@@ -198,7 +198,7 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   protected List<SerializedObject> getStaleObjects(
-      LongKeyMap<VersionAndExpiry> reads) {
+      LongKeyMap<ReadVersion> reads) {
     try {
       return tm.checkForStaleObjects(Worker.getWorker().getPrincipal(), reads);
     } catch (AccessException e) {

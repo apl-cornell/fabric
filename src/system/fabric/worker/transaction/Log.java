@@ -25,12 +25,12 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 
 import fabric.common.Logging;
+import fabric.common.ReadVersion;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
 import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
-import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyHashMap;
@@ -486,14 +486,14 @@ public final class Log {
    * @param includeModified
    *          whether to include reads on modified objects.
    */
-  LongKeyMap<VersionAndExpiry> getReadsForStore(Store store,
+  LongKeyMap<ReadVersion> getReadsForStore(Store store,
       boolean includeModified) {
-    LongKeyMap<VersionAndExpiry> result = new LongKeyHashMap<>();
+    LongKeyMap<ReadVersion> result = new LongKeyHashMap<>();
     LongKeyMap<ReadMap.Entry> submap = reads.get(store);
     if (submap == null) return result;
 
     for (LongKeyMap.Entry<ReadMap.Entry> entry : submap.entrySet()) {
-      result.put(entry.getKey(), new VersionAndExpiry(
+      result.put(entry.getKey(), new ReadVersion(
           entry.getValue().getVersionNumber(), entry.getValue().getExpiry()));
     }
 
@@ -501,8 +501,8 @@ public final class Log {
       for (ReadMap.Entry entry : readsReadByParent) {
         FabricSoftRef entryRef = entry.getRef();
         if (store.equals(entryRef.store)) {
-          result.put(entryRef.onum, new VersionAndExpiry(
-              entry.getVersionNumber(), entry.getExpiry()));
+          result.put(entryRef.onum,
+              new ReadVersion(entry.getVersionNumber(), entry.getExpiry()));
         }
       }
     }
@@ -1790,7 +1790,8 @@ public final class Log {
     while (cur.parent != null)
       cur = cur.parent;
     while (cur != null) {
-      if (!o.$readMapEntry.getReaders().contains(cur) && cur.reads.containsKey(o)) {
+      if (!o.$readMapEntry.getReaders().contains(cur)
+          && cur.reads.containsKey(o)) {
         //Logging.METRICS_LOGGER.log(Level.SEVERE,
         //    "FOUND DIFFERENT IMPLS FOR {0}/{1}: {2} vs. {3}",
         //    new Object[] { o.$getStore(), o.$getOnum(),

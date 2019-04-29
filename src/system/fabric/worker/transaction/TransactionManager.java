@@ -26,11 +26,11 @@ import java.util.logging.Level;
 import fabric.common.ConfigProperties;
 import fabric.common.FabricThread;
 import fabric.common.Logging;
+import fabric.common.ReadVersion;
 import fabric.common.Threading;
 import fabric.common.Threading.NamedRunnable;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
-import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
@@ -1259,7 +1259,7 @@ public final class TransactionManager {
 
     // Go through each store and send check messages in parallel.
     for (Store store : stores) {
-      final LongKeyMap<VersionAndExpiry> reads =
+      final LongKeyMap<ReadVersion> reads =
           checkingLog.getReadsForStore(store, true);
       NamedRunnable runnable =
           new NamedRunnable("worker freshness check to " + store.name()) {

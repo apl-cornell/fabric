@@ -19,9 +19,9 @@ import fabric.common.AuthorizationUtil;
 import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
+import fabric.common.ReadVersion;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
-import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
@@ -368,7 +368,7 @@ public class TransactionManager {
    * for any stale objects found.
    */
   List<SerializedObject> checkForStaleObjects(Principal worker,
-      LongKeyMap<VersionAndExpiry> versionsAndExpiries) throws AccessException {
+      LongKeyMap<ReadVersion> versionsAndExpiries) throws AccessException {
     // First, check read and write permissions.
     Store store = Worker.getWorker().getStore(database.getName());
     if (worker == null || worker.$getStore() != store
@@ -379,8 +379,7 @@ public class TransactionManager {
     }
 
     List<SerializedObject> result = new ArrayList<>();
-    for (LongKeyMap.Entry<VersionAndExpiry> entry : versionsAndExpiries
-        .entrySet()) {
+    for (LongKeyMap.Entry<ReadVersion> entry : versionsAndExpiries.entrySet()) {
       long onum = entry.getKey();
       int version = entry.getValue().version;
       long expiry = entry.getValue().expiry;
@@ -467,8 +466,8 @@ public class TransactionManager {
 
   private final int EXTENSION_WINDOW = 1000;
 
-  private final ExecutorService extensionsPool =
-      Threading.newFixedThreadPool(32);
+  private final ExecutorService extensionsPool = Threading.getPool();
+  //Threading.newFixedThreadPool(32);
 
   /**
    * A thread that goes through the extensions queue, waiting until the next
@@ -553,6 +552,21 @@ public class TransactionManager {
                                   treaty.get$$expiry());
                             }
                           }, true);
+                      //Store store =
+                      //    Worker.getWorker().getStore(database.getName());
+                      //Treaty treaty = new Treaty._Proxy(store, extension.onum);
+                      //Treaty._Proxy.rebalance_async(treaty);
+                      //nameAndNewExpiry.third = Worker.runInTopLevelTransaction(
+                      //    new Code<Long>() {
+                      //      @Override
+                      //      public Long run() {
+                      //        Store store = Worker.getWorker()
+                      //            .getStore(database.getName());
+                      //        Treaty treaty =
+                      //            new Treaty._Proxy(store, extension.onum);
+                      //        return treaty.get$$expiry();
+                      //      }
+                      //    }, true);
                     } catch (AbortException e) {
                       success = false;
                       StringWriter sw = new StringWriter();

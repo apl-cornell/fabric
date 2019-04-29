@@ -11,10 +11,10 @@ import java.util.Set;
 
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
+import fabric.common.ReadVersion;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.TransactionID;
-import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
@@ -66,7 +66,7 @@ public final class LocalStore implements Store, Serializable {
   public void prepareTransaction(final long tid, final boolean singleStore,
       final boolean readOnly, final long expiryToCheck,
       final Collection<Object._Impl> toCreate,
-      final LongKeyMap<VersionAndExpiry> reads,
+      final LongKeyMap<ReadVersion> reads,
       final Collection<Object._Impl> writes,
       final Collection<ExpiryExtension> extensions,
       final LongKeyMap<OidHashSet> extensionsTriggered,
@@ -161,7 +161,7 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public boolean checkForStaleObjects(LongKeyMap<VersionAndExpiry> reads) {
+  public boolean checkForStaleObjects(LongKeyMap<ReadVersion> reads) {
     return false;
   }
 

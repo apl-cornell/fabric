@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
+import fabric.common.ReadVersion;
 import fabric.common.SerializedObject;
-import fabric.common.VersionAndExpiry;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongHashSet;
@@ -54,7 +54,7 @@ public class PrepareTransactionMessage extends AsyncMessage {
    */
   public final long expiryToCheck;
 
-  public final LongKeyMap<VersionAndExpiry> reads;
+  public final LongKeyMap<ReadVersion> reads;
 
   /**
    * The objects created during the transaction, unserialized. This will only be
@@ -111,7 +111,7 @@ public class PrepareTransactionMessage extends AsyncMessage {
    */
   public PrepareTransactionMessage(long tid, boolean singleStore,
       boolean readOnly, long expiryToCheck, Collection<_Impl> toCreate,
-      LongKeyMap<VersionAndExpiry> reads, Collection<_Impl> writes,
+      LongKeyMap<ReadVersion> reads, Collection<_Impl> writes,
       Collection<ExpiryExtension> extensions,
       LongKeyMap<OidHashSet> extensionsTriggered, LongSet delayedExtensions) {
     super(MessageType.PREPARE_TRANSACTION);
@@ -163,7 +163,7 @@ public class PrepareTransactionMessage extends AsyncMessage {
       out.writeInt(0);
     } else {
       out.writeInt(reads.size());
-      for (LongKeyMap.Entry<VersionAndExpiry> entry : reads.entrySet()) {
+      for (LongKeyMap.Entry<ReadVersion> entry : reads.entrySet()) {
         out.writeLong(entry.getKey());
         entry.getValue().write(out);
       }
@@ -253,7 +253,7 @@ public class PrepareTransactionMessage extends AsyncMessage {
     } else {
       reads = new LongKeyHashMap<>(size);
       for (int i = 0; i < size; i++)
-        reads.put(in.readLong(), new VersionAndExpiry(in));
+        reads.put(in.readLong(), new ReadVersion(in));
     }
 
     // Read creates.
