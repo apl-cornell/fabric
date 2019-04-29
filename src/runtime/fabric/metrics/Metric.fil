@@ -472,8 +472,29 @@ public abstract class Metric extends AbstractSubject
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-  public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
+  public EnforcementPolicy equalityPolicy(double value, long time, StatsMap weakStats, final Store s) {
     return DirectPolicy.singleton;
+  }
+
+  /**
+   * Used to construct and enforce {@link Treaty}s bounding this
+   * {@link Metric}s value.
+   * <p>
+   * Implementations of this method should use "weak" estimates of value,
+   * velocity, and noise to avoid contention issues. The internal
+   * implementation is expected to have refreshed these estimates recently
+   * prior to the call.
+   *
+   * @param value
+   *            the value we're asserting equality with.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
+   * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
+   *         being above bound.
+   */
+  public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
+    return equalityPolicy(value, 0, weakStats, s);
   }
 
   /**
@@ -513,8 +534,29 @@ public abstract class Metric extends AbstractSubject
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-  public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
+  public EnforcementPolicy thresholdPolicy(double rate, double base, long time, StatsMap weakStats, final Store s) {
     return DirectPolicy.singleton;
+  }
+
+  /**
+   * Used to construct and enforce {@link Treaty}s bounding this
+   * {@link Metric}s value.
+   * <p>
+   * Implementations of this method should use "weak" estimates of value,
+   * velocity, and noise to avoid contention issues. The internal
+   * implementation is expected to have refreshed these estimates recently
+   * prior to the call.
+   *
+   * @param bound
+   *            a bound that the returned policy enforces.
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
+   * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
+   *         being above bound.
+   */
+  public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
+    return thresholdPolicy(rate, base, System.currentTimeMillis(), weakStats, s);
   }
 
   /**

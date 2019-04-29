@@ -3,8 +3,10 @@ package fabric.worker.metrics.treaties.enforcement;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.metrics.Metric;
 import fabric.metrics.treaties.Treaty;
 import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 /**
  * Policy enforcing the treaty by directly monitoring the metric value.
@@ -98,5 +100,25 @@ public class DirectPolicy extends EnforcementPolicy {
 
   private Object readResolve() {
     return singleton;
+  }
+
+  @Override
+  public long estimatedHedgedExpiry(Metric m, TreatyStatement s,
+      long currentTime, StatsMap weakStats) {
+    return s.hedgedExpiry(m, currentTime, weakStats);
+  }
+
+  @Override
+  public long estimatedTrueExpiry(Metric m, TreatyStatement s, long currentTime,
+      StatsMap weakStats) {
+    return s.hedgedEstimate(m, currentTime, weakStats);
+  }
+
+  @Override
+  public void abandonPolicy(Treaty t, EnforcementPolicy existingPolicy) {
+    // If the new policy is also direct, don't do anything.
+    if (!(existingPolicy instanceof DirectPolicy)) {
+      unapply(t);
+    }
   }
 }

@@ -75,7 +75,7 @@ public class ProxyMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
+  public EnforcementPolicy equalityPolicy(double value, long time, StatsMap weakStats, final Store s) {
     // TODO: Is this right?
     Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
     witnesses.put(term(0), EqualityStatement.create(value));
@@ -83,7 +83,7 @@ public class ProxyMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
+  public EnforcementPolicy thresholdPolicy(double rate, double base, long time, StatsMap weakStats, final Store s) {
     // TODO: Is this right?
     Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
     witnesses.put(term(0), ThresholdStatement.create(rate, base));

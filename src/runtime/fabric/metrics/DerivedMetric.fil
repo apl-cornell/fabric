@@ -505,7 +505,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   /*@Override*/
-  public EnforcementPolicy equalityPolicy(double value, StatsMap weakStats, final Store s) {
+  public EnforcementPolicy equalityPolicy(double value, long time, StatsMap weakStats, final Store s) {
     // TODO: There's a better policy to override this with in MinMetric.
     // The value will be checked consistently later if we're using weak stats
     // right now.

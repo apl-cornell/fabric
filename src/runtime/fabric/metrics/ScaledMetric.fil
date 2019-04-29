@@ -164,7 +164,7 @@ public class ScaledMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public EnforcementPolicy thresholdPolicy(double rate, double base, StatsMap weakStats, final Store s) {
+    public EnforcementPolicy thresholdPolicy(double rate, double base, long time, StatsMap weakStats, final Store s) {
         // Don't do this if we want to avoid conflicts between local concurrent
         // operations on different metrics in a derived metric...
         //if (isSingleStore())
@@ -176,8 +176,7 @@ public class ScaledMetric extends DerivedMetric {
         if (term(0) instanceof SampledMetric)
             return DirectPolicy.singleton;
 
-        long currentTime = System.currentTimeMillis();
-        double baseNow = Bound.value(rate, base, currentTime);
+        double baseNow = Bound.value(rate, base, time);
 
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
@@ -197,7 +196,7 @@ public class ScaledMetric extends DerivedMetric {
             rate = -rate;
         }
         Multimap/*<Metric, TreatyStatement>*/ witnesses = HashMultimap/*<>*/.create();
-        witnesses.put(m, ThresholdStatement.create(rate, baseNow, currentTime));
+        witnesses.put(m, ThresholdStatement.create(rate, baseNow, time));
         return WitnessPolicy.create(witnesses);
     }
 

@@ -2,6 +2,8 @@ package fabric.worker.metrics.treaties.enforcement;
 
 import fabric.worker.metrics.StatsMap;
 import fabric.metrics.treaties.Treaty;
+import fabric.metrics.Metric;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 import java.io.Serializable;
 
@@ -46,4 +48,24 @@ public class DirectPolicy extends EnforcementPolicy implements Serializable, fab
    * Shift from this policy to the given policy on the given Treaty.
    */
   public native void shiftPolicies(Treaty t, EnforcementPolicy newPolicy);
+
+  /**
+   * Abandon this policy without removing t as an observer for the given
+   * policy's shared witnesses.
+   */
+  public native void abandonPolicy(Treaty t, EnforcementPolicy existingPolicy);
+
+  /**
+   * Give the estimate (using weakstats if present, otherwise grabbing stats) of
+   * how long this policy will last if activated.
+   */
+  public native long estimatedTrueExpiry(Metric m, TreatyStatement s,
+      long currentTime, StatsMap weakStats);
+
+  /**
+   * Give the estimate (using weakstats if present, otherwise grabbing stats) of
+   * the expiry that will be used if activated.
+   */
+  public native long estimatedHedgedExpiry(Metric m, TreatyStatement s,
+      long currentTime, StatsMap weakStats);
 }

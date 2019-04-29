@@ -86,8 +86,9 @@ public class EqualityStatement extends TreatyStatement implements Serializable {
   }
 
   @Override
-  public EnforcementPolicy getNewPolicy(Metric m, StatsMap weakStats) {
-    return m.equalityPolicy(value, weakStats, m.$getStore());
+  public EnforcementPolicy getNewPolicy(Metric m, long currentTime,
+      StatsMap weakStats) {
+    return m.equalityPolicy(value, currentTime, weakStats, m.$getStore());
   }
 
   @Override
@@ -120,5 +121,19 @@ public class EqualityStatement extends TreatyStatement implements Serializable {
   private void readObjectNoData() {
     // This shouldn't happen.
     this.value = 0;
+  }
+
+  @Override
+  public long hedgedEstimate(Metric m, long currentTime, StatsMap weakStats) {
+    if (m.value() != value) {
+      return 0;
+    } else {
+      return (long) m.updateInterval(weakStats);
+    }
+  }
+
+  @Override
+  public long hedgedExpiry(Metric m, long currentTime, StatsMap weakStats) {
+    return trueExpiry(m, weakStats);
   }
 }

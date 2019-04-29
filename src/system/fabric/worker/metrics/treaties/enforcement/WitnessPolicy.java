@@ -468,4 +468,96 @@ public class WitnessPolicy extends EnforcementPolicy implements Serializable {
       }
     });
   }
+
+  @Override
+  public long estimatedHedgedExpiry(Metric m, TreatyStatement s,
+      long currentTime, StatsMap weakStats) {
+    long estimated = Long.MAX_VALUE;
+    for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> witness : witnesses
+        .entries()) {
+      Metric witnessMetric = witness.getKey().get$owner();
+      TreatyStatement witnessStatement = witness.getValue();
+      estimated = Math.min(estimated,
+          witnessStatement.getNewPolicy(witnessMetric, currentTime, weakStats)
+              .estimatedHedgedExpiry(witnessMetric, witnessStatement,
+                  currentTime, weakStats));
+    }
+    return estimated;
+  }
+
+  @Override
+  public long estimatedTrueExpiry(Metric m, TreatyStatement s, long currentTime,
+      StatsMap weakStats) {
+    long estimated = Long.MAX_VALUE;
+    for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> witness : witnesses
+        .entries()) {
+      Metric witnessMetric = witness.getKey().get$owner();
+      TreatyStatement witnessStatement = witness.getValue();
+      estimated = Math.min(estimated,
+          witnessStatement.getNewPolicy(witnessMetric, currentTime, weakStats)
+              .estimatedTrueExpiry(witnessMetric, witnessStatement, currentTime,
+                  weakStats));
+    }
+    return estimated;
+  }
+
+  @Override
+  public void abandonPolicy(Treaty t, EnforcementPolicy existingPolicy) {
+    if (existingPolicy instanceof WitnessPolicy) {
+      WitnessPolicy nextPol = (WitnessPolicy) existingPolicy;
+      // Only add and remove nonoverlapping witnesses
+      Set<Map.Entry<TreatiesBox._Proxy, TreatyStatement>> toBeRemoved =
+          new TreeSet<>(
+              new Comparator<Map.Entry<TreatiesBox._Proxy, TreatyStatement>>() {
+                @Override
+                public int compare(
+                    Map.Entry<TreatiesBox._Proxy, TreatyStatement> a,
+                    Map.Entry<TreatiesBox._Proxy, TreatyStatement> b) {
+                  // Try keys
+                  TreatiesBox._Proxy a1 = a.getKey();
+                  TreatiesBox._Proxy b1 = b.getKey();
+                  int storeComp =
+                      a1.$getStore().name().compareTo(b1.$getStore().name());
+                  if (storeComp != 0) return storeComp;
+                  int onumComp = Long.compare(a1.$getOnum(), b1.$getOnum());
+                  if (onumComp != 0) return onumComp;
+
+                  // Try values
+                  TreatyStatement a2 = a.getValue();
+                  TreatyStatement b2 = b.getValue();
+                  if (a2 instanceof ThresholdStatement) {
+                    if (b2 instanceof ThresholdStatement) {
+                      ThresholdStatement aT = (ThresholdStatement) a2;
+                      ThresholdStatement bT = (ThresholdStatement) b2;
+                      int rateComp = Double.compare(aT.rate(), bT.rate());
+                      if (rateComp != 0) return rateComp;
+                      return Double.compare(aT.base(), bT.base());
+                    } else {
+                      return 1;
+                    }
+                  } else {
+                    if (b2 instanceof ThresholdStatement) {
+                      EqualityStatement aT = (EqualityStatement) a2;
+                      EqualityStatement bT = (EqualityStatement) b2;
+                      return Double.compare(aT.value(), bT.value());
+                    } else {
+                      return -1;
+                    }
+                  }
+                }
+              });
+      toBeRemoved.addAll(witnesses.entries());
+      toBeRemoved.removeAll(nextPol.witnesses.entries());
+      for (Map.Entry<TreatiesBox._Proxy, TreatyStatement> e : toBeRemoved) {
+        Treaty w = e.getKey().get(e.getValue());
+        if (w == null) continue;
+        w.removeObserver(t);
+        if (TransactionManager.usingPrefetching())
+          t.set$$associates(t.get$$associates().remove(w));
+      }
+    } else {
+      // Do the normal thing.
+      unapply(t);
+    }
+  }
 }

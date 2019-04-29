@@ -3,8 +3,10 @@ package fabric.worker.metrics.treaties.enforcement;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.metrics.Metric;
 import fabric.metrics.treaties.Treaty;
 import fabric.worker.metrics.StatsMap;
+import fabric.worker.metrics.treaties.statements.TreatyStatement;
 
 /**
  * Stand-in when there is no method of enforcement being used.
@@ -15,7 +17,8 @@ public class NoPolicy extends EnforcementPolicy {
   public static final NoPolicy singleton = new NoPolicy();
 
   // Hide this.
-  private NoPolicy() {}
+  private NoPolicy() {
+  }
 
   @Override
   public long calculateExpiry(Treaty treaty, StatsMap weakStats) {
@@ -75,5 +78,22 @@ public class NoPolicy extends EnforcementPolicy {
 
   private Object readResolve() {
     return singleton;
+  }
+
+  @Override
+  public long estimatedHedgedExpiry(Metric m, TreatyStatement s,
+      long currentTime, StatsMap weakStats) {
+    return 0;
+  }
+
+  @Override
+  public long estimatedTrueExpiry(Metric m, TreatyStatement s, long currentTime,
+      StatsMap weakStats) {
+    return 0;
+  }
+
+  @Override
+  public void abandonPolicy(Treaty t, EnforcementPolicy existingPolicy) {
+    // Do nothing.
   }
 }

@@ -43,6 +43,18 @@ public abstract class TreatyStatement
   }
 
   /**
+   * Hedged expiry that will be assigned for the given metric and weak stats.
+   */
+  public abstract long hedgedExpiry(Metric m, long currentTime,
+      StatsMap weakStats);
+
+  /**
+   * Projected "true" expiry for the given metric and weak stats.
+   */
+  public abstract long hedgedEstimate(Metric m, long currentTime,
+      StatsMap weakStats);
+
+  /**
    * @param m the metric we want a direct expiry relative to.
    * @return the expiry to be used as determined by the value of m
    */
@@ -80,7 +92,15 @@ public abstract class TreatyStatement
   /**
    * Get a new policy for enforcing this statement on the given metric.
    */
-  public abstract EnforcementPolicy getNewPolicy(Metric m, StatsMap weakStats);
+  public abstract EnforcementPolicy getNewPolicy(Metric m, long currentTime,
+      StatsMap weakStats);
+
+  /**
+   * Get a new policy for enforcing this statement on the given metric.
+   */
+  public EnforcementPolicy getNewPolicy(Metric m, StatsMap weakStats) {
+    return getNewPolicy(m, System.currentTimeMillis(), weakStats);
+  }
 
   /**
    * Get a proxy treaty for the same statement on the given store.
