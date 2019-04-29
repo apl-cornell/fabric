@@ -866,7 +866,7 @@ public interface doubleArray extends fabric.lang.Object {
                         boolean $backoffEnabled49 =
                           fabric.worker.Worker.getWorker(
                                                  ).config.txRetryBackoff;
-                        int $backoff47 = 1;
+                        long $backoff47 = 1;
                         boolean $doBackoff48 = true;
                         boolean $retry42 = true;
                         boolean $keepReads43 = false;
@@ -892,7 +892,17 @@ public interface doubleArray extends fabric.lang.Object {
                                             }
                                         }
                                     }
-                                    if ($backoff47 < 5000) $backoff47 *= 2;
+                                    if ($backoff47 <
+                                          fabric.worker.Worker.getWorker().
+                                            config.
+                                            maxBackoff)
+                                        $backoff47 =
+                                          java.lang.Math.
+                                            min(
+                                              $backoff47 * 2,
+                                              fabric.worker.Worker.getWorker().
+                                                config.
+                                                maxBackoff);
                                 }
                                 $doBackoff48 = $backoff47 <= 32 ||
                                                  !$doBackoff48;
@@ -901,28 +911,9 @@ public interface doubleArray extends fabric.lang.Object {
                             fabric.worker.transaction.TransactionManager.
                               getInstance().startTransaction();
                             try {
-                                try {
-                                    fabric.lang.arrays.doubleArray._Static.
-                                      _Proxy.
-                                      $instance.
-                                      set$DEFAULT_VALUE((double) 0.0);
-                                }
-                                catch (final fabric.worker.
-                                         RetryException $e44) {
-                                    throw $e44;
-                                }
-                                catch (final fabric.worker.
-                                         TransactionAbortingException $e44) {
-                                    throw $e44;
-                                }
-                                catch (final fabric.worker.
-                                         TransactionRestartingException $e44) {
-                                    throw $e44;
-                                }
-                                catch (final Throwable $e44) {
-                                    $tm46.getCurrentLog().checkRetrySignal();
-                                    throw $e44;
-                                }
+                                fabric.lang.arrays.doubleArray._Static._Proxy.
+                                  $instance.
+                                  set$DEFAULT_VALUE((double) 0.0);
                             }
                             catch (final fabric.worker.RetryException $e44) {
                                 $commit41 = false;
@@ -933,11 +924,6 @@ public interface doubleArray extends fabric.lang.Object {
                                 $commit41 = false;
                                 $retry42 = false;
                                 $keepReads43 = $e44.keepReads;
-                                if ($tm46.checkForStaleObjects()) {
-                                    $retry42 = true;
-                                    $keepReads43 = false;
-                                    continue $label40;
-                                }
                                 fabric.common.TransactionID $currentTid45 =
                                   $tm46.getCurrentTid();
                                 if ($e44.tid == null ||
@@ -965,15 +951,16 @@ public interface doubleArray extends fabric.lang.Object {
                             }
                             catch (final Throwable $e44) {
                                 $commit41 = false;
-                                if ($tm46.checkForStaleObjects())
-                                    continue $label40;
                                 $retry42 = false;
-                                throw new fabric.worker.AbortException($e44);
+                                if ($tm46.inNestedTxn()) {
+                                    $keepReads43 = true;
+                                }
+                                throw $e44;
                             }
                             finally {
+                                fabric.common.TransactionID $currentTid45 =
+                                  $tm46.getCurrentTid();
                                 if ($commit41) {
-                                    fabric.common.TransactionID $currentTid45 =
-                                      $tm46.getCurrentTid();
                                     try {
                                         fabric.worker.transaction.TransactionManager.
                                           getInstance().commitTransaction();
@@ -987,11 +974,6 @@ public interface doubleArray extends fabric.lang.Object {
                                         $commit41 = false;
                                         $retry42 = false;
                                         $keepReads43 = $e44.keepReads;
-                                        if ($tm46.checkForStaleObjects()) {
-                                            $retry42 = true;
-                                            $keepReads43 = false;
-                                            continue $label40;
-                                        }
                                         if ($e44.tid ==
                                               null ||
                                               !$e44.tid.isDescendantOf(
@@ -1013,10 +995,28 @@ public interface doubleArray extends fabric.lang.Object {
                                             }
                                         }
                                     }
-                                } else if ($keepReads43) {
-                                    fabric.worker.transaction.TransactionManager.getInstance().abortTransactionUpdates();
                                 } else {
-                                    fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
+                                    if (!$tm46.inNestedTxn() &&
+                                          $tm46.checkForStaleObjects()) {
+                                        $retry42 = true;
+                                        $keepReads43 = false;
+                                    }
+                                    if ($keepReads43) {
+                                        try {
+                                            fabric.worker.transaction.TransactionManager.getInstance().abortTransactionUpdates();
+                                        }
+                                        catch (final fabric.worker.TransactionRestartingException $e44) {
+                                            $currentTid45 = $tm46.getCurrentTid();
+                                            if ($currentTid45 != null &&
+                                                  ($e44.tid.equals($currentTid45) || !$e44.tid.isDescendantOf($currentTid45))) {
+                                                throw $e44;
+                                            } else {
+                                                $retry42 = true;
+                                            }
+                                        }
+                                    } else {
+                                        fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
+                                    }
                                 }
                                 if (!$commit41) {
                                     {  }

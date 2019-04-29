@@ -860,7 +860,7 @@ public interface longArray extends fabric.lang.Object {
                         boolean $backoffEnabled79 =
                           fabric.worker.Worker.getWorker(
                                                  ).config.txRetryBackoff;
-                        int $backoff77 = 1;
+                        long $backoff77 = 1;
                         boolean $doBackoff78 = true;
                         boolean $retry72 = true;
                         boolean $keepReads73 = false;
@@ -886,7 +886,17 @@ public interface longArray extends fabric.lang.Object {
                                             }
                                         }
                                     }
-                                    if ($backoff77 < 5000) $backoff77 *= 2;
+                                    if ($backoff77 <
+                                          fabric.worker.Worker.getWorker().
+                                            config.
+                                            maxBackoff)
+                                        $backoff77 =
+                                          java.lang.Math.
+                                            min(
+                                              $backoff77 * 2,
+                                              fabric.worker.Worker.getWorker().
+                                                config.
+                                                maxBackoff);
                                 }
                                 $doBackoff78 = $backoff77 <= 32 ||
                                                  !$doBackoff78;
@@ -895,27 +905,9 @@ public interface longArray extends fabric.lang.Object {
                             fabric.worker.transaction.TransactionManager.
                               getInstance().startTransaction();
                             try {
-                                try {
-                                    fabric.lang.arrays.longArray._Static._Proxy.
-                                      $instance.
-                                      set$DEFAULT_VALUE((long) 0L);
-                                }
-                                catch (final fabric.worker.
-                                         RetryException $e74) {
-                                    throw $e74;
-                                }
-                                catch (final fabric.worker.
-                                         TransactionAbortingException $e74) {
-                                    throw $e74;
-                                }
-                                catch (final fabric.worker.
-                                         TransactionRestartingException $e74) {
-                                    throw $e74;
-                                }
-                                catch (final Throwable $e74) {
-                                    $tm76.getCurrentLog().checkRetrySignal();
-                                    throw $e74;
-                                }
+                                fabric.lang.arrays.longArray._Static._Proxy.
+                                  $instance.
+                                  set$DEFAULT_VALUE((long) 0L);
                             }
                             catch (final fabric.worker.RetryException $e74) {
                                 $commit71 = false;
@@ -926,11 +918,6 @@ public interface longArray extends fabric.lang.Object {
                                 $commit71 = false;
                                 $retry72 = false;
                                 $keepReads73 = $e74.keepReads;
-                                if ($tm76.checkForStaleObjects()) {
-                                    $retry72 = true;
-                                    $keepReads73 = false;
-                                    continue $label70;
-                                }
                                 fabric.common.TransactionID $currentTid75 =
                                   $tm76.getCurrentTid();
                                 if ($e74.tid == null ||
@@ -958,15 +945,16 @@ public interface longArray extends fabric.lang.Object {
                             }
                             catch (final Throwable $e74) {
                                 $commit71 = false;
-                                if ($tm76.checkForStaleObjects())
-                                    continue $label70;
                                 $retry72 = false;
-                                throw new fabric.worker.AbortException($e74);
+                                if ($tm76.inNestedTxn()) {
+                                    $keepReads73 = true;
+                                }
+                                throw $e74;
                             }
                             finally {
+                                fabric.common.TransactionID $currentTid75 =
+                                  $tm76.getCurrentTid();
                                 if ($commit71) {
-                                    fabric.common.TransactionID $currentTid75 =
-                                      $tm76.getCurrentTid();
                                     try {
                                         fabric.worker.transaction.TransactionManager.
                                           getInstance().commitTransaction();
@@ -980,11 +968,6 @@ public interface longArray extends fabric.lang.Object {
                                         $commit71 = false;
                                         $retry72 = false;
                                         $keepReads73 = $e74.keepReads;
-                                        if ($tm76.checkForStaleObjects()) {
-                                            $retry72 = true;
-                                            $keepReads73 = false;
-                                            continue $label70;
-                                        }
                                         if ($e74.tid ==
                                               null ||
                                               !$e74.tid.isDescendantOf(
@@ -1006,10 +989,28 @@ public interface longArray extends fabric.lang.Object {
                                             }
                                         }
                                     }
-                                } else if ($keepReads73) {
-                                    fabric.worker.transaction.TransactionManager.getInstance().abortTransactionUpdates();
                                 } else {
-                                    fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
+                                    if (!$tm76.inNestedTxn() &&
+                                          $tm76.checkForStaleObjects()) {
+                                        $retry72 = true;
+                                        $keepReads73 = false;
+                                    }
+                                    if ($keepReads73) {
+                                        try {
+                                            fabric.worker.transaction.TransactionManager.getInstance().abortTransactionUpdates();
+                                        }
+                                        catch (final fabric.worker.TransactionRestartingException $e74) {
+                                            $currentTid75 = $tm76.getCurrentTid();
+                                            if ($currentTid75 != null &&
+                                                  ($e74.tid.equals($currentTid75) || !$e74.tid.isDescendantOf($currentTid75))) {
+                                                throw $e74;
+                                            } else {
+                                                $retry72 = true;
+                                            }
+                                        }
+                                    } else {
+                                        fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
+                                    }
                                 }
                                 if (!$commit71) {
                                     {  }
