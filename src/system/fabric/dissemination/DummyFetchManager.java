@@ -84,7 +84,9 @@ public class DummyFetchManager implements FetchManager {
         }
       }
 
-      return fetchLock.result.decrypt();
+      if (fetchLock.result != null) return fetchLock.result.decrypt();
+      // Otherwise there's an access exception.
+      return null;
     }
   }
 
