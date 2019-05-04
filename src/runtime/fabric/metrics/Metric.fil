@@ -353,6 +353,7 @@ public abstract class Metric extends AbstractSubject
   public abstract double getPresetB();
   public abstract double getPresetV();
   public abstract double getPresetN();
+  public abstract double getPresetNTerm();
 
   protected ProxyMap/*<Metric>*/ proxies;
 
@@ -454,6 +455,19 @@ public abstract class Metric extends AbstractSubject
    * @return the estimated velocity of the {@link Metric}.
    */
   public abstract double noise(StatsMap weakStats);
+
+  /** @return the estimated noise of the {@link Metric}. */
+  public double noiseTerm() {
+    return noiseTerm(StatsMap.emptyStats());
+  }
+
+  /**
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
+   * @return the estimated velocity of the {@link Metric}.
+   */
+  public abstract double noiseTerm(StatsMap weakStats);
 
   /**
    * Used to construct and enforce {@link Treaty}s bounding this
@@ -614,7 +628,8 @@ public abstract class Metric extends AbstractSubject
           tmp.computeLastUpdate(weakStats),
           tmp.computeUpdateInterval(weakStats),
           tmp.computeVelocity(weakStats),
-          tmp.computeNoise(weakStats));
+          tmp.computeNoise(weakStats),
+          tmp.computeNoiseTerm(weakStats));
     } else {
       StatsMap result = null;
       atomic {
@@ -624,7 +639,8 @@ public abstract class Metric extends AbstractSubject
             tmp.computeLastUpdate(weakStats),
             tmp.computeUpdateInterval(weakStats),
             tmp.computeVelocity(weakStats),
-            tmp.computeNoise(weakStats));
+            tmp.computeNoise(weakStats),
+            tmp.computeNoiseTerm(weakStats));
       }
       return result;
     }
@@ -681,6 +697,14 @@ public abstract class Metric extends AbstractSubject
    * @return a freshly computed noise for this {@link DerivedMetric}.
    */
   protected abstract double computeNoise(StatsMap weakStats);
+
+  /**
+   * @param weakStats
+   *            StatsMap for mapping metrics to weakly consistent values to use
+   *            for metric stats.
+   * @return a freshly computed noise for this {@link DerivedMetric}.
+   */
+  protected abstract double computeNoiseTerm(StatsMap weakStats);
 
   /**
    * @return true iff all the sampling and transformations on this metric are

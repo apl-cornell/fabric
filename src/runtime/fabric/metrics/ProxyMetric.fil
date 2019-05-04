@@ -58,6 +58,11 @@ public class ProxyMetric extends DerivedMetric {
   }
 
   /*@Override*/
+  public double computePresetNTerm() {
+    return term(0).getPresetNTerm();
+  }
+
+  /*@Override*/
   protected double computeValue(StatsMap weakStats) {
     if (weakStats.containsKey(this)) return weakStats.getValue(this);
     return this.term(0).value(weakStats);
@@ -72,6 +77,12 @@ public class ProxyMetric extends DerivedMetric {
   protected double computeNoise(StatsMap weakStats) {
     if (weakStats.containsKey(this)) return weakStats.getNoise(this);
     return this.term(0).noise(weakStats);
+  }
+
+  /*@Override*/
+  protected double computeNoiseTerm(StatsMap weakStats) {
+    if (weakStats.containsKey(this)) return weakStats.getNoiseTerm(this);
+    return this.term(0).noiseTerm(weakStats);
   }
 
   /*@Override*/

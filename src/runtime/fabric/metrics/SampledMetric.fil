@@ -67,11 +67,14 @@ public class SampledMetric extends Metric {
       this.presetN = config.noises.containsKey(presetKey) ?
         ((Double) config.noises.get(presetKey)).doubleValue() :
         0.0;
+      // 0 preset NTerm
+      this.presetNTerm = 0;
     } else {
       this.presetR = 0.0;
       this.presetB = 0.0;
       this.presetV = 0.0;
       this.presetN = 0.0;
+      this.presetNTerm = 0.0;
     }
     fabric$metrics$Metric$();
     return this;
@@ -104,6 +107,12 @@ public class SampledMetric extends Metric {
   /*@Override*/
   public double getPresetN() {
     return presetN;
+  }
+
+  public final double presetNTerm;
+  /*@Override*/
+  public double getPresetNTerm() {
+    return presetNTerm;
   }
 
   /**
@@ -282,6 +291,35 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
+  protected double computeNoiseTerm(StatsMap weakStats) {
+    return static_computeNoiseTerm(this, weakStats);
+  }
+
+  private static double static_computeNoiseTerm(SampledMetric tmp, StatsMap weakStats) {
+    if (TransactionManager.getInstance().inTxn()) {
+      if (tmp.getUsePreset()) {
+        return tmp.presetNTerm;
+      } else {
+        RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
+        if (preloaded != tmp.stats) tmp.stats = preloaded;
+        return tmp.stats.getNoiseTermEstimate();
+      }
+    } else {
+      double rtn = 0;
+      atomic {
+        if (tmp.getUsePreset()) {
+          rtn = tmp.presetNTerm;
+        } else {
+          RunningMetricStats preloaded = tmp.stats.preload(tmp.key);
+          if (preloaded != tmp.stats) tmp.stats = preloaded;
+          rtn = tmp.stats.getNoiseTermEstimate();
+        }
+      }
+      return rtn;
+    }
+  }
+
+  /*@Override*/
   public String toString() {
     return "SampledMetric(" + key + ")@" + getStore().name();
   }
@@ -421,6 +459,24 @@ public class SampledMetric extends Metric {
     } else {
       atomic {
         result = tmp.computeNoise(weakStats);
+      }
+    }
+    return result;
+  }
+
+  /*@Override*/
+  public double noiseTerm(StatsMap weakStats) {
+    return static_noiseTerm(this, weakStats);
+  }
+
+  private static double static_noiseTerm(SampledMetric tmp, StatsMap weakStats) {
+    if (!tmp.getUsePreset() && weakStats.containsKey(tmp)) return weakStats.getNoiseTerm(tmp);
+    double result = 0;
+    if (TransactionManager.getInstance().inTxn()) {
+      result = tmp.computeNoiseTerm(weakStats);
+    } else {
+      atomic {
+        result = tmp.computeNoiseTerm(weakStats);
       }
     }
     return result;

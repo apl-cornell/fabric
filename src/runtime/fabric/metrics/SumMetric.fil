@@ -82,6 +82,15 @@ public class SumMetric extends DerivedMetric {
     }
 
     /*@Override*/
+    public double computePresetNTerm() {
+        double result = 0;
+        for (int i = 0; i < terms.length(); i++) {
+            result += term(i).getPresetNTerm();
+        }
+        return result;
+    }
+
+    /*@Override*/
     protected double computeValue(StatsMap weakStats) {
         double result = 0;
         for (int i = 0; i < terms.length(); i++) {
@@ -104,6 +113,15 @@ public class SumMetric extends DerivedMetric {
         double result = 0;
         for (int i = 0; i < terms.length(); i++) {
           result += term(i).noise(weakStats);
+        }
+        return result;
+    }
+
+    /*@Override*/
+    protected double computeNoiseTerm(StatsMap weakStats) {
+        double result = 0;
+        for (int i = 0; i < terms.length(); i++) {
+          result += term(i).noiseTerm(weakStats);
         }
         return result;
     }

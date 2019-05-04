@@ -22,14 +22,12 @@ public class RunningMetricStats implements Serializable {
   private final double startInterval;
   /** E[dt] */
   private final double intervalEst;
-  /** Var[dt] */
-  private final double intervalNoise;
   /** E[dx] */
   private final double dxEst;
-  /** Var[dx] */
-  private final double dxNoise;
-  /** E[dx * dt] */
-  private final double prodEst;
+  /** E[dx - v * dt] */
+  private final double noiseEst;
+  /** Var[dx - v * dt] */
+  private final double noiseVar;
   private final long lastUpdate;
   private final long samples;
 
@@ -52,9 +50,8 @@ public class RunningMetricStats implements Serializable {
     this.startInterval = startInterval;
     intervalEst = startInterval;
     dxEst = startDelta;
-    prodEst = startInterval * startDelta;
-    intervalNoise = 0;
-    dxNoise = 0;
+    noiseEst = 0.0;
+    noiseVar = 0.0;
     lastUpdate = System.currentTimeMillis() - 1;
     samples = 0;
   }
@@ -87,23 +84,21 @@ public class RunningMetricStats implements Serializable {
     if (useEstimation) {
       double alpha = getAlpha(old.samples + 1);
 
-      intervalEst = updatedMean(old.intervalEst, old.intervalNoise, dT, alpha);
-      intervalNoise =
-          updatedNoise(old.intervalEst, old.intervalNoise, dT, alpha);
+      intervalEst = updatedMean(old.intervalEst, dT, alpha);
+      dxEst = updatedMean(old.dxEst, dx, alpha);
 
-      dxEst = updatedMean(old.dxEst, old.dxNoise, dx, alpha);
-      dxNoise = updatedNoise(old.dxEst, old.dxNoise, dx, alpha);
-
-      prodEst = updatedMean(old.prodEst, 0, dx * dT, alpha);
+      noiseEst =
+          updatedMean(old.noiseEst, dx - old.getVelocityEstimate() * dT, alpha);
+      noiseVar = updatedNoise(old.noiseEst, old.noiseVar,
+          dx - old.getVelocityEstimate() * dT, alpha);
 
       lastUpdate = curTime;
       samples = old.samples + 1;
     } else {
       intervalEst = old.intervalEst;
-      intervalNoise = old.intervalNoise;
       dxEst = old.dxEst;
-      dxNoise = old.dxNoise;
-      prodEst = old.prodEst;
+      noiseEst = old.noiseEst;
+      noiseVar = old.noiseVar;
       lastUpdate = curTime;
       samples = old.samples;
     }
@@ -112,8 +107,7 @@ public class RunningMetricStats implements Serializable {
   /**
    * Updated mean
    */
-  public static double updatedMean(double oldEst, double oldNoise,
-      double newVal, double alpha) {
+  public static double updatedMean(double oldEst, double newVal, double alpha) {
     return (1.0 - alpha) * oldEst + alpha * newVal;
   }
 
@@ -123,8 +117,7 @@ public class RunningMetricStats implements Serializable {
   public static double updatedNoise(double oldEst, double oldNoise,
       double newVal, double alpha) {
     double delta1 = newVal - oldEst;
-    double delta2 = newVal - updatedMean(oldEst, oldNoise, newVal, alpha);
-    return (1.0 - alpha) * (oldNoise + alpha * delta1 * delta2);
+    return (1.0 - alpha) * (oldNoise + alpha * Math.abs(delta1 * delta1));
   }
 
   /**
@@ -139,13 +132,6 @@ public class RunningMetricStats implements Serializable {
    */
   public double getValue() {
     return value;
-  }
-
-  /**
-   * Get estimate of the current dx vs dt covariance.
-   */
-  public double getDxDtCovariance() {
-    return prodEst - (dxEst * intervalEst);
   }
 
   /**
@@ -175,10 +161,21 @@ public class RunningMetricStats implements Serializable {
     // values.
     //if (samples <= 1) return Double.MAX_VALUE;
     if (samples <= 1) return 0;
-    return ((dxEst * dxEst) / (intervalEst * intervalEst))
-        * ((dxNoise / (dxEst * dxEst))
-            - (2 * getDxDtCovariance() / (dxEst * intervalEst))
-            + (intervalNoise / (intervalEst * intervalEst)));
+    return noiseVar / intervalEst;
+  }
+
+  /**
+   * Compute an estimated noise term, assuming normal distribution of values and
+   * exponential distribution of intervals.
+   *
+   * @return the current estimated noise.
+   */
+  public double getNoiseTermEstimate() {
+    // Assuming that there's 0 covariance between update intervals and update
+    // values.
+    //if (samples <= 1) return Double.MAX_VALUE;
+    if (samples <= 1) return 0;
+    return noiseEst;
   }
 
   /**
@@ -246,19 +243,18 @@ public class RunningMetricStats implements Serializable {
 
     // Interval
     this.intervalEst = presets.getIntervalEst();
-    this.intervalNoise = 0;
     this.lastUpdate =
         (long) (System.currentTimeMillis() - (0.5 * this.intervalEst));
     this.startInterval = intervalEst;
 
     // Value
     this.dxEst = presets.getVelocityEst() * intervalEst;
-    // Assume 0 covariance and 0 interval Noise.
-    this.dxNoise = presets.getNoiseEst() * intervalEst * intervalEst;
+
+    this.noiseEst = 0;
+    this.noiseVar = presets.getNoiseEst() * intervalEst;
     this.startDelta = this.dxEst;
 
     // Estimation
-    this.prodEst = this.intervalEst * this.dxEst; // Ensure 0 covariance.
     this.samples = presets.getSamples();
   }
 
@@ -306,7 +302,7 @@ public class RunningMetricStats implements Serializable {
       double oldDx = velocityEst * intervalEst;
       double newIntervalEst = (1.0 - alpha) * intervalEst + alpha * dt;
 
-      return ((1.0 - alpha) * oldDx + alpha * dx) / newIntervalEst;
+      return updatedMean(oldDx, dx, alpha) / newIntervalEst;
       //return velocityEst + alpha * ((dx / Math.max(Math.min(0.5, newIntervalEst), dt)) - velocityEst);
     }
   }
@@ -357,12 +353,12 @@ public class RunningMetricStats implements Serializable {
    */
   public static double updatedVelocity(double velocityEst, double intervalEst,
       long samples, long lastUpdate, long curTime) {
-    if (samples <= 1) return velocityEst;
-    long timeSince = curTime - lastUpdate;
-    if (2 * timeSince <= intervalEst) return velocityEst;
-    // Act as if we got a 0 dx update.
-    return updateVelocity(velocityEst, intervalEst, 0, samples, lastUpdate,
-        curTime, 0);
+    if (samples <= 1 || (2 * (curTime - lastUpdate)) <= intervalEst)
+      return velocityEst;
+    // Act as if we got a avg dx update now.
+    return /*(updatedMean(velocityEst * intervalEst, 0, getAlpha(samples)))*/
+      velocityEst * intervalEst
+        / (updatedMean(intervalEst, curTime - lastUpdate, getAlpha(samples)));
   }
 
   /**
@@ -370,13 +366,29 @@ public class RunningMetricStats implements Serializable {
    * estimate.
    */
   public static double updatedNoise(double velocityEst, double noiseEst,
-      double intervalEst, long samples, long lastUpdate, long curTime) {
-    if (samples <= 1) return noiseEst;
+      double noiseTermEst, double intervalEst, long samples, long lastUpdate,
+      long curTime) {
+    //if (samples <= 1) return noiseEst;
     long timeSince = curTime - lastUpdate;
-    if (2 * timeSince <= intervalEst) return noiseEst;
+    //if (2 * timeSince <= intervalEst) return noiseEst;
+    // Act as if we got a 0 dx update now.
+    return updatedNoise(noiseTermEst, noiseEst * intervalEst,
+        -velocityEst * timeSince, getAlpha(samples)) / updatedMean(intervalEst, timeSince, getAlpha(samples));
+  }
+
+  /**
+   * Utility for converting a stale noise estimate to a properly "decayed"
+   * estimate.
+   */
+  public static double updatedNoiseTerm(double velocityEst, double noiseEst,
+      double noiseTermEst, double intervalEst, long samples, long lastUpdate,
+      long curTime) {
+    //if (samples <= 1) return noiseEst;
+    long timeSince = curTime - lastUpdate;
+    //if (2 * timeSince <= intervalEst) return noiseEst;
     // Pretend we're halfway into the window of an update that follows the
     // current estimated velocity.
-    return updateNoise(velocityEst, intervalEst, noiseEst, samples, lastUpdate,
-        curTime, 0);
+    return updatedMean(noiseTermEst, -velocityEst * timeSince,
+        getAlpha(samples));
   }
 }

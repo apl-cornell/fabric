@@ -52,6 +52,14 @@ public class RunningMetricStats implements Serializable, JavaInlineable {
   public native double getNoiseEstimate();
 
   /**
+   * Compute an estimated noise, assuming normal distribution of values and
+   * exponential distribution of intervals.
+   *
+   * @return the current estimated noise.
+   */
+  public native double getNoiseTermEstimate();
+
+  /**
    * @return the last update time.
    */
   public native long getLastUpdate();
@@ -96,5 +104,14 @@ public class RunningMetricStats implements Serializable, JavaInlineable {
    * estimate.
    */
   public static native double updatedNoise(double velocityEst, double noiseEst,
-      double intervalEst, long samples, long lastUpdate, long curTime);
+      double noiseTermEst, double intervalEst, long samples, long lastUpdate,
+      long curTime);
+
+  /**
+   * Utility for converting a stale noise estimate to a properly "decayed"
+   * estimate.
+   */
+  public static native double updatedNoiseTerm(double velocityEst,
+      double noiseEst, double noiseTermEst, double intervalEst, long samples,
+      long lastUpdate, long curTime);
 }

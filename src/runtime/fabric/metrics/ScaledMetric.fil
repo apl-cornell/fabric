@@ -66,6 +66,11 @@ public class ScaledMetric extends DerivedMetric {
     }
 
     /*@Override*/
+    public double computePresetNTerm() {
+        return scalar * term(0).getPresetNTerm();
+    }
+
+    /*@Override*/
     protected double computeValue(StatsMap weakStats) {
       return scalar * term(0).value(weakStats);
     }
@@ -78,6 +83,11 @@ public class ScaledMetric extends DerivedMetric {
     /*@Override*/
     protected double computeNoise(StatsMap weakStats) {
       return scalar * scalar * term(0).noise(weakStats);
+    }
+
+    /*@Override*/
+    protected double computeNoiseTerm(StatsMap weakStats) {
+      return scalar * term(0).noiseTerm(weakStats);
     }
 
     /*@Override*/

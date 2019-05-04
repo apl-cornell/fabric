@@ -56,6 +56,12 @@ public class StatsMap implements Serializable, JavaInlineable {
   public native double getNoise(Metric m);
 
   /**
+   * @param m a {@link Metric}
+   * @return the cached noise term of m, or a default value of 0.
+   */
+  public native double getNoiseTerm(Metric m);
+
+  /**
    * Put an entry for the given metric with the given stats.
    * @param m the new key
    * @param value the value of m
@@ -64,10 +70,12 @@ public class StatsMap implements Serializable, JavaInlineable {
    * @param updateInterval the update interval of m
    * @param velocity the velocity of m
    * @param noise the noise of m
+   * @param noiseTerm the noise term of m
    * @return the updated map.
    */
   public native StatsMap put(Metric m, double value, long samples,
-      long lastUpdate, double updateInterval, double velocity, double noise);
+      long lastUpdate, double updateInterval, double velocity, double noise,
+      double noiseTerm);
 
   /**
    * Merge entries in another map missing from this map.

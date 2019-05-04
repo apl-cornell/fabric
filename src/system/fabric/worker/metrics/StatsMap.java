@@ -36,6 +36,7 @@ public class StatsMap implements FastSerializable, Serializable {
     public final double updateInterval;
     public final double velocity;
     public final double noise;
+    public final double noiseTerm;
 
     /**
      * @param value
@@ -44,15 +45,18 @@ public class StatsMap implements FastSerializable, Serializable {
      * @param updateInterval
      * @param velocity
      * @param noise
+     * @param noiseTerm
      */
     public Entry(double value, long samples, long lastUpdate,
-        double updateInterval, double velocity, double noise) {
+        double updateInterval, double velocity, double noise,
+        double noiseTerm) {
       this.value = value;
       this.samples = samples;
       this.lastUpdate = lastUpdate;
       this.updateInterval = updateInterval;
       this.velocity = velocity;
       this.noise = noise;
+      this.noiseTerm = noiseTerm;
     }
 
     public Entry(DataInput in) throws IOException {
@@ -62,6 +66,7 @@ public class StatsMap implements FastSerializable, Serializable {
       this.updateInterval = in.readDouble();
       this.velocity = in.readDouble();
       this.noise = in.readDouble();
+      this.noiseTerm = in.readDouble();
     }
 
     @Override
@@ -72,13 +77,14 @@ public class StatsMap implements FastSerializable, Serializable {
       out.writeDouble(this.updateInterval);
       out.writeDouble(this.velocity);
       out.writeDouble(this.noise);
+      out.writeDouble(this.noiseTerm);
     }
 
     @Override
     public String toString() {
       return "StatsEntry(" + this.value + "," + this.samples + ","
           + this.lastUpdate + "," + this.updateInterval + "," + this.velocity
-          + "," + this.noise + ")";
+          + "," + this.noise + "," + this.noiseTerm + ")";
     }
   }
 
@@ -220,6 +226,15 @@ public class StatsMap implements FastSerializable, Serializable {
   }
 
   /**
+   * @param m a {@link Metric}
+   * @return the cached noise term of m, or a default value of 0.
+   */
+  public double getNoiseTerm(Metric m) {
+    if (table.containsKey(m)) return table.get(m).noiseTerm;
+    return 0;
+  }
+
+  /**
    * Put an entry for the given metric with the given stats.
    * @param m the new key
    * @param value the value of m
@@ -228,13 +243,14 @@ public class StatsMap implements FastSerializable, Serializable {
    * @param updateInterval the update interval of m
    * @param velocity the velocity of m
    * @param noise the noise of m
+   * @param noiseTerm the noiseTerm of m
    * @return the updated map.
    */
   public StatsMap put(Metric m, double value, long samples, long lastUpdate,
-      double updateInterval, double velocity, double noise) {
+      double updateInterval, double velocity, double noise, double noiseTerm) {
     StatsMap updated = new StatsMap(this);
-    updated.table.put(m,
-        new Entry(value, samples, lastUpdate, updateInterval, velocity, noise));
+    updated.table.put(m, new Entry(value, samples, lastUpdate, updateInterval,
+        velocity, noise, noiseTerm));
     Logging.METRICS_LOGGER.finest("Updated weak stats to " + updated);
     return updated;
   }

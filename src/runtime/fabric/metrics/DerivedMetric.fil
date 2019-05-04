@@ -65,6 +65,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   protected double cachedValue;
   protected double cachedVelocity;
   protected double cachedNoise;
+  protected double cachedNoiseTerm;
   protected long cachedSamples;
   protected long cachedLastUpdate;
   protected double cachedUpdateInterval;
@@ -102,6 +103,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
       this.presetB = computePresetB();
       this.presetV = computePresetV();
       this.presetN = computePresetN();
+      this.presetNTerm = computePresetNTerm();
     } else {
       this.presetR = 0.0;
       this.presetB = 0.0;
@@ -145,6 +147,13 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
   public abstract double computePresetN();
 
+  public final double presetNTerm;
+  /*@Override*/
+  public double getPresetNTerm() {
+    return presetNTerm;
+  }
+  public abstract double computePresetNTerm();
+
   /**
    * Method to be called at the end of a constructor for any subclass of
    * {@link DerivedMetric}. Ensures that the {@link getLeafSubjects()} result
@@ -182,6 +191,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
       cachedValue = newValue;
       cachedVelocity = computeVelocity(StatsMap.emptyStats());
       cachedNoise = computeNoise(StatsMap.emptyStats());
+      cachedNoiseTerm = computeNoiseTerm(StatsMap.emptyStats());
       cachedSamples = computeSamples(StatsMap.emptyStats());
       cachedLastUpdate = System.currentTimeMillis();
       cachedUpdateInterval = computeUpdateInterval(StatsMap.emptyStats());
@@ -354,11 +364,35 @@ public abstract class DerivedMetric extends Metric implements Observer {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
       return RunningMetricStats.updatedNoise(tmp.cachedVelocity,
-          tmp.cachedNoise, tmp.cachedUpdateInterval, tmp.cachedSamples,
+          tmp.cachedNoise, tmp.cachedNoiseTerm, tmp.cachedUpdateInterval, tmp.cachedSamples,
           tmp.cachedLastUpdate, System.currentTimeMillis());
     }
     // Not getting updated proactively, so compute it
     return tmp.computeNoise(weakStats);
+  }
+
+  // XXX: note that the below assumes that if we're not using weakly cached
+  // items, we're called from a transactional context!
+  /*@Override*/
+  public double noiseTerm(StatsMap weakStats) {
+    return static_noiseTerm(this, weakStats);
+  }
+
+  private static double static_noiseTerm(DerivedMetric tmp, StatsMap weakStats) {
+    if (tmp.getUsePreset()) return tmp.presetNTerm;
+    if (weakStats.containsKey(tmp)) return weakStats.getNoiseTerm(tmp);
+    if (tmp.isObserved()) {
+      // Separated here because we're not expecting regular updates unless
+      // observing, the weak values don't try to account for time since the last
+      // update.
+      // Make sure any related updates are accounted for
+      fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
+      return RunningMetricStats.updatedNoiseTerm(tmp.cachedVelocity,
+          tmp.cachedNoise, tmp.cachedNoiseTerm, tmp.cachedUpdateInterval,
+          tmp.cachedSamples, tmp.cachedLastUpdate, System.currentTimeMillis());
+    }
+    // Not getting updated proactively, so compute it
+    return tmp.computeNoiseTerm(weakStats);
   }
 
   /*@Override*/
@@ -384,6 +418,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
       cachedValue = computeValue(StatsMap.emptyStats());
       cachedVelocity = computeVelocity(StatsMap.emptyStats());
       cachedNoise = computeNoise(StatsMap.emptyStats());
+      cachedNoiseTerm = computeNoiseTerm(StatsMap.emptyStats());
       cachedSamples = computeSamples(StatsMap.emptyStats());
       cachedLastUpdate = System.currentTimeMillis();
       cachedUpdateInterval = computeUpdateInterval(StatsMap.emptyStats());
