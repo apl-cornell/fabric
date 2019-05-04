@@ -455,7 +455,7 @@
 
     <path id="fabil-signatures.sigcp">
       <pathelement location="${signatures.fabil.src}"/>
-      <pathelement location="${runtime.src}"/>
+      <!--<pathelement location="${runtime.src}"/>-->
     </path>
     <pathconvert
         property="fabil-signatures.sigcp"
