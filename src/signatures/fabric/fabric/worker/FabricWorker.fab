@@ -3,16 +3,17 @@ package fabric.worker;
 public class FabricWorker {
   private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
   private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
-  
+
   private int {_→}@{*→} accessLabelKludge;
-  
+
   public native final String getName();
 
   public native Store getStore(String str);
   public native Store getLocalStore();
-  
+
   public native static FabricWorker getWorker();
   public native static Principal getPrincipal();
   public native RemoteWorker getWorker(String name);
-  
+  public native RemoteWorker getLocalWorker();
+
 }
