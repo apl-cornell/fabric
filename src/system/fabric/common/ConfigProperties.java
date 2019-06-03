@@ -91,6 +91,9 @@ public class ConfigProperties {
   // Whether to proactively prefetch associates (when subscription is not
   // running.)
   public final boolean usePrefetching;
+  // Maximum tolerated clock offset between nodes.  Used as a modifier to the
+  // expiry time advertised by treaties.
+  public final long maxClockOffset;
 
   /**
    * Whether to exponentially back off when retrying transactions.
@@ -287,6 +290,10 @@ public class ConfigProperties {
 
     this.usePrefetching = Boolean.parseBoolean(
         removeProperty(p, "fabric.metrics.usePrefetching", "false"));
+
+    this.maxClockOffset = Long
+        .parseLong(removeProperty(p, "fabric.metrics.maxClockOffset", "100"));
+
 
     /************************** Worker Properties *****************************/
     this.workerPort =

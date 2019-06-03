@@ -84,7 +84,6 @@ public class Treaty extends AbstractSubject implements Observer {
    * checking the commit time.
    */
   public boolean valid() {
-    // TODO: Adjust for clock skew tolerance.
     TransactionManager tm = TransactionManager.getInstance();
     // Ensure expiry is consistent with updates so far.
     tm.resolveObservations();

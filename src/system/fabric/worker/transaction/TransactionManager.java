@@ -792,7 +792,9 @@ public final class TransactionManager {
   }
 
   public void registerExpiryUse(long exp) {
-    if (current != null) current.updateExpiry(exp);
+    // Force all treaties used to be valid after accounting for the max clock
+    // offset
+    if (current != null) current.updateExpiry(exp - maxClockOffset());
   }
 
   public void registerRead(_Impl obj) {
@@ -1591,5 +1593,13 @@ public final class TransactionManager {
   public boolean shouldRebalance(Treaty t) {
     return Worker.getWorker().config.aggressiveRebalancing && current
         .storesToContact().containsAll(current.storesForMetric(t.get$metric()));
+  }
+
+  /**
+   * Return the configured clock offset tolerance.
+   */
+  public static long maxClockOffset() {
+    ConfigProperties config = Worker.getWorker().config;
+    return config.maxClockOffset;
   }
 }
