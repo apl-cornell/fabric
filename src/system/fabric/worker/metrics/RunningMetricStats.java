@@ -82,7 +82,8 @@ public class RunningMetricStats implements Serializable {
     value = newValue;
 
     if (useEstimation) {
-      double alpha = getAlpha(old.samples + 1);
+      //double alpha = getAlpha(old.samples + 1);
+      double alpha = getAlpha(old.samples);
 
       intervalEst = updatedMean(old.intervalEst, dT, alpha);
       dxEst = updatedMean(old.dxEst, dx, alpha);

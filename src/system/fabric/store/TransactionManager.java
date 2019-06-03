@@ -572,7 +572,7 @@ public class TransactionManager {
                       StringWriter sw = new StringWriter();
                       PrintWriter pw = new PrintWriter(sw);
                       e.printStackTrace(pw);
-                      Logging.METRICS_LOGGER.log(Level.INFO,
+                      Logging.METRICS_LOGGER.log(Level.WARNING,
                           "FAILED EXTENSION OF {0} WITH {1}\n{2}",
                           new Object[] { Long.valueOf(extension.onum), e,
                               sw, });
@@ -581,7 +581,7 @@ public class TransactionManager {
                       StringWriter sw = new StringWriter();
                       PrintWriter pw = new PrintWriter(sw);
                       e.printStackTrace(pw);
-                      Logging.METRICS_LOGGER.log(Level.INFO,
+                      Logging.METRICS_LOGGER.log(Level.WARNING,
                           "FAILED EXTENSION OF {0} WITH {1}\n{2}",
                           new Object[] { Long.valueOf(extension.onum), e,
                               sw, });
@@ -590,7 +590,7 @@ public class TransactionManager {
                       unresolvedExtensions.remove(extension.onum, extension);
                     }
                     if (nameAndNewExpiry != null) {
-                      Logging.METRICS_LOGGER.log(Level.INFO,
+                      Logging.METRICS_LOGGER.log(Level.FINE,
                           "FINISHED EXTENSION OF {0} IN {1}ms by {4} (in {6}) {5} (success {2}) STATS: {3}",
                           new Object[] { Long.valueOf(extension.onum),
                               Long.valueOf(System.currentTimeMillis() - start),
