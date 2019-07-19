@@ -11,9 +11,9 @@ public class Diagnostics {
   public static final int NUM_INITIAL_BLOGS = 50;
   public static final int NUM_INITLAL_COMMENTS = 5;
 
-  private static LocalStore localStore;
-  private static Store store;
-  private static Label currentLabel;
+  private transient static LocalStore localStore;
+  private transient static Store store;
+  private transient static Label currentLabel;
 
   public static LocalStore getLocalStore() {
     return localStore;
