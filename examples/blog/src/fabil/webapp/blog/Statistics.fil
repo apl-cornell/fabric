@@ -9,10 +9,10 @@ import webapp.PageStats;
 
 public class Statistics {
 
-  private static ThreadLocal/*Statistics*/ instance;
-  private static Set/*String*/ clients;
-  private static Set/*String*/ busyClients;
-  private static boolean clientError;
+  private transient static ThreadLocal/*Statistics*/ instance;
+  private transient static Set/*String*/ clients;
+  private transient static Set/*String*/ busyClients;
+  private transient static boolean clientError;
 
   private Set/*Object*/ updates;
   private Set/*Object*/ reads;

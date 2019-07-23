@@ -95,7 +95,7 @@ done
   HOSTNAME="$(openssl x509 -in "${CERT}" -noout -subject)"
 
   # Strip off the "subject=" at the start of the string.
-  HOSTNAME="$(echo "${HOSTNAME}" | sed 's/^subject *= *//'i)"
+  HOSTNAME="$(echo "${HOSTNAME}" | sed 's/^subject *= *//i')"
 
   # Remove components until we find the CN component.
   until echo "${HOSTNAME}" | grep -i '^cn *=' &>/dev/null ; do
