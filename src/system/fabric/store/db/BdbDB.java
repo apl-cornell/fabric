@@ -6,16 +6,12 @@ import static fabric.common.Logging.STORE_DB_LOGGER;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.PrivateKey;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 
@@ -43,7 +39,6 @@ import fabric.common.SysUtil;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
-import fabric.common.util.Cache;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.LongSet;
@@ -70,21 +65,6 @@ public class BdbDB extends ObjectDB {
    */
   private Database db;
 
-  /**
-   * Database containing prepared transactions.
-   */
-  private Database prepared;
-
-  /**
-   * Database containing objects created by prepared transactions.
-   */
-  private Database preparedCreates;
-
-  /**
-   * Database containing objects modified by prepared transactions.
-   */
-  private Database preparedWrites;
-
   private final DatabaseEntry initializationStatus;
   private final DatabaseEntry onumCounter;
 
@@ -103,11 +83,6 @@ public class BdbDB extends ObjectDB {
    * SoftReferences to Integers, so we use MutableIntegers instead.
    */
   private final LongKeyCache<MutableInteger> cachedVersions;
-
-  /**
-   * Cache: maps BDB keys to prepared-transaction records.
-   */
-  private final Cache<ByteArray, PendingTransaction> preparedTransactions;
 
   /**
    * Creates a new BdbStore for the store specified. A new database will be
@@ -136,12 +111,9 @@ public class BdbDB extends ObjectDB {
       dbconf.setAllowCreate(true);
       dbconf.setTransactional(true);
       db = env.openDatabase(null, "store", dbconf);
-      prepared = env.openDatabase(null, "prepared", dbconf);
       meta = env.openDatabase(null, "meta", dbconf);
 
       dbconf.setSortedDuplicates(true);
-      preparedCreates = env.openDatabase(null, "preparedCreates", dbconf);
-      preparedWrites = env.openDatabase(null, "preparedWrites", dbconf);
 
       initRwCount();
 
@@ -162,7 +134,6 @@ public class BdbDB extends ObjectDB {
     this.nextOnum = new MutableLong(-1);
     this.lastReservedOnum = new MutableLong(-2);
     this.cachedVersions = new LongKeyCache<>();
-    this.preparedTransactions = new Cache<>();
   }
 
   @Override
@@ -172,7 +143,7 @@ public class BdbDB extends ObjectDB {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     final PendingTransaction pending;
     synchronized (submap) {
-      pending = submap.remove(worker);
+      pending = submap.get(worker);
       if (pending != null) {
         synchronized (pending) {
           switch (pending.state) {
@@ -191,29 +162,6 @@ public class BdbDB extends ObjectDB {
         }
       }
     }
-
-    final DatabaseEntry key = new DatabaseEntry(toBytes(tid, worker));
-
-    runInBdbTransaction(new Code<Void, RuntimeException>() {
-      @Override
-      public Void run(Transaction txn) throws RuntimeException {
-        DatabaseEntry data = new DatabaseEntry(toBytesNoModData(pending));
-        prepared.put(txn, key, data);
-
-        Serializer<SerializedObject> serializer = new Serializer<>();
-        for (SerializedObject obj : pending.getCreates()) {
-          data.setData(serializer.toBytes(obj));
-          preparedCreates.put(txn, key, data);
-        }
-        for (SerializedObject obj : pending.getWrites()) {
-          data.setData(serializer.toBytes(obj));
-          preparedWrites.put(txn, key, data);
-        }
-        return null;
-      }
-    });
-
-    preparedTransactions.put(new ByteArray(key.getData()), pending);
     STORE_DB_LOGGER.log(Level.FINER, "Bdb prepare success tid {0}", tid);
   }
 
@@ -229,7 +177,7 @@ public class BdbDB extends ObjectDB {
           public PendingTransaction run(Transaction txn)
               throws RuntimeException {
             PendingTransaction pending =
-                remove(workerIdentity.principal, txn, tid);
+                getPrepared(workerIdentity.principal, txn, tid);
 
             if (pending != null) {
               Serializer<SerializedObject> serializer = new Serializer<>();
@@ -289,11 +237,19 @@ public class BdbDB extends ObjectDB {
 
       // Update the version-number cache.
       cacheVersionNumber(onum, o.getVersion());
-
     }
 
     // Remove any cached globs containing the old version of this object.
     notifyCommittedUpdates(sm, writtenOnums, workerIdentity.node);
+
+    runInBdbTransaction(new Code<Void, RuntimeException>() {
+      @Override
+      public Void run(Transaction txn) {
+        // Now remove and clean it up.
+        remove(workerIdentity.principal, txn, tid);
+        return null;
+      }
+    });
 
     STORE_DB_LOGGER.log(Level.FINER, "Bdb commit success tid {0}", tid);
   }
@@ -421,9 +377,6 @@ public class BdbDB extends ObjectDB {
   public void close() {
     try {
       if (db != null) db.close();
-      if (prepared != null) prepared.close();
-      if (preparedCreates != null) preparedCreates.close();
-      if (preparedWrites != null) preparedWrites.close();
       if (meta != null) meta.close();
       if (env != null) env.close();
     } catch (DatabaseException e) {
@@ -470,6 +423,31 @@ public class BdbDB extends ObjectDB {
   }
 
   /**
+   * Grabs a PendingTransaction from the prepare log and returns it. If no
+   * transaction with the given transaction id is found, null is returned.
+   *
+   * @param worker
+   *          the principal under which this action is being executed.
+   * @param txn
+   *          the BDB Transaction instance that should be used to perform the
+   *          retrieval.
+   * @param tid
+   *          the transaction id.
+   * @return the PrepareRequest corresponding to tid
+   * @throws DatabaseException
+   *           if a database error occurs
+   */
+  private PendingTransaction getPrepared(Principal worker, Transaction txn,
+      long tid) throws DatabaseException {
+    // Get it from "cache"
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    synchronized (submap) {
+      PendingTransaction cached = submap.get(worker);
+      return cached;
+    }
+  }
+
+  /**
    * Removes a PendingTransaction from the prepare log and returns it. If no
    * transaction with the given transaction id is found, null is returned.
    *
@@ -486,63 +464,18 @@ public class BdbDB extends ObjectDB {
    */
   private PendingTransaction remove(Principal worker, Transaction txn, long tid)
       throws DatabaseException {
-    byte[] key = toBytes(tid, worker);
-    DatabaseEntry bdbKey = new DatabaseEntry(key);
-    DatabaseEntry data = new DatabaseEntry();
-
     // Also remove value from the table if it's in the "cache"
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    PendingTransaction cached = null;
     synchronized (submap) {
-      PendingTransaction cached = submap.remove(worker);
-      if (cached != null) {
-        synchronized (cached) {
-          cached.unpin(this);
-        }
-      }
+      cached = submap.remove(worker);
       if (submap.isEmpty()) pendingByTid.remove(tid, submap);
     }
 
-    // TODO: is this ever different from the above value? Does BDB spill to disk
-    // for these?
-    PendingTransaction pending =
-        preparedTransactions.remove(new ByteArray(key));
-
-    if (pending == null
-        && prepared.get(txn, bdbKey, data, LockMode.DEFAULT) == SUCCESS) {
-      pending = toPendingTransaction(data.getData());
-
-      Cursor cursor = preparedCreates.openCursor(txn, null);
-      for (OperationStatus result =
-          cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
-              cursor.getNextDup(bdbKey, data, null)) {
-        try {
-          pending.addCreate(this, toSerializedObject(data.getData()));
-        } catch (TransactionPrepareFailedException e) {
-          throw new InternalError("This should not happen here", e);
-        }
-      }
-      cursor.close();
-
-      cursor = preparedWrites.openCursor(txn, null);
-      for (OperationStatus result =
-          cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
-              cursor.getNextDup(bdbKey, data, null)) {
-        try {
-          pending.addWrite(this, toSerializedObject(data.getData()));
-        } catch (TransactionPrepareFailedException e) {
-          throw new InternalError("This should not happen here", e);
-        }
-      }
-      cursor.close();
+    if (cached != null) {
+      cached.unpin(this);
     }
-
-    if (pending == null) return null;
-    prepared.delete(txn, bdbKey);
-    preparedCreates.delete(txn, bdbKey);
-    preparedWrites.delete(txn, bdbKey);
-
-    pending.unpin(this);
-    return pending;
+    return cached;
   }
 
   private void cacheVersionNumber(long onum, int versionNumber) {
@@ -556,8 +489,7 @@ public class BdbDB extends ObjectDB {
     }
   }
 
-  private static int MAX_TX_RETRIES = 20;
-  private static int MAX_TX_WAIT_AVG = 5000;
+  private static int MAX_TX_WAIT_AVG = 1000;
   private static final Random RAND = new Random();
 
   private static int randInt(int max) {
@@ -576,8 +508,7 @@ public class BdbDB extends ObjectDB {
     // This code is adapted from the JavaDoc for LockConflictException.
     boolean success = false;
     int backoff = 1;
-    List<LockConflictException> conflicts = new ArrayList<>(MAX_TX_RETRIES);
-    for (int i = 0; i < MAX_TX_RETRIES; i++) {
+    while (true) {
       int waitTime = randInt(backoff);
       if (waitTime > 0) {
         while (true) {
@@ -604,7 +535,6 @@ public class BdbDB extends ObjectDB {
         success = true;
         return result;
       } catch (LockConflictException e) {
-        conflicts.add(e);
         continue;
       } catch (DatabaseException e) {
         STORE_DB_LOGGER.log(Level.SEVERE, "Bdb error: ", e);
@@ -613,50 +543,10 @@ public class BdbDB extends ObjectDB {
         if (!success && txn != null) txn.abort();
       }
     }
-
-    throw new InternalError(
-        "BDB transaction failed too many times. List of LockConflictExceptions "
-            + "we got: " + conflicts);
   }
 
   private static interface Code<T, E extends Exception> {
     T run(Transaction txn) throws E;
-  }
-
-  private static byte[] toBytes(long tid, Principal worker) {
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      DataOutputStream dos = new DataOutputStream(bos);
-      dos.writeLong(tid);
-      if (worker != null) {
-        dos.writeUTF(worker.$getStore().name());
-        dos.writeLong(worker.$getOnum());
-      }
-      dos.flush();
-      return bos.toByteArray();
-    } catch (IOException e) {
-      throw new InternalError(e);
-    }
-  }
-
-  private static byte[] toBytesNoModData(PendingTransaction pending) {
-    return new Serializer<PendingTransaction>() {
-      @Override
-      public void write(PendingTransaction pending, ObjectOutputStream out)
-          throws IOException {
-        pending.writeNoModData(out);
-      }
-    }.toBytes(pending);
-  }
-
-  private static PendingTransaction toPendingTransaction(byte[] data) {
-    try {
-      ByteArrayInputStream bis = new ByteArrayInputStream(data);
-      ObjectInputStream ois = new ObjectInputStream(bis);
-      return new PendingTransaction(ois);
-    } catch (IOException e) {
-      throw new InternalError(e);
-    }
   }
 
   private static SerializedObject toSerializedObject(byte[] data) {
@@ -767,27 +657,5 @@ public class BdbDB extends ObjectDB {
       System.out.println(onum + "," + className + "," + version + ","
           + updateLabelOnum + "," + accessPolicyOnum + extraInfo);
     }
-  }
-
-  private static class ByteArray {
-    private final byte[] data;
-
-    public ByteArray(byte[] data) {
-      this.data = data;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof ByteArray)) return false;
-
-      byte[] data = ((ByteArray) obj).data;
-      return Arrays.equals(data, ((ByteArray) obj).data);
-    }
-
-    @Override
-    public int hashCode() {
-      return Arrays.hashCode(data);
-    }
-
   }
 }
