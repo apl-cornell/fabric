@@ -1,0 +1,28 @@
+/**
+ * A simple persistent message data type, to be stored at a Fabric store and
+ * retrieved later.
+ * To demonstrate mutable state, this class tracks the number of times the
+ * message contents have been read.
+ */
+public class Message {
+  // Fields of Fabric objects should either be other persistent objects or java
+  // primitives (eg. long, int, char, double, float, byte, String).
+  private final String contents;
+  private int accessCount;
+
+  // See the discussion of constructors in Hello.
+  public Message Message$(String contents) {
+    this.contents = contents;
+
+    fabric$lang$Object$();
+
+    this.accessCount = 0;
+
+    return this;
+  }
+
+  public String getContents() {
+    accessCount++;
+    return "(Accessed " + accessCount + " times): " + contents;
+  }
+}

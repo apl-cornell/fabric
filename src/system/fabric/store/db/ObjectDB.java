@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 
 import javax.security.auth.x500.X500Principal;
@@ -20,7 +21,6 @@ import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.NodePrincipal;
@@ -73,21 +73,55 @@ public abstract class ObjectDB {
   /**
    * The data stored for a partially prepared transaction.
    */
-  protected static final class PendingTransaction implements FastSerializable,
-      Iterable<Long> {
+  protected static final class PendingTransaction
+      implements FastSerializable, Iterable<Long> {
+    /**
+     * State of a PendingTransaction at the store.
+     */
+    public static enum State {
+      /**
+       * Began preparing but not finished preparing.
+       * May abort due to a lock conflict or a concurrent abort message from the
+       * worker.
+       */
+      PREPARING,
+      /**
+       * Began preparing but not finished preparing and is now marked to abort.
+       * This state happens when an abort message arrives from the worker and
+       * the prepare message hasn't finished processing.
+       */
+      ABORTING,
+      /**
+       * Finished preparing but not yet committed.
+       * Can still abort, but this indicates the prepare message has finished
+       * being handled.
+       */
+      PREPARED;
+    }
+
     public final long tid;
     public final Principal owner;
-    public final Collection<Long> reads;
+    public State state;
+
+    /**
+     * Identifiers read in the transaction.
+     */
+    private final Collection<Long> reads;
 
     /**
      * Objects that have been created.
      */
-    public final Collection<SerializedObject> creates;
+    private final Collection<SerializedObject> creates;
 
     /**
      * Objects that have been modified.
      */
-    public final Collection<SerializedObject> writes;
+    private final Collection<SerializedObject> writes;
+
+    /**
+     * Lock the transaction is waiting on, if any.
+     */
+    private transient Object waitingOn = null;
 
     PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
@@ -95,6 +129,7 @@ public abstract class ObjectDB {
       this.reads = new ArrayList<>();
       this.creates = new ArrayList<>();
       this.writes = new ArrayList<>();
+      this.state = State.PREPARING; // By default, start in preparing state.
     }
 
     /**
@@ -109,6 +144,8 @@ public abstract class ObjectDB {
       } else {
         this.owner = null;
       }
+
+      this.state = State.values()[in.readInt()];
 
       int size = in.readInt();
       this.reads = new ArrayList<>(size);
@@ -199,12 +236,175 @@ public abstract class ObjectDB {
         out.writeLong(owner.$getOnum());
       }
 
+      out.writeInt(state.ordinal());
+
       out.writeInt(reads.size());
       for (Long onum : reads)
         out.writeLong(onum);
 
       out.writeInt(creates.size());
       out.writeInt(writes.size());
+    }
+
+    /**
+     * Unpin the locks held by this PendingTransaction.
+     */
+    public synchronized void unpin(ObjectDB db) {
+      switch (state) {
+      case PREPARING:
+        throw new InternalError(
+            "Only PREPARED and ABORTING transactions can be unpinned.");
+      case ABORTING:
+      case PREPARED:
+        for (long onum : reads) {
+          db.rwLocks.releaseReadLock(onum, this);
+        }
+        reads.clear();
+
+        for (SerializedObject update : SysUtil.chain(creates, writes)) {
+          long onum = update.getOnum();
+          db.rwLocks.releaseWriteLock(onum, this);
+        }
+        creates.clear();
+        writes.clear();
+      }
+    }
+
+    /**
+     * Wake up the thread preparing this PendingTransaction, if it is waiting on
+     * a lock.
+     */
+    public void wakeForAbort() {
+      Object waitingOnCopy;
+      synchronized (this) {
+        waitingOnCopy = waitingOn;
+        if (waitingOnCopy == null) return;
+      }
+      synchronized (waitingOnCopy) {
+        waitingOnCopy.notifyAll();
+      }
+    }
+
+    /**
+     * Set the currently waited on lock for this transaction.
+     */
+    public synchronized void setWaitsFor(Object lock) {
+      waitingOn = lock;
+    }
+
+    /**
+     * Clear the currently waited on lock for this transaction.
+     */
+    public synchronized void clearWaitsFor() {
+      waitingOn = null;
+    }
+
+    /**
+     * Add a create.
+     */
+    public void addCreate(ObjectDB db, SerializedObject obj)
+        throws TransactionPrepareFailedException {
+      // First, lock the object.
+      try {
+        db.rwLocks.acquireWriteLock(obj.getOnum(), this);
+      } catch (UnableToLockException e) {
+        throw new TransactionPrepareFailedException("Object " + obj.getOnum()
+            + " has been locked by an uncommitted transaction.");
+      }
+
+      try {
+        synchronized (this) {
+          if (state == State.ABORTING) {
+            throw new TransactionPrepareFailedException(
+                "Trying to add a create for an aborting transaction.");
+          }
+          // Don't freak out on prepared, this is called to deserialize in BdbDB
+          creates.add(obj);
+        }
+      } catch (TransactionPrepareFailedException e) {
+        // Release lock, since it won't be added to the pending set.
+        db.rwLocks.releaseWriteLock(obj.getOnum(), this);
+        throw e;
+      }
+    }
+
+    /**
+     * Add a write.
+     */
+    public synchronized void addWrite(ObjectDB db, SerializedObject obj)
+        throws TransactionPrepareFailedException {
+      // First, lock the object.
+      try {
+        db.rwLocks.acquireWriteLock(obj.getOnum(), this);
+      } catch (UnableToLockException e) {
+        throw new TransactionPrepareFailedException("Object " + obj.getOnum()
+            + " has been locked by an uncommitted transaction.");
+      }
+
+      try {
+        synchronized (this) {
+          if (state == State.ABORTING) {
+            throw new TransactionPrepareFailedException(
+                "Trying to add a write for an aborting transaction.");
+          }
+          // Don't freak out on prepared, this is called to deserialize in BdbDB
+          writes.add(obj);
+        }
+      } catch (TransactionPrepareFailedException e) {
+        // Release lock, since it won't be added to the pending set.
+        db.rwLocks.releaseWriteLock(obj.getOnum(), this);
+        throw e;
+      }
+    }
+
+    /**
+     * Add a read.
+     */
+    public synchronized void addRead(ObjectDB db, long onum)
+        throws TransactionPrepareFailedException {
+      // First, lock the object.
+      try {
+        db.rwLocks.acquireReadLock(onum, this);
+      } catch (UnableToLockException e) {
+        throw new TransactionPrepareFailedException("Object " + onum
+            + " has been write-locked by an uncommitted transaction.");
+      }
+
+      try {
+        synchronized (this) {
+          if (state == State.ABORTING) {
+            throw new TransactionPrepareFailedException(
+                "Trying to add a read for an aborting transaction.");
+          }
+          // Don't freak out on prepared, this is called to deserialize in BdbDB
+          reads.add(onum);
+        }
+      } catch (TransactionPrepareFailedException e) {
+        // Release lock, since it won't be added to the pending set.
+        db.rwLocks.releaseReadLock(onum, this);
+        throw e;
+      }
+    }
+
+    /**
+     * @return the reads
+     */
+    public Collection<Long> getReads() {
+      return Collections.unmodifiableCollection(reads);
+    }
+
+    /**
+     * @return the creates
+     */
+    public Collection<SerializedObject> getCreates() {
+      return Collections.unmodifiableCollection(creates);
+    }
+
+    /**
+     * @return the writes
+     */
+    public Collection<SerializedObject> getWrites() {
+      return Collections.unmodifiableCollection(writes);
     }
   }
 
@@ -221,16 +421,31 @@ public abstract class ObjectDB {
   protected final ConcurrentLongKeyMap<OidKeyHashMap<PendingTransaction>> pendingByTid;
 
   /**
-   * Maps onums to ObjectLocks. This should be recomputed from the set of
-   * prepared transactions when restoring from stable storage.
+   * Table holding locks for ongoing transactions.
    */
-  protected final ConcurrentLongKeyMap<ObjectLocks> rwLocks;
+  protected final ObjectLocksTable rwLocks;
 
   protected ObjectDB(String name, PrivateKey privateKey) {
     this.name = name;
     this.pendingByTid = new ConcurrentLongKeyHashMap<>();
-    this.rwLocks = new ConcurrentLongKeyHashMap<>();
+    this.rwLocks = new ObjectLocksTable();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
+  }
+
+  /**
+   * Returns (and if necessary, creates if it doesn't exist already) the pending transaction map for a given
+   * tid.
+   */
+  private OidKeyHashMap<PendingTransaction> getOrCreatePendingMap(long tid) {
+    // Ensure pendingByTid has a submap for the given TID.
+    while (true) {
+      OidKeyHashMap<PendingTransaction> submap = new OidKeyHashMap<>();
+      OidKeyHashMap<PendingTransaction> existingSubmap =
+          pendingByTid.putIfAbsent(tid, submap);
+      if (existingSubmap != null) submap = existingSubmap;
+      // Ensure the submap wasn't removed out from under us.
+      if (pendingByTid.get(tid) == submap) return submap;
+    }
   }
 
   /**
@@ -243,19 +458,15 @@ public abstract class ObjectDB {
    */
   public final void beginTransaction(long tid, Principal worker)
       throws AccessException {
-    // Ensure pendingByTid has a submap for the given TID.
     while (true) {
-      OidKeyHashMap<PendingTransaction> submap = new OidKeyHashMap<>();
-      OidKeyHashMap<PendingTransaction> existingSubmap =
-          pendingByTid.putIfAbsent(tid, submap);
-      if (existingSubmap != null) submap = existingSubmap;
-
+      OidKeyHashMap<PendingTransaction> submap = getOrCreatePendingMap(tid);
       synchronized (submap) {
-        submap.put(worker, new PendingTransaction(tid, worker));
-      }
+        if (!submap.containsKey(worker))
+          submap.put(worker, new PendingTransaction(tid, worker));
 
-      // Ensure the submap wasn't removed out from under us.
-      if (pendingByTid.get(tid) == submap) return;
+        // Paranoia: make sure the submap wasn't swiped from under us.
+        if (pendingByTid.get(tid) == submap) return;
+      }
     }
   }
 
@@ -276,22 +487,26 @@ public abstract class ObjectDB {
    *          to this map, binding the object's onum to its current version.
    */
   public final void prepareRead(long tid, Principal worker, long onum,
-      int version, LongKeyMap<SerializedObject> versionConflicts)
+      int version, OidKeyHashMap<SerializedObject> versionConflicts)
       throws TransactionPrepareFailedException {
-    // First, lock the object.
-    try {
-      objectLocksFor(onum).lockForRead(tid, worker);
-    } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts, "Object "
-          + onum + " has been locked by an uncommitted transaction.");
-    }
-
-    // Register that the transaction has locked the object.
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-
-    synchronized (submap) {
-      submap.get(worker).reads.add(onum);
+    if (submap == null) {
+      throw new TransactionPrepareFailedException(versionConflicts,
+          "Aborted by another thread");
     }
+
+    PendingTransaction tx;
+    synchronized (submap) {
+      if (!submap.containsKey(worker)
+          || submap.get(worker).state == PendingTransaction.State.ABORTING)
+        throw new TransactionPrepareFailedException(versionConflicts,
+            "Aborted by another thread");
+
+      tx = submap.get(worker);
+    }
+
+    // First, lock the object and register it.
+    tx.addRead(this, onum);
 
     // Check version numbers.
     int curVersion;
@@ -303,7 +518,8 @@ public abstract class ObjectDB {
     }
 
     if (curVersion != version) {
-      versionConflicts.put(onum, read(onum));
+      versionConflicts.put(Worker.getWorker().getStore(getName()), onum,
+          read(onum));
     }
   }
 
@@ -323,32 +539,34 @@ public abstract class ObjectDB {
    *          version.
    */
   public final void prepareUpdate(long tid, Principal worker,
-      SerializedObject obj, LongKeyMap<SerializedObject> versionConflicts,
+      SerializedObject obj, OidKeyHashMap<SerializedObject> versionConflicts,
       UpdateMode mode) throws TransactionPrepareFailedException {
-    long onum = obj.getOnum();
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    if (submap == null) {
+      throw new TransactionPrepareFailedException(versionConflicts,
+          "Aborted by another thread");
+    }
 
-    // First, lock the object.
-    try {
-      objectLocksFor(onum).lockForWrite(tid);
-    } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts, "Object "
-          + onum + " has been locked by an uncommitted transaction.");
+    long onum = obj.getOnum();
+    PendingTransaction tx;
+    synchronized (submap) {
+      if (!submap.containsKey(worker)
+          || submap.get(worker).state == PendingTransaction.State.ABORTING)
+        throw new TransactionPrepareFailedException(versionConflicts,
+            "Aborted by another thread");
+      tx = submap.get(worker);
     }
 
     // Record the updated object. Doing so will also register that the
     // transaction has locked the object.
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-
     switch (mode) {
     case CREATE:
-      synchronized (submap) {
-        submap.get(worker).creates.add(obj);
-      }
+      tx.addCreate(this, obj);
 
       // Make sure the onum doesn't already exist in the database.
       if (exists(onum)) {
-        throw new TransactionPrepareFailedException(versionConflicts, "Object "
-            + onum + " already exists.");
+        throw new TransactionPrepareFailedException(versionConflicts,
+            "Object " + onum + " already exists.");
       }
 
       // Set the object's initial version number.
@@ -356,9 +574,7 @@ public abstract class ObjectDB {
       return;
 
     case WRITE:
-      synchronized (submap) {
-        submap.get(worker).writes.add(obj);
-      }
+      tx.addWrite(this, obj);
 
       // Read the old copy from the database.
       SerializedObject storeCopy = read(onum);
@@ -367,7 +583,8 @@ public abstract class ObjectDB {
       int storeVersion = storeCopy.getVersion();
       int workerVersion = obj.getVersion();
       if (storeVersion != workerVersion) {
-        versionConflicts.put(onum, storeCopy);
+        versionConflicts.put(Worker.getWorker().getStore(getName()), onum,
+            storeCopy);
         return;
       }
 
@@ -380,27 +597,45 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Obtains the ObjectLocks for a given onum, creating one if it doesn't
-   * already exist.
-   */
-  private ObjectLocks objectLocksFor(long onum) {
-    ObjectLocks newLocks = new ObjectLocks();
-    ObjectLocks curLocks = rwLocks.putIfAbsent(onum, newLocks);
-
-    if (curLocks != null) return curLocks;
-    return newLocks;
-  }
-
-  /**
-   * Rolls back a partially prepared transaction. (i.e., one for which
-   * finishPrepare() has yet to be called.)
+   * Abort a transaction.
    */
   public final void abortPrepare(long tid, Principal worker) {
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-
-    synchronized (submap) {
-      unpin(submap.remove(worker));
-      if (submap.isEmpty()) pendingByTid.remove(tid, submap);
+    while (true) {
+      OidKeyHashMap<PendingTransaction> submap = getOrCreatePendingMap(tid);
+      PendingTransaction stillPending;
+      synchronized (submap) {
+        // Try again.
+        if (pendingByTid.get(tid) != submap) continue;
+        stillPending = submap.get(worker);
+        if (stillPending == null) {
+          stillPending = new PendingTransaction(tid, worker);
+          submap.put(worker, stillPending);
+        }
+        synchronized (stillPending) {
+          switch (stillPending.state) {
+          case PREPARING:
+            // Drop the locks so far, change the state, but don't drop from the
+            // table.
+            stillPending.state = PendingTransaction.State.ABORTING;
+            stillPending.unpin(this);
+            break;
+          case ABORTING:
+            // If already aborting, then this is a second call indicating both
+            // abort and prepare messages have now seen and acknowledged.
+          case PREPARED:
+            // Roll back and drop from the table.
+            try {
+              rollback(tid, worker);
+            } catch (AccessException e) {
+              throw new InternalError(
+                  "Rollback of a pending transaction failed", e);
+            }
+            break;
+          }
+        }
+      }
+      stillPending.wakeForAbort();
+      return;
     }
   }
 
@@ -417,8 +652,11 @@ public abstract class ObjectDB {
    * transaction to stable storage so that it can be recovered in case of
    * failure.
    * </p>
+   * @throws TransactionPrepareFailedException if the transaction was marked as
+   * aborting by another process (due to receiving an Abort message.
    */
-  public abstract void finishPrepare(long tid, Principal worker);
+  public abstract void finishPrepare(long tid, Principal worker)
+      throws TransactionPrepareFailedException;
 
   /**
    * Causes the objects prepared in transaction [tid] to be committed. The
@@ -487,95 +725,28 @@ public abstract class ObjectDB {
    * @param worker
    *          the worker that performed the update.
    */
-  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum,
-      RemoteWorker worker) {
+  protected final void notifyCommittedUpdates(SubscriptionManager sm,
+      LongSet onums, RemoteWorker worker) {
     // Remove from the glob table the glob associated with the onum.
-    LongSet groupOnums = objectGrouper.removeGroup(onum);
+    LongSet groupOnums = new LongHashSet();
+    for (LongIterator iter = onums.iterator(); iter.hasNext();) {
+      long onum = iter.next();
+      if (Worker.getWorker().config.useSubscriptions) {
+        // Make sure the worker performing these updates is subscribed to future
+        // updates.
+        // TODO: Running it as a dissem subscription right now... that should be
+        // revisited.
+        sm.subscribe(onum, worker, true);
+      }
+      if (!groupOnums.contains(onum)) {
+        LongSet group = objectGrouper.removeGroup(onum);
+        if (group != null) groupOnums.addAll(group);
+      }
+    }
 
-    if (SubscriptionManager.ENABLE_OBJECT_UPDATES) {
+    if (Worker.getWorker().config.useSubscriptions) {
       // Notify the subscription manager that the group has been updated.
-      LongSet updatedOnums = new LongHashSet();
-      updatedOnums.add(onum);
-      if (groupOnums != null) {
-        for (LongIterator onumIt = groupOnums.iterator(); onumIt.hasNext();) {
-          long relatedOnum = onumIt.next();
-          if (relatedOnum == onum) continue;
-
-          updatedOnums.add(relatedOnum);
-        }
-      }
-
-      sm.notifyUpdate(updatedOnums, worker);
-    }
-  }
-
-  /**
-   * Determines whether an onum has an outstanding uncommitted conflicting
-   * change or read. Outstanding uncommitted changes are always considered
-   * conflicting. Outstanding uncommitted reads are considered conflicting if
-   * they are by transactions whose tid is different from the one given.
-   *
-   * @param onum
-   *          the object number in question
-   */
-  public final boolean isPrepared(long onum, long tid) {
-    ObjectLocks locks = rwLocks.get(onum);
-
-    if (locks == null) return false;
-
-    synchronized (locks) {
-      if (locks.writeLock != null) return true;
-
-      if (locks.readLocks.isEmpty()) return false;
-      if (locks.readLocks.size() > 1) return true;
-      return !locks.readLocks.containsKey(tid);
-    }
-  }
-
-  /**
-   * Determines whether an onum has outstanding uncommitted changes.
-   *
-   * @param onum
-   *          the object number in question
-   * @return true if the object has been changed by a transaction that hasn't
-   *         been committed or rolled back.
-   */
-  public final boolean isWritten(long onum) {
-    ObjectLocks locks = rwLocks.get(onum);
-
-    if (locks == null) return false;
-
-    synchronized (locks) {
-      return locks.writeLock != null;
-    }
-  }
-
-  /**
-   * Adjusts rwLocks to account for the fact that the given transaction is about
-   * to be committed or aborted.
-   */
-  protected final void unpin(PendingTransaction tx) {
-    for (long readOnum : tx.reads) {
-      ObjectLocks locks = rwLocks.get(readOnum);
-      if (locks != null) {
-        synchronized (locks) {
-          locks.unlockForRead(tx.tid, tx.owner);
-
-          if (!locks.isLocked()) rwLocks.remove(readOnum, locks);
-        }
-      }
-    }
-
-    for (SerializedObject update : SysUtil.chain(tx.creates, tx.writes)) {
-      long onum = update.getOnum();
-      ObjectLocks locks = rwLocks.get(onum);
-      if (locks != null) {
-        synchronized (locks) {
-          locks.unlockForWrite(tx.tid);
-
-          if (!locks.isLocked()) rwLocks.remove(onum, locks);
-        }
-      }
+      sm.notifyUpdate(groupOnums, worker);
     }
   }
 

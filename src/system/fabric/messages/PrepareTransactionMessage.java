@@ -8,20 +8,18 @@ import java.util.Collection;
 import java.util.Collections;
 
 import fabric.common.SerializedObject;
+import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
-import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>PrepareTransactionMessage</code> represents a transaction request to
  * a store.
  */
-public class PrepareTransactionMessage
-    extends
-    Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
+public class PrepareTransactionMessage extends AsyncMessage {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -86,8 +84,7 @@ public class PrepareTransactionMessage
   public PrepareTransactionMessage(long tid, boolean singleStore,
       boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) {
-    super(MessageType.PREPARE_TRANSACTION,
-        TransactionPrepareFailedException.class);
+    super(MessageType.PREPARE_TRANSACTION);
 
     this.tid = tid;
     this.singleStore = singleStore;
@@ -116,9 +113,9 @@ public class PrepareTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
-      throws TransactionPrepareFailedException {
-    return h.handle(client, this);
+  public void dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
+      throws ProtocolError {
+    h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -168,8 +165,7 @@ public class PrepareTransactionMessage
 
   /* readMessage */
   protected PrepareTransactionMessage(DataInput in) throws IOException {
-    super(MessageType.PREPARE_TRANSACTION,
-        TransactionPrepareFailedException.class);
+    super(MessageType.PREPARE_TRANSACTION);
     this.creates = null;
     this.writes = null;
 
@@ -213,14 +209,5 @@ public class PrepareTransactionMessage
       for (int i = 0; i < size; i++)
         serializedWrites.add(new SerializedObject(in));
     }
-  }
-
-  @Override
-  protected void writeResponse(DataOutput out, Response r) throws IOException {
-  }
-
-  @Override
-  protected Response readResponse(DataInput in) throws IOException {
-    return new Response();
   }
 }

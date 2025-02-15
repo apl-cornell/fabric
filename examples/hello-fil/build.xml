@@ -1,0 +1,58 @@
+<!--
+  This is the Apache Ant build file for the FabIL "hello world" example
+-->
+
+<project name="hello-fil" default="build-all" basedir=".">
+  <description>
+    Build Hello world example
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="hello.home" file="${ant.file.hello}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${hello.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${hello.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+          description="Builds the Hello World example">
+    <filc dest="${hello.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${hello.home}/src/fabil" />
+      <arg value="-cp"         /> <arg value="${hello.home}/classes" />
+
+      <fileset dir="${hello.home}/src" includes="**/*.fil" />
+    </filc>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

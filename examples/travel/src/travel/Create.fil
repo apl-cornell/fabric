@@ -89,7 +89,7 @@ public class Create {
       ConfPolicy bottomConf = LabelUtil.bottomConf();
       Label bottom = LabelUtil.toLabel(brokerStore, bottomConf, bottomInteg);
       Create cr = new Create@brokerStore().travel$Create$();
-      cr.create@brokerWorker(args);
+      cr.create_remote@brokerWorker(null, args);
     }
   }
 
@@ -102,6 +102,10 @@ public class Create {
     this.$updateLabel = LabelUtil.noComponents();
     this.$accessPolicy = LabelUtil.bottomConf();
     return this;
+  }
+
+  public void create_remote(Principal p, String[] args) {
+    create(args);
   }
 
   public void create(String[] args) {

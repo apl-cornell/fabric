@@ -1,0 +1,7 @@
+public class Test {
+  public static int[] a;
+
+  public Test() {
+    a = new int[] { 1, 2, 3 };
+  }
+}

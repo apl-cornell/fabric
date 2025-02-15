@@ -7,8 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import com.google.common.collect.Multiset;
@@ -30,10 +29,22 @@ import fabric.common.util.LongSet;
 public class DeadlockDetectorThread extends Thread {
 
   /**
-   * Queue of logs of transactions for which deadlock-detection requests have
-   * been made.
+   * Set of logs currently still waiting for some object and should be included
+   * in a deadlock detection attempt.
    */
-  private BlockingQueue<Log> detectRequests;
+  private Set<Log> waitingLogs;
+
+  /**
+   * Set of transaction ids currently still waiting for some object and should
+   * be included in a deadlock detection attempt.
+   */
+  private Set<TransactionID> waitingTids;
+
+  /**
+   * Atomic flag for synchronizing request changes on and for flagging a new
+   * request which hasn't been handled yet.
+   */
+  private AtomicBoolean newRequest;
 
   /**
    * Constructs a deadlock detector thread and starts it running.
@@ -41,7 +52,10 @@ public class DeadlockDetectorThread extends Thread {
   public DeadlockDetectorThread() {
     super("Deadlock detector");
     setDaemon(true);
-    this.detectRequests = new LinkedBlockingQueue<>();
+    setPriority(getPriority() + 1);
+    this.waitingLogs = new HashSet<>();
+    this.waitingTids = new HashSet<>();
+    this.newRequest = new AtomicBoolean(false);
     start();
   }
 
@@ -50,21 +64,53 @@ public class DeadlockDetectorThread extends Thread {
    * transaction log.
    */
   void requestDetect(Log log) {
-    detectRequests.add(log);
-    WORKER_DEADLOCK_LOGGER.log(Level.FINEST,
+    synchronized (this.newRequest) {
+      waitingLogs.add(log);
+      waitingTids.add(log.getTid());
+      this.newRequest.notifyAll();
+      this.newRequest.set(true);
+    }
+    WORKER_DEADLOCK_LOGGER.log(Level.FINE,
         "Deadlock detection requested for {0}", log);
+  }
+
+  /**
+   * Stops requesting a deadlock detection for the waits-for graph involving the
+   * given transaction log.  This removes the log from the group examined for
+   * deadlock.
+   */
+  void stopRequestDetect(Log log) {
+    //detectRequests.add(log);
+    synchronized (this.newRequest) {
+      if (!waitingLogs.contains(log)) return;
+      waitingLogs.remove(log);
+      waitingTids.remove(log.getTid());
+    }
+    WORKER_DEADLOCK_LOGGER.log(Level.FINE,
+        "Deadlock detection no longer requested for {0}", log);
   }
 
   @Override
   public void run() {
+    Set<TransactionID> lastTidsSeen = new HashSet<>();
     while (true) {
       try {
-        // Wait for a request.
         Set<Log> requests = new LinkedHashSet<>();
-        requests.add(detectRequests.take());
-
-        // Obtain all requests made thus far and iterate over them.
-        detectRequests.drainTo(requests);
+        // Wait for a request.
+        synchronized (this.newRequest) {
+          while (!this.newRequest.get()) {
+            try {
+              this.newRequest.wait();
+            } catch (InterruptedException e) {
+              Logging.logIgnoredInterruptedException(e);
+            }
+          }
+          this.newRequest.set(false);
+          requests.addAll(waitingLogs);
+          // Update the last handled set.
+          lastTidsSeen.clear();
+          lastTidsSeen.addAll(waitingTids);
+        }
 
         WORKER_DEADLOCK_LOGGER.log(Level.FINER,
             "Performing deadlock detection for {0}", requests);
@@ -83,8 +129,6 @@ public class DeadlockDetectorThread extends Thread {
 
           resolveDeadlocks(cycles);
         }
-      } catch (InterruptedException e) {
-        Logging.logIgnoredInterruptedException(e);
       } catch (RuntimeException | Error e) {
         e.printStackTrace();
       }
@@ -160,8 +204,15 @@ public class DeadlockDetectorThread extends Thread {
     topLevelTidsVisited.add(curTopTid);
     try {
       for (Log waitsForLog : waitsFor) {
+        // Look for cycles continuing this path
         findCycles(waitsForLog, pathToTid, topLevelTidsVisited, cyclesFound,
             requests);
+        if (!topLevelTidsVisited.contains(waitsForLog.tid.topTid)) {
+          // Look for cycles starting from here, in case there's a deadlock not
+          // involving the path so far.
+          findCycles(waitsForLog, new LongKeyHashMap<Log>(), new LongHashSet(),
+              cyclesFound, requests);
+        }
       }
     } finally {
       pathToTid.remove(curTopTid);
@@ -248,8 +299,14 @@ public class DeadlockDetectorThread extends Thread {
       }
 
       // Abort the transaction.
-      WORKER_DEADLOCK_LOGGER.log(Level.FINE, "Aborting {0}", toAbort);
-      toAbort.flagRetry();
+      WORKER_DEADLOCK_LOGGER.log(Level.FINE, "Aborting {0} to break deadlock",
+          toAbort);
+      toAbort.flagRetry("breaking deadlocks in " + cycles);
+
+      synchronized (this.newRequest) {
+        this.waitingLogs.remove(toAbort);
+        this.waitingTids.remove(toAbort.getTid());
+      }
 
       // Fix up our data structures to reflect the aborted transaction.
       for (Iterator<Set<Log>> cycleIt = cycles.iterator(); cycleIt.hasNext();) {

@@ -17,6 +17,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
+import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
@@ -37,6 +38,12 @@ public class WriterMap implements FastSerializable {
   private final long tid;
 
   /**
+   * Maps oid to Label for unencrypted objects (bottom conf). These are the
+   * "create" entries.
+   */
+  private OidKeyHashMap<Label> unencryptedCreates;
+
+  /**
    * Maps hash(oid) to Label. These are the "create" entries.
    */
   private Map<Hash, Label> creates;
@@ -48,6 +55,11 @@ public class WriterMap implements FastSerializable {
   private Map<Hash, Pair<byte[], byte[]>> writers;
 
   /**
+   * Map for oid to remote worker for the oids with no encryption (bottom conf)
+   */
+  private OidKeyHashMap<RemoteWorker> unencryptedWriters;
+
+  /**
    * Cache for "writers" entries and non-entries that have been discovered.
    */
   private OidKeyHashMap<RemoteWorker> readCache;
@@ -55,7 +67,7 @@ public class WriterMap implements FastSerializable {
   /**
    * Cache for "writers" entries that haven't been encrypted yet.
    */
-  private OidKeyHashMap<Pair<_Proxy, RemoteWorker>> writeCache;
+  private OidKeyHashMap<Pair<_Impl, RemoteWorker>> writeCache;
 
   public int version;
 
@@ -66,7 +78,9 @@ public class WriterMap implements FastSerializable {
    */
   public WriterMap(long tid) {
     this.creates = new HashMap<>();
+    this.unencryptedCreates = new OidKeyHashMap<>();
     this.writers = new HashMap<>();
+    this.unencryptedWriters = new OidKeyHashMap<>();
     this.readCache = new OidKeyHashMap<>();
     this.writeCache = new OidKeyHashMap<>();
     this.version = 0;
@@ -78,7 +92,9 @@ public class WriterMap implements FastSerializable {
    */
   public WriterMap(WriterMap map) {
     this.creates = new HashMap<>(map.creates);
+    this.unencryptedCreates = new OidKeyHashMap<>(map.unencryptedCreates);
     this.writers = new HashMap<>(map.writers);
+    this.unencryptedWriters = new OidKeyHashMap<>(map.unencryptedWriters);
     this.readCache = new OidKeyHashMap<>(map.readCache);
     this.writeCache = new OidKeyHashMap<>(map.writeCache);
     this.version = map.version;
@@ -94,7 +110,7 @@ public class WriterMap implements FastSerializable {
 
     Worker worker = Worker.getWorker();
 
-    // Read creates.
+    // Read encrypted creates.
     int size = in.readInt();
     for (int i = 0; i < size; i++) {
       byte[] buf = new byte[in.readInt()];
@@ -118,7 +134,28 @@ public class WriterMap implements FastSerializable {
       creates.put(key, val);
     }
 
-    // Read writers.
+    // Read unencrypted creates.
+    size = in.readInt();
+    for (int i = 0; i < size; i++) {
+      Store s = Worker.getWorker().getStore(in.readUTF());
+      long o = in.readLong();
+
+      Label._Proxy val = null;
+      if (in.readBoolean()) {
+        String storeName = in.readUTF();
+        long onum = in.readLong();
+
+        Store store = worker.getLocalStore();
+        if (!ONumConstants.isGlobalConstant(onum)) {
+          store = worker.getStore(storeName);
+        }
+
+        val = new Label._Proxy(store, onum);
+      }
+      unencryptedCreates.put(s, o, val);
+    }
+
+    // Read encrypted writers.
     size = in.readInt();
     for (int i = 0; i < size; i++) {
       byte[] buf = new byte[in.readInt()];
@@ -133,17 +170,30 @@ public class WriterMap implements FastSerializable {
 
       writers.put(key, new Pair<>(iv, data));
     }
+
+    // Read unencrypted writers.
+    size = in.readInt();
+    for (int i = 0; i < size; i++) {
+      Store s = Worker.getWorker().getStore(in.readUTF());
+      long o = in.readLong();
+
+      RemoteWorker val = Worker.getWorker().getWorker(in.readUTF());
+      unencryptedWriters.put(s, o, val);
+    }
   }
 
   /**
    * Determines whether this map has a "create" entry for the given object.
    */
   public boolean containsCreate(_Proxy proxy) {
+    if (unencryptedCreates.containsKey(proxy)) return true;
     if (creates.isEmpty()) return false;
     return creates.containsKey(hash(proxy));
   }
 
   public Label getCreate(_Proxy proxy) {
+    if (unencryptedCreates.containsKey(proxy))
+      return unencryptedCreates.get(proxy);
     if (creates.isEmpty()) return null;
     return creates.get(hash(proxy));
   }
@@ -151,6 +201,8 @@ public class WriterMap implements FastSerializable {
   public RemoteWorker getWriter(_Proxy proxy) {
     // First, check the cache.
     if (readCache.containsKey(proxy)) return readCache.get(proxy);
+    if (unencryptedWriters.containsKey(proxy))
+      return unencryptedWriters.get(proxy);
     if (writers.isEmpty()) return null;
 
     RemoteWorker result = slowLookup(proxy, getKey(proxy));
@@ -167,6 +219,8 @@ public class WriterMap implements FastSerializable {
    */
   public RemoteWorker getWriter(_Proxy proxy, Label label) {
     if (readCache.containsKey(proxy)) return readCache.get(proxy);
+    if (unencryptedWriters.containsKey(proxy))
+      return unencryptedWriters.get(proxy);
     if (writers.isEmpty()) return null;
 
     RemoteWorker result = slowLookup(proxy, getKey(label));
@@ -176,6 +230,7 @@ public class WriterMap implements FastSerializable {
 
   private RemoteWorker slowLookup(_Proxy proxy, byte[] encryptKey) {
     try {
+      if (encryptKey == null) return unencryptedWriters.get(proxy);
       Hash mapKey = hash(proxy, encryptKey);
       Pair<byte[], byte[]> encHost = writers.get(mapKey);
 
@@ -202,23 +257,25 @@ public class WriterMap implements FastSerializable {
     return true;
   }
 
-  public void put(_Proxy proxy, Label keyObject) {
+  public void put(_Impl impl, Label keyObject) {
     // Don't put in entries for global constants or objects on local store.
-    if (ONumConstants.isGlobalConstant(proxy.$getOnum())
-        || proxy.$getStore() instanceof LocalStore)
+    if (ONumConstants.isGlobalConstant(impl.$getOnum())
+        || impl.$getStore() instanceof LocalStore)
       return;
 
-    creates.put(hash(proxy), keyObject);
+    if (keyObject == null)
+      unencryptedCreates.put(impl, keyObject);
+    else creates.put(hash(impl), keyObject);
   }
 
-  public void put(_Proxy proxy, RemoteWorker worker) {
+  public void put(_Impl impl, RemoteWorker worker) {
     // Don't put in entries for global constants or objects on local store.
-    if (ONumConstants.isGlobalConstant(proxy.$getOnum())
-        || proxy.$getStore() instanceof LocalStore)
+    if (ONumConstants.isGlobalConstant(impl.$getOnum())
+        || impl.$getStore() instanceof LocalStore)
       return;
 
-    writeCache.put(proxy, new Pair<>(proxy, worker));
-    readCache.put(proxy, worker);
+    writeCache.put(impl, new Pair<>(impl, worker));
+    readCache.put(impl, worker);
   }
 
   /**
@@ -226,12 +283,14 @@ public class WriterMap implements FastSerializable {
    */
   public void putAll(WriterMap map) {
     this.creates.putAll(map.creates);
+    this.unencryptedCreates.putAll(map.unencryptedCreates);
 
     map.flushWriteCache();
-    if (map.writers.isEmpty()) return;
+    if (map.writers.isEmpty() && map.unencryptedWriters.isEmpty()) return;
 
     flushWriteCache();
     this.writers.putAll(map.writers);
+    this.unencryptedWriters.putAll(map.unencryptedWriters);
     this.readCache.clear();
 
     if (map.version > version)
@@ -240,8 +299,8 @@ public class WriterMap implements FastSerializable {
   }
 
   private void flushWriteCache() {
-    for (LongKeyMap<Pair<_Proxy, RemoteWorker>> entry : writeCache) {
-      for (Pair<_Proxy, RemoteWorker> val : entry.values()) {
+    for (LongKeyMap<Pair<_Impl, RemoteWorker>> entry : writeCache) {
+      for (Pair<_Impl, RemoteWorker> val : entry.values()) {
         slowPut(val.first, val.second);
       }
     }
@@ -249,10 +308,14 @@ public class WriterMap implements FastSerializable {
     writeCache.clear();
   }
 
-  private void slowPut(_Proxy proxy, RemoteWorker worker) {
+  private void slowPut(_Impl impl, RemoteWorker worker) {
     try {
-      byte[] encryptKey = getKey(proxy);
-      Hash mapKey = hash(proxy, encryptKey);
+      byte[] encryptKey = getKey(impl);
+      if (encryptKey == null) {
+        unencryptedWriters.put(impl, worker);
+        return;
+      }
+      Hash mapKey = hash(impl, encryptKey);
       byte[] iv = Crypto.makeIV();
 
       Cipher cipher =
@@ -265,18 +328,18 @@ public class WriterMap implements FastSerializable {
     }
   }
 
-  private Hash hash(_Proxy proxy) {
-    return hash(proxy, null);
+  private Hash hash(fabric.lang.Object o) {
+    return hash(o, null);
   }
 
   /**
    * Given a proxy and an encryption key, hashes the object location with the
    * transaction ID and the key.
    */
-  private Hash hash(_Proxy proxy, byte[] key) {
+  private Hash hash(fabric.lang.Object o, byte[] key) {
     MessageDigest digest = Crypto.digestInstance();
-    Store store = proxy.$getStore();
-    long onum = proxy.$getOnum();
+    Store store = o.$getStore();
+    long onum = o.$getOnum();
 
     digest.update(store.name().getBytes());
     digest.update((byte) onum);
@@ -306,8 +369,8 @@ public class WriterMap implements FastSerializable {
    * Returns a byte array containing the symmetric encryption key protecting the
    * given object. If the object is public, null is returned.
    */
-  private byte[] getKey(_Proxy proxy) {
-    return getKey(proxy.get$$updateLabel());
+  private byte[] getKey(fabric.lang.Object o) {
+    return getKey(o.get$$updateLabel());
   }
 
   /**
@@ -328,7 +391,7 @@ public class WriterMap implements FastSerializable {
     // Write tid.
     out.writeLong(tid);
 
-    // Write creates.
+    // Write encrypted creates.
     out.writeInt(creates.size());
     for (Map.Entry<Hash, Label> entry : creates.entrySet()) {
       Hash key = entry.getKey();
@@ -344,7 +407,24 @@ public class WriterMap implements FastSerializable {
       } else out.writeBoolean(false);
     }
 
-    // Write writers.
+    // Write unencrypted creates.
+    out.writeInt(unencryptedCreates.size());
+    for (Store s : unencryptedCreates.storeSet()) {
+      for (LongKeyMap.Entry<Label> e : unencryptedCreates.get(s).entrySet()) {
+        out.writeUTF(s.name());
+        out.writeLong(e.getKey());
+
+        Label value = e.getValue();
+
+        if (value != null) {
+          out.writeBoolean(true);
+          out.writeUTF(value.$getStore().name());
+          out.writeLong(value.$getOnum());
+        } else out.writeBoolean(false);
+      }
+    }
+
+    // Write encrypted writers.
     out.writeInt(writers.size());
     for (Map.Entry<Hash, Pair<byte[], byte[]>> entry : writers.entrySet()) {
       Hash key = entry.getKey();
@@ -356,6 +436,17 @@ public class WriterMap implements FastSerializable {
       out.write(val.first);
       out.writeInt(val.second.length);
       out.write(val.second);
+    }
+
+    // Write unencrypted writers.
+    out.writeInt(unencryptedWriters.size());
+    for (Store s : unencryptedWriters.storeSet()) {
+      for (LongKeyMap.Entry<RemoteWorker> e : unencryptedWriters.get(s)
+          .entrySet()) {
+        out.writeUTF(s.name());
+        out.writeLong(e.getKey());
+        out.writeUTF(e.getValue().name());
+      }
     }
   }
 

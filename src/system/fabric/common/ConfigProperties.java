@@ -35,6 +35,7 @@ public class ConfigProperties {
   public final String hostname;
 
   public final String backendClass;
+  public final String surrogateManagerClass;
   public final int storePort;
 
   public final String homeStore;
@@ -55,6 +56,26 @@ public class ConfigProperties {
    * Whether to exponentially back off when retrying transactions.
    */
   public final boolean txRetryBackoff;
+
+  /**
+   * Max wait time for exponential backoff.
+   */
+  public final long maxBackoff;
+
+  /**
+   * Whether to use the subscription service.
+   */
+  public final boolean useSubscriptions;
+
+  /**
+   * Whether to record what is being fetched in the txn stats.
+   */
+  public final boolean recordFetched;
+
+  /**
+   * Whether to record what was the source of conflicts in 2PC aborts.
+   */
+  public final boolean recordConflicts;
 
   static {
     //
@@ -108,6 +129,18 @@ public class ConfigProperties {
     this.txRetryBackoff = Boolean
         .parseBoolean(removeProperty(p, "fabric.node.txRetryBackoff", "true"));
 
+    this.maxBackoff =
+        Long.parseLong(removeProperty(p, "fabric.node.maxBackoff", "5000"));
+
+    this.useSubscriptions = Boolean.parseBoolean(
+        removeProperty(p, "fabric.node.useSubscriptions", "false"));
+
+    this.recordFetched = Boolean
+        .parseBoolean(removeProperty(p, "fabric.node.recordFetched", "false"));
+
+    this.recordConflicts = Boolean.parseBoolean(
+        removeProperty(p, "fabric.node.recordConflicts", "false"));
+
     // Collect network-delay properties.
     Map<String, Short> inDelays = new HashMap<>();
     for (Object prop : p.keySet()) {
@@ -136,6 +169,9 @@ public class ConfigProperties {
         Integer.parseInt(removeProperty(p, "fabric.store.port", "3472"));
     this.backendClass =
         removeProperty(p, "fabric.store.db.class", "fabric.store.db.BdbDB");
+    this.surrogateManagerClass =
+        removeProperty(p, "fabric.store.SurrogateManager.class",
+            "fabric.store.DummySurrogateManager");
 
     //
     // Collect dissemination properties while printing other unused properties.

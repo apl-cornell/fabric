@@ -1,5 +1,8 @@
 package fabric.worker.transaction;
 
+import static fabric.common.Logging.WORKER_DEADLOCK_LOGGER;
+import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -8,8 +11,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.SysUtil;
+import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
@@ -17,10 +23,12 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.Store;
+import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
@@ -60,12 +68,29 @@ public final class Log {
   Thread thread;
 
   /**
+   * The TxnStats associated with this transaction.
+   */
+  TxnStats stats;
+
+  /**
+   * Prepare object associated with this log.  Allows for remote workers to
+   * initiate second phase of commit protocol through log.
+   */
+  TransactionPrepare prepare;
+
+  /**
    * A flag indicating whether this transaction should abort or be retried. This
    * flag should be checked before each operation. This flag is set when it's
    * non-null and indicates the transaction in the stack that is to be retried;
    * all child transactions are to be aborted.
    */
   volatile TransactionID retrySignal;
+
+  /**
+   * An exception with stack trace and reason for retry being signalled.  Null
+   * if there's no retry being signalled.
+   */
+  volatile RetrySignalException retryCause;
 
   /**
    * Maps OIDs to <code>readMap</code> entries for objects read in this
@@ -87,8 +112,10 @@ public final class Log {
    * sub-transactions. Objects created in running or aborted sub-transactions
    * don't count here. To keep them from being pinned, objects on local store
    * are not tracked here.
+   *
+   * Using an OidKeyHashMap for quick inclusion checking.
    */
-  protected final List<_Impl> creates;
+  protected final OidKeyHashMap<_Impl> creates;
 
   /**
    * Tracks objects created on local store. See <code>creates</code>.
@@ -100,8 +127,10 @@ public final class Log {
    * sub-transactions. Objects modified in running or aborted sub-transactions
    * don't count here. To keep them from being pinned, objects on local store
    * are not tracked here.
+   *
+   * Using an OidKeyHashMap for quick inclusion checking.
    */
-  protected final List<_Impl> writes;
+  protected final OidKeyHashMap<_Impl> writes;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -114,6 +143,11 @@ public final class Log {
    * sub-transactions.
    */
   public final List<RemoteWorker> workersCalled;
+
+  /**
+   * Set of runnables to run if this transaction commits.
+   */
+  public final List<Runnable> commitHooks;
 
   /**
    * Indicates the state of commit for the top-level transaction.
@@ -175,6 +209,11 @@ public final class Log {
   private final Set<Log> waitsFor;
 
   /**
+   * The lock, if any, this transaction is waiting on.
+   */
+  private Object waitsOn;
+
+  /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
    * given TID is null, a random tid is generated for the subtransaction.
@@ -194,15 +233,18 @@ public final class Log {
     this.child = null;
     this.thread = Thread.currentThread();
     this.retrySignal = parent == null ? null : parent.retrySignal;
+    this.retryCause = parent == null ? null : parent.retryCause;
     this.reads = new OidKeyHashMap<>();
     this.readsReadByParent = new ArrayList<>();
-    this.creates = new ArrayList<>();
+    this.creates = new OidKeyHashMap<>();
     this.localStoreCreates = new WeakReferenceArrayList<>();
-    this.writes = new ArrayList<>();
+    this.writes = new OidKeyHashMap<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
+    this.commitHooks = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
     this.waitsFor = new HashSet<>();
+    this.waitsOn = null;
 
     if (parent != null) {
       try {
@@ -218,6 +260,7 @@ public final class Log {
       } finally {
         Timing.SUBTX.end();
       }
+      stats = parent.stats;
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
@@ -227,6 +270,7 @@ public final class Log {
 
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
+      stats = TransactionManager.getInstance().stats;
     }
   }
 
@@ -254,7 +298,7 @@ public final class Log {
    * this log.
    */
   boolean isDescendantOf(Log log) {
-    return tid.isDescendantOf(log.tid);
+    return log != null && tid.isDescendantOf(log.tid);
   }
 
   /**
@@ -274,11 +318,11 @@ public final class Log {
 
     result.addAll(reads.storeSet());
 
-    for (_Impl obj : writes) {
+    for (_Impl obj : writes.values()) {
       if (obj.$isOwned) result.add(obj.$getStore());
     }
 
-    for (_Impl obj : creates) {
+    for (_Impl obj : creates.values()) {
       if (obj.$isOwned) result.add(obj.$getStore());
     }
 
@@ -339,8 +383,10 @@ public final class Log {
           result.remove(write.$getOnum());
       } else {
         Iterable<_Impl> writesToExclude =
-            includeModified ? Collections.<_Impl> emptyList() : curLog.writes;
-        Iterable<_Impl> chain = SysUtil.chain(writesToExclude, curLog.creates);
+            includeModified ? Collections.<_Impl> emptyList()
+                : curLog.writes.values();
+        Iterable<_Impl> chain =
+            SysUtil.chain(writesToExclude, curLog.creates.values());
         for (_Impl write : chain)
           if (write.$getStore() == store) result.remove(write.$getOnum());
       }
@@ -368,11 +414,11 @@ public final class Log {
         result.remove(create.$getOnum());
       }
     } else {
-      for (_Impl obj : writes)
+      for (_Impl obj : writes.values())
         if (obj.$getStore() == store && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
 
-      for (_Impl create : creates)
+      for (_Impl create : creates.values())
         if (create.$getStore() == store) result.remove(create.$getOnum());
     }
 
@@ -392,7 +438,7 @@ public final class Log {
         result.put(obj.$getOnum(), obj);
       }
     } else {
-      for (_Impl obj : creates)
+      for (_Impl obj : creates.values())
         if (obj.$getStore() == store && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
     }
@@ -401,9 +447,25 @@ public final class Log {
   }
 
   /**
+   * Check if this transaction has been told to abort and retry.
+   * @throws TransactionRestartingException if a retry was flagged.
+   */
+  public void checkRetrySignal() throws TransactionRestartingException {
+    if (this.retrySignal != null) {
+      synchronized (this) {
+        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got retry signal",
+            this);
+
+        throw new TransactionRestartingException(this.retrySignal,
+            this.retryCause);
+      }
+    }
+  }
+
+  /**
    * Sets the retry flag on this and the logs of all sub-transactions.
    */
-  public void flagRetry() {
+  public void flagRetry(String reason) {
     Queue<Log> toFlag = new LinkedList<>();
     toFlag.add(this);
     while (!toFlag.isEmpty()) {
@@ -412,16 +474,32 @@ public final class Log {
         if (log.child != null) toFlag.add(log.child);
         if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid)) {
           log.retrySignal = tid;
-          // XXX This was here to unblock a thread that may have been waiting on
-          // XXX a lock. Commented out because it was causing a bunch of
-          // XXX InterruptedExceptions and ClosedByInterruptExceptions that
-          // XXX weren't being handled properly. This includes improper or
-          // XXX insufficient handling by Java code in the examples (e.g.,
-          // XXX Jetty).
-          // XXX Instead, when a thread is blocked waiting on an object lock, we
-          // XXX spin once a second to check the retry signal.
+          try {
+            throw new RetrySignalException(reason);
+          } catch (RetrySignalException e) {
+            log.retryCause = e;
+          }
 
-          // log.thread.interrupt();
+          // Grab the currently marked blocking dependency
+          final Object curWaitingOn = log.waitsOn;
+          if (curWaitingOn != null) {
+            // Run this in a different thread, we need to avoid any deadlocks in
+            // this step.
+            final Log logCopy = log;
+            Threading.getPool().submit(new Runnable() {
+              @Override
+              public void run() {
+                synchronized (curWaitingOn) {
+                  // If still blocked on the object after synchronizing, wake
+                  // the thread that needs to be aborted so it sees retry
+                  // signal.
+                  if (logCopy.waitsOn == curWaitingOn) {
+                    logCopy.waitsOn.notifyAll();
+                  }
+                }
+              }
+            });
+          }
         }
       }
     }
@@ -432,6 +510,7 @@ public final class Log {
    * transaction. All locks held by this transaction are released.
    */
   void abort() {
+    TransactionManager.getInstance().stats.markTxnAbort();
     // Release read locks.
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
       for (ReadMap.Entry entry : submap.values()) {
@@ -443,15 +522,25 @@ public final class Log {
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
-    Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
+    Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
-        write.$copyStateFrom(write.$history);
-
+        if (write.$writeLockHolder == this) {
+          if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
+                this, write.$getStore(), write.$getOnum(), write.getClass(),
+                System.identityHashCode(write), Thread.currentThread());
+          }
+          write.$copyStateFrom(write.$history);
+        }
         // Signal any waiting readers/writers.
-        if (write.$numWaiting > 0) write.notifyAll();
+        if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
+          write.notifyAll();
       }
     }
+
+    prepare = null;
 
     if (parent != null && parent.tid.equals(tid.parent)) {
       // The parent frame represents the parent transaction. Null out its child.
@@ -469,6 +558,7 @@ public final class Log {
       localStoreWrites.clear();
       workersCalled.clear();
       securityCache.reset();
+      commitHooks.clear();
 
       if (parent != null) {
         writerMap = new WriterMap(parent.writerMap);
@@ -478,7 +568,8 @@ public final class Log {
 
       if (retrySignal != null) {
         synchronized (this) {
-          if (retrySignal.equals(tid)) retrySignal = null;
+          retrySignal = null;
+          retryCause = null;
         }
       }
     }
@@ -510,8 +601,8 @@ public final class Log {
     }
 
     // Merge writes and transfer write locks.
-    List<_Impl> parentWrites = parent.writes;
-    for (_Impl obj : writes) {
+    OidKeyHashMap<_Impl> parentWrites = parent.writes;
+    for (_Impl obj : writes.values()) {
       synchronized (obj) {
         if (obj.$history.$writeLockHolder == parent) {
           // The parent transaction already wrote to the object. Discard one
@@ -522,14 +613,14 @@ public final class Log {
           // The parent transaction didn't write to the object. Add write to
           // parent and transfer our write lock.
           synchronized (parentWrites) {
-            parentWrites.add(obj);
+            parentWrites.put(obj, obj);
           }
         }
         obj.$writer = null;
         obj.$writeLockHolder = parent;
 
         // Signal any readers/writers.
-        if (obj.$numWaiting > 0) obj.notifyAll();
+        //if (obj.$numWaiting > 0) obj.notifyAll();
       }
     }
 
@@ -553,15 +644,15 @@ public final class Log {
         obj.$writeLockHolder = parent;
 
         // Signal any readers/writers.
-        if (obj.$numWaiting > 0) obj.notifyAll();
+        //if (obj.$numWaiting > 0) obj.notifyAll();
       }
     }
 
     // Merge creates and transfer write locks.
-    List<_Impl> parentCreates = parent.creates;
+    OidKeyHashMap<_Impl> parentCreates = parent.creates;
     synchronized (parentCreates) {
-      for (_Impl obj : creates) {
-        parentCreates.add(obj);
+      for (_Impl obj : creates.values()) {
+        parentCreates.put(obj, obj);
         obj.$writeLockHolder = parent;
       }
     }
@@ -591,6 +682,11 @@ public final class Log {
       parent.writerMap.putAll(writerMap);
     }
 
+    // Merge hooks.
+    synchronized (parent.commitHooks) {
+      parent.commitHooks.addAll(commitHooks);
+    }
+
     synchronized (parent) {
       parent.child = null;
     }
@@ -602,6 +698,34 @@ public final class Log {
    * this transaction are released.
    */
   void commitTopLevel() {
+    // Release write locks on created objects and set version numbers.
+    // XXX TRM 3/9/18: Do this before reads and writes so that nobody gets a
+    // reference to the creates before we've released the writer locks on
+    // creates.
+    Iterable<_Impl> chain2 = SysUtil.chain(creates.values(), localStoreCreates);
+    for (_Impl obj : chain2) {
+      if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+        Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+            "{0} in {5} committed and released (created) write lock on {1}/{2} ({3}) ({4})",
+            this, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+            System.identityHashCode(obj), Thread.currentThread());
+      }
+      if (!obj.$isOwned) {
+        // The cached object is out-of-date. Evict it.
+        obj.$ref.evict();
+        continue;
+      }
+
+      // XXX: Should we notify here in case somehow a reference is found in
+      // another transaction in another thread still?
+      obj.$writer = null;
+      obj.$writeLockHolder = null;
+      obj.$writeLockStackTrace = null;
+      obj.$version = 1;
+      obj.$readMapEntry.incrementVersion();
+      obj.$isOwned = false;
+    }
+
     // Release read locks.
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
       for (ReadMap.Entry entry : submap.values()) {
@@ -614,7 +738,7 @@ public final class Log {
       throw new InternalError("something was read by a non-existent parent");
 
     // Release write locks and ownerships; update version numbers.
-    Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
+    Iterable<_Impl> chain = SysUtil.chain(writes.values(), localStoreWrites);
     for (_Impl obj : chain) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
@@ -623,6 +747,12 @@ public final class Log {
       }
 
       synchronized (obj) {
+        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+              "{0} in {5} committed and released write lock on {1}/{2} ({3}) ({4})",
+              this, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+              System.identityHashCode(obj), Thread.currentThread());
+        }
         obj.$writer = null;
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
@@ -638,25 +768,15 @@ public final class Log {
       }
     }
 
-    // Release write locks on created objects and set version numbers.
-    Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
-    for (_Impl obj : chain2) {
-      if (!obj.$isOwned) {
-        // The cached object is out-of-date. Evict it.
-        obj.$ref.evict();
-        continue;
-      }
-
-      obj.$writer = null;
-      obj.$writeLockHolder = null;
-      obj.$writeLockStackTrace = null;
-      obj.$version = 1;
-      obj.$readMapEntry.incrementVersion();
-      obj.$isOwned = false;
-    }
+    prepare = null;
 
     // Merge the security cache into the top-level label cache.
     securityCache.mergeWithTopLevel();
+
+    // Run commit hooks.
+    for (Runnable hook : commitHooks) {
+      hook.run();
+    }
   }
 
   /**
@@ -759,22 +879,36 @@ public final class Log {
   }
 
   /**
+   * Changes the waitsFor set to an empty set.  This is for waiting on objects
+   * which are not necessarily held by other worker transactions, such as
+   * waiting for a fetch to complete.
+   */
+  public void setWaitsFor(Object obj) {
+    synchronized (this.waitsFor) {
+      this.waitsFor.clear();
+      this.waitsOn = obj;
+    }
+  }
+
+  /**
    * Changes the waitsFor set to a singleton set containing the given log.
    */
-  public void setWaitsFor(Log waitsFor) {
+  public void setWaitsFor(Log waitsFor, Object obj) {
     synchronized (this.waitsFor) {
       this.waitsFor.clear();
       this.waitsFor.add(waitsFor);
+      this.waitsOn = obj;
     }
   }
 
   /**
    * Changes the waitsFor set to contain exactly the elements of the given set.
    */
-  public void setWaitsFor(Set<Log> waitsFor) {
+  public void setWaitsFor(Set<Log> waitsFor, Object obj) {
     synchronized (this.waitsFor) {
       this.waitsFor.clear();
       this.waitsFor.addAll(waitsFor);
+      this.waitsOn = obj;
     }
   }
 
@@ -784,6 +918,7 @@ public final class Log {
   public void clearWaitsFor() {
     synchronized (this.waitsFor) {
       this.waitsFor.clear();
+      this.waitsOn = null;
     }
   }
 
@@ -816,5 +951,64 @@ public final class Log {
   @Override
   public String toString() {
     return "[" + tid + "]";
+  }
+
+  /**
+   * Dumb hack to check we aren't clobbering an existing write of a different
+   * _Impl copy.  Aborts up to the furthest ancestor with a different _Impl for
+   * the obj.
+   */
+  public void checkWriteClobber(fabric.lang.Object._Impl o) {
+    // Walk from top level down.
+    Log cur = this;
+    while (cur.parent != null)
+      cur = cur.parent;
+    while (cur != null) {
+      if (cur.writes.containsKey(o) && cur.writes.get(o) != o) {
+        throw new TransactionRestartingException(cur.tid);
+      }
+      cur = cur.child;
+    }
+  }
+
+  /**
+   * Dumb hack to check we aren't clobbering an existing read of a different
+   * copy.  Aborts up to the furthest ancestor with a different read for the
+   * obj.
+   */
+  public void checkReadClobber(fabric.lang.Object._Impl o) {
+    // Walk from top level down.
+    Log cur = this;
+    while (cur.parent != null)
+      cur = cur.parent;
+    while (cur != null) {
+      if (!o.$readMapEntry.getReaders().contains(cur)
+          && cur.reads.containsKey(o)) {
+        throw new TransactionRestartingException(cur.tid);
+      }
+      cur = cur.child;
+    }
+  }
+
+  /**
+   * Get the impl already seen by this transaction.
+   */
+  public _Impl getImpl(_Proxy p) {
+    if (parent != null) {
+      _Impl result = parent.getImpl(p);
+      if (result != null) return result;
+    }
+    if (writes.containsKey(p)) {
+      _Impl result = writes.get(p);
+      if (result.$cacheEntry.isEvicted())
+        throw new TransactionRestartingException(tid);
+      return result;
+    }
+    if (creates.containsKey(p)) {
+      _Impl result = creates.get(p);
+      if (result.$cacheEntry.isEvicted())
+        throw new TransactionRestartingException(tid);
+      return result;
+    } else return null;
   }
 }

@@ -166,6 +166,15 @@ public interface Object {
       _Impl impl = ref.get();
       if (impl != null) return impl.$cacheEntry;
 
+      // Check current log
+      TransactionManager tm = TransactionManager.getInstance();
+      if (tm.inTxn()) {
+        _Impl result = tm.getCurrentLog().getImpl(this);
+        if (result != null) {
+          return result.$cacheEntry;
+        }
+      }
+
       // Check anchor.
       if (anchor != null) return anchor.$cacheEntry;
 
@@ -187,7 +196,6 @@ public interface Object {
           Logging.TIMING_LOGGER.fine("begin fetching FClass");
         }
         // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
-        TransactionManager tm = TransactionManager.getInstance();
         RemoteWorker worker = tm.getFetchWorker(this);
         if (worker != null) {
           // Sanity check.
@@ -202,13 +210,13 @@ public interface Object {
           result = serialized.first.cache(serialized.second);
         } else if (this instanceof SecretKeyObject
             || ref.store instanceof InProcessStore) {
-          // Fetch from the store. Bypass dissemination when reading key
-          // objects and when reading from an in-process store.
-          result = ref.store.readObjectNoDissem(ref.onum);
-        } else {
-          // Fetch from the store.
-          result = ref.store.readObject(ref.onum);
-        }
+              // Fetch from the store. Bypass dissemination when reading key
+              // objects and when reading from an in-process store.
+              result = ref.store.readObjectNoDissem(ref.onum);
+            } else {
+              // Fetch from the store.
+              result = ref.store.readObject(ref.onum);
+            }
       } catch (AccessException e) {
         throw new RuntimeFetchException(e);
       } finally {

@@ -1,0 +1,90 @@
+Hello World
+===========
+
+This is a demonstration of FabIL code for various basic features of the
+fabric system, playing on the idea of every programmer's favorite
+program. It allows a user to create, read, and push messages stored on a
+persistent storage server.
+
+The code is intended to demonstrate how to write FabIL code, including
+both the nice distributed programming support as well as issues to keep
+in mind to avoid potential pitfalls.
+
+This directory contains the following sub-directories:
+
+  - src/fabil: source code for the example, written in FabIL
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's store and worker
+
+
+Using
+-----
+This example comes with a store named "store" for storing persistent
+data, and a worker named "worker" to run the computation.
+
+  0. Begin in the hello example directory and compile the example:
+
+        $ cd $FABRIC/examples/hello-fil
+        $ ant
+
+  1. Start the store in a terminal.
+
+        $ bin/start-store
+
+  2. Start the workers in other terminals.
+     Worker 1:
+        $ bin/start-worker
+     Worker 2:
+        $ bin/start-worker2
+
+  3. After you're done, exit the store and workers with the "exit"
+     command in its console (you can also use CTRL-D).
+
+     You can clean up the store's persistent state by removing the 'var'
+     directory:
+
+        $ rm -rf var
+
+Once the store and workers are running, you can run the Hello program
+(in src/fabil/Hello.fil) to create messages,
+
+	worker> Hello create title "message contents"
+	Message created.
+
+	worker>
+
+Read messages,
+
+	worker>  Hello read title
+	Reading message title
+	Contents: (Accessed 1 times): message contents
+
+	worker>
+
+And push them to the terminal of another worker
+
+	On worker:
+	worker> Hello send title worker2
+	Message sent
+
+	worker>
+
+	On worker2:
+	worker2> Message contains (Accessed 2 times): message contents
+
+Note: it may be the case that the nodes keys are out of date when you
+run this, which will cause the nodes to crash on start.
+To create new keys, first remove the old keys under
+$FABRIC/examples/hello-fil/etc/keys/. Then run the following:
+	1. Create the store key
+		# $FABRIC/bin/create-node --app-home $FABRIC/examples/hello-fil --name store
+	2. Create the worker key
+		# $FABRIC/bin/create-node --app-home $FABRIC/examples/hello-fil --name worker
+	3. Create the worker2 key
+		# $FABRIC/bin/create-node --app-home $FABRIC/examples/hello-fil --name worker2
+
+When asked for a password, use "password" (no quotes) for the default
+setting.  If you want to use a different password, make sure to update
+the config file for the node under
+$FABRIC/examples/hello-file/etc/config/ to include the line:
+	fabric.node.password=YOUR_PASSWORD

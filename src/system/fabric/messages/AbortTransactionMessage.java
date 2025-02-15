@@ -5,12 +5,11 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.TransactionID;
-import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.worker.remote.RemoteWorker;
 
-public class AbortTransactionMessage extends
-Message<AbortTransactionMessage.Response, AccessException> {
+public class AbortTransactionMessage extends AsyncMessage {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -19,17 +18,8 @@ Message<AbortTransactionMessage.Response, AccessException> {
   public final TransactionID tid;
 
   public AbortTransactionMessage(TransactionID tid) {
-    super(MessageType.ABORT_TRANSACTION, AccessException.class);
+    super(MessageType.ABORT_TRANSACTION);
     this.tid = tid;
-  }
-
-  // ////////////////////////////////////////////////////////////////////////////
-  // response contents //
-  // ////////////////////////////////////////////////////////////////////////////
-
-  public static class Response implements Message.Response {
-    public Response() {
-    }
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -37,9 +27,9 @@ Message<AbortTransactionMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
-      throws AccessException {
-    return h.handle(client, this);
+  public void dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
+      throws ProtocolError {
+    h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -54,14 +44,5 @@ Message<AbortTransactionMessage.Response, AccessException> {
   /* readMessage */
   protected AbortTransactionMessage(DataInput in) throws IOException {
     this(new TransactionID(in));
-  }
-
-  @Override
-  protected void writeResponse(DataOutput out, Response r) {
-  }
-
-  @Override
-  protected Response readResponse(DataInput in) {
-    return new Response();
   }
 }

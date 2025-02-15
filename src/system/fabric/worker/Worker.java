@@ -11,8 +11,6 @@ import java.lang.reflect.Method;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
@@ -44,6 +42,9 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongSet;
 import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.FetchManager;
 import fabric.lang.FabricClassLoader;
@@ -399,9 +400,9 @@ public final class Worker {
    *
    * @return true iff either of the caches were updated.
    */
-  public boolean updateCaches(RemoteStore store, long onum,
+  public boolean updateCaches(RemoteStore store, LongSet onums,
       AbstractGlob<?> update) {
-    return fetchManager.updateCaches(store, onum, update);
+    return fetchManager.updateCaches(store, onums, update);
   }
 
   /**
@@ -420,26 +421,26 @@ public final class Worker {
    *     of the group.
    */
   public boolean updateCache(RemoteStore store, ObjectGroup group) {
-    // XXX FIXME
-    boolean result = false;
-    for (SerializedObject obj : group.objects().values()) {
-      if (TransactionManager.haveReaders(store, obj.getOnum())) {
-        store.forceCache(obj);
-        result = true;
-      } else if (store.updateOrEvict(obj)) {
-        result = true;
+    for (LongIterator iter = group.objects().keySet().iterator(); iter
+        .hasNext();) {
+      if (store.readFromCache(iter.next()) != null) {
+        // Put all of the values into the cache.
+        for (SerializedObject obj : group.objects().values()) {
+          store.forceCache(obj);
+        }
+        return true;
       }
     }
-
-    return result;
+    return false;
   }
 
   /**
    * Detemines which of a given set of onums are resident in cache.
    */
-  public List<Long> findOnumsInCache(RemoteStore store, List<Long> onums) {
-    List<Long> result = new ArrayList<>();
-    for (long onum : onums) {
+  public LongSet findOnumsInCache(RemoteStore store, LongSet onums) {
+    LongSet result = new LongHashSet();
+    for (LongIterator iter = onums.iterator(); iter.hasNext();) {
+      long onum = iter.next();
       if (store.readFromCache(onum) != null) result.add(onum);
     }
 
@@ -467,6 +468,18 @@ public final class Worker {
    * Shuts down and cleans up the worker.
    */
   public void shutdown() {
+    synchronized (TransactionManager.outstandingCommits) {
+      while (!TransactionManager.outstandingCommits.isEmpty()) {
+        WORKER_LOGGER
+            .info("Waiting for " + TransactionManager.outstandingCommits.size()
+                + " outstanding commits");
+        try {
+          TransactionManager.outstandingCommits.wait();
+        } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
+        }
+      }
+    }
     fetchManager.destroy();
   }
 
@@ -737,19 +750,22 @@ public final class Worker {
     TransactionManager tm = TransactionManager.getInstance();
     boolean backoffEnabled = getWorker().config.txRetryBackoff;
 
+    // Indicating the transaction finished
     boolean success = false;
+    // Indicating whether to retry if unsuccessful. Retry in nearly all cases.
+    boolean retry = true;
 
     // Flag for triggering backoff on alternate retries.
     boolean doBackoff = true;
 
-    int backoff = 1;
+    long backoff = 1;
     while (!success) {
       if (backoffEnabled) {
         if (doBackoff) {
           if (backoff > 32) {
             while (true) {
               try {
-                Thread.sleep(backoff);
+                Thread.sleep(Math.round(Math.random() * backoff));
                 break;
               } catch (InterruptedException e) {
                 Logging.logIgnoredInterruptedException(e);
@@ -757,7 +773,8 @@ public final class Worker {
             }
           }
 
-          if (backoff < 5000) backoff *= 2;
+          if (backoff < getWorker().config.maxBackoff)
+            backoff = Math.min(backoff * 2, getWorker().config.maxBackoff);
         }
 
         doBackoff = backoff <= 32 || !doBackoff;
@@ -767,7 +784,18 @@ public final class Worker {
       tm.startTransaction();
 
       try {
-        return code.run();
+        try {
+          return code.run();
+        } catch (RetryException e) {
+          throw e;
+        } catch (TransactionRestartingException e) {
+          throw e;
+        } catch (Throwable e) {
+          // First check whether we just missed an abort flag.
+          tm.getCurrentLog().checkRetrySignal();
+          // If retry signal didn't fire, then continue.
+          throw e;
+        }
       } catch (RetryException e) {
         success = false;
         continue;
@@ -779,8 +807,11 @@ public final class Worker {
           // Restart this transaction.
           continue;
 
-        // Need to restart a parent transaction.
-        if (currentTid.parent != null) throw e;
+        if (currentTid.parent != null) {
+          // Don't retry, kicking this up to a parent that needs to retry.
+          retry = false;
+          throw e;
+        }
 
         throw new InternalError("Something is broken with transaction "
             + "management. Got a signal to restart a different transaction "
@@ -791,6 +822,8 @@ public final class Worker {
         // Retry if the exception was a result of stale objects.
         if (tm.checkForStaleObjects()) continue;
 
+        // Bad state, don't keep retrying.
+        retry = false;
         throw new AbortException(e);
       } finally {
         if (success) {
@@ -827,7 +860,9 @@ public final class Worker {
           tm.abortTransaction();
         }
 
-        if (!success) continue;
+        // If not successful and should retry, override control flow to run the
+        // loop again.
+        if (!success && retry) continue;
       }
     }
 

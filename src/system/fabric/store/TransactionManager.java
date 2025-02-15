@@ -1,8 +1,6 @@
 package fabric.store;
 
 import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
-import static fabric.store.db.ObjectDB.UpdateMode.CREATE;
-import static fabric.store.db.ObjectDB.UpdateMode.WRITE;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,7 +15,6 @@ import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.dissemination.ObjectGlob;
@@ -45,8 +42,6 @@ public class TransactionManager {
    */
   private final SubscriptionManager sm;
 
-  // protected final ReadHistory readHistory;
-
   public TransactionManager(ObjectDB database) {
     this.database = database;
     this.sm = new SubscriptionManager(database.getName(), this);
@@ -55,11 +50,12 @@ public class TransactionManager {
   /**
    * Instruct the transaction manager that the given transaction is aborting
    */
-  public void abortTransaction(Principal worker, long transactionID)
-      throws AccessException {
-    database.rollback(transactionID, worker);
-    STORE_TRANSACTION_LOGGER.log(Level.FINE, "Aborted transaction {0}",
-        transactionID);
+  public void abortTransaction(Principal worker, long transactionID) {
+    database.abortPrepare(transactionID, worker);
+    if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Aborted transaction {0}",
+          Long.toHexString(transactionID));
+    }
   }
 
   /**
@@ -69,10 +65,13 @@ public class TransactionManager {
       long transactionID) throws TransactionCommitFailedException {
     try {
       database.commit(transactionID, workerIdentity, sm);
-      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Committed transaction {0}",
-          transactionID);
+      if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+        STORE_TRANSACTION_LOGGER.log(Level.FINE, "Committed transaction {0}",
+            Long.toHexString(transactionID));
+      }
     } catch (final AccessException e) {
-      throw new TransactionCommitFailedException("Insufficient Authorization");
+      throw new TransactionCommitFailedException("Insufficient Authorization",
+          e);
     } catch (final RuntimeException e) {
       throw new TransactionCommitFailedException(
           "something went wrong; store experienced a runtime exception during "
@@ -112,72 +111,14 @@ public class TransactionManager {
    */
   public void prepare(Principal worker, PrepareRequest req)
       throws TransactionPrepareFailedException {
-    final long tid = req.tid;
-
-    // First, check read and write permissions. We do this before we attempt to
-    // do the actual prepare because we want to run the permissions check in a
-    // transaction outside of the worker's transaction.
-    Store store = Worker.getWorker().getStore(database.getName());
-    if (worker == null || worker.$getStore() != store
-        || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
-      try {
-        checkPerms(worker, req.reads.keySet(), req.writes);
-      } catch (AccessException e) {
-        throw new TransactionPrepareFailedException(e.getMessage());
-      }
-    }
-
-    try {
-      database.beginTransaction(tid, worker);
-    } catch (final AccessException e) {
-      throw new TransactionPrepareFailedException("Insufficient privileges");
-    }
-
-    try {
-      // This will store the set of onums of objects that were out of date.
-      LongKeyMap<SerializedObject> versionConflicts = new LongKeyHashMap<>();
-
-      // Prepare writes.
-      for (SerializedObject o : req.writes) {
-        database.prepareUpdate(tid, worker, o, versionConflicts, WRITE);
-      }
-
-      // Prepare creates.
-      for (SerializedObject o : req.creates) {
-        database.prepareUpdate(tid, worker, o, versionConflicts, CREATE);
-      }
-
-      // Check reads
-      for (LongKeyMap.Entry<Integer> entry : req.reads.entrySet()) {
-        long onum = entry.getKey();
-        int version = entry.getValue().intValue();
-
-        database.prepareRead(tid, worker, onum, version, versionConflicts);
-      }
-
-      if (!versionConflicts.isEmpty()) {
-        throw new TransactionPrepareFailedException(versionConflicts);
-      }
-
-      // readHistory.record(req);
-      database.finishPrepare(tid, worker);
-
-      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}", tid);
-    } catch (TransactionPrepareFailedException e) {
-      database.abortPrepare(tid, worker);
-      throw e;
-    } catch (RuntimeException e) {
-      e.printStackTrace();
-      database.abortPrepare(tid, worker);
-      throw e;
-    }
+    req.runPrepare(this, database, worker);
   }
 
   /**
    * Checks that the worker principal has permissions to read/write the given
    * objects. If it doesn't, an AccessException is thrown.
    */
-  private void checkPerms(final Principal worker, final LongSet reads,
+  protected void checkPerms(final Principal worker, final LongSet reads,
       final Collection<SerializedObject> writes) throws AccessException {
     // The code that does the actual checking.
     Code<AccessException> checker = new Code<AccessException>() {
@@ -230,6 +171,18 @@ public class TransactionManager {
   GroupContainer getGroupContainer(long onum) throws AccessException {
     return getGroupContainerAndSubscribe(onum, null,
         false /* this argument doesn't matter */);
+  }
+
+  /**
+   * Unsubscribe the given worker from updates for the given
+   *
+   * @param client
+   *          the {@link RemoteWorker} to be unsubscribed
+   * @param unsubscribes
+   *          the set of onums to be unsubscribed from.
+   */
+  void unsubscribe(RemoteWorker client, LongSet unsubscribes) {
+    sm.unsubscribe(client, unsubscribes);
   }
 
   /**

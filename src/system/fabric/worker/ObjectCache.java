@@ -9,7 +9,10 @@ import java.util.logging.Level;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
+import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyCache;
@@ -164,7 +167,7 @@ public final class ObjectCache {
     /**
      * Determines whether this entry is <b>evicted</b>.
      */
-    private synchronized boolean isEvicted() {
+    public synchronized boolean isEvicted() {
       if (next != null) {
         if (!next.isEvicted()) return false;
 
@@ -310,9 +313,37 @@ public final class ObjectCache {
   private final Store store;
   private final LongKeyCache<Entry> entries;
 
+  /**
+   * The set of fetch locks. Used to prevent threads from concurrently
+   * attempting to fetch the same object.
+   */
+  final ConcurrentLongKeyMap<FetchLock> fetchLocks;
+
+  static class FetchLock {
+    volatile ObjectCache.Entry object;
+    volatile AccessException error;
+  }
+
   ObjectCache(Store store) {
     this.store = store;
     this.entries = new LongKeyCache<>();
+    this.fetchLocks = new ConcurrentLongKeyHashMap<>();
+  }
+
+  /**
+   * Notify waiters that the onum has been fetched into cache.
+   */
+  void notifyFetched(long onum, Entry result) {
+    if (result != null) {
+      FetchLock curLock = fetchLocks.get(onum);
+      if (curLock != null) {
+        synchronized (curLock) {
+          curLock.object = result;
+          curLock.notifyAll();
+          fetchLocks.remove(onum, curLock);
+        }
+      }
+    }
   }
 
   /**
@@ -350,15 +381,19 @@ public final class ObjectCache {
   void put(Object._Impl impl) {
     long onum = impl.$getOnum();
 
-    while (true) {
-      Entry existingEntry = entries.putIfAbsent(onum, impl.$cacheEntry);
-      if (existingEntry == null) return;
+    try {
+      while (true) {
+        Entry existingEntry = entries.putIfAbsent(onum, impl.$cacheEntry);
+        if (existingEntry == null) return;
 
-      if (existingEntry.getImpl(false) != impl) {
-        throw new InternalError("Conflicting cache entry");
+        if (existingEntry.getImpl(false) != impl) {
+          throw new InternalError("Conflicting cache entry");
+        }
+
+        if (entries.replace(onum, existingEntry, impl.$cacheEntry)) return;
       }
-
-      if (entries.replace(onum, existingEntry, impl.$cacheEntry)) return;
+    } finally {
+      notifyFetched(onum, get(onum));
     }
   }
 
@@ -394,6 +429,7 @@ public final class ObjectCache {
       return existingEntry;
     }
 
+    notifyFetched(obj.getOnum(), newEntry);
     return newEntry;
   }
 
@@ -409,10 +445,8 @@ public final class ObjectCache {
   Entry put(ObjectGroup group, long onum) {
     Entry result = null;
     for (SerializedObject obj : group.objects().values()) {
-      Entry curEntry = putIfAbsent(obj, true);
-      if (result == null && onum == obj.getOnum()) {
-        result = curEntry;
-      }
+      Entry updated = update(obj, false);
+      if (obj.getOnum() == onum) result = updated;
     }
 
     if (result == null) throw new InternalError("Entry not found.");
@@ -424,8 +458,8 @@ public final class ObjectCache {
    * replaced, and any transactions currently using the object are aborted and
    * retried.
    */
-  void forcePut(SerializedObject obj) {
-    update(obj, false);
+  Entry forcePut(SerializedObject obj) {
+    return update(obj, false);
   }
 
   /**
@@ -435,8 +469,8 @@ public final class ObjectCache {
    * and retried. If the object does not exist in cache, then the cache is not
    * updated.
    */
-  void update(SerializedObject update) {
-    update(update, true);
+  Entry update(SerializedObject update) {
+    return update(update, true);
   }
 
   /**
@@ -446,28 +480,40 @@ public final class ObjectCache {
    * and the given update is placed in the cache. If the cache is updated, then
    * any transactions currently using the object are aborted and retried.
    */
-  void update(SerializedObject update, boolean replaceOnly) {
+  Entry update(SerializedObject update, boolean replaceOnly) {
     long onum = update.getOnum();
-    Entry curEntry = entries.get(onum);
 
-    if (curEntry == null) {
-      if (!replaceOnly) putIfAbsent(update, true);
-      return;
-    }
-
-    synchronized (curEntry) {
-      if (replaceOnly && curEntry.isEvicted()) return;
-
-      // Check if object in current entry is an older version.
-      if (curEntry.getVersion() >= update.getVersion()) return;
-
-      curEntry.evict();
-    }
-
+    Entry curEntry = null;
     Entry newEntry = new Entry(update);
-    entries.replace(onum, curEntry, newEntry);
+    do {
+      curEntry = entries.get(onum);
 
-    TransactionManager.abortReaders(store, update.getOnum());
+      if (curEntry == null) {
+        if (!replaceOnly) {
+          return putIfAbsent(update, true);
+        }
+        return null;
+      }
+
+      synchronized (curEntry) {
+        if (replaceOnly && curEntry.isEvicted()) return null;
+
+        if (!curEntry.isEvicted()) {
+          // Check if object in current entry is an older version.
+          if (curEntry.getVersion() >= update.getVersion()) return curEntry;
+
+          curEntry.evict();
+        }
+      }
+
+      // abort pre-existing readers.
+      TransactionManager.abortReaders(store, update.getOnum(),
+          "cache update of " + store + "/" + update.getOnum());
+
+      // Keep retrying until we know we succeeded.
+    } while (!entries.replace(onum, curEntry, newEntry));
+
+    return newEntry;
   }
 
   /**
@@ -505,6 +551,22 @@ public final class ObjectCache {
   void evict(long onum) {
     Entry entry = entries.get(onum);
     if (entry == null) return;
+    entry.evict();
+    entries.remove(onum, entry);
+  }
+
+  /**
+   * Evicts the entry with the given onum from cache if the version number given
+   * is greater than the current version in cache.
+   *
+   * @return true iff an entry for the onum was found in cache.
+   */
+  void evict(long onum, int version) {
+    Entry entry = entries.get(onum);
+    if (entry == null) return;
+    synchronized (entry) {
+      if (entry.isEvicted() || entry.getVersion() >= version) return;
+    }
     entry.evict();
     entries.remove(onum, entry);
   }

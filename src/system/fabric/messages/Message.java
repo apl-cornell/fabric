@@ -14,6 +14,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
@@ -64,6 +65,8 @@ import fabric.worker.remote.RemoteWorker;
  */
 public abstract class Message<R extends Message.Response, E extends FabricException> {
 
+  static AtomicLong msgCount = new AtomicLong();
+
   // ////////////////////////////////////////////////////////////////////////////
   // public API //
   // ////////////////////////////////////////////////////////////////////////////
@@ -84,14 +87,17 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
   public final R send(SubSocket<?> s) throws IOException, E {
     DataInputStream in = new DataInputStream(s.getInputStream());
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
+    long msgId = msgCount.incrementAndGet();
 
     // Write this message out.
+    out.writeBoolean(true); // This requires response.
+    out.writeLong(msgId); // Helps with debugging, should be removed.
     out.writeByte(messageType.ordinal());
     writeMessage(out);
     out.flush();
 
-    Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE, "Sent {0} to {1}",
-        messageType, s);
+    Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
+        "Sent message {0} {1} to {2}", msgId, messageType, s);
 
     // Read in the reply. Determine if an error occurred.
     if (in.readBoolean()) {
@@ -133,15 +139,16 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    *           If a malformed message is sent, or in the case of a failure in
    *           the <code>DataInput</code> provided.
    */
-  public static Message<?, ?> receive(DataInput in) throws IOException {
+  public static Message<?, ?> receive(DataInput in,
+      SubSocket<RemoteWorker> connection, long msgId) throws IOException {
     Message<?, ?> m = null;
     try {
       MessageType messageType = MessageType.values()[in.readByte()];
 
       m = messageType.parse(in);
 
-      Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE, "Received {0}",
-          messageType);
+      Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE,
+          "Received {0} {1} on {2}", msgId, messageType, connection);
 
       return m;
 
@@ -219,28 +226,16 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
         return new ReadMessage(in);
       }
     },
-    PREPARE_TRANSACTION {
-      @Override
-      PrepareTransactionMessage parse(DataInput in) throws IOException {
-        return new PrepareTransactionMessage(in);
-      }
-    },
-    COMMIT_TRANSACTION {
-      @Override
-      CommitTransactionMessage parse(DataInput in) throws IOException {
-        return new CommitTransactionMessage(in);
-      }
-    },
-    ABORT_TRANSACTION {
-      @Override
-      AbortTransactionMessage parse(DataInput in) throws IOException {
-        return new AbortTransactionMessage(in);
-      }
-    },
     DISSEM_READ_ONUM {
       @Override
       DissemReadMessage parse(DataInput in) throws IOException {
         return new DissemReadMessage(in);
+      }
+    },
+    NONATOMIC_CALL {
+      @Override
+      NonAtomicCallMessage parse(DataInput in) throws IOException {
+        return new NonAtomicCallMessage(in);
       }
     },
     REMOTE_CALL {
@@ -259,12 +254,6 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
       @Override
       TakeOwnershipMessage parse(DataInput in) throws IOException {
         return new TakeOwnershipMessage(in);
-      }
-    },
-    OBJECT_UPDATE {
-      @Override
-      ObjectUpdateMessage parse(DataInput in) throws IOException {
-        return new ObjectUpdateMessage(in);
       }
     },
     GET_CERT_CHAIN {
@@ -290,8 +279,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
       InterWorkerStalenessMessage parse(DataInput in) throws IOException {
         return new InterWorkerStalenessMessage(in);
       }
-    },
-    ;
+    },;
 
     /** Read a message of the appropriate type from the given DataInput. */
     abstract Message<?, ?> parse(DataInput in) throws IOException;

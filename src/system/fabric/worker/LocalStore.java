@@ -11,6 +11,7 @@ import java.util.Set;
 
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
@@ -24,8 +25,12 @@ import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil.TopPrincipal;
+import fabric.messages.StoreCommittedMessage;
+import fabric.messages.StorePrepareSuccessMessage;
 import fabric.util.HashMap;
 import fabric.util.Map;
+import fabric.worker.transaction.TransactionManager;
+import fabric.worker.transaction.TransactionPrepare;
 
 public final class LocalStore implements Store, Serializable {
 
@@ -49,12 +54,19 @@ public final class LocalStore implements Store, Serializable {
   private Set<Pair<Principal, Principal>> localDelegates;
 
   @Override
-  public void prepareTransaction(long tid, boolean singleStore,
+  public void prepareTransaction(final long tid, boolean singleStore,
       boolean readOnly, Collection<Object._Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
-    // Note: since we assume local single threading we can ignore reads
-    // (conflicts are impossible)
-    WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        // Note: since we assume local single threading we can ignore reads
+        // (conflicts are impossible)
+        WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
+        TransactionManager.pendingPrepares.get(tid).markSuccess(name(),
+            new StorePrepareSuccessMessage(tid));
+      }
+    });
   }
 
   @Override
@@ -63,8 +75,17 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public void commitTransaction(long transactionID) {
-    WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
+  public void commitTransaction(final long transactionID) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
+        TransactionPrepare p =
+            TransactionManager.outstandingCommits.get(transactionID);
+        if (p != null)
+          p.markCommitted(name(), new StoreCommittedMessage(transactionID));
+      }
+    });
   }
 
   @Override
@@ -205,6 +226,11 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public void evict(long onum) {
+    // nothing to do
+  }
+
+  @Override
+  public void evict(long onum, int version) {
     // nothing to do
   }
 

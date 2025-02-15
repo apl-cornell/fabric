@@ -1,14 +1,19 @@
 package fabric.worker.transaction;
 
+import static fabric.common.Logging.WORKER_DEADLOCK_LOGGER;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.util.ConcurrentOidKeyHashMap;
 import fabric.lang.Object._Impl;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.ObjectCache;
 import fabric.worker.Store;
+import fabric.worker.TransactionRestartingException;
 
 /**
  * A map from OIDs to Entry objects. An object's Entry records its version
@@ -96,6 +101,10 @@ public final class ReadMap {
      * Adds a lock for the given reader.
      */
     synchronized void addLock(Log reader) {
+      if (defunct) {
+        reader.checkRetrySignal();
+        throw new TransactionRestartingException(reader.tid);
+      }
       readLocks.add(reader);
     }
 
@@ -104,6 +113,15 @@ public final class ReadMap {
      */
     void releaseLock(Log reader) {
       synchronized (this) {
+        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+          _Impl raw = this.obj.get();
+          if (raw != null) {
+            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                "{0} in {5} released read lock on {1}/{2} ({3}) ({4})", reader,
+                raw.$getStore(), raw.$getOnum(), raw.getClass(),
+                System.identityHashCode(raw), Thread.currentThread());
+          }
+        }
         readLocks.remove(reader);
         attemptGC();
       }
@@ -152,9 +170,14 @@ public final class ReadMap {
     /**
      * Aborts all transactions that have this entry in their logs.
      */
-    synchronized void abortReaders() {
-      for (Log reader : readLocks)
-        reader.flagRetry();
+    synchronized void abortReaders(String reason) {
+      for (Log reader : readLocks) {
+        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+              "Cache updated for {0}, aborting reader {1}", obj.onum, reader);
+        }
+        reader.flagRetry(reason);
+      }
     }
 
     /**
@@ -183,7 +206,8 @@ public final class ReadMap {
           if (versionNumber != impl.$version) {
             // Version numbers don't match. Retry all other transactions.
             // XXX What if we were given an older copy of the object?
-            abortReaders();
+            abortReaders("updating " + impl.$getStore() + "/" + impl.$getOnum()
+                + " to ver. " + impl.$version + " in read map");
             defunct = true;
             return false;
           }
@@ -257,9 +281,9 @@ public final class ReadMap {
   /**
    * Sends abort signals to all transactions that have read the given OID.
    */
-  void abortReaders(Store store, long onum) {
+  void abortReaders(Store store, long onum, String reason) {
     Entry entry = map.get(store, onum);
-    if (entry != null) entry.abortReaders();
+    if (entry != null) entry.abortReaders(reason);
   }
 
   /**
@@ -281,8 +305,7 @@ public final class ReadMap {
 
       if (existing.updateImpl(impl)) return existing;
 
-      if (map.replace(ref.store, ref.onum, existing, newEntry))
-        return newEntry;
+      if (map.replace(ref.store, ref.onum, existing, newEntry)) return newEntry;
     }
   }
 }

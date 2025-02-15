@@ -11,7 +11,10 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
+import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.worker.RemoteStore;
@@ -240,17 +243,24 @@ public class Cache {
    * Updates the dissemination and worker cache with the given object glob. If
    * the caches do not have entries for the given glob, then nothing is changed.
    *
+   * TODO: onums is frivolous at this point.
+   *
    * @return true iff either of the caches was changed.
    */
-  public boolean updateEntry(RemoteStore store, long onum, ObjectGlob g) {
+  public boolean updateEntry(RemoteStore store, LongSet onums, ObjectGlob g) {
     // Update the local worker's cache.
     // XXX What happens if the worker isn't trusted to decrypt the glob?
-    boolean workerCacheUpdated =
-        Worker.getWorker().updateCache(store, g.decrypt());
+    ObjectGroup decrypted = g.decrypt();
+    boolean updated = Worker.getWorker().updateCache(store, decrypted);
 
-    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
+    for (LongIterator iter = decrypted.objects().keySet().iterator(); iter
+        .hasNext();) {
+      long onum = iter.next();
+      Pair<RemoteStore, Long> key = new Pair<>(store, onum);
+      updated |= put(key, g, true) != null;
+    }
 
-    return put(key, g, true) != null || workerCacheUpdated;
+    return updated;
   }
 
   /**

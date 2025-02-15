@@ -14,12 +14,12 @@ import polyglot.util.Position;
 public class NewFabricArray_c extends NewArray_c implements NewFabricArray {
   @Deprecated
   public NewFabricArray_c(Position pos, TypeNode baseType, List<Expr> dims,
-      int addDims, ArrayInit init) {
+      int addDims, FabricArrayInit init) {
     this(pos, baseType, dims, addDims, init, null);
   }
 
   public NewFabricArray_c(Position pos, TypeNode baseType, List<Expr> dims,
-      int addDims, ArrayInit init, Ext ext) {
+      int addDims, FabricArrayInit init, Ext ext) {
     super(pos, baseType, dims, addDims, init, ext);
   }
 }

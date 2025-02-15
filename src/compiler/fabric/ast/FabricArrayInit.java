@@ -10,5 +10,9 @@ public interface FabricArrayInit extends polyglot.ast.ArrayInit {
 
   FabricArrayInit location(Expr location);
 
+  Expr location();
+
   FabricArrayInit label(Expr label);
+
+  Expr label();
 }

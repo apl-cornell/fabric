@@ -1,6 +1,7 @@
 package fabric.worker.transaction;
 
 import static fabric.common.Logging.HOTOS_LOGGER;
+import static fabric.common.Logging.WORKER_DEADLOCK_LOGGER;
 import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTING;
@@ -11,44 +12,39 @@ import static fabric.worker.transaction.Log.CommitState.Values.PREPARE_FAILED;
 import static fabric.worker.transaction.Log.CommitState.Values.PREPARING;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 
 import fabric.common.FabricThread;
 import fabric.common.Logging;
-import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.Threading.NamedRunnable;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
-import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecurityCache;
+import fabric.messages.NonAtomicCallMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.worker.AbortException;
 import fabric.worker.LocalStore;
-import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionAbortingException;
 import fabric.worker.TransactionAtomicityViolationException;
-import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
@@ -110,11 +106,36 @@ public final class TransactionManager {
   private Log current;
 
   /**
+   * Per-Thread stats for app-level transactions
+   */
+  public final TxnStats stats = new TxnStats();
+
+  /**
+   * If this thread is handling an {@link NonAtomicCallMessage}, this is the list of
+   * oids for which writes have committed.
+   */
+  protected OidKeyHashMap<Integer> committedWrites;
+
+  /**
    * A debugging switch for storing a stack trace each time a write lock is
    * obtained. Enable this by passing "--trace-locks" as a command-line argument
    * to the node.
    */
   public static boolean TRACE_WRITE_LOCKS = false;
+
+  /**
+   * A map from tids to objects representing currently pending prepare phases.
+   */
+  public static final ConcurrentLongKeyMap<TransactionPrepare> pendingPrepares =
+      new ConcurrentLongKeyHashMap<>();
+
+  /**
+   * A map from tids to a boolean, if an entry exists, it means that the tid has
+   * not been committed at stores.  Worker should not successfully complete a
+   * "normal" shutdown while this is nonempty.
+   */
+  public static final ConcurrentLongKeyMap<TransactionPrepare> outstandingCommits =
+      new ConcurrentLongKeyHashMap<>();
 
   /**
    * A map from OIDs to a version number and a list of logs for transactions
@@ -132,8 +153,8 @@ public final class TransactionManager {
     return readMap.haveReaders(store, onum);
   }
 
-  public static void abortReaders(Store store, long onum) {
-    readMap.abortReaders(store, onum);
+  public static void abortReaders(Store store, long onum, String reason) {
+    readMap.abortReaders(store, onum, reason);
   }
 
   public static ReadMap.Entry getReadMapEntry(_Impl impl) {
@@ -172,14 +193,7 @@ public final class TransactionManager {
   }
 
   private void checkRetrySignal() {
-    if (current.retrySignal != null) {
-      synchronized (current) {
-        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got retry signal",
-            current);
-
-        throw new TransactionRestartingException(current.retrySignal);
-      }
-    }
+    current.checkRetrySignal();
   }
 
   /**
@@ -187,17 +201,6 @@ public final class TransactionManager {
    * stores that were contacted.
    */
   public void abortTransaction() {
-    abortTransaction(Collections.<RemoteNode<?>> emptySet());
-  }
-
-  /**
-   * @param abortedNodes
-   *          a set of nodes that don't need to be contacted because they
-   *          already know about the abort.
-   */
-  private void abortTransaction(Set<RemoteNode<?>> abortedNodes) {
-    Set<Store> storesToContact;
-    List<RemoteWorker> workersToContact;
     if (current.tid.depth == 0) {
       // Aborting a top-level transaction. Make sure no other thread is working
       // on this transaction.
@@ -213,15 +216,11 @@ public final class TransactionManager {
         switch (current.commitState.value) {
         case UNPREPARED:
           current.commitState.value = ABORTING;
-          storesToContact = Collections.emptySet();
-          workersToContact = current.workersCalled;
           break;
 
         case PREPARE_FAILED:
         case PREPARED:
           current.commitState.value = ABORTING;
-          storesToContact = current.storesToContact();
-          workersToContact = current.workersCalled;
           break;
 
         case PREPARING:
@@ -245,11 +244,6 @@ public final class TransactionManager {
           throw new InternalError();
         }
       }
-    } else {
-      // Aborting a nested transaction. Only need to abort at the workers we've
-      // called.
-      storesToContact = Collections.emptySet();
-      workersToContact = current.workersCalled;
     }
 
     boolean readOnly = current.isReadOnly();
@@ -258,13 +252,13 @@ public final class TransactionManager {
     // Assume only one thread will be executing this.
     HOTOS_LOGGER.log(Level.FINEST, "aborting {0}", current);
 
-    // Set the retry flag in all our children.
-    current.flagRetry();
+    // Set the retry flag in all our children, if that hasn't happened already.
+    current.flagRetry("manager triggered abort");
 
     // Wait for all other threads to finish.
     current.waitForThreads();
 
-    sendAbortMessages(storesToContact, workersToContact, abortedNodes);
+    if (current.prepare != null) current.prepare.abort();
     current.abort();
     WORKER_TRANSACTION_LOGGER.log(Level.INFO, "{0} aborted", current);
     HOTOS_LOGGER.log(Level.INFO, "aborted {0} " + (readOnly ? "R" : "W"),
@@ -383,6 +377,12 @@ public final class TransactionManager {
           }
         }
         return;
+      } catch (TransactionAbortingException e) {
+        abortTransaction();
+        throw e;
+      } catch (TransactionRestartingException e) {
+        abortTransaction();
+        throw e;
       } finally {
         Timing.SUBTX.end();
       }
@@ -412,10 +412,10 @@ public final class TransactionManager {
 
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
-    sendPrepareMessages(singleStore, readOnly, stores, workers);
+    sendPrepareMessages(null, singleStore, readOnly, stores, workers);
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(singleStore, readOnly, stores, workers);
+    commitAndCleanUp();
 
     // Collect the names of nodes contacted.
     String[] contactedNodes = new String[stores.size() + workers.size()];
@@ -430,6 +430,13 @@ public final class TransactionManager {
 
     final long commitTime = System.currentTimeMillis();
     COMMIT_TIME.set(commitTime);
+    // Coordinated if we had to commit at more than 1 store.
+    if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
+    if ((stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0)) > 1) {
+      stats.markCoordination();
+    }
+    // Record the Tid
+    stats.recordTid(HOTOS_current.tid.tid);
     if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
       final long commitLatency = commitTime - prepareStart;
       if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
@@ -453,6 +460,8 @@ public final class TransactionManager {
    * XXX Similarly gross HACK for making transaction commit round trips visible
    * to the application.
    */
+  // TODO: This isn't modified anymore and should be replaced with transaction
+  // stats object.
   public static final ThreadLocal<Integer> ROUND_TRIPS = new ThreadLocal<>();
 
   /**
@@ -471,8 +480,9 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  public void sendPrepareMessages() {
-    sendPrepareMessages(false, false, current.storesToContact(),
+  public void sendPrepareMessages(RemoteWorker coordinator)
+      throws TransactionRestartingException {
+    sendPrepareMessages(coordinator, false, false, current.storesToContact(),
         current.workersCalled);
   }
 
@@ -484,13 +494,9 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  private void sendPrepareMessages(final boolean singleStore,
-      final boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-      throws TransactionRestartingException {
-    final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
-        Collections.synchronizedMap(
-            new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
-
+  private void sendPrepareMessages(final RemoteWorker coordinator,
+      final boolean singleStore, final boolean readOnly, Set<Store> stores,
+      List<RemoteWorker> workers) throws TransactionRestartingException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
@@ -517,164 +523,32 @@ public final class TransactionManager {
       }
     }
 
-    List<Future<?>> futures = new ArrayList<>(stores.size() + workers.size());
+    current.prepare = new TransactionPrepare(coordinator, current, singleStore,
+        readOnly, stores, workers);
 
-    // Go through each worker and send prepare messages in parallel.
-    for (final RemoteWorker worker : workers) {
-      Threading.NamedRunnable runnable =
-          new Threading.NamedRunnable("worker prepare to " + worker.name()) {
-            @Override
-            protected void runImpl() {
-              try {
-                worker.prepareTransaction(current.tid.topTid);
-              } catch (UnreachableNodeException e) {
-                failures.put(worker, new TransactionPrepareFailedException(
-                    "Unreachable worker"));
-              } catch (TransactionPrepareFailedException e) {
-                failures.put(worker,
-                    new TransactionPrepareFailedException(e.getMessage()));
-              } catch (TransactionRestartingException e) {
-                failures.put(worker, new TransactionPrepareFailedException(
-                    "transaction restarting"));
-              }
-            }
-          };
-      futures.add(Threading.getPool().submit(runnable));
-    }
-
-    boolean haveRoundTrip = false;
-
-    // Go through each store and send prepare messages in parallel.
-    for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
-      final Store store = storeIt.next();
-      NamedRunnable runnable =
-          new NamedRunnable("worker prepare to " + store.name()) {
-            @Override
-            public void runImpl() {
-              try {
-                Collection<_Impl> creates = current.getCreatesForStore(store);
-                LongKeyMap<Integer> reads =
-                    current.getReadsForStore(store, false);
-                Collection<_Impl> writes = current.getWritesForStore(store);
-                store.prepareTransaction(current.tid.topTid, singleStore,
-                    readOnly, creates, reads, writes);
-              } catch (TransactionPrepareFailedException e) {
-                failures.put((RemoteNode<?>) store, e);
-              } catch (UnreachableNodeException e) {
-                failures.put((RemoteNode<?>) store,
-                    new TransactionPrepareFailedException("Unreachable store"));
-              }
-            }
-          };
-
-      // Optimization: only start in a new thread if there are more stores to
-      // contact and if it's a truly remote store (i.e., not in-process).
-      if (!(store instanceof InProcessStore || store.isLocalStore())
-          && storeIt.hasNext()) {
-        futures.add(Threading.getPool().submit(runnable));
-      } else {
-        runnable.run();
-      }
-
-      if (!(store instanceof InProcessStore || store.isLocalStore()))
-        haveRoundTrip = true;
-    }
-
-    if (haveRoundTrip) {
-      Integer curRoundTrips = ROUND_TRIPS.get();
-      if (curRoundTrips != null) {
-        ROUND_TRIPS.set(curRoundTrips + 1);
-      }
-    }
-
-    // Wait for replies.
-    for (Future<?> future : futures) {
-      while (true) {
-        try {
-          future.get();
-          break;
-        } catch (InterruptedException e) {
-          Logging.logIgnoredInterruptedException(e);
-        } catch (ExecutionException e) {
-          e.printStackTrace();
-        }
-      }
-    }
-
-    // Check for conflicts and unreachable stores/workers.
-    if (!failures.isEmpty()) {
-      String logMessage = "Transaction tid="
-          + Long.toHexString(current.tid.topTid) + ":  prepare failed.";
-
-      for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
-          .entrySet()) {
-        if (entry.getKey() instanceof RemoteStore) {
-          // Remove old objects from our cache.
-          RemoteStore store = (RemoteStore) entry.getKey();
-          LongKeyMap<SerializedObject> versionConflicts =
-              entry.getValue().versionConflicts;
-          if (versionConflicts != null) {
-            for (SerializedObject obj : versionConflicts.values())
-              store.updateCache(obj);
-          }
-        }
-
-        if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
-          logMessage +=
-              "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
-        }
-      }
-      WORKER_TRANSACTION_LOGGER.fine(logMessage);
-      HOTOS_LOGGER.fine("Prepare failed.");
-
+    try {
+      current.prepare.prepare();
+    } catch (TransactionRestartingException e) {
       synchronized (current.commitState) {
         current.commitState.value = PREPARE_FAILED;
         current.commitState.notifyAll();
       }
 
-      TransactionID tid = current.tid;
+      abortTransaction();
 
-      TransactionPrepareFailedException e =
-          new TransactionPrepareFailedException(failures);
-      Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
-          "{0} error committing: prepare failed exception: {1}", current, e);
+      throw e;
+    }
 
-      Set<RemoteNode<?>> abortedNodes = failures.keySet();
-      if (readOnly) {
-        // All remote stores should have aborted already.
-        abortedNodes = new HashSet<>(abortedNodes);
-        for (Store store : stores) {
-          if (store instanceof RemoteStore) {
-            abortedNodes.add((RemoteStore) store);
-          }
-        }
-      }
-      abortTransaction(abortedNodes);
-      throw new TransactionRestartingException(tid);
-
-    } else {
-      synchronized (current.commitState) {
-        current.commitState.value = PREPARED;
-        current.commitState.notifyAll();
-      }
+    synchronized (current.commitState) {
+      current.commitState.value = PREPARED;
+      current.commitState.notifyAll();
     }
   }
 
   /**
    * Sends commit messages to the cohorts in a distributed transaction.
    */
-  public void sendCommitMessagesAndCleanUp()
-      throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(false, false, current.storesToContact(),
-        current.workersCalled);
-  }
-
-  /**
-   * Sends commit messages to the given set of stores and workers.
-   */
-  private void sendCommitMessagesAndCleanUp(boolean singleStore,
-      boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-      throws TransactionAtomicityViolationException {
+  public void commitAndCleanUp() {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
@@ -697,94 +571,7 @@ public final class TransactionManager {
       }
     }
 
-    if (!singleStore && !readOnly) {
-      final List<RemoteNode<?>> unreachable =
-          Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
-      final List<RemoteNode<?>> failed =
-          Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
-      List<Future<?>> futures = new ArrayList<>(stores.size() + workers.size());
-
-      // Send commit messages to the workers in parallel.
-      for (final RemoteWorker worker : workers) {
-        NamedRunnable runnable =
-            new NamedRunnable("worker commit to " + worker) {
-              @Override
-              public void runImpl() {
-                try {
-                  worker.commitTransaction(current.tid.topTid);
-                } catch (UnreachableNodeException e) {
-                  unreachable.add(worker);
-                } catch (TransactionCommitFailedException e) {
-                  failed.add(worker);
-                }
-              }
-            };
-
-        futures.add(Threading.getPool().submit(runnable));
-      }
-
-      boolean haveRoundTrip = false;
-
-      // Send commit messages to the stores in parallel.
-      for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
-        final Store store = storeIt.next();
-        NamedRunnable runnable =
-            new NamedRunnable("worker commit to " + store.name()) {
-              @Override
-              public void runImpl() {
-                try {
-                  store.commitTransaction(current.tid.topTid);
-                } catch (TransactionCommitFailedException e) {
-                  failed.add((RemoteStore) store);
-                } catch (UnreachableNodeException e) {
-                  unreachable.add((RemoteStore) store);
-                }
-              }
-            };
-
-        // Optimization: only start in a new thread if there are more stores to
-        // contact and if it's a truly remote store (i.e., not in-process).
-        if (!(store instanceof InProcessStore || store.isLocalStore())
-            && storeIt.hasNext()) {
-          futures.add(Threading.getPool().submit(runnable));
-        } else {
-          runnable.run();
-        }
-
-        if (!(store instanceof InProcessStore || store.isLocalStore()))
-          haveRoundTrip = true;
-      }
-
-      if (haveRoundTrip) {
-        Integer curRoundTrips = ROUND_TRIPS.get();
-        if (curRoundTrips != null) {
-          ROUND_TRIPS.set(curRoundTrips + 1);
-        }
-      }
-
-      // Wait for replies.
-      for (Future<?> future : futures) {
-        while (true) {
-          try {
-            future.get();
-            break;
-          } catch (InterruptedException e) {
-            Logging.logIgnoredInterruptedException(e);
-          } catch (ExecutionException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-          }
-        }
-      }
-
-      if (!(unreachable.isEmpty() && failed.isEmpty())) {
-        Logging.log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
-            "{0} error committing: atomicity violation "
-                + "-- failed: {1} unreachable: {2}",
-            current, failed, unreachable);
-        throw new TransactionAtomicityViolationException(failed, unreachable);
-      }
-    }
+    current.prepare.commit();
 
     // Update data structures to reflect successful commit.
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST,
@@ -799,39 +586,6 @@ public final class TransactionManager {
     TransactionRegistry.remove(current.tid.topTid);
 
     current = null;
-  }
-
-  /**
-   * Sends abort messages to those nodes that haven't reported failures.
-   *
-   * @param stores
-   *          the set of stores involved in the transaction.
-   * @param workers
-   *          the set of workers involved in the transaction.
-   * @param fails
-   *          the set of nodes that have reported failure.
-   */
-  private void sendAbortMessages(Set<Store> stores, List<RemoteWorker> workers,
-      Set<RemoteNode<?>> fails) {
-    for (Store store : stores)
-      if (!fails.contains(store)) {
-        try {
-          store.abortTransaction(current.tid);
-        } catch (AccessException e) {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
-              "Access error while aborting transaction: {0}", e);
-        }
-      }
-
-    for (RemoteWorker worker : workers)
-      if (!fails.contains(worker)) {
-        try {
-          worker.abortTransaction(current.tid);
-        } catch (AccessException e) {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
-              "Access error while aborting transaction: {0}", e);
-        }
-      }
   }
 
   public void registerCreate(_Impl obj) {
@@ -849,6 +603,13 @@ public final class TransactionManager {
       if (TRACE_WRITE_LOCKS)
         obj.$writeLockStackTrace = Thread.currentThread().getStackTrace();
 
+      if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+        Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+            "{0} in {5} got write lock (via create) on {1}/{2} ({3}) ({4})",
+            current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+            System.identityHashCode(obj), Thread.currentThread());
+      }
+
       // Own the object. The call to ensureOwnership is responsible for adding
       // the object to the set of created objects.
       ensureOwnership(obj);
@@ -858,8 +619,8 @@ public final class TransactionManager {
   }
 
   public void registerLabelsInitialized(_Impl obj) {
-    current.writerMap.put(obj.$getProxy(), Worker.getWorker().getLocalWorker());
-    current.writerMap.put(obj.$getProxy(), obj.get$$updateLabel());
+    current.writerMap.put(obj, Worker.getWorker().getLocalWorker());
+    current.writerMap.put(obj, obj.get$$updateLabel());
   }
 
   public void registerRead(_Impl obj) {
@@ -892,39 +653,28 @@ public final class TransactionManager {
     // Make sure we're not supposed to abort/retry.
     checkRetrySignal();
 
+    current.checkReadClobber(obj);
+
     // Check read condition: wait until all writers are in our ancestry.
     boolean hadToWait = false;
     try {
-      boolean firstWait = true;
-      boolean deadlockDetectRequested = false;
       while (obj.$writeLockHolder != null
           && !current.isDescendantOf(obj.$writeLockHolder)) {
+        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
+              "{0} in {6} wants to read {1}/{2} ({3}) ({5}); waiting on writer {4}",
+              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+              obj.$writeLockHolder, System.identityHashCode(obj),
+              Thread.currentThread());
+        }
+        hadToWait = true;
+        obj.$numWaiting++;
         try {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-              "{0} wants to read {1}/{2} ({3}); waiting on writer {4}", current,
-              obj.$getStore(), obj.$getOnum(), obj.getClass(),
-              obj.$writeLockHolder);
-          hadToWait = true;
-          obj.$numWaiting++;
-          current.setWaitsFor(obj.$writeLockHolder);
+          current.setWaitsFor(obj.$writeLockHolder, obj);
 
-          if (firstWait) {
-            // This is the first time we're waiting. Wait with a 10 ms timeout.
-            firstWait = false;
-            obj.wait(10);
-          } else {
-            // Not the first time through the loop. Ask for deadlock detection
-            // if we haven't already.
-            if (!deadlockDetectRequested) {
-              deadlockDetector.requestDetect(current);
-              deadlockDetectRequested = true;
-            }
-
-            // Should be waiting indefinitely, but this requires proper handling
-            // of InterruptedExceptions in the entire system. Instead, we spin
-            // once a second so that we periodically check the retry signal.
-            obj.wait(1000);
-          }
+          // Ask for deadlock detection while we wait.
+          deadlockDetector.requestDetect(current);
+          obj.wait();
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
         }
@@ -934,6 +684,8 @@ public final class TransactionManager {
         checkRetrySignal();
       }
     } finally {
+      // Remove this log from the possibly deadlocked set.
+      deadlockDetector.stopRequestDetect(current);
       current.clearWaitsFor();
     }
 
@@ -944,6 +696,12 @@ public final class TransactionManager {
     obj.writerMapVersion = -1;
 
     current.acquireReadLock(obj);
+    if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+      Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+          "{0} in {5} got read lock on {1}/{2} ({3}) ({4})", current,
+          obj.$getStore(), obj.$getOnum(), obj.getClass(),
+          System.identityHashCode(obj), Thread.currentThread());
+    }
     if (hadToWait)
       WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got read lock", current);
   }
@@ -988,6 +746,8 @@ public final class TransactionManager {
     // Make sure we're not supposed to abort/retry.
     checkRetrySignal();
 
+    current.checkWriteClobber(obj);
+
     // Check write condition: wait until writer is in our ancestry and all
     // readers are in our ancestry.
     boolean hadToWait = false;
@@ -995,84 +755,69 @@ public final class TransactionManager {
       // This is the set of logs for those transactions we're waiting for.
       Set<Log> waitsFor = new HashSet<>();
 
-      boolean firstWait = true;
-      boolean deadlockDetectRequested = false;
       while (true) {
         waitsFor.clear();
 
-        // Flag indicating if we temporarily set a write lock for current
-        boolean tempWriteLock = false;
         // Make sure writer is in our ancestry.
         if (obj.$writeLockHolder != null
             && !current.isDescendantOf(obj.$writeLockHolder)) {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-              "{0} wants to write {1}/{2} ({3}); waiting on writer {4}",
-              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-              obj.$writeLockHolder);
+          if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
+                "{0} in {6} wants to write {1}/{2} ({3}) ({5}); waiting on writer {4}",
+                current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+                obj.$writeLockHolder, System.identityHashCode(obj),
+                Thread.currentThread());
+          }
           waitsFor.add(obj.$writeLockHolder);
           hadToWait = true;
         } else {
-          if (obj.$writeLockHolder == null) {
-            // Grab a write lock temporarily to avoid later readers dogpiling.
-            tempWriteLock = true;
-            obj.$writeLockHolder = current;
-          }
-          // Restart any incompatible readers.
+          // Wait on any incompatible readers.
           ReadMap.Entry readMapEntry = obj.$readMapEntry;
           if (readMapEntry != null) {
             synchronized (readMapEntry) {
               for (Log lock : readMapEntry.getReaders()) {
                 if (!current.isDescendantOf(lock)) {
-                  Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-                      "{0} wants to write {1}/{2} ({3}); aborting reader {4}",
-                      current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-                      lock);
-                  waitsFor.add(lock);
-                  lock.flagRetry();
+                  if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+                    Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
+                        "{0} in {6} wants to write {1}/{2} ({3}) ({5}); aborting reader {4}",
+                        current, obj.$getStore(), obj.$getOnum(),
+                        obj.getClass(), lock, System.identityHashCode(obj),
+                        Thread.currentThread());
+                  }
+                  // Don't wait for readers, either they'll abort later on or
+                  // finish their 2PC
+                  //waitsFor.add(lock);
+                  lock.flagRetry("writer " + current.tid + " wants to write "
+                      + obj.$getStore() + "/" + obj.$getOnum());
                 }
               }
 
               if (waitsFor.isEmpty()) {
-                // Release the temp lock and acquire it after the clone below.
-                if (tempWriteLock) obj.$writeLockHolder = null;
                 break;
               }
+              hadToWait = true;
             }
           }
         }
 
+        obj.$numWaiting++;
         try {
-          obj.$numWaiting++;
-          current.setWaitsFor(waitsFor);
+          current.setWaitsFor(waitsFor, obj);
 
-          if (firstWait) {
-            // This is the first time we're waiting. Wait with a 10 ms timeout.
-            firstWait = false;
-            obj.wait(10);
-          } else {
-            // Not the first time through the loop. Ask for deadlock detection
-            // if we haven't already.
-            if (!deadlockDetectRequested) {
-              deadlockDetector.requestDetect(current);
-              deadlockDetectRequested = true;
-            }
-
-            // Should be waiting indefinitely, but this requires proper handling
-            // of InterruptedExceptions in the entire system. Instead, we spin
-            // once a second so that we periodically check the retry signal.
-            obj.wait(1000);
-          }
+          // Ask for deadlock detection while we wait.
+          deadlockDetector.requestDetect(current);
+          obj.wait();
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
         }
-        // Release the temp lock and acquire it after the clone below.
-        if (tempWriteLock) obj.$writeLockHolder = null;
         obj.$numWaiting--;
 
         // Make sure we weren't aborted/retried while we were waiting.
         checkRetrySignal();
       }
     } finally {
+      // Remove this log from the possibly deadlocked set.
+      deadlockDetector.stopRequestDetect(current);
       current.clearWaitsFor();
     }
 
@@ -1097,14 +842,23 @@ public final class TransactionManager {
       }
     } else {
       synchronized (current.writes) {
-        current.writes.add(obj);
+        current.writes.put(obj, obj);
       }
+    }
+
+    if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+      Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+          "{0} in {5} got write lock on {1}/{2} ({3}) ({4})", current,
+          obj.$getStore(), obj.$getOnum(), obj.getClass(),
+          System.identityHashCode(obj), Thread.currentThread());
     }
 
     if (obj.$reader != current) {
       // Clear the read stamp -- the reader's read condition no longer holds.
       obj.$reader = Log.NO_READER;
     }
+    // Also grab a read lock so we can be preempted if the cache is updated.
+    ensureReadLock(obj);
   }
 
   /**
@@ -1128,8 +882,7 @@ public final class TransactionManager {
     // Add the object to the writer map, but only do so if the object's labels
     // are initialized.
     if (obj.$version != 0 || obj.get$$updateLabel() != null) {
-      current.writerMap.put(obj.$getProxy(),
-          Worker.getWorker().getLocalWorker());
+      current.writerMap.put(obj, Worker.getWorker().getLocalWorker());
     }
 
     // If the object is fresh, add it to our set of creates.
@@ -1140,7 +893,7 @@ public final class TransactionManager {
         }
       } else {
         synchronized (current.creates) {
-          current.creates.add(obj);
+          current.creates.put(obj, obj);
         }
       }
     }
@@ -1182,64 +935,97 @@ public final class TransactionManager {
     int numNodesToContact = stores.size() + current.workersCalled.size();
     final List<RemoteNode<?>> nodesWithStaleObjects = Collections
         .synchronizedList(new ArrayList<RemoteNode<?>>(numNodesToContact));
-    List<Future<?>> futures = new ArrayList<>(numNodesToContact);
+    // A single cell array to synchronize on for checks.  Notified when a check
+    // has finished, cell contains the number of still outstanding checks.
+    final int[] outstandingChecks = new int[] { 0 };
+    final Log checkingLog = current;
 
     // Go through each worker and send check messages in parallel.
-    for (final RemoteWorker worker : current.workersCalled) {
+    for (final RemoteWorker worker : checkingLog.workersCalled) {
       NamedRunnable runnable =
           new NamedRunnable("worker freshness check to " + worker.name()) {
             @Override
             public void runImpl() {
               try {
-                if (worker.checkForStaleObjects(current.tid))
+                if (worker.checkForStaleObjects(checkingLog.tid))
                   nodesWithStaleObjects.add(worker);
               } catch (UnreachableNodeException e) {
                 // Conservatively assume it had stale objects.
                 nodesWithStaleObjects.add(worker);
+              } catch (Throwable t) {
+                // Conservatively assume it had stale objects.
+                nodesWithStaleObjects.add(worker);
+                throw t;
+              } finally {
+                synchronized (outstandingChecks) {
+                  outstandingChecks[0]--;
+                  outstandingChecks.notifyAll();
+                }
               }
             }
           };
-      futures.add(Threading.getPool().submit(runnable));
+      synchronized (outstandingChecks) {
+        outstandingChecks[0]++;
+      }
+      Threading.getPool().submit(runnable);
     }
 
     // Go through each store and send check messages in parallel.
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
+      final LongKeyMap<Integer> reads =
+          checkingLog.getReadsForStore(store, true);
       NamedRunnable runnable =
           new NamedRunnable("worker freshness check to " + store.name()) {
             @Override
             public void runImpl() {
-              LongKeyMap<Integer> reads = current.getReadsForStore(store, true);
-              if (store.checkForStaleObjects(reads))
+              try {
+                if (store.checkForStaleObjects(reads))
+                  nodesWithStaleObjects.add((RemoteNode<?>) store);
+              } catch (Throwable t) {
+                // Conservatively assume it had stale objects.
                 nodesWithStaleObjects.add((RemoteNode<?>) store);
+                throw t;
+              } finally {
+                synchronized (outstandingChecks) {
+                  outstandingChecks[0]--;
+                  outstandingChecks.notifyAll();
+                }
+              }
             }
           };
-
-      // Optimization: only start a new thread if there are more stores to
-      // contact and if it's truly a remote store (i.e., not in-process).
-      if (!(store instanceof InProcessStore || store.isLocalStore())
-          && storeIt.hasNext()) {
-        futures.add(Threading.getPool().submit(runnable));
-      } else {
-        runnable.run();
+      synchronized (outstandingChecks) {
+        outstandingChecks[0]++;
       }
+      Threading.getPool().submit(runnable);
     }
 
-    // Wait for replies.
-    for (Future<?> future : futures) {
-      while (true) {
+    // Wait until there is a stale result or we've finished all checks.
+    synchronized (outstandingChecks) {
+      while (outstandingChecks[0] > 0 && nodesWithStaleObjects.isEmpty()) {
         try {
-          future.get();
-          break;
+          outstandingChecks.wait();
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
-        } catch (ExecutionException e) {
-          e.printStackTrace();
         }
       }
     }
 
     return !nodesWithStaleObjects.isEmpty();
+  }
+
+  /**
+   * If there's a transaction currently, enqueue a runnable to run if the
+   * transaction successfully runs 2PC.
+   *
+   * @param r the runnable to run on successful 2PC.
+   */
+  public void registerCommitHook(Runnable r) {
+    if (current != null) {
+      synchronized (current.commitHooks) {
+        current.commitHooks.add(r);
+      }
+    }
   }
 
   /**
@@ -1262,12 +1048,20 @@ public final class TransactionManager {
   private void startTransaction(TransactionID tid, boolean ignoreRetrySignal) {
     if (current != null && !ignoreRetrySignal) checkRetrySignal();
 
+    if (current == null || current.tid == null) {
+      stats.markTxnAttempt();
+    }
     try {
       Timing.BEGIN.begin();
       current = new Log(current, tid);
-      Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-          "{0} started subtx {1} in thread {2}", current.parent, current,
-          Thread.currentThread());
+      if (current.parent == null) {
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE,
+            "started txn {0} in thread {1}", current, Thread.currentThread());
+      } else {
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+            "{0} started subtx {1} in thread {2}", current.parent, current,
+            Thread.currentThread());
+      }
       HOTOS_LOGGER.log(Level.FINEST, "started {0}", current);
     } finally {
       Timing.BEGIN.end();
@@ -1327,6 +1121,31 @@ public final class TransactionManager {
       if (!current.workersCalled.contains(worker))
         current.workersCalled.add(worker);
     }
+  }
+
+  /**
+   * Starts tracking for a new nonatomic call being handled in this thread.
+   * Initializes a new committedWrites list.
+   */
+  public void startNonAtomicCall() {
+    if (committedWrites == null) committedWrites = new OidKeyHashMap<>();
+  }
+
+  /**
+   * Finishes tracking for a new nonatomic call being handled in this thread.
+   * @return The list of oids for which writes have been committed.
+   */
+  public OidKeyHashMap<Integer> finishNonAtomicCall() {
+    OidKeyHashMap<Integer> writes = committedWrites;
+    committedWrites = null;
+    return writes;
+  }
+
+  /**
+   * Add a batch of committed writes to the running list.
+   */
+  public void addCommittedWrites(OidKeyHashMap<Integer> writes) {
+    if (committedWrites != null) committedWrites.putAll(writes);
   }
 
   /**

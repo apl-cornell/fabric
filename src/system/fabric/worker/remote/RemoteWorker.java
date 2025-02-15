@@ -2,7 +2,8 @@ package fabric.worker.remote;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.List;
+import java.util.Collection;
+import java.util.Map;
 
 import fabric.common.ClassRef;
 import fabric.common.ObjectGroup;
@@ -15,25 +16,33 @@ import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
+import fabric.messages.AsyncMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DirtyReadMessage;
 import fabric.messages.InterWorkerStalenessMessage;
 import fabric.messages.Message;
 import fabric.messages.Message.NoException;
+import fabric.messages.NonAtomicCallMessage;
 import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
+import fabric.messages.StoreCommittedMessage;
+import fabric.messages.StorePrepareFailedMessage;
+import fabric.messages.StorePrepareSuccessMessage;
 import fabric.messages.TakeOwnershipMessage;
+import fabric.messages.WorkerCommittedMessage;
+import fabric.messages.WorkerPrepareFailedMessage;
+import fabric.messages.WorkerPrepareSuccessMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
-import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.transaction.Log;
@@ -70,6 +79,32 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     this.subSocketFactory = subSocketFactory;
   }
 
+  public void notifyStorePrepareFailed(long tid,
+      TransactionPrepareFailedException e) {
+    sendAsync(new StorePrepareFailedMessage(tid, e));
+  }
+
+  public void notifyStorePrepareSuccess(long tid) {
+    sendAsync(new StorePrepareSuccessMessage(tid));
+  }
+
+  public void notifyStoreCommitted(long tid) {
+    sendAsync(new StoreCommittedMessage(tid));
+  }
+
+  public void notifyWorkerPrepareFailed(long tid,
+      TransactionPrepareFailedException e) {
+    sendAsync(new WorkerPrepareFailedMessage(tid, e));
+  }
+
+  public void notifyWorkerPrepareSuccess(long tid) {
+    sendAsync(new WorkerPrepareSuccessMessage(tid));
+  }
+
+  public void notifyWorkerCommitted(long tid) {
+    sendAsync(new WorkerCommittedMessage(tid));
+  }
+
   public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
       throws UnreachableNodeException, RemoteCallException {
@@ -77,18 +112,18 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     tm.registerRemoteCall(this);
 
     TransactionID tid = tm.getCurrentTid();
-    WriterMap writerMap = tm.getWriterMap();
-
-    Class<? extends fabric.lang.Object> receiverClass =
-        (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
-            .getClass().getEnclosingClass();
-    ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
-
-    RemoteCallMessage.Response response =
-        send(new RemoteCallMessage(tid, writerMap, receiverClassRef, receiver,
-            methodName, parameterTypes, args));
-
     if (tid != null) {
+      WriterMap writerMap = tm.getWriterMap();
+
+      Class<? extends fabric.lang.Object> receiverClass =
+          (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
+              .getClass().getEnclosingClass();
+      ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
+
+      RemoteCallMessage.Response response =
+          send(new RemoteCallMessage(tid, writerMap, receiverClassRef, receiver,
+              methodName, parameterTypes, args));
+
       // Commit any outstanding subtransactions that occurred as a result of the
       // remote call.
       Log innermost = TransactionRegistry.getInnermostLog(tid.topTid);
@@ -97,19 +132,39 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
       // Merge in the writer map we got.
       if (response.writerMap != null)
         tm.getWriterMap().putAll(response.writerMap);
+
+      return response.result;
+    } else {
+      Class<? extends fabric.lang.Object> receiverClass =
+          (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
+              .getClass().getEnclosingClass();
+      ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
+
+      NonAtomicCallMessage.Response response =
+          send(new NonAtomicCallMessage(receiverClassRef, receiver, methodName,
+              parameterTypes, args));
+
+      // Evict modified objects from the cache.
+      if (response.modifiedObjects != null) {
+        for (Store s : response.modifiedObjects.storeSet()) {
+          for (LongKeyMap.Entry<Integer> e : response.modifiedObjects.get(s)
+              .entrySet()) {
+            s.evict(e.getKey(), e.getValue());
+          }
+        }
+        tm.addCommittedWrites(response.modifiedObjects);
+      }
+
+      return response.result;
     }
-
-    return response.result;
   }
 
-  public void prepareTransaction(long tid)
-      throws UnreachableNodeException, TransactionPrepareFailedException {
-    send(new PrepareTransactionMessage(tid));
+  public void prepareTransaction(long tid) throws UnreachableNodeException {
+    sendAsync(new PrepareTransactionMessage(tid));
   }
 
-  public void commitTransaction(long tid)
-      throws UnreachableNodeException, TransactionCommitFailedException {
-    send(new CommitTransactionMessage(tid));
+  public void commitTransaction(long tid) {
+    sendAsync(new CommitTransactionMessage(tid));
   }
 
   /**
@@ -118,9 +173,8 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
    * @param tid
    *          the tid for the transaction that is aborting.
    */
-  public void abortTransaction(TransactionID tid)
-      throws AccessException, UnreachableNodeException {
-    send(new AbortTransactionMessage(tid));
+  public void abortTransaction(TransactionID tid) {
+    sendAsync(new AbortTransactionMessage(tid));
   }
 
   /**
@@ -188,38 +242,11 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   }
 
   /**
-   * Notifies the dissemination node at the given worker that an object has been
-   * updated.
-   *
-   * @return whether the node is resubscribing to the object.
+   * Notifies the worker of updates.
    */
-  public List<Long> notifyObjectUpdates(String store,
-      LongKeyMap<ObjectGlob> updates) {
-    ObjectUpdateMessage.Response response;
-    try {
-      response = send(new ObjectUpdateMessage(store, updates));
-    } catch (NoException e) {
-      // This is not possible.
-      throw new InternalError(e);
-    }
-    return response.resubscriptions;
-  }
-
-  /**
-   * Notifies the worker that a set of objects has been updated.
-   *
-   * @return whether the node is resubscribing to the object.
-   */
-  public List<Long> notifyObjectUpdates(List<Long> updatedOnums,
-      List<ObjectGroup> updates) {
-    ObjectUpdateMessage.Response response;
-    try {
-      response = send(new ObjectUpdateMessage(updatedOnums, updates));
-    } catch (NoException e) {
-      // This is not possible.
-      throw new InternalError(e);
-    }
-    return response.resubscriptions;
+  public void notifyObjectUpdates(String store, Map<ObjectGlob, LongSet> globs,
+      LongSet updatedOnums, Collection<ObjectGroup> groups) {
+    sendAsync(new ObjectUpdateMessage(store, globs, updatedOnums, groups));
   }
 
   /**
@@ -240,6 +267,10 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   private <R extends Message.Response, E extends FabricException> R send(
       Message<R, E> message) throws E {
     return send(subSocketFactory, message);
+  }
+
+  private void sendAsync(AsyncMessage message) {
+    sendAsync(subSocketFactory, message);
   }
 
   // ////////////////////////////////

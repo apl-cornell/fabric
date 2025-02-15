@@ -16,6 +16,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.util.Arrays;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -25,6 +26,7 @@ import javax.crypto.SecretKey;
 import fabric.common.Crypto;
 import fabric.common.FastSerializable;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongSet;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
 import fabric.worker.RemoteStore;
@@ -35,8 +37,13 @@ import fabric.worker.Worker.Code;
 /**
  * A glob represents data that has been encrypted and signed by a store.
  */
-public abstract class AbstractGlob<Payload extends FastSerializable> implements
-FastSerializable {
+public abstract class AbstractGlob<Payload extends FastSerializable>
+    implements FastSerializable {
+  /**
+   * Cached value of the hashCode.
+   */
+  private final int hashCode;
+
   /**
    * The time at which this glob was created. This acts as a version number.
    */
@@ -110,6 +117,13 @@ FastSerializable {
     } catch (GeneralSecurityException e) {
       throw new InternalError(e);
     }
+
+    int hashCode = 0;
+    hashCode ^= Long.hashCode(timestamp);
+    if (keyObject != null) hashCode ^= keyObject.hashCode();
+    if (iv != null) hashCode ^= Arrays.hashCode(iv);
+    if (data != null) hashCode ^= Arrays.hashCode(data);
+    this.hashCode = hashCode;
   }
 
   /**
@@ -176,8 +190,8 @@ FastSerializable {
     return timestamp < glob.timestamp;
   }
 
-  public void verifySignature(PublicKey key) throws SignatureException,
-  InvalidKeyException {
+  public void verifySignature(PublicKey key)
+      throws SignatureException, InvalidKeyException {
     if (signature.length == 0) {
       // No signature received. Verify that none was required.
       // XXX This is rather inefficient.
@@ -252,6 +266,13 @@ FastSerializable {
 
     this.signature = new byte[in.readInt()];
     in.readFully(this.signature);
+
+    int hashCode = 0;
+    hashCode ^= Long.hashCode(timestamp);
+    if (keyObject != null) hashCode ^= keyObject.hashCode();
+    if (iv != null) hashCode ^= Arrays.hashCode(iv);
+    if (data != null) hashCode ^= Arrays.hashCode(data);
+    this.hashCode = hashCode;
   }
 
   public Payload decrypt() {
@@ -287,5 +308,25 @@ FastSerializable {
    * @return true iff either cache was changed.
    */
   public abstract boolean updateCache(Cache dissemCache, RemoteStore store,
-      long onum);
+      LongSet onums);
+
+  @Override
+  public int hashCode() {
+    return this.hashCode;
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other instanceof AbstractGlob) {
+      AbstractGlob<?> that = (AbstractGlob<?>) other;
+      return this.timestamp == that.timestamp
+          && ((this.keyObject == null && that.keyObject == null)
+              || this.keyObject.equals(that.keyObject))
+          && ((this.iv == null && that.iv == null)
+              || Arrays.equals(this.iv, that.iv))
+          && ((this.data == null && that.data == null)
+              || Arrays.equals(this.data, that.data));
+    }
+    return false;
+  }
 }

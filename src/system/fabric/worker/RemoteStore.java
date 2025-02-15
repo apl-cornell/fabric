@@ -17,6 +17,7 @@ import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
@@ -24,9 +25,8 @@ import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.exceptions.RuntimeFetchException;
-import fabric.common.util.ConcurrentLongKeyHashMap;
-import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
@@ -41,9 +41,13 @@ import fabric.messages.Message.NoException;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
+import fabric.messages.UnsubscribeMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
+import fabric.worker.ObjectCache.FetchLock;
+import fabric.worker.transaction.Log;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * Encapsulates a Store. This class maintains two connections to the store (one
@@ -62,24 +66,13 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   /**
    * The object table: locally resident objects.
    */
-  private transient final ObjectCache cache;
-
-  /**
-   * The set of fetch locks. Used to prevent threads from concurrently
-   * attempting to fetch the same object.
-   */
-  private transient final ConcurrentLongKeyMap<FetchLock> fetchLocks;
+  private final ObjectCache cache;
 
   /**
    * The store's public SSL key. Used for verifying signatures on object groups.
    * This is null until getPublicKey() is called.
    */
   private transient PublicKey publicKey;
-
-  private static class FetchLock {
-    private volatile ObjectCache.Entry object;
-    private volatile AccessException error;
-  }
 
   /**
    * Creates a store representing the store at the given host name.
@@ -88,7 +81,6 @@ public class RemoteStore extends RemoteNode<RemoteStore>
     super(name);
 
     this.cache = new ObjectCache(this);
-    this.fetchLocks = new ConcurrentLongKeyHashMap<>();
     this.fresh_ids = new LinkedList<>();
     this.publicKey = null;
   }
@@ -120,8 +112,8 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   public void prepareTransaction(long tid, boolean singleStore,
       boolean readOnly, Collection<Object._Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object._Impl> writes)
-      throws TransactionPrepareFailedException, UnreachableNodeException {
-    send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
+      throws UnreachableNodeException {
+    sendAsync(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
         singleStore, readOnly, toCreate, reads, writes));
   }
 
@@ -141,54 +133,75 @@ public class RemoteStore extends RemoteNode<RemoteStore>
     return readObject(false, onum);
   }
 
-  private final ObjectCache.Entry readObject(boolean useDissem, long onum)
-      throws AccessException {
+  private final ObjectCache.Entry readObject(final boolean useDissem,
+      final long onum) throws AccessException {
     // Get/create a mutex for fetching the object.
     FetchLock fetchLock = new FetchLock();
-    FetchLock existingFetchLock = fetchLocks.putIfAbsent(onum, fetchLock);
+    FetchLock existingFetchLock = cache.fetchLocks.putIfAbsent(onum, fetchLock);
     boolean needToFetch = true;
     if (existingFetchLock != null) {
       fetchLock = existingFetchLock;
       needToFetch = false;
     }
 
-    if (needToFetch) {
-      // We are responsible for fetching the object.
+    final FetchLock lock = fetchLock;
 
-      // Check object table in case some other thread had just finished
-      // fetching the object while we weren't looking.
-      fetchLock.object = readFromCache(onum);
+    boolean waited = false;
+    TransactionManager tm = TransactionManager.getInstance();
+    synchronized (lock) {
+      if (needToFetch) {
+        if (tm != null) tm.stats.markFetch();
+        // We are responsible for initiating the fetch of the object.
+        Threading.getPool().submit(new Threading.NamedRunnable(
+            "Fetch of " + this.name() + "/" + onum) {
+          @Override
+          public void runImpl() {
+            // Check object table in case some other thread had just finished
+            // fetching the object while we weren't looking.
+            lock.object = readFromCache(onum);
 
-      if (fetchLock.object == null) {
-        // Really need to fetch.
-        try {
-          fetchLock.object = fetchObject(useDissem, onum);
-        } catch (AccessException e) {
-          fetchLock.error = e;
-        }
+            if (lock.object == null) {
+              // Really need to fetch.
+              try {
+                fetchObject(useDissem, onum);
+              } catch (AccessException e) {
+                synchronized (lock) {
+                  lock.error = e;
+                  lock.notifyAll();
+                  cache.fetchLocks.remove(onum, lock);
+                }
+              }
+            } else {
+              cache.notifyFetched(onum, lock.object);
+            }
+          }
+        });
       }
 
-      // Object now cached. Remove our mutex from fetchLocks.
-      fetchLocks.remove(onum, fetchLock);
-
-      // Signal any other threads that might be waiting for our fetch.
-      synchronized (fetchLock) {
-        fetchLock.notifyAll();
-      }
-    } else {
-      // Wait for another thread to fetch the object for us.
-      synchronized (fetchLock) {
+      // Wait for object to be fetched.
+      Log curLog = TransactionManager.getInstance().getCurrentLog();
+      try {
         while (fetchLock.object == null && fetchLock.error == null) {
           try {
-            fetchLock.wait();
+            if (curLog != null) {
+              curLog.checkRetrySignal();
+              curLog.setWaitsFor(lock);
+            }
+            lock.wait();
+            // Only mark waiting for the first wait.
+            if (tm != null && !waited) tm.stats.markFetchWait();
+            waited = true;
           } catch (InterruptedException e) {
             Logging.logIgnoredInterruptedException(e);
           }
         }
+      } finally {
+        if (curLog != null) curLog.clearWaitsFor();
       }
     }
 
     if (fetchLock.error != null) throw fetchLock.error;
+    if (waited) tm.stats.markFetched(lock.object.getProxy());
     return fetchLock.object;
   }
 
@@ -208,7 +221,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    *          The object number to fetch
    * @return The cache entry for the object.
    */
-  private ObjectCache.Entry fetchObject(boolean useDissem, long onum)
+  private void fetchObject(boolean useDissem, long onum)
       throws AccessException {
     ObjectGroup g;
     if (useDissem) {
@@ -218,7 +231,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
       g = readObjectFromStore(onum);
     }
 
-    return cache.put(g, onum);
+    cache.put(g, onum);
   }
 
   /**
@@ -291,14 +304,13 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   @Override
-  public void abortTransaction(TransactionID tid) throws AccessException {
-    send(Worker.getWorker().authToStore, new AbortTransactionMessage(tid));
+  public void abortTransaction(TransactionID tid) {
+    sendAsync(Worker.getWorker().authToStore, new AbortTransactionMessage(tid));
   }
 
   @Override
-  public void commitTransaction(long transactionID)
-      throws UnreachableNodeException, TransactionCommitFailedException {
-    send(Worker.getWorker().authToStore,
+  public void commitTransaction(long transactionID) {
+    sendAsync(Worker.getWorker().authToStore,
         new CommitTransactionMessage(transactionID));
   }
 
@@ -352,6 +364,11 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   @Override
   public void evict(long onum) {
     cache.evict(onum);
+  }
+
+  @Override
+  public void evict(long onum, int version) {
+    cache.evict(onum, version);
   }
 
   /**
@@ -482,6 +499,13 @@ public class RemoteStore extends RemoteNode<RemoteStore>
     }
 
     return result;
+  }
+
+  /**
+   * Send an unsubscribe message.
+   */
+  public void unsubscribe(LongSet onums) {
+    sendAsync(Worker.getWorker().authToStore, new UnsubscribeMessage(onums));
   }
 
   // ////////////////////////////////

@@ -32,8 +32,7 @@ public interface Store extends Serializable {
    */
   void prepareTransaction(long tid, boolean singleStore, boolean readOnly,
       Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<_Impl> writes)
-      throws UnreachableNodeException, TransactionPrepareFailedException;
+      Collection<_Impl> writes) throws UnreachableNodeException;
 
   /**
    * Creates a new cache entry for the given _Impl.
@@ -75,20 +74,16 @@ public interface Store extends Serializable {
    * @param tid
    *          the ID of the aborting transaction. This is assumed to specify a
    *          top-level transaction.
-   * @throws AccessException
    */
-  void abortTransaction(TransactionID tid) throws AccessException;
+  void abortTransaction(TransactionID tid);
 
   /**
    * Notifies the Store that the transaction should be committed.
    *
    * @param transactionID
    *          the ID of the transaction to commit
-   * @throws UnreachableNodeException
-   * @throws TransactionCommitFailedException
    */
-  void commitTransaction(long transactionID)
-      throws UnreachableNodeException, TransactionCommitFailedException;
+  void commitTransaction(long transactionID);
 
   /**
    * Determines whether the given set of objects are stale.
@@ -113,6 +108,12 @@ public interface Store extends Serializable {
    * Evicts the object with the given onum from cache.
    */
   public void evict(long onum);
+
+  /**
+   * Evicts the object with the given onum from cache unless the version in
+   * cache is greater than or equal to the version given.
+   */
+  public void evict(long onum, int version);
 
   /**
    * Adds the given object to the cache.

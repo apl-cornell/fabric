@@ -12,13 +12,14 @@ import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
 import fabric.lang.security.Principal;
+import fabric.messages.AsyncMessage;
 import fabric.messages.Message;
 
 /**
  * Abstracts remote stores and remote workers.
  */
-public abstract class RemoteNode<This extends RemoteNode<This>> implements
-Serializable {
+public abstract class RemoteNode<This extends RemoteNode<This>>
+    implements Serializable {
   /**
    * The node's Fabric node name. (Likely different from its DNS host name.)
    */
@@ -83,6 +84,25 @@ Serializable {
       SubSocket<This> socket = getSocket(subSocketFactory);
       try {
         return message.send(socket);
+      } catch (IOException e) {
+        socket = null;
+        throw e;
+      } finally {
+        if (socket != null) {
+          recycle(subSocketFactory, socket);
+        }
+      }
+    } catch (IOException e) {
+      throw new NotImplementedException(e);
+    }
+  }
+
+  protected void sendAsync(SubSocketFactory<This> subSocketFactory,
+      AsyncMessage message) {
+    try {
+      SubSocket<This> socket = getSocket(subSocketFactory);
+      try {
+        message.send(socket);
       } catch (IOException e) {
         socket = null;
         throw e;

@@ -11,6 +11,7 @@ import codebases.frontend.CodebaseImportsInitialized;
 import codebases.types.CodebaseTypeSystem;
 import codebases.visit.CBTypeBuilder;
 import codebases.visit.CodebaseTranslator;
+
 import fabil.ExtensionInfo;
 import fabil.FabILOptions;
 import fabil.Topics;
@@ -32,6 +33,7 @@ import fabil.visit.PrincipalDelegator;
 import fabil.visit.ProviderRewriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ReadWriteChecker;
+import fabil.visit.RemoteCallChecker;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.SignatureCleaner;
 import fabil.visit.SignatureHashGenerator;
@@ -39,6 +41,7 @@ import fabil.visit.StaticInitializerCollector;
 import fabil.visit.StoreGetterRewriter;
 import fabil.visit.ThreadRewriter;
 import fabil.visit.UpdatedVariableFinder;
+
 import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.CyclicDependencyException;
@@ -71,14 +74,14 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     super(extInfo);
     this.extInfo = extInfo;
   }
-  
+
   public Goal ImmutableFlagsCleared(Job job) {
     Goal g = internGoal(new VisitorGoal(job, new FinalRepairRewriter()) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler s) {
         List<Goal> l = new ArrayList<>();
         l.add(SignaturesHashed(job));
-        
+
         if (!extInfo.getOptions().signatureMode()) {
           l.add(RewriteProxies(job));
         }
@@ -442,13 +445,30 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     return g;
   }
 
+  public Goal CheckRemoteCalls(final Job job) {
+    TypeSystem ts = job.extensionInfo().typeSystem();
+    NodeFactory nf = job.extensionInfo().nodeFactory();
+
+    Goal g =
+        internGoal(new VisitorGoal(job, new RemoteCallChecker(job, ts, nf)) {
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+            List<Goal> l = new ArrayList<>();
+            l.add(RewriteAtomic(job));
+            return l;
+          }
+        });
+
+    return g;
+  }
+
   public Goal RewriteRemoteCalls(final Job job) {
     Goal g = internGoal(new VisitorGoal(job,
         new RemoteCallRewriter((ExtensionInfo) job.extensionInfo())) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler s) {
         List<Goal> l = new ArrayList<>();
-        l.add(RewriteAtomic(job));
+        l.add(CheckRemoteCalls(job));
         return l;
       }
     });

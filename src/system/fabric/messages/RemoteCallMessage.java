@@ -19,8 +19,9 @@ import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
-public class RemoteCallMessage extends
-Message<RemoteCallMessage.Response, RemoteCallException> {
+public class RemoteCallMessage
+    extends Message<RemoteCallMessage.Response, RemoteCallException>
+    implements CallMessage {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
   //////////////////////////////////////////////////////////////////////////////
@@ -80,8 +81,8 @@ Message<RemoteCallMessage.Response, RemoteCallException> {
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
-      throws ProtocolError, RemoteCallException {
+  public Response dispatch(RemoteIdentity<RemoteWorker> client,
+      MessageHandler h) throws ProtocolError, RemoteCallException {
     return h.handle(client, this);
   }
 
@@ -163,6 +164,7 @@ Message<RemoteCallMessage.Response, RemoteCallException> {
     }
   }
 
+  @Override
   public Method getMethod() throws SecurityException, NoSuchMethodException {
     Class<?>[] mangledParamTypes = new Class<?>[parameterTypes.length + 1];
     mangledParamTypes[0] = Principal.class;
@@ -174,10 +176,21 @@ Message<RemoteCallMessage.Response, RemoteCallException> {
         receiverType.toProxyClass();
 
     if (proxyType == null) {
-      throw new InternalError("Unable to find _Proxy class for " + receiverType);
+      throw new InternalError(
+          "Unable to find _Proxy class for " + receiverType);
     }
 
     return proxyType.getMethod(methodName + "_remote", mangledParamTypes);
+  }
+
+  @Override
+  public Object[] getArgs() {
+    return args;
+  }
+
+  @Override
+  public _Proxy getReceiver() {
+    return receiver;
   }
 
   @Override

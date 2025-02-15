@@ -37,7 +37,6 @@ class AbstractPolicy                  (abstract) implements Policy
 == Misc ==
 
 class SecretKeyObject
-class PrivateKeyObject
 
 interface Closure
 

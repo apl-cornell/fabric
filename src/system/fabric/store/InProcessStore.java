@@ -6,12 +6,14 @@ import java.util.List;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.worker.RemoteStore;
@@ -53,18 +55,30 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void abortTransaction(TransactionID tid) {
-    try {
-      tm.abortTransaction(Worker.getWorker().getPrincipal(), tid.topTid);
-    } catch (AccessException e) {
-      throw new InternalError(e);
-    }
+  public void abortTransaction(final TransactionID tid) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        tm.abortTransaction(Worker.getWorker().getPrincipal(), tid.topTid);
+      }
+    });
   }
 
   @Override
-  public void commitTransaction(long transactionID)
-      throws TransactionCommitFailedException {
-    tm.commitTransaction(getLocalWorkerIdentity(), transactionID);
+  public void commitTransaction(final long transactionID) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          tm.commitTransaction(getLocalWorkerIdentity(), transactionID);
+          Worker.getWorker().getLocalWorker()
+              .notifyStoreCommitted(transactionID);
+        } catch (TransactionCommitFailedException e) {
+          throw new InternalError(
+              "Commit phase failed for " + Long.toHexString(transactionID), e);
+        }
+      }
+    });
   }
 
   @Override
@@ -77,12 +91,12 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void prepareTransaction(long tid, boolean singleStore,
-      boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<_Impl> writes) throws TransactionPrepareFailedException {
-    Collection<SerializedObject> serializedCreates =
+  public void prepareTransaction(final long tid, final boolean singleStore,
+      final boolean readOnly, final Collection<_Impl> toCreate,
+      final LongKeyMap<Integer> reads, final Collection<_Impl> writes) {
+    final Collection<SerializedObject> serializedCreates =
         new ArrayList<>(toCreate.size());
-    Collection<SerializedObject> serializedWrites =
+    final Collection<SerializedObject> serializedWrites =
         new ArrayList<>(writes.size());
 
     for (_Impl o : toCreate) {
@@ -97,22 +111,31 @@ public class InProcessStore extends RemoteStore {
       serializedWrites.add(serialized);
     }
 
-    PrepareRequest req =
-        new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        PrepareRequest req =
+            new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
 
-    // Swizzle remote pointers.
-    sm.createSurrogates(req);
+        // Swizzle remote pointers.
+        sm.createSurrogates(req);
 
-    tm.prepare(Worker.getWorker().getPrincipal(), req);
+        try {
+          tm.prepare(Worker.getWorker().getPrincipal(), req);
 
-    if (singleStore || readOnly) {
-      try {
-        commitTransaction(tid);
-      } catch (TransactionCommitFailedException e) {
-        // Shouldn't happen.
-        throw new InternalError("Single-store commit failed unexpectedly.", e);
+          if (singleStore || readOnly) {
+            tm.commitTransaction(getLocalWorkerIdentity(), tid);
+          }
+          Worker.getWorker().inProcessRemoteWorker
+              .notifyStorePrepareSuccess(tid);
+        } catch (TransactionPrepareFailedException e) {
+          Worker.getWorker().inProcessRemoteWorker.notifyStorePrepareFailed(tid,
+              e);
+        } catch (TransactionCommitFailedException e) {
+          throw new InternalError(e);
+        }
       }
-    }
+    });
   }
 
   @Override
@@ -133,7 +156,7 @@ public class InProcessStore extends RemoteStore {
   @Override
   protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
     try {
-      return tm.checkForStaleObjects(getPrincipal(), reads);
+      return tm.checkForStaleObjects(Worker.getWorker().getPrincipal(), reads);
     } catch (AccessException e) {
       throw new InternalError(e);
     }
@@ -143,4 +166,10 @@ public class InProcessStore extends RemoteStore {
     return new SerializationProxy(name);
   }
 
+  @Override
+  public void unsubscribe(LongSet onums) {
+    // Running this in the current thread because it should only be called in
+    // the dedicated thread for InProcessRemoteWorker's handling of updates.
+    tm.unsubscribe(Worker.getWorker().getLocalWorker(), onums);
+  }
 }
